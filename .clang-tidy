@@ -1,0 +1,27 @@
+# TODO: Can pointer arithmetic and no assembler warning only be disabled for bootloader and kernel?
+# TODO: Re-enable c array warnings.
+---
+Checks: >
+  *,
+  -abseil*,
+  -android*,
+  -clang-analyzer*,
+  -fuchsia*,
+  -llvmlibc*,
+  -zircon*,
+
+  -cppcoreguidelines-avoid-c-arrays,
+  -hicpp-avoid-c-arrays,
+  -modernize-avoid-c-arrays,
+
+  -bugprone-macro-parentheses,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -google-readability-todo,
+  -hicpp-no-assembler,
+  -llvm-header-guard,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+FormatStyle: file
