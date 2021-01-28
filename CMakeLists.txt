@@ -31,7 +31,8 @@ if(BUILD_WARNINGS)
         -Weverything
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
-        -Wno-missing-prototypes)
+        -Wno-missing-prototypes
+        -Wno-padded)
 endif()
 
 add_custom_target(image
