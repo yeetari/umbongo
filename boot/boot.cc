@@ -1,17 +1,20 @@
+#include <boot/BootInfo.hh>
 #include <boot/Efi.hh>
 #include <boot/Elf.hh>
 #include <ustd/Types.hh>
 
 namespace {
 
-const EfiGuid g_file_info_guid{0x9576e92, 0x6d3f, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
+const EfiGuid g_file_info_guid{0x9576E92, 0x6D3F, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+
+const EfiGuid g_graphics_output_protocol_guid{
+    0x9042A9DE, 0x23DC, 0x4A38, {0x96, 0xFB, 0x7A, 0xDE, 0xD0, 0x80, 0x51, 0x6A}};
 
 const EfiGuid g_loaded_image_protocol_guid{
-    0x5B1B31A1, 0x9562, 0x11d2, {0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+    0x5B1B31A1, 0x9562, 0x11D2, {0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
 
 const EfiGuid g_simple_file_system_protocol_guid{
-    0x964e5b22, 0x6459, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
-
+    0x964E5B22, 0x6459, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
 } // namespace
 
 // TODO: Remove this.
@@ -139,8 +142,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
             kernel_file->set_position(kernel_file, static_cast<uint64>(ph->offset));
             status = kernel_file->read(kernel_file, &size, reinterpret_cast<void *>(paddr));
             if (status != EfiStatus::Success) {
-                st->con_out->output_string(
-                    st->con_out, L"Failed to copy kernel!\r\n");
+                st->con_out->output_string(st->con_out, L"Failed to copy kernel!\r\n");
                 while (true) {
                 }
             }
@@ -148,6 +150,19 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     }
 
     // TODO: Free memory.
+
+    // Get framebuffer info.
+    EfiGraphicsOutputProtocol *gop = nullptr;
+    st->con_out->output_string(st->con_out, L"Querying framebuffer info...\r\n");
+    {
+        EfiStatus status = st->boot_services->locate_protocol(&g_graphics_output_protocol_guid, nullptr,
+                                                              reinterpret_cast<void **>(&gop));
+        if (status != EfiStatus::Success || gop == nullptr) {
+            st->con_out->output_string(st->con_out, L"Failed to locate graphics output protocol!\r\n");
+            while (true) {
+            }
+        }
+    }
 
     // Get memory map data.
     usize map_key = 0;
@@ -192,12 +207,24 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
             }
         }
     }
+
+    // Fill out boot info.
+    BootInfo boot_info{
+        .width = gop->mode->info->width,
+        .height = gop->mode->info->height,
+        .pixels_per_scan_line = gop->mode->info->pixels_per_scan_line,
+        .framebuffer_base = gop->mode->framebuffer_base,
+    };
+
+    // Exit boot services.
     if (st->boot_services->exit_boot_services(image_handle, map_key) != EfiStatus::Success) {
         st->con_out->output_string(st->con_out, L"Failed to exit boot services!\r\n");
         while (true) {
         }
     }
-    reinterpret_cast<__attribute__((sysv_abi)) void(*)()>(kernel_entry)();
+
+    // Call kernel and spin on return.
+    reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_entry)(&boot_info);
     while (true) {
     }
 }

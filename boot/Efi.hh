@@ -96,6 +96,8 @@ struct EfiBootServicesTable : public EfiTableHeader {
     EfiStatus (*handle_protocol)(EfiHandle handle, const EfiGuid *protocol, void **interface);
     void *unused3[9];
     EfiStatus (*exit_boot_services)(EfiHandle handle, usize map_key);
+    void *unused4[10];
+    EfiStatus (*locate_protocol)(const EfiGuid *protocol, void *registration, void **interface);
 };
 
 // EFI System Table (UEFI specification 2.8B section 4.3)
@@ -131,6 +133,46 @@ struct EfiFileProtocol {
     void *unused1[2];
     EfiStatus (*set_position)(EfiFileProtocol *, uint64 position);
     EfiStatus (*get_info)(EfiFileProtocol *, const EfiGuid *info_type, usize *size, void *buffer);
+};
+
+struct EfiPixelMask {
+    uint32 red;
+    uint32 green;
+    uint32 blue;
+    uint32 reserved;
+};
+
+enum class EfiGraphicsPixelFormat : uint32 {
+    Rgb,
+    Bgr,
+    Mask,
+    None,
+};
+
+struct EfiGraphicsOutputModeInfo {
+    uint32 version;
+    uint32 width;
+    uint32 height;
+    EfiGraphicsPixelFormat pixel_format;
+    EfiPixelMask pixel_mask;
+    uint32 pixels_per_scan_line;
+};
+
+struct EfiGraphicsOutputProtocolMode {
+    uint32 max_mode;
+    uint32 mode;
+    EfiGraphicsOutputModeInfo *info;
+    usize size_of_info;
+    uintptr framebuffer_base;
+    usize framebuffer_size;
+};
+
+// EFI Graphics Output Protocol (UEFI specification 2.8B section 12.9)
+struct EfiGraphicsOutputProtocol {
+    void *unused0;
+    EfiStatus (*set_mode)(EfiGraphicsOutputProtocol *, uint32 mode);
+    void *unused1;
+    EfiGraphicsOutputProtocolMode *mode;
 };
 
 // EFI Loaded Image Protocol (UEFI specification 2.8B section 9.1)
