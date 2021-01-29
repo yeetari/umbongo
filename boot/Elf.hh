@@ -1,10 +1,11 @@
 #pragma once
 
+#include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
 struct [[gnu::packed]] ElfHeader {
-    uint8 magic[4];
-    uint8 ident[12];
+    Array<uint8, 4> magic;
+    Array<uint8, 12> ident;
     uint16 type;
     uint16 machine;
     uint32 version;

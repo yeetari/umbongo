@@ -18,9 +18,9 @@ const EfiGuid g_simple_file_system_protocol_guid{
 } // namespace
 
 // TODO: Remove this.
-extern "C" void *memset(void *bufptr, int value, size_t size) {
+extern "C" void *memset(void *bufptr, int value, usize size) {
     auto *buf = static_cast<unsigned char *>(bufptr);
-    for (size_t i = 0; i < size; i++) {
+    for (usize i = 0; i < size; i++) {
         buf[i] = static_cast<unsigned char>(value);
     }
     return bufptr;

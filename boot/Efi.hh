@@ -1,10 +1,11 @@
 #pragma once
 
+#include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
 using EfiHandle = void *;
 
-#define EFI_ERR(x) (static_cast<usize>(1U) << 63U) | x
+#define EFI_ERR(x) ((static_cast<usize>(1U) << 63U) | (x))
 enum class EfiStatus : usize {
     Success = 0,
     InvalidParameter = EFI_ERR(2U),
@@ -22,7 +23,7 @@ struct EfiGuid {
     uint32 dat1;
     uint16 dat2;
     uint16 dat3;
-    uint8 dat4[8];
+    Array<uint8, 8> dat4;
 };
 
 // EFI Table Header (UEFI specification 2.8B section 4.2)
@@ -85,18 +86,18 @@ struct EfiMemoryDescriptor {
 
 // EFI Boot Services Table (UEFI specification 2.8B section 4.4)
 struct EfiBootServicesTable : public EfiTableHeader {
-    void *unused0[2];
+    Array<void *, 2> unused0;
     EfiStatus (*allocate_pages)(EfiAllocateType, EfiMemoryType, usize page_count, uintptr *memory);
     void *unused1;
     EfiStatus (*get_memory_map)(usize *size, EfiMemoryDescriptor *map, usize *key, usize *descriptor_size,
                                 uint32 *descriptor_version);
     EfiStatus (*allocate_pool)(EfiMemoryType type, usize size, void **buffer);
     EfiStatus (*free_pool)(void *buffer);
-    void *unused2[9];
+    Array<void *, 9> unused2;
     EfiStatus (*handle_protocol)(EfiHandle handle, const EfiGuid *protocol, void **interface);
-    void *unused3[9];
+    Array<void *, 9> unused3;
     EfiStatus (*exit_boot_services)(EfiHandle handle, usize map_key);
-    void *unused4[10];
+    Array<void *, 10> unused4;
     EfiStatus (*locate_protocol)(const EfiGuid *protocol, void *registration, void **interface);
 };
 
@@ -121,16 +122,16 @@ struct EfiFileInfo {
     uint64 size;
     uint64 file_size;
     uint64 physical_size;
-    uint8 junk[66];
+    Array<uint8, 66> junk;
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
 struct EfiFileProtocol {
     uint64 revision;
     EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, uint64 mode, uint64 flags);
-    void *unused0[2];
+    Array<void *, 2> unused0;
     EfiStatus (*read)(EfiFileProtocol *, usize *size, void *buffer);
-    void *unused1[2];
+    Array<void *, 2> unused1;
     EfiStatus (*set_position)(EfiFileProtocol *, uint64 position);
     EfiStatus (*get_info)(EfiFileProtocol *, const EfiGuid *info_type, usize *size, void *buffer);
 };
