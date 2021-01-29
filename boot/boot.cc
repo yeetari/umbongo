@@ -17,15 +17,6 @@ const EfiGuid g_simple_file_system_protocol_guid{
     0x964E5B22, 0x6459, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
 } // namespace
 
-// TODO: Remove this.
-extern "C" void *memset(void *bufptr, int value, usize size) {
-    auto *buf = static_cast<unsigned char *>(bufptr);
-    for (usize i = 0; i < size; i++) {
-        buf[i] = static_cast<unsigned char>(value);
-    }
-    return bufptr;
-}
-
 EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Flush input buffer and clear screen.
     st->con_in->reset(st->con_in, false);
