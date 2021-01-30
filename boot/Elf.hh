@@ -3,7 +3,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-struct [[gnu::packed]] ElfHeader {
+struct ElfHeader {
     Array<uint8, 4> magic;
     Array<uint8, 12> ident;
     uint16 type;
@@ -22,7 +22,7 @@ enum class ElfProgramHeaderType : uint32 {
     Load = 1,
 };
 
-struct [[gnu::packed]] ElfProgramHeader {
+struct ElfProgramHeader {
     ElfProgramHeaderType type;
     uint32 flags;
     ptrdiff offset;
