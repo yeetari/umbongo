@@ -1,6 +1,8 @@
 #include <boot/BootInfo.hh>
 #include <boot/Efi.hh>
 #include <boot/Elf.hh>
+#include <ustd/Assert.hh>
+#include <ustd/Log.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -15,189 +17,146 @@ const EfiGuid g_loaded_image_protocol_guid{
 
 const EfiGuid g_simple_file_system_protocol_guid{
     0x964E5B22, 0x6459, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+
+EfiSystemTable *s_st;
+
 } // namespace
 
+[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
+    log("Assertion '{}' failed at {}:{}", expr, file, line);
+    log("=> {}", msg);
+    while (true) {
+        asm volatile("cli");
+        asm volatile("hlt");
+    }
+}
+
+void put_char(char ch) {
+    if (ch == '\n') {
+        s_st->con_out->output_string(s_st->con_out, L"\r\n");
+        return;
+    }
+    Array<wchar_t, 2> array{static_cast<wchar_t>(ch), '\0'};
+    s_st->con_out->output_string(s_st->con_out, array.data());
+}
+
+#define EFI_CHECK(expr, msg)                                                                                           \
+    {                                                                                                                  \
+        EfiStatus status = (expr);                                                                                     \
+        ENSURE(status == EfiStatus::Success, (msg));                                                                   \
+    }
+
 EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
+    s_st = st;
+
     // Flush input buffer and clear screen.
     st->con_in->reset(st->con_in, false);
     st->con_out->clear_screen(st->con_out);
 
     // Load loaded image protocol.
     EfiLoadedImageProtocol *loaded_image = nullptr;
-    {
-        EfiStatus status = st->boot_services->handle_protocol(image_handle, &g_loaded_image_protocol_guid,
-                                                              reinterpret_cast<void **>(&loaded_image));
-        if (status != EfiStatus::Success || loaded_image == nullptr) {
-            st->con_out->output_string(st->con_out, L"Loaded image protocol failed!\r\n");
-            while (true) {
-            }
-        }
-    }
+    EFI_CHECK(st->boot_services->handle_protocol(image_handle, &g_loaded_image_protocol_guid,
+                                                 reinterpret_cast<void **>(&loaded_image)),
+              "Loaded image protocol load failed!")
+    ENSURE(loaded_image != nullptr, "Loaded image protocol load failed!");
 
-    // Mount file system.
+    // Load file system protcol.
     EfiSimpleFileSystemProtocol *file_system = nullptr;
-    {
-        EfiStatus status = st->boot_services->handle_protocol(
-            loaded_image->device_handle, &g_simple_file_system_protocol_guid, reinterpret_cast<void **>(&file_system));
-        if (status != EfiStatus::Success || file_system == nullptr) {
-            st->con_out->output_string(st->con_out, L"File system protocol load failed!\r\n");
-            while (true) {
-            }
-        }
-    }
+    EFI_CHECK(st->boot_services->handle_protocol(loaded_image->device_handle, &g_simple_file_system_protocol_guid,
+                                                 reinterpret_cast<void **>(&file_system)),
+              "File system protocol load failed!")
+    ENSURE(file_system != nullptr, "File system protocol load failed!");
 
     // Open volume.
     EfiFileProtocol *directory = nullptr;
-    st->con_out->output_string(st->con_out, L"Opening volume...\r\n");
-    {
-        EfiStatus status = file_system->open_volume(file_system, &directory);
-        if (status != EfiStatus::Success || directory == nullptr) {
-            st->con_out->output_string(st->con_out, L"Failed to open volume!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Opening volume...");
+    EFI_CHECK(file_system->open_volume(file_system, &directory), "Failed to open volume!")
+    ENSURE(directory != nullptr, "Failed to open volume!");
 
     // Load kernel from disk.
     EfiFileProtocol *kernel_file = nullptr;
-    st->con_out->output_string(st->con_out, L"Loading kernel from disk...\r\n");
-    {
-        // TODO: Don't hardcode mode&flags.
-        EfiStatus status = directory->open(directory, &kernel_file, L"kernel", 1U, 1U);
-        if (status != EfiStatus::Success || kernel_file == nullptr) {
-            st->con_out->output_string(st->con_out, L"Failed to load kernel from disk!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Loading kernel from disk...");
+    // TODO: Don't hardcode mode&flags.
+    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", 1U, 1U), "Failed to load kernel from disk!")
+    ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
-    // Allocate memory for kernel.
+    // Retrieve kernel file info.
+    EfiFileInfo kernel_file_info{};
+    usize kernel_file_info_size = sizeof(EfiFileInfo);
+    log("Retrieving kernel file info...");
+    EFI_CHECK(kernel_file->get_info(kernel_file, &g_file_info_guid, &kernel_file_info_size, &kernel_file_info),
+              "Failed to get kernel file info!")
+    ENSURE(kernel_file_info.file_size != 0, "Failed to get kernel file size!");
+
+    // Allocate memory for kernel and read kernel data.
     void *kernel_data = nullptr;
-    st->con_out->output_string(st->con_out, L"Allocating memory for kernel...\r\n");
-    {
-        EfiFileInfo file_info{};
-        usize file_info_size = sizeof(EfiFileInfo);
-        EfiStatus status = kernel_file->get_info(kernel_file, &g_file_info_guid, &file_info_size, &file_info);
-        if (status != EfiStatus::Success || file_info.file_size == 0) {
-            st->con_out->output_string(st->con_out, L"Failed to get kernel file info size!\r\n");
-            while (true) {
-            }
-        }
+    uint64 kernel_size = kernel_file_info.file_size;
+    log("Allocating memory for kernel...");
+    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, kernel_size,
+                                               reinterpret_cast<void **>(&kernel_data)),
+              "Failed to allocate memory for kernel!")
+    log("Reading kernel data...");
+    EFI_CHECK(kernel_file->read(kernel_file, &kernel_size, kernel_data), "Failed to read kernel data!")
 
-        uint64 kernel_size = file_info.file_size;
-        status = st->boot_services->allocate_pool(EfiMemoryType::LoaderData, kernel_size,
-                                                  reinterpret_cast<void **>(&kernel_data));
-        if (status != EfiStatus::Success) {
-            st->con_out->output_string(st->con_out, L"Failed to allocate memory for kernel!\r\n");
-            while (true) {
-            }
-        }
+    // Parse kernel ELF header.
+    log("Parsing kernel ELF header...");
+    auto *kernel_header = reinterpret_cast<ElfHeader *>(kernel_data);
+    ENSURE(kernel_header->magic[0] == 0x7F, "Kernel ELF header corrupt!");
+    ENSURE(kernel_header->magic[1] == 'E', "Kernel ELF header corrupt!");
+    ENSURE(kernel_header->magic[2] == 'L', "Kernel ELF header corrupt!");
+    ENSURE(kernel_header->magic[3] == 'F', "Kernel ELF header corrupt!");
 
-        status = kernel_file->read(kernel_file, &kernel_size, kernel_data);
-        if (status != EfiStatus::Success) {
-            st->con_out->output_string(st->con_out, L"Failed to copy kernel data!\r\n");
-            while (true) {
-            }
+    // Parse kernel load program headers.
+    uintptr kernel_entry = kernel_header->entry;
+    log("Parsing kernel load program headers...");
+    for (uint16 i = 0; i < kernel_header->ph_count; i++) {
+        auto *ph = reinterpret_cast<ElfProgramHeader *>(reinterpret_cast<uintptr>(kernel_data) +
+                                                        static_cast<uintptr>(kernel_header->ph_off) +
+                                                        kernel_header->ph_size * i);
+        if (ph->type != ElfProgramHeaderType::Load) {
+            continue;
         }
-    }
-
-    // Parse kernel ELF.
-    uintptr kernel_entry = 0;
-    st->con_out->output_string(st->con_out, L"Parsing kernel ELF...\r\n");
-    {
-        auto *header = reinterpret_cast<ElfHeader *>(kernel_data);
-        if (header->magic[0] != 0x7F || header->magic[1] != 'E' || header->magic[2] != 'L' || header->magic[3] != 'F') {
-            st->con_out->output_string(st->con_out, L"Kernel corrupt!\r\n");
-            while (true) {
-            }
-        }
-
-        kernel_entry = header->entry;
-        for (uint16 i = 0; i < header->ph_count; i++) {
-            auto *ph = reinterpret_cast<ElfProgramHeader *>(reinterpret_cast<uintptr>(kernel_data) +
-                                                            static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-            if (ph->type != ElfProgramHeaderType::Load) {
-                continue;
-            }
-            const usize page_count = (ph->memsz + 4096 - 1) / 4096;
-            uintptr paddr = ph->paddr;
-            EfiStatus status = st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress,
-                                                                 EfiMemoryType::LoaderData, page_count, &paddr);
-            if (status != EfiStatus::Success) {
-                st->con_out->output_string(
-                    st->con_out, L"Failed to claim physical memory for kernel, memory must already be in use!\r\n");
-                while (true) {
-                }
-            }
-            usize size = ph->filesz;
-            kernel_file->set_position(kernel_file, static_cast<uint64>(ph->offset));
-            status = kernel_file->read(kernel_file, &size, reinterpret_cast<void *>(paddr));
-            if (status != EfiStatus::Success) {
-                st->con_out->output_string(st->con_out, L"Failed to copy kernel!\r\n");
-                while (true) {
-                }
-            }
-        }
+        const usize page_count = (ph->memsz + 4096 - 1) / 4096;
+        EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::LoaderData,
+                                                    page_count, &ph->paddr),
+                  "Failed to claim physical memory for kernel!")
+        kernel_file->set_position(kernel_file, static_cast<uint64>(ph->offset));
+        EFI_CHECK(kernel_file->read(kernel_file, &ph->filesz, reinterpret_cast<void *>(ph->paddr)),
+                  "Failed to read kernel!")
     }
 
     // TODO: Free memory.
 
     // Get framebuffer info.
     EfiGraphicsOutputProtocol *gop = nullptr;
-    st->con_out->output_string(st->con_out, L"Querying framebuffer info...\r\n");
-    {
-        EfiStatus status = st->boot_services->locate_protocol(&g_graphics_output_protocol_guid, nullptr,
-                                                              reinterpret_cast<void **>(&gop));
-        if (status != EfiStatus::Success || gop == nullptr) {
-            st->con_out->output_string(st->con_out, L"Failed to locate graphics output protocol!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Querying framebuffer info...");
+    EFI_CHECK(
+        st->boot_services->locate_protocol(&g_graphics_output_protocol_guid, nullptr, reinterpret_cast<void **>(&gop)),
+        "Failed to locate graphics output protocol!")
+    ENSURE(gop != nullptr, "Failed to locate graphics output protocol!");
 
     // Get memory map data.
     usize map_key = 0;
     usize map_size = 0;
     usize descriptor_size = 0;
     uint32 descriptor_version = 0;
-    st->con_out->output_string(st->con_out, L"Querying memory map size...\r\n");
-    {
-        EfiStatus status =
-            st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
-        if (status == EfiStatus::InvalidParameter) {
-            st->con_out->output_string(st->con_out, L"Failed to query memory map size!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Querying memory map size...");
+    st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
 
     // Allocate extra page for memory map.
     map_size += 4096;
 
     // Allocate some memory for memory map.
     EfiMemoryDescriptor *map = nullptr;
-    st->con_out->output_string(st->con_out, L"Allocating memory for memory map...\r\n");
-    {
-        EfiStatus status =
-            st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&map));
-        if (status != EfiStatus::Success || map == nullptr) {
-            st->con_out->output_string(st->con_out, L"Failed to allocate memory for memory map!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Allocating memory for memory map...");
+    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&map)),
+              "Failed to allocate memory for memory map!")
+    ENSURE(map != nullptr, "Failed to allocate memory for memory map!");
 
     // Copy memory map.
-    st->con_out->output_string(st->con_out, L"Copying memory map...\r\n");
-    {
-        EfiStatus status =
-            st->boot_services->get_memory_map(&map_size, map, &map_key, &descriptor_size, &descriptor_version);
-        if (status != EfiStatus::Success) {
-            st->con_out->output_string(st->con_out, L"Failed to copy memory map!\r\n");
-            while (true) {
-            }
-        }
-    }
+    log("Copying memory map...");
+    EFI_CHECK(st->boot_services->get_memory_map(&map_size, map, &map_key, &descriptor_size, &descriptor_version),
+              "Failed to copy memory map!")
 
     // Fill out boot info.
     BootInfo boot_info{
@@ -208,14 +167,12 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     };
 
     // Exit boot services.
-    if (st->boot_services->exit_boot_services(image_handle, map_key) != EfiStatus::Success) {
-        st->con_out->output_string(st->con_out, L"Failed to exit boot services!\r\n");
-        while (true) {
-        }
-    }
+    EFI_CHECK(st->boot_services->exit_boot_services(image_handle, map_key), "Failed to exit boot services!")
 
     // Call kernel and spin on return.
     reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_entry)(&boot_info);
     while (true) {
+        asm volatile("cli");
+        asm volatile("hlt");
     }
 }
