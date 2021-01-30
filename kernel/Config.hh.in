@@ -1,3 +1,4 @@
 #pragma once
 
 constexpr bool KERNEL_STACK_PROTECTOR = $<IF:$<BOOL:${KERNEL_STACK_PROTECTOR}>,true,false>;
+constexpr bool KERNEL_QEMU_DEBUG = $<IF:$<BOOL:${KERNEL_QEMU_DEBUG}>,true,false>;

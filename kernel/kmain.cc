@@ -23,19 +23,22 @@ usize __stack_chk_guard = 0xDEADC0DE;
 }
 
 void put_char(char ch) {
-    port_write(0xE9, ch);
+    if constexpr (KERNEL_QEMU_DEBUG) {
+        port_write(0xE9, ch);
+    }
 }
 
 extern "C" void kmain(BootInfo *boot_info) {
     if constexpr (KERNEL_STACK_PROTECTOR) {
         log("SSP initialised with guard value {:h}", __stack_chk_guard);
     }
-
-    if (port_read(0xE9) == 0xE9) {
-        log("Hello, world!");
-        log("boot_info = {}", boot_info);
-        log("framebuffer = {:h}", boot_info->framebuffer_base);
+    if constexpr (KERNEL_QEMU_DEBUG) {
+        ENSURE(port_read(0xE9) == 0xE9, "KERNEL_QEMU_DEBUG config option enabled, but port E9 isn't available!");
     }
+
+    log("Hello, world!");
+    log("boot_info = {}", boot_info);
+    log("framebuffer = {:h}", boot_info->framebuffer_base);
 
     // Clear screen.
     const uint64 bytes_per_scan_line = boot_info->pixels_per_scan_line * sizeof(uint32);
