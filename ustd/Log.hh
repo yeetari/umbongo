@@ -9,19 +9,18 @@ void put_char(char ch);
 namespace detail {
 
 template <typename T>
-void log_single(const char *, const T &);
+void log_single(const char *, T);
 
 template <typename T>
-void log_single(const char *opts, const T &arg) requires IsInteger<T> {
+void log_single(const char *opts, T arg) requires IsInteger<T> {
     const usize base = opts[1] == 'h' ? 16 : 10;
     Array<char, 20> buf{};
     uint32 len = 0;
-    T val = arg;
     do {
-        const char digit = static_cast<char>(val % base);
+        const char digit = static_cast<char>(arg % base);
         buf[len++] = (digit < 10 ? '0' + digit : 'A' + digit - 10);
-        val /= base;
-    } while (val > 0);
+        arg /= base;
+    } while (arg > 0);
 
     if (base == 16) {
         buf[len++] = 'x';
@@ -34,8 +33,15 @@ void log_single(const char *opts, const T &arg) requires IsInteger<T> {
 }
 
 template <typename T>
-void log_single(const char *, const T &arg) requires IsPointer<T> {
+void log_single(const char *, T arg) requires IsPointer<T> {
     log_single(":h", reinterpret_cast<uintptr>(arg));
+}
+
+template <>
+inline void log_single(const char *, const char *msg) {
+    while (*msg != '\0') {
+        put_char(*msg++);
+    }
 }
 
 template <typename T>
