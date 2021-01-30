@@ -32,6 +32,7 @@ if(BUILD_WARNINGS)
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
         -Wno-missing-prototypes
+        -Wno-missing-variable-declarations
         -Wno-padded)
 endif()
 
@@ -64,7 +65,7 @@ else()
     message(WARNING "Qemu not found, run target will be unavailable!")
 endif()
 
-include_directories(.)
+include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 add_subdirectory(boot)
 add_subdirectory(kernel)
 add_subdirectory(ustd)

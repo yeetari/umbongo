@@ -1,8 +1,17 @@
 #include <boot/BootInfo.hh>
+#include <kernel/Config.hh>
 #include <kernel/Port.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
+
+// NOLINTNEXTLINE
+usize __stack_chk_guard = 0xDEADC0DE;
+
+// NOLINTNEXTLINE
+[[noreturn]] extern "C" void __stack_chk_fail() {
+    ENSURE_NOT_REACHED("Stack smashing detected!");
+}
 
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
     log("Assertion '{}' failed at {}:{}", expr, file, line);
@@ -18,6 +27,10 @@ void put_char(char ch) {
 }
 
 extern "C" void kmain(BootInfo *boot_info) {
+    if constexpr (KERNEL_STACK_PROTECTOR) {
+        log("SSP initialised with guard value {:h}", __stack_chk_guard);
+    }
+
     if (port_read(0xE9) == 0xE9) {
         log("Hello, world!");
         log("boot_info = {}", boot_info);

@@ -1,8 +1,17 @@
+# Kernel options.
+set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
+
+# Generate kernel config header.
+configure_file(Config.hh.in Config.hh)
+file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
+
+# Kernel target.
 add_executable(kernel kmain.cc)
 install(TARGETS kernel DESTINATION .)
 target_compile_features(kernel PRIVATE cxx_std_20)
 target_compile_options(kernel PRIVATE
     -ffreestanding -fno-exceptions -fno-rtti
+    $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-all>
     -mno-red-zone
     -nostdinc++ -nostdlib)
 target_link_libraries(kernel PRIVATE ustd)
