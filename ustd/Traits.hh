@@ -36,6 +36,16 @@ struct IsIntegerCheck<bool> : public TrueType {};
 template <>
 struct IsIntegerCheck<char> : public TrueType {};
 template <>
+struct IsIntegerCheck<int8> : public TrueType {};
+template <>
+struct IsIntegerCheck<int16> : public TrueType {};
+template <>
+struct IsIntegerCheck<int32> : public TrueType {};
+template <>
+struct IsIntegerCheck<int64> : public TrueType {};
+template <>
+struct IsIntegerCheck<uint8> : public TrueType {};
+template <>
 struct IsIntegerCheck<uint16> : public TrueType {};
 template <>
 struct IsIntegerCheck<uint32> : public TrueType {};
