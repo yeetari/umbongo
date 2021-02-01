@@ -64,7 +64,7 @@ void log_part(const char *&fmt, const T &arg) {
 }
 
 // NOLINTNEXTLINE
-void log_part(const char *&fmt) {
+inline void log_part(const char *&fmt) {
     while (*fmt != '\0') {
         put_char(*fmt++);
     }
@@ -74,9 +74,7 @@ void log_part(const char *&fmt) {
 
 template <typename... Args>
 void log(const char *fmt, const Args &... args) {
-    if constexpr (sizeof...(args) == 0) {
-        detail::log_part(fmt);
-    }
     (detail::log_part(fmt, args), ...);
+    detail::log_part(fmt);
     put_char('\n');
 }
