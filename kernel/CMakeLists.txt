@@ -13,6 +13,7 @@ target_compile_features(kernel PRIVATE cxx_std_20)
 target_compile_options(kernel PRIVATE
     -ffreestanding -fno-exceptions -fno-rtti
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-strong>
+    $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
     -mno-red-zone
     -nostdinc++ -nostdlib)
 target_link_libraries(kernel PRIVATE ustd)
