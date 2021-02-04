@@ -22,15 +22,6 @@ EfiSystemTable *s_st;
 
 } // namespace
 
-[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
-    log("Assertion '{}' failed at {}:{}", expr, file, line);
-    log("=> {}", msg);
-    while (true) {
-        asm volatile("cli");
-        asm volatile("hlt");
-    }
-}
-
 void put_char(char ch) {
     if (ch == '\n') {
         s_st->con_out->output_string(s_st->con_out, L"\r\n");

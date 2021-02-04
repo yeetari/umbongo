@@ -9,6 +9,7 @@ file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 # Kernel target.
 add_executable(kernel kmain.cc)
 install(TARGETS kernel DESTINATION .)
+target_compile_definitions(kernel PRIVATE KERNEL)
 target_compile_features(kernel PRIVATE cxx_std_20)
 target_compile_options(kernel PRIVATE
     -ffreestanding -fno-exceptions -fno-rtti

@@ -1,6 +1,7 @@
 add_executable(boot boot.cc ../ustd/Memory.cc)
 install(TARGETS boot DESTINATION EFI/BOOT)
 set_target_properties(boot PROPERTIES OUTPUT_NAME "BOOTX64.EFI")
+target_compile_definitions(boot PRIVATE BOOTLOADER)
 target_compile_features(boot PRIVATE cxx_std_20)
 target_compile_options(boot PRIVATE
     -ffreestanding -fno-exceptions -fno-rtti -fshort-wchar
