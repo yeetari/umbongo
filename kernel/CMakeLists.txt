@@ -16,5 +16,6 @@ target_compile_options(kernel PRIVATE
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
     -mno-red-zone
     -nostdinc++ -nostdlib)
+target_gc_sections(kernel)
 target_link_libraries(kernel PRIVATE ustd)
 target_link_options(kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)

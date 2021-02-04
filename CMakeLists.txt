@@ -24,6 +24,14 @@ set(CMAKE_INSTALL_PREFIX sysroot)
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
+# Enable GC sections and stripping for release builds.
+function(target_gc_sections target)
+    if(BUILD_TYPE STREQUAL "Release")
+        target_compile_options(${target} PRIVATE -fdata-sections -ffunction-sections)
+        target_link_options(${target} PRIVATE -Wl,--gc-sections,-s)
+    endif()
+endfunction()
+
 # Enable warnings globally.
 if(BUILD_WARNINGS)
     add_compile_options(
