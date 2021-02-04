@@ -42,7 +42,8 @@ if(BUILD_WARNINGS)
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-missing-prototypes
         -Wno-missing-variable-declarations
-        -Wno-padded)
+        -Wno-padded
+        -Wno-switch-enum)
 endif()
 
 add_custom_target(image

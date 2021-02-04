@@ -65,6 +65,18 @@ enum class EfiMemoryType : uint32 {
     Reserved,
     LoaderCode,
     LoaderData,
+    BootServicesCode,
+    BootServicesData,
+    RuntimeServicesCode,
+    RuntimeServicesData,
+    Conventional,
+    Unusable,
+    AcpiReclaimable,
+    AcpiNvs,
+    MemoryMappedIo,
+    MemoryMappedIoPortSpace,
+    PalCode,
+    PersistentMemory,
 };
 
 enum class EfiMemoryFlag : uint64 {
@@ -77,7 +89,8 @@ enum class EfiMemoryFlag : uint64 {
 };
 
 struct EfiMemoryDescriptor {
-    uint32 type;
+    EfiMemoryType type;
+    uint32 pad;
     uintptr phys_start;
     uintptr virt_start;
     uint64 page_count;

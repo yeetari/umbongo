@@ -116,7 +116,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
                   "Failed to read kernel!")
     }
 
-    // TODO: Free memory.
+    // TODO: Free memory. We could also just leave it and let the kernel reclaim it later.
 
     // Get framebuffer info.
     EfiGraphicsOutputProtocol *gop = nullptr;
@@ -126,28 +126,64 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         "Failed to locate graphics output protocol!")
     ENSURE(gop != nullptr, "Failed to locate graphics output protocol!");
 
-    // Get memory map data.
+    // Get EFI memory map data.
     usize map_key = 0;
     usize map_size = 0;
     usize descriptor_size = 0;
     uint32 descriptor_version = 0;
     log("Querying memory map size...");
     st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
+    ENSURE(descriptor_size >= sizeof(EfiMemoryDescriptor));
 
-    // Allocate extra page for memory map.
+    // Allocate extra page for EFI memory map because we're about to allocate the memory for it + our memory map.
+    // TODO: We should try to allocate in a loop whilst EfiStatus::BufferTooSmall is returned.
     map_size += 4096;
 
-    // Allocate some memory for memory map.
-    EfiMemoryDescriptor *map = nullptr;
+    // Allocate some memory for EFI memory map.
+    EfiMemoryDescriptor *efi_map = nullptr;
+    log("Allocating memory for EFI memory map...");
+    EFI_CHECK(
+        st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&efi_map)),
+        "Failed to allocate memory for EFI memory map!")
+    ENSURE(efi_map != nullptr, "Failed to allocate memory for EFI memory map!");
+
+    // Allocate some memory for our memory map.
+    const usize efi_map_entry_count = map_size / descriptor_size;
+    MemoryMapEntry *map = nullptr;
     log("Allocating memory for memory map...");
-    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&map)),
+    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, efi_map_entry_count * sizeof(MemoryMapEntry),
+                                               reinterpret_cast<void **>(&map)),
               "Failed to allocate memory for memory map!")
     ENSURE(map != nullptr, "Failed to allocate memory for memory map!");
 
-    // Copy memory map.
-    log("Copying memory map...");
-    EFI_CHECK(st->boot_services->get_memory_map(&map_size, map, &map_key, &descriptor_size, &descriptor_version),
-              "Failed to copy memory map!")
+    // Retrieve EFI memory map.
+    log("Retrieving EFI memory map...");
+    EFI_CHECK(st->boot_services->get_memory_map(&map_size, efi_map, &map_key, &descriptor_size, &descriptor_version),
+              "Failed to retrieve EFI memory map!")
+
+    // We have to be extremely careful not to call any EFI functions between now and the exit_boot_services call. This
+    // means that we can't free the EFI memory map memory, but the kernel can reclaim it later.
+
+    // Construct memory map.
+    for (usize i = 0, j = 0; i < map_size; i += descriptor_size, j++) {
+        auto *descriptor = reinterpret_cast<EfiMemoryDescriptor *>(&reinterpret_cast<uint8 *>(efi_map)[i]);
+        auto *entry = &map[j];
+        switch (descriptor->type) {
+        case EfiMemoryType::Conventional:
+            entry->type = MemoryType::Available;
+            break;
+        case EfiMemoryType::AcpiReclaimable:
+            // TODO: Mark LoaderCode+LoaderData as reclaimable too.
+            entry->type = MemoryType::Reclaimable;
+            break;
+        default:
+            // Assume that anything unknown is reserved.
+            entry->type = MemoryType::Reserved;
+            break;
+        }
+        entry->base = descriptor->phys_start;
+        entry->page_count = descriptor->page_count;
+    }
 
     // Fill out boot info.
     BootInfo boot_info{
@@ -155,6 +191,10 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         .height = gop->mode->info->height,
         .pixels_per_scan_line = gop->mode->info->pixels_per_scan_line,
         .framebuffer_base = gop->mode->framebuffer_base,
+        .map = map,
+        // Recalculate map entry count here. We can't use efi_map_entry_count since the memory for the memory map needs
+        // to be overallocated to store an entry for itself.
+        .map_entry_count = map_size / descriptor_size,
     };
 
     // Exit boot services.
