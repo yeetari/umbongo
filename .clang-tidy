@@ -148,5 +148,5 @@ Checks: >
   readability-uppercase-literal-suffix,
 FormatStyle: file
 CheckOptions:
-  - key:             bugprone-assert-side-effect.AssertMacros
-    value:           ASSERT,ASSERT_PEDANTIC,ENSURE
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: ASSERT,ASSERT_PEDANTIC,ENSURE
