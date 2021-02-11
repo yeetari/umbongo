@@ -14,16 +14,16 @@ usize __stack_chk_guard = 0xDEADC0DE;
 }
 
 void put_char(char ch) {
-    if constexpr (KERNEL_QEMU_DEBUG) {
+    if constexpr (k_kernel_qemu_debug) {
         port_write(0xE9, ch);
     }
 }
 
 extern "C" void kmain(BootInfo *boot_info) {
-    if constexpr (KERNEL_STACK_PROTECTOR) {
+    if constexpr (k_kernel_stack_protector) {
         log("core: SSP initialised with guard value {:h}", __stack_chk_guard);
     }
-    if constexpr (KERNEL_QEMU_DEBUG) {
+    if constexpr (k_kernel_qemu_debug) {
         ENSURE(port_read(0xE9) == 0xE9, "KERNEL_QEMU_DEBUG config option enabled, but port E9 isn't available!");
     }
 
