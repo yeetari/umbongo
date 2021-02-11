@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ustd/Types.hh>
+
 template <typename T, T V>
 struct IntegralConstant {
     static constexpr T value = V;
