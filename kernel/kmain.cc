@@ -6,7 +6,7 @@
 #include <ustd/Types.hh>
 
 // NOLINTNEXTLINE
-usize __stack_chk_guard = 0xDEADC0DE;
+usize __stack_chk_guard = 0xdeadc0de;
 
 // NOLINTNEXTLINE
 [[noreturn]] extern "C" void __stack_chk_fail() {
@@ -15,7 +15,7 @@ usize __stack_chk_guard = 0xDEADC0DE;
 
 void put_char(char ch) {
     if constexpr (k_kernel_qemu_debug) {
-        port_write(0xE9, ch);
+        port_write(0xe9, ch);
     }
 }
 
@@ -24,7 +24,7 @@ extern "C" void kmain(BootInfo *boot_info) {
         log("core: SSP initialised with guard value {:h}", __stack_chk_guard);
     }
     if constexpr (k_kernel_qemu_debug) {
-        ENSURE(port_read(0xE9) == 0xE9, "KERNEL_QEMU_DEBUG config option enabled, but port E9 isn't available!");
+        ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
     }
 
     log("core: boot_info = {}", boot_info);

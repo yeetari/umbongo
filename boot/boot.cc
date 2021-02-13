@@ -8,16 +8,16 @@
 
 namespace {
 
-const EfiGuid g_file_info_guid{0x9576E92, 0x6D3F, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+const EfiGuid g_file_info_guid{0x9576e92, 0x6d3f, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
 
 const EfiGuid g_graphics_output_protocol_guid{
-    0x9042A9DE, 0x23DC, 0x4A38, {0x96, 0xFB, 0x7A, 0xDE, 0xD0, 0x80, 0x51, 0x6A}};
+    0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xdE, 0xd0, 0x80, 0x51, 0x6a}};
 
 const EfiGuid g_loaded_image_protocol_guid{
-    0x5B1B31A1, 0x9562, 0x11D2, {0x8E, 0x3F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+    0x5b1b31a1, 0x9562, 0x11d2, {0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
 
 const EfiGuid g_simple_file_system_protocol_guid{
-    0x964E5B22, 0x6459, 0x11D2, {0x8E, 0x39, 0x0, 0xA0, 0xC9, 0x69, 0x72, 0x3B}};
+    0x964e5b22, 0x6459, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
 
 EfiSystemTable *s_st;
 
@@ -69,7 +69,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     EfiFileProtocol *kernel_file = nullptr;
     log("Loading kernel from disk...");
     // TODO: Don't hardcode mode&flags.
-    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", 1U, 1U), "Failed to load kernel from disk!")
+    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", 1u, 1u), "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
     // Retrieve kernel file info.
@@ -93,7 +93,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Parse kernel ELF header.
     log("Parsing kernel ELF header...");
     auto *kernel_header = reinterpret_cast<ElfHeader *>(kernel_data);
-    ENSURE(kernel_header->magic[0] == 0x7F, "Kernel ELF header corrupt!");
+    ENSURE(kernel_header->magic[0] == 0x7f, "Kernel ELF header corrupt!");
     ENSURE(kernel_header->magic[1] == 'E', "Kernel ELF header corrupt!");
     ENSURE(kernel_header->magic[2] == 'L', "Kernel ELF header corrupt!");
     ENSURE(kernel_header->magic[3] == 'F', "Kernel ELF header corrupt!");
