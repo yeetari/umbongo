@@ -2,20 +2,20 @@
 
 #include <ustd/Types.hh>
 
-template <typename T, uint32 N>
+template <typename T, usize N>
 struct Array {
     // NOLINTNEXTLINE
     alignas(T) T m_data[N];
 
     // TODO: Assert index in bounds.
-    T &operator[](uint32 index) { return m_data[index]; }
-    const T &operator[](uint32 index) const { return m_data[index]; }
+    constexpr T &operator[](usize index) { return m_data[index]; }
+    constexpr const T &operator[](usize index) const { return m_data[index]; }
 
-    T *data() { return static_cast<T *>(m_data); }
-    const T *data() const { return static_cast<T *>(m_data); }
+    constexpr T *data() { return static_cast<T *>(m_data); }
+    constexpr const T *data() const { return static_cast<T *>(m_data); }
 
-    constexpr uint32 size() const { return N; }
-    constexpr uint32 size_in_bytes() const { return N * sizeof(T); }
+    constexpr usize size() const { return N; }
+    constexpr usize size_in_bytes() const { return N * sizeof(T); }
 };
 
 template <typename T, typename... Args>
