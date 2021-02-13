@@ -43,7 +43,8 @@ if(BUILD_WARNINGS)
         -Wno-missing-prototypes
         -Wno-missing-variable-declarations
         -Wno-padded
-        -Wno-switch-enum)
+        -Wno-switch-enum
+        -Wno-unused-private-field)
 endif()
 
 add_custom_target(image
