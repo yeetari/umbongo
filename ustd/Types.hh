@@ -11,3 +11,18 @@ using uint32 = __UINT32_TYPE__;
 using uint64 = __UINT64_TYPE__;
 using uintptr = __UINTPTR_TYPE__;
 using usize = __SIZE_TYPE__;
+
+// NOLINTNEXTLINE
+constexpr usize operator"" _KiB(unsigned long long num) {
+    return num * 0x400;
+}
+
+// NOLINTNEXTLINE
+constexpr usize operator"" _MiB(unsigned long long num) {
+    return num * 0x100000;
+}
+
+// NOLINTNEXTLINE
+constexpr usize operator"" _GiB(unsigned long long num) {
+    return num * 0x40000000;
+}
