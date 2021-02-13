@@ -1,6 +1,7 @@
 #include <boot/BootInfo.hh>
 #include <kernel/Config.hh>
 #include <kernel/Port.hh>
+#include <kernel/cpu/Processor.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
@@ -17,6 +18,10 @@ void put_char(char ch) {
     if constexpr (k_kernel_qemu_debug) {
         port_write(0xe9, ch);
     }
+}
+
+void handle_interrupt(InterruptFrame *frame) {
+    log("core: Received interrupt {}", frame->num);
 }
 
 extern "C" void kmain(BootInfo *boot_info) {
@@ -44,6 +49,14 @@ extern "C" void kmain(BootInfo *boot_info) {
     }
     log(" mem: {}MiB/{}MiB free ({}%)", usable_mem / 1024 / 1024, total_mem / 1024 / 1024,
         (usable_mem * 100) / total_mem);
+
+    Processor::initialise(reinterpret_cast<void *>(60_MiB), reinterpret_cast<void *>(70_MiB));
+    Processor::wire_interrupt(0, &handle_interrupt);
+    Processor::wire_interrupt(31, &handle_interrupt);
+    Processor::wire_interrupt(255, &handle_interrupt);
+    asm volatile("int $0");
+    asm volatile("int $31");
+    asm volatile("int $255");
 
     // Clear screen.
     const uint64 bytes_per_scan_line = boot_info->pixels_per_scan_line * sizeof(uint32);

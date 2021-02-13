@@ -7,7 +7,12 @@ configure_file(Config.hh.in Config.hh)
 file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 
 # Kernel target.
-add_executable(kernel kmain.cc)
+add_executable(kernel
+    cpu/Processor.cc
+    kmain.cc)
+add_library(kernel_asm OBJECT
+    cpu/cpu.asm
+    cpu/interrupts.asm)
 install(TARGETS kernel DESTINATION .)
 target_compile_definitions(kernel PRIVATE KERNEL)
 target_compile_features(kernel PRIVATE cxx_std_20)
@@ -18,5 +23,5 @@ target_compile_options(kernel PRIVATE
     -mno-red-zone
     -nostdinc++ -nostdlib)
 target_gc_sections(kernel)
-target_link_libraries(kernel PRIVATE ustd)
+target_link_libraries(kernel PRIVATE kernel_asm ustd)
 target_link_options(kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
