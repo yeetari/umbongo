@@ -33,6 +33,7 @@ function(target_gc_sections target)
 endfunction()
 
 # Enable warnings globally.
+# TODO: This probably shouldn't be here, maybe cmake profiles could be used instead?
 if(BUILD_WARNINGS)
     add_compile_options(
         -Werror
