@@ -73,7 +73,7 @@ inline void log_part(const char *&fmt) {
 } // namespace detail
 
 template <typename... Args>
-void log(const char *fmt, const Args &... args) {
+void log(const char *fmt, const Args &...args) {
     (detail::log_part(fmt, args), ...);
     detail::log_part(fmt);
     put_char('\n');
