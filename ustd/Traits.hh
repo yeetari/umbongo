@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 template <typename T, T V>
 struct IntegralConstant {
@@ -13,23 +14,6 @@ using FalseType = BoolConstant<false>;
 using TrueType = BoolConstant<true>;
 
 namespace detail {
-
-template <typename T>
-struct RemoveQualImpl {
-    using type = T;
-};
-template <typename T>
-struct RemoveQualImpl<const T> {
-    using type = T;
-};
-template <typename T>
-struct RemoveQualImpl<volatile T> {
-    using type = T;
-};
-template <typename T>
-struct RemoveQualImpl<const volatile T> {
-    using type = T;
-};
 
 template <typename>
 struct IsIntegerCheck : public FalseType {};
@@ -65,9 +49,6 @@ template <typename T>
 struct IsSameCheck<T, T> : public TrueType {};
 
 } // namespace detail
-
-template <typename T>
-using RemoveQual = typename detail::RemoveQualImpl<T>::type;
 
 template <typename T>
 concept IsInteger = detail::IsIntegerCheck<RemoveQual<T>>::value;
