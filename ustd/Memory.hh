@@ -7,3 +7,7 @@ extern "C" void *memset(void *, int, usize);
 inline void *operator new(usize, void *ptr) {
     return ptr;
 }
+
+inline void *operator new[](usize, void *ptr) {
+    return ptr;
+}
