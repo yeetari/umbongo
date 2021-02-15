@@ -2,6 +2,7 @@
 #include <kernel/Config.hh>
 #include <kernel/Port.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/mem/MemoryManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
@@ -35,22 +36,8 @@ extern "C" void kmain(BootInfo *boot_info) {
     log("core: boot_info = {}", boot_info);
     log("core: framebuffer = {:h}", boot_info->framebuffer_base);
 
-    usize total_mem = 0;
-    usize usable_mem = 0;
-    for (usize i = 0; i < boot_info->map_entry_count; i++) {
-        auto *entry = &boot_info->map[i];
-        ENSURE(entry->base % 4096 == 0);
-
-        const usize entry_size = entry->page_count * 4096;
-        total_mem += entry_size;
-        if (entry->type != MemoryType::Reserved) {
-            usable_mem += entry_size;
-        }
-    }
-    log(" mem: {}MiB/{}MiB free ({}%)", usable_mem / 1024 / 1024, total_mem / 1024 / 1024,
-        (usable_mem * 100) / total_mem);
-
-    Processor::initialise(reinterpret_cast<void *>(60_MiB), reinterpret_cast<void *>(70_MiB));
+    MemoryManager memory_manager(boot_info);
+    Processor::initialise(memory_manager);
     Processor::wire_interrupt(0, &handle_interrupt);
     Processor::wire_interrupt(31, &handle_interrupt);
     Processor::wire_interrupt(255, &handle_interrupt);

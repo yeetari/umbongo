@@ -1,6 +1,7 @@
 #include <kernel/cpu/Processor.hh>
 
 #include <kernel/cpu/PrivilegeLevel.hh>
+#include <kernel/mem/MemoryManager.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -111,9 +112,9 @@ extern "C" void interrupt_handler(InterruptFrame *frame) {
     s_handlers[frame->num](frame);
 }
 
-void Processor::initialise(void *gdt, void *idt) {
-    s_gdt = new (gdt) Gdt;
-    s_idt = new (idt) Idt;
+void Processor::initialise(MemoryManager &memory_manager) {
+    s_gdt = new (memory_manager.alloc_phys(sizeof(Gdt))) Gdt;
+    s_idt = new (memory_manager.alloc_phys(sizeof(Idt))) Idt;
     s_gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
     s_gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
     ENSURE(&k_interrupt_stubs_start != &k_interrupt_stubs_end);

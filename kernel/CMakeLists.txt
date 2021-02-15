@@ -9,6 +9,7 @@ file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 # Kernel target.
 add_executable(kernel
     cpu/Processor.cc
+    mem/MemoryManager.cc
     kmain.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
