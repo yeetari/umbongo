@@ -183,9 +183,9 @@ struct EfiGraphicsOutputProtocolMode {
 
 // EFI Graphics Output Protocol (UEFI specification 2.8B section 12.9)
 struct EfiGraphicsOutputProtocol {
-    void *unused0;
+    EfiStatus (*query_mode)(EfiGraphicsOutputProtocol *, uint32 mode, usize *size, EfiGraphicsOutputModeInfo **info);
     EfiStatus (*set_mode)(EfiGraphicsOutputProtocol *, uint32 mode);
-    void *unused1;
+    void *unused0;
     EfiGraphicsOutputProtocolMode *mode;
 };
 
