@@ -5,13 +5,13 @@
 
 using EfiHandle = void *;
 
-#define EFI_ERR(x) ((static_cast<usize>(1U) << 63U) | (x))
+#define EFI_ERR(x) ((static_cast<usize>(1u) << 63u) | (x))
 enum class EfiStatus : usize {
     Success = 0,
-    InvalidParameter = EFI_ERR(2U),
-    Unsupported = EFI_ERR(3U),
-    BufferTooSmall = EFI_ERR(5U),
-    NotReady = EFI_ERR(6U),
+    InvalidParameter = EFI_ERR(2u),
+    Unsupported = EFI_ERR(3u),
+    BufferTooSmall = EFI_ERR(5u),
+    NotReady = EFI_ERR(6u),
 };
 
 struct EfiInputKey {
@@ -80,12 +80,12 @@ enum class EfiMemoryType : uint32 {
 };
 
 enum class EfiMemoryFlag : uint64 {
-    Uncacheable = 1U << 0U,
-    WriteCombining = 1U << 1U,
-    WriteThrough = 1U << 2U,
-    WriteBack = 1U << 3U,
-    UncacheableExported = 1U << 4U,
-    WriteProtected = 1U << 12U,
+    Uncacheable = 1u << 0u,
+    WriteCombining = 1u << 1u,
+    WriteThrough = 1u << 2u,
+    WriteBack = 1u << 3u,
+    UncacheableExported = 1u << 4u,
+    WriteProtected = 1u << 12u,
 };
 
 struct EfiMemoryDescriptor {
