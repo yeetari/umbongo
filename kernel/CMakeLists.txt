@@ -1,6 +1,6 @@
 # Kernel options.
-set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
 set(KERNEL_QEMU_DEBUG OFF CACHE BOOL "Enable debug logging to port E9 in the kernel")
+set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
 
 # Generate kernel config header.
 configure_file(Config.hh.in Config.hh)

@@ -1,6 +1,6 @@
 #pragma once
 
 // clang-format off
-constexpr bool k_kernel_stack_protector = $<IF:$<BOOL:${KERNEL_STACK_PROTECTOR}>,true,false>;
 constexpr bool k_kernel_qemu_debug = $<IF:$<BOOL:${KERNEL_QEMU_DEBUG}>,true,false>;
+constexpr bool k_kernel_stack_protector = $<IF:$<BOOL:${KERNEL_STACK_PROTECTOR}>,true,false>;
 // clang-format on
