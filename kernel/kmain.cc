@@ -39,7 +39,8 @@ extern "C" void kmain(BootInfo *boot_info) {
     }
 
     logln("core: boot_info = {}", boot_info);
-    logln("core: framebuffer = {:h}", boot_info->framebuffer_base);
+    logln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
+    logln("core: rsdp = {}", boot_info->rsdp);
 
     MemoryManager memory_manager(boot_info);
     Processor::initialise(memory_manager);

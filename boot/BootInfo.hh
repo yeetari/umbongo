@@ -15,6 +15,9 @@ struct MemoryMapEntry {
 };
 
 struct BootInfo {
+    // ACPI RSDP.
+    void *rsdp;
+
     // Framebuffer info.
     uint32 width;
     uint32 height;

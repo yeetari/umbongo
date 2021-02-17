@@ -9,6 +9,8 @@
 
 namespace {
 
+const EfiGuid g_acpi_table_guid{0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81}};
+
 const EfiGuid g_file_info_guid{0x9576e92, 0x6d3f, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
 
 const EfiGuid g_graphics_output_protocol_guid{
@@ -123,6 +125,18 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     }
 
     // TODO: Free memory. We could also just leave it and let the kernel reclaim it later.
+
+    // Find ACPI RSDP.
+    void *rsdp = nullptr;
+    logln("Finding ACPI RSDP...");
+    for (usize i = 0; i < st->configuration_table_count; i++) {
+        auto &table = st->configuration_table[i];
+        if (memcmp(&table.vendor_guid, &g_acpi_table_guid, sizeof(EfiGuid)) == 0) {
+            rsdp = table.vendor_table;
+            break;
+        }
+    }
+    ENSURE(rsdp != nullptr, "Failed to find ACPI RSDP!");
 
     // Get framebuffer info.
     EfiGraphicsOutputProtocol *gop = nullptr;
@@ -242,6 +256,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Fill out boot info.
     BootInfo boot_info{
+        .rsdp = rsdp,
         .width = gop->mode->info->width,
         .height = gop->mode->info->height,
         .pixels_per_scan_line = gop->mode->info->pixels_per_scan_line,

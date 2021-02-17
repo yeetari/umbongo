@@ -114,6 +114,12 @@ struct EfiBootServicesTable : public EfiTableHeader {
     EfiStatus (*locate_protocol)(const EfiGuid *protocol, void *registration, void **interface);
 };
 
+// EFI Configuration Table (UEFI specification 2.8B section 4.6)
+struct EfiConfigurationTable {
+    EfiGuid vendor_guid;
+    void *vendor_table;
+};
+
 // EFI System Table (UEFI specification 2.8B section 4.3)
 struct EfiSystemTable : public EfiTableHeader {
     wchar_t *firmware_vendor;
@@ -126,8 +132,8 @@ struct EfiSystemTable : public EfiTableHeader {
     void *std_err;
     void *runtime_services;
     EfiBootServicesTable *boot_services;
-    usize table_entry_count;
-    void *configuration_table;
+    usize configuration_table_count;
+    EfiConfigurationTable *configuration_table;
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
