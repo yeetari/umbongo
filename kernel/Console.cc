@@ -16,8 +16,9 @@ uint32 s_current_x = 0;
 uint32 s_current_y = 0;
 
 void set_absolute_pixel(uint32 x, uint32 y, uint32 colour) {
-    ASSERT(x < s_framebuffer_width);
-    ASSERT(y < s_framebuffer_height);
+    if (x >= s_framebuffer_width || y >= s_framebuffer_height) {
+        return;
+    }
     *(reinterpret_cast<uint32 *>(s_framebuffer_base + y * s_bytes_per_scan_line) + x) = colour;
 }
 
