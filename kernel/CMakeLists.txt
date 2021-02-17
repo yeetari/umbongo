@@ -1,4 +1,5 @@
 # Kernel options.
+set(KERNEL_FONT "${CMAKE_SOURCE_DIR}/ProggySquare.ttf" CACHE STRING "Font to use in the kernel")
 set(KERNEL_QEMU_DEBUG OFF CACHE BOOL "Enable debug logging to port E9 in the kernel")
 set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
 
@@ -6,10 +7,17 @@ set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in th
 configure_file(Config.hh.in Config.hh)
 file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 
+# Generate font at build time.
+add_custom_command(OUTPUT Font.cc
+    COMMAND ${CMAKE_BINARY_DIR}/tools/font-generator ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
+    DEPENDS font-generator)
+
 # Kernel target.
 add_executable(kernel
     cpu/Processor.cc
     mem/MemoryManager.cc
+    Console.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
