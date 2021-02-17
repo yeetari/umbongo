@@ -25,21 +25,21 @@ void put_char(char ch) {
 }
 
 void handle_interrupt(InterruptFrame *frame) {
-    log("core: Received interrupt {}", frame->num);
+    logln("core: Received interrupt {}", frame->num);
 }
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
-    log("core: Using font {} {}", g_font.name(), g_font.style());
+    logln("core: Using font {} {}", g_font.name(), g_font.style());
     if constexpr (k_kernel_qemu_debug) {
         ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
     }
     if constexpr (k_kernel_stack_protector) {
-        log("core: SSP initialised with guard value {:h}", __stack_chk_guard);
+        logln("core: SSP initialised with guard value {:h}", __stack_chk_guard);
     }
 
-    log("core: boot_info = {}", boot_info);
-    log("core: framebuffer = {:h}", boot_info->framebuffer_base);
+    logln("core: boot_info = {}", boot_info);
+    logln("core: framebuffer = {:h}", boot_info->framebuffer_base);
 
     MemoryManager memory_manager(boot_info);
     Processor::initialise(memory_manager);

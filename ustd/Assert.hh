@@ -26,8 +26,8 @@
 
 template <typename... Args>
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, Args... args) {
-    log("Assertion '{}' failed at {}:{}", expr, file, line);
-    (log("=> {}", args), ...);
+    logln("Assertion '{}' failed at {}:{}", expr, file, line);
+    (logln("=> {}", args), ...);
 #if defined(BOOTLOADER) || defined(KERNEL)
     while (true) {
         asm volatile("cli");

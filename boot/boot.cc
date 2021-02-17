@@ -61,13 +61,13 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Open volume.
     EfiFileProtocol *directory = nullptr;
-    log("Opening volume...");
+    logln("Opening volume...");
     EFI_CHECK(file_system->open_volume(file_system, &directory), "Failed to open volume!")
     ENSURE(directory != nullptr, "Failed to open volume!");
 
     // Load kernel from disk.
     EfiFileProtocol *kernel_file = nullptr;
-    log("Loading kernel from disk...");
+    logln("Loading kernel from disk...");
     // TODO: Don't hardcode mode&flags.
     EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", 1u, 1u), "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
@@ -75,7 +75,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Retrieve kernel file info.
     EfiFileInfo kernel_file_info{};
     usize kernel_file_info_size = sizeof(EfiFileInfo);
-    log("Retrieving kernel file info...");
+    logln("Retrieving kernel file info...");
     EFI_CHECK(kernel_file->get_info(kernel_file, &g_file_info_guid, &kernel_file_info_size, &kernel_file_info),
               "Failed to get kernel file info!")
     ENSURE(kernel_file_info.file_size != 0, "Failed to get kernel file size!");
@@ -83,15 +83,15 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Allocate memory for kernel and read kernel data.
     void *kernel_data = nullptr;
     uint64 kernel_size = kernel_file_info.file_size;
-    log("Allocating memory for kernel...");
+    logln("Allocating memory for kernel...");
     EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, kernel_size,
                                                reinterpret_cast<void **>(&kernel_data)),
               "Failed to allocate memory for kernel!")
-    log("Reading kernel data...");
+    logln("Reading kernel data...");
     EFI_CHECK(kernel_file->read(kernel_file, &kernel_size, kernel_data), "Failed to read kernel data!")
 
     // Parse kernel ELF header.
-    log("Parsing kernel ELF header...");
+    logln("Parsing kernel ELF header...");
     auto *kernel_header = reinterpret_cast<ElfHeader *>(kernel_data);
     ENSURE(kernel_header->magic[0] == 0x7f, "Kernel ELF header corrupt!");
     ENSURE(kernel_header->magic[1] == 'E', "Kernel ELF header corrupt!");
@@ -100,7 +100,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Parse kernel load program headers.
     uintptr kernel_entry = kernel_header->entry;
-    log("Parsing kernel load program headers...");
+    logln("Parsing kernel load program headers...");
     for (uint16 i = 0; i < kernel_header->ph_count; i++) {
         auto *ph = reinterpret_cast<ElfProgramHeader *>(reinterpret_cast<uintptr>(kernel_data) +
                                                         static_cast<uintptr>(kernel_header->ph_off) +
@@ -121,7 +121,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Get framebuffer info.
     EfiGraphicsOutputProtocol *gop = nullptr;
-    log("Querying framebuffer info...");
+    logln("Querying framebuffer info...");
     EFI_CHECK(
         st->boot_services->locate_protocol(&g_graphics_output_protocol_guid, nullptr, reinterpret_cast<void **>(&gop)),
         "Failed to locate graphics output protocol!")
@@ -132,7 +132,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     usize map_size = 0;
     usize descriptor_size = 0;
     uint32 descriptor_version = 0;
-    log("Querying memory map size...");
+    logln("Querying memory map size...");
     st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
     ENSURE(descriptor_size >= sizeof(EfiMemoryDescriptor));
 
@@ -142,7 +142,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Allocate some memory for EFI memory map.
     EfiMemoryDescriptor *efi_map = nullptr;
-    log("Allocating memory for EFI memory map...");
+    logln("Allocating memory for EFI memory map...");
     EFI_CHECK(
         st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&efi_map)),
         "Failed to allocate memory for EFI memory map!")
@@ -151,14 +151,14 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Allocate some memory for our memory map.
     const usize efi_map_entry_count = map_size / descriptor_size;
     MemoryMapEntry *map = nullptr;
-    log("Allocating memory for memory map...");
+    logln("Allocating memory for memory map...");
     EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, efi_map_entry_count * sizeof(MemoryMapEntry),
                                                reinterpret_cast<void **>(&map)),
               "Failed to allocate memory for memory map!")
     ENSURE(map != nullptr, "Failed to allocate memory for memory map!");
 
     // Retrieve EFI memory map.
-    log("Retrieving EFI memory map...");
+    logln("Retrieving EFI memory map...");
     EFI_CHECK(st->boot_services->get_memory_map(&map_size, efi_map, &map_key, &descriptor_size, &descriptor_version),
               "Failed to retrieve EFI memory map!")
 

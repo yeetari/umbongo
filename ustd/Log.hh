@@ -76,5 +76,10 @@ template <typename... Args>
 void log(const char *fmt, const Args &...args) {
     (detail::log_part(fmt, args), ...);
     detail::log_part(fmt);
+}
+
+template <typename... Args>
+void logln(const char *fmt, const Args &...args) {
+    log(fmt, args...);
     put_char('\n');
 }

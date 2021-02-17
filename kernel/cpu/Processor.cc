@@ -94,7 +94,7 @@ Gdt *s_gdt;
 Idt *s_idt;
 
 [[noreturn]] void unhandled_interrupt(InterruptFrame *frame) {
-    log(" cpu: Received unexpected interrupt {}!", frame->num);
+    logln(" cpu: Received unexpected interrupt {}!", frame->num);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 

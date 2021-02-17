@@ -31,7 +31,7 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
         total_bytes += entry_size;
         m_total_frames += entry.page_count;
     }
-    log(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+    logln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
 
     // Find some free memory for the physical frame bitset. We do this by finding the first fit entry in the memory map.
     const usize bucket_count = m_total_frames / k_bucket_bit_count;
