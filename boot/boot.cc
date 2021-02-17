@@ -4,6 +4,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -112,6 +113,10 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::LoaderData,
                                                     page_count, &ph->paddr),
                   "Failed to claim physical memory for kernel!")
+        // Zero out any uninitialised data.
+        if (ph->filesz != ph->memsz) {
+            memset(reinterpret_cast<void *>(ph->paddr), 0, ph->memsz);
+        }
         kernel_file->set_position(kernel_file, static_cast<uint64>(ph->offset));
         EFI_CHECK(kernel_file->read(kernel_file, &ph->filesz, reinterpret_cast<void *>(ph->paddr)),
                   "Failed to read kernel!")
