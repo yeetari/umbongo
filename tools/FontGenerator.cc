@@ -49,8 +49,8 @@ public:
     const char *family_name() const { return m_face->family_name; }
     const char *style_name() const { return m_face->style_name; }
     FT_Vector advance() const { return m_face->glyph->advance; }
-    FT_Short ascender() const { return m_face->ascender; }
-    FT_Short line_height() const { return m_face->height; }
+    FT_Pos ascender() const { return m_face->size->metrics.ascender; }
+    FT_Pos line_height() const { return m_face->size->metrics.ascender - m_face->size->metrics.descender; }
 };
 
 class FreeType {
@@ -79,8 +79,8 @@ public:
 };
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cout << "Usage: " << argv[0] << " <input> <output>\n";
+    if (argc != 4) {
+        std::cout << "Usage: " << argv[0] << " <input> <output> <size>\n";
         return 1;
     }
 
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 
     FreeType freetype;
     auto face = freetype.new_face(argv[1], 0);
-    face.set_pixel_sizes(32, 32);
+    face.set_pixel_sizes(0, std::atoi(argv[3]));
 
     std::string characters = " !\"#$%&\'()*+,-./"
                              "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`"
