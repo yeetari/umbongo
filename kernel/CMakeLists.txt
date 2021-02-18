@@ -1,5 +1,6 @@
 # Kernel options.
 set(KERNEL_FONT "${CMAKE_SOURCE_DIR}/ProggySquare.ttf" CACHE STRING "Font to use in the kernel")
+set(KERNEL_FONT_SIZE "16" CACHE STRING "Font size to use in the kernel")
 set(KERNEL_QEMU_DEBUG OFF CACHE BOOL "Enable debug logging to port E9 in the kernel")
 set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
 
@@ -9,7 +10,7 @@ file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 
 # Generate font at build time.
 add_custom_command(OUTPUT Font.cc
-    COMMAND ${CMAKE_BINARY_DIR}/tools/font-generator ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc 16
+    COMMAND ${CMAKE_BINARY_DIR}/tools/font-generator ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc ${KERNEL_FONT_SIZE}
     DEPENDS font-generator)
 
 # Kernel target.
