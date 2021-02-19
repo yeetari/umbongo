@@ -1,6 +1,6 @@
 # Kernel options.
-set(KERNEL_FONT "${CMAKE_SOURCE_DIR}/ProggySquare.ttf" CACHE STRING "Font to use in the kernel")
-set(KERNEL_FONT_SIZE "16" CACHE STRING "Font size to use in the kernel")
+set(KERNEL_FONT "${CMAKE_SOURCE_DIR}/FantasqueSansMono.ttf" CACHE STRING "Font to use in the kernel")
+set(KERNEL_FONT_SIZE "24" CACHE STRING "Font size to use in the kernel")
 set(KERNEL_QEMU_DEBUG OFF CACHE BOOL "Enable debug logging to port E9 in the kernel")
 set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
 
