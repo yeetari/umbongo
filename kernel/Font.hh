@@ -6,8 +6,8 @@ struct FontGlyph {
     const char ch;
     const uint32 width;
     const uint32 height;
-    const uint32 left;
-    const uint32 top;
+    const int32 left;
+    const int32 top;
     const uint8 *bitmap;
 };
 
