@@ -48,8 +48,8 @@ void Console::put_char(char ch) {
     for (uint32 y1 = 0; y1 < glyph->height; y1++) {
         for (uint32 x1 = 0; x1 < glyph->width; x1++) {
             const uint32 colour = glyph->bitmap[y1 * glyph->width + x1];
-            const uint32 x2 = x1 + s_current_x + glyph->left;
-            const uint32 y2 = y1 + s_current_y + g_font.ascender() - glyph->top;
+            const auto x2 = static_cast<uint32>(static_cast<int32>(x1 + s_current_x) + glyph->left);
+            const auto y2 = static_cast<uint32>(static_cast<int32>(y1 + s_current_y + g_font.ascender()) - glyph->top);
             set_absolute_pixel(x2, y2, colour | (colour << 8u) | (colour << 16u));
         }
     }
