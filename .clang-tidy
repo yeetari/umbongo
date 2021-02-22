@@ -26,7 +26,6 @@ Checks: >
   bugprone-not-null-terminated-result,
   bugprone-parent-virtual-call,
   bugprone-redundant-branch-condition,
-  bugprone-reserved-identifier,
   bugprone-signed-char-misuse,
   bugprone-sizeof-container,
   bugprone-sizeof-expression,

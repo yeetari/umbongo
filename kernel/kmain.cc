@@ -9,10 +9,8 @@
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
 
-// NOLINTNEXTLINE
 usize __stack_chk_guard = 0xdeadc0de;
 
-// NOLINTNEXTLINE
 [[noreturn]] extern "C" void __stack_chk_fail() {
     ENSURE_NOT_REACHED("Stack smashing detected!");
 }
