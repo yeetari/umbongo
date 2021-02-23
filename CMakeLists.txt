@@ -43,6 +43,7 @@ if(BUILD_WARNINGS)
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
         -Wno-gnu-zero-variadic-macro-arguments
+        -Wno-missing-noreturn
         -Wno-missing-prototypes
         -Wno-missing-variable-declarations
         -Wno-padded

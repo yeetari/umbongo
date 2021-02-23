@@ -16,6 +16,8 @@ constexpr usize page_round_up(usize x) {
     return (x + k_page_size - 1) & ~(k_page_size - 1);
 }
 
+MemoryManager *s_memory_manager = nullptr;
+
 } // namespace
 
 MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
@@ -54,6 +56,7 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
     for (usize i = 0; i < page_round_up(bucket_count * sizeof(usize)) / k_page_size; i++) {
         set_frame(*bitset_location / k_page_size + i);
     }
+    s_memory_manager = this;
 }
 
 Optional<uintptr> MemoryManager::find_first_fit_region(usize size) {
@@ -104,4 +107,21 @@ void *MemoryManager::alloc_phys(usize size) {
         return reinterpret_cast<void *>(i * k_page_size);
     }
     ENSURE_NOT_REACHED("No available physical memory!");
+}
+
+void *operator new(usize size) {
+    ASSERT(s_memory_manager != nullptr, "Attempted heap allocation before memory manager setup!");
+    return s_memory_manager->alloc_phys(size);
+}
+
+void *operator new[](usize size) {
+    return operator new(size);
+}
+
+void operator delete(void *) {
+    ENSURE_NOT_REACHED();
+}
+
+void operator delete[](void *ptr) {
+    return operator delete(ptr);
 }
