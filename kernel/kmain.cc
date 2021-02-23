@@ -41,7 +41,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     logln("core: rsdp = {}", boot_info->rsdp);
 
     MemoryManager memory_manager(boot_info);
-    Processor::initialise(memory_manager);
+    Processor::initialise();
     Processor::wire_interrupt(0, &handle_interrupt);
     Processor::wire_interrupt(31, &handle_interrupt);
     Processor::wire_interrupt(255, &handle_interrupt);

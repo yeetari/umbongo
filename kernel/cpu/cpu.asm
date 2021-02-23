@@ -1,3 +1,4 @@
+; void flush_gdt(Gdt *gdt)
 global flush_gdt
 flush_gdt:
     lgdt [rdi]
@@ -9,9 +10,4 @@ flush_gdt:
     push qword .ret ; rip
     iretq
 .ret:
-    ret
-
-global flush_idt
-flush_idt:
-    lidt [rdi]
     ret

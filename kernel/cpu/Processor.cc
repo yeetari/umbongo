@@ -1,12 +1,10 @@
 #include <kernel/cpu/Processor.hh>
 
 #include <kernel/cpu/PrivilegeLevel.hh>
-#include <kernel/mem/MemoryManager.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -20,6 +18,26 @@ enum class DescriptorType : uint8 {
     Tss = 0b01001,
     InterruptGate = 0b01110,
     TrapGate = 0b01111,
+};
+
+template <typename Descriptor, usize Count>
+class [[gnu::packed]] DescriptorTable {
+    const uint16 m_limit{sizeof(m_descriptors) - 1};
+    const uintptr m_base{reinterpret_cast<uintptr>(&m_descriptors)};
+    uint64 : 48;
+    Array<Descriptor, Count> m_descriptors{};
+
+public:
+    DescriptorTable() {
+        // AMD64 System Programming Manual revision 3.36 section 4.6.2 recommends that a descriptor table be aligned on
+        // a quadword boundary.
+        ENSURE(m_base % 8 == 0, "Descriptor table misaligned!");
+    }
+
+    void set(uint64 index, const Descriptor &descriptor) {
+        ASSERT(index < Count);
+        m_descriptors[index] = descriptor;
+    }
 };
 
 class [[gnu::packed]] GlobalDescriptor {
@@ -37,11 +55,20 @@ class [[gnu::packed]] GlobalDescriptor {
     uint8 m_base_high{0};
 
 public:
+    static constexpr GlobalDescriptor create_base_extended(uint32 base_extended) { return {base_extended}; }
     static constexpr GlobalDescriptor create_kernel(DescriptorType type) { return {PrivilegeLevel::Kernel, type}; }
+    static constexpr GlobalDescriptor create_tss(uint64 base, uint32 limit) {
+        return {PrivilegeLevel::Kernel, DescriptorType::Tss, base, limit};
+    }
+    static constexpr GlobalDescriptor create_user(DescriptorType type) { return {PrivilegeLevel::User, type}; }
 
     constexpr GlobalDescriptor() = default;
-    constexpr GlobalDescriptor(PrivilegeLevel dpl, DescriptorType type)
-        : m_type(type), m_dpl(dpl), m_present(true), m_long_mode(type == DescriptorType::Code) {}
+    constexpr GlobalDescriptor(uint32 base_extended) // NOLINT
+        : m_limit_low(base_extended & 0xffffu), m_base_low((base_extended >> 16u) & 0xffffu) {}
+    constexpr GlobalDescriptor(PrivilegeLevel dpl, DescriptorType type, uint64 base = 0, uint32 limit = 0)
+        : m_limit_low(limit & 0xffffu), m_base_low(base & 0xffffu), m_base_mid((base >> 16u) & 0xffu), m_type(type),
+          m_dpl(dpl), m_present(true), m_limit_mid((limit >> 16u) & 0xffu), m_long_mode(type == DescriptorType::Code),
+          m_base_high((base >> 24u) & 0xffu) {}
 };
 
 class [[gnu::packed]] InterruptDescriptor {
@@ -66,35 +93,31 @@ public:
           m_base_mid((base >> 16ul) & 0xfffful), m_base_high((base >> 32ul) & 0xfffffffful) {}
 };
 
-template <typename Descriptor, usize Count>
-class [[gnu::packed]] DescriptorTable {
-    const uint16 m_limit{sizeof(m_descriptors) - 1};
-    const uintptr m_base{reinterpret_cast<uintptr>(&m_descriptors)};
-    uint64 : 48;
-    Array<Descriptor, Count> m_descriptors{};
-
-public:
-    DescriptorTable() {
-        // AMD64 System Programming Manual revision 3.36 section 4.6.2 recommends that a descriptor table be aligned on
-        // a quadword boundary.
-        ENSURE(m_base % 8 == 0, "Descriptor table misaligned!");
-    }
-
-    void set(uint64 index, const Descriptor &descriptor) {
-        ASSERT(index < Count);
-        m_descriptors[index] = descriptor;
-    }
-};
-
 using Gdt = DescriptorTable<GlobalDescriptor, k_gdt_entry_count>;
 using Idt = DescriptorTable<InterruptDescriptor, k_interrupt_count>;
 
-Array<InterruptHandler, k_interrupt_count> s_handlers;
-Gdt *s_gdt;
-Idt *s_idt;
+struct [[gnu::packed]] Tss {
+    uint32 : 32;
+    void *rsp0;
+    void *rsp1;
+    void *rsp2;
+    uint64 : 64;
+    void *ist1;
+    void *ist2;
+    void *ist3;
+    void *ist4;
+    void *ist5;
+    void *ist6;
+    void *ist7;
+    uint64 : 64;
+    uint16 : 16;
+    uint16 iopb;
+};
+
+Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 
 [[noreturn]] void unhandled_interrupt(InterruptFrame *frame) {
-    logln(" cpu: Received unexpected interrupt {}!", frame->num);
+    logln(" cpu: Received unexpected interrupt {} in ring {}!", frame->num, frame->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 
@@ -104,34 +127,51 @@ extern uint8 k_interrupt_stubs_start;
 extern uint8 k_interrupt_stubs_end;
 
 extern "C" void flush_gdt(Gdt *gdt);
-extern "C" void flush_idt(Idt *idt);
 
 extern "C" void interrupt_handler(InterruptFrame *frame) {
     ASSERT_PEDANTIC(frame->num < k_interrupt_count);
-    ASSERT_PEDANTIC(s_handlers[frame->num] != nullptr);
-    s_handlers[frame->num](frame);
+    ASSERT_PEDANTIC(s_interrupt_table[frame->num] != nullptr);
+    s_interrupt_table[frame->num](frame);
 }
 
-void Processor::initialise(MemoryManager &memory_manager) {
-    s_gdt = new (memory_manager.alloc_phys(sizeof(Gdt))) Gdt;
-    s_idt = new (memory_manager.alloc_phys(sizeof(Idt))) Idt;
-    s_gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
-    s_gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
+void Processor::initialise() {
+    auto *gdt = new Gdt;
+    auto *idt = new Idt;
+    auto *tss = new Tss;
+
+    // Setup flat GDT.
+    gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
+    gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
+    gdt->set(3, GlobalDescriptor::create_user(DescriptorType::Data));
+    gdt->set(4, GlobalDescriptor::create_user(DescriptorType::Code));
+    gdt->set(5, GlobalDescriptor::create_tss(reinterpret_cast<uintptr>(tss), sizeof(Tss) - 1));
+    gdt->set(6, GlobalDescriptor::create_base_extended(reinterpret_cast<uintptr>(tss) >> 32u));
+
+    // Fill IDT with asm handler stubs. Also make sure that the interrupt stub section isn't empty, which could happen
+    // if the linker accidentally removes it.
     ENSURE(&k_interrupt_stubs_start != &k_interrupt_stubs_end);
     for (auto *ptr = &k_interrupt_stubs_start; ptr < &k_interrupt_stubs_end; ptr += 12) {
         const uint64 vector = static_cast<uint64>(ptr - &k_interrupt_stubs_start) / 12u;
-        ASSERT(vector < k_interrupt_count);
-        s_idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr)));
+        idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr)));
     }
-    flush_gdt(s_gdt);
-    flush_idt(s_idt);
-    ustd::fill(s_handlers, &unhandled_interrupt);
+
+    // Set kernel stack for interrupt handling. Also set IO permission bitmap base to `sizeof(Tss)`. This makes any ring
+    // 3 attempt to use IO ports fail with a #GP exception since the TSS limit is also its size.
+    tss->rsp0 = new char[4_KiB] + 4_KiB;
+    tss->iopb = sizeof(Tss);
+
+    // Load our new GDT, IDT and TSS. Flushing the GDT involves performing an iret to change the current code selector.
+    // We also fill the interrupt handler table with trap handlers to ensure any unexpected interrupts are caught.
+    flush_gdt(gdt);
+    asm volatile("lidt %0" : : "m"(*idt));
+    asm volatile("ltr %%ax" : : "a"(0x28));
+    ustd::fill(s_interrupt_table, &unhandled_interrupt);
 }
 
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
     ASSERT(vector < k_interrupt_count);
     ASSERT(handler != nullptr);
-    s_handlers[vector] = handler;
+    s_interrupt_table[vector] = handler;
 }
 
 void Processor::write_cr3(void *pml4) {
