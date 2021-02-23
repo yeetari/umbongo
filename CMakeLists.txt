@@ -11,6 +11,8 @@ mark_as_advanced(CMAKE_TOOLCHAIN_FILE)
 # Global options for the whole system.
 set(BUILD_TYPE "Debug" CACHE STRING "Build with optimisations")
 set(BUILD_WARNINGS OFF CACHE BOOL "Build with warnings")
+set(ENABLE_ASSERTIONS ON CACHE BOOL "Enable assertions")
+set(ENABLE_ASSERTIONS_PEDANTIC OFF CACHE BOOL "Enable pedantic assertions")
 set(LINK_TIME_OPT OFF CACHE BOOL "Build with LTO")
 set(OVMF_BINARY "${CMAKE_SOURCE_DIR}/OVMF.fd" CACHE STRING "OVMF binary for emulation")
 set_property(CACHE BUILD_TYPE PROPERTY STRINGS Debug Release)

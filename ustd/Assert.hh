@@ -2,12 +2,6 @@
 
 #include <ustd/Log.hh>
 
-// TODO: Config options.
-#ifndef NDEBUG
-#define ASSERTIONS
-#define ASSERTIONS_PEDANTIC
-#endif
-
 #define ENSURE(expr, ...)                                                                                              \
     static_cast<bool>(expr) ? static_cast<void>(0) : assertion_failed(__FILE__, __LINE__, #expr, ##__VA_ARGS__)
 #ifdef ASSERTIONS
