@@ -15,4 +15,5 @@ using InterruptHandler = void (*)(InterruptFrame *);
 struct Processor {
     static void initialise(MemoryManager &memory_manager);
     static void wire_interrupt(uint64 vector, InterruptHandler handler);
+    static void write_cr3(void *pml4);
 };

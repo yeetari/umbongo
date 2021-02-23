@@ -17,6 +17,7 @@ add_custom_command(OUTPUT Font.cc
 add_executable(kernel
     cpu/Processor.cc
     mem/MemoryManager.cc
+    mem/VirtSpace.cc
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc)

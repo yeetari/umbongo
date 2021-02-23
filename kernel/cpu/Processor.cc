@@ -133,3 +133,11 @@ void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
     ASSERT(handler != nullptr);
     s_handlers[vector] = handler;
 }
+
+void Processor::write_cr3(void *pml4) {
+    // Make sure both the upper and lower 12 bits of the PML4 base address are clear. The upper 12 bits of CR3 should be
+    // clear since the minimum physical address width required to be supported by the CPU is 40 bits. The lower 12 bits
+    // of CR3 are used for flags and should be clear in the PML4 base address since it should be page-aligned.
+    ASSERT_PEDANTIC((reinterpret_cast<uintptr>(pml4) & 0xfff0000000000fffu) == 0);
+    asm volatile("mov %0, %%cr3" : : "r"(pml4) : "memory");
+}
