@@ -156,6 +156,6 @@ int main(int argc, char **argv) {
     output_file << "            return &m_glyph_array[i];\n";
     output_file << "        }\n";
     output_file << "    }\n";
-    output_file << "    ENSURE_NOT_REACHED();\n";
+    output_file << "    return glyph('?');\n";
     output_file << "}\n";
 }
