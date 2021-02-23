@@ -13,6 +13,10 @@ void log_single(const char *, T);
 
 template <typename T>
 void log_single(const char *opts, T arg) requires IsInteger<T> {
+    if (opts[1] == 'c') {
+        put_char(static_cast<char>(arg));
+        return;
+    }
     const usize base = opts[1] == 'h' ? 16 : 10;
     Array<char, 20> buf{};
     uint32 len = 0;
