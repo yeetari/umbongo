@@ -48,6 +48,7 @@ if(BUILD_WARNINGS)
         -Wno-missing-variable-declarations
         -Wno-padded
         -Wno-switch-enum
+        -Wno-unused-member-function
         -Wno-unused-private-field)
 endif()
 

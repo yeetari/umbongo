@@ -12,6 +12,23 @@ namespace {
 constexpr usize k_gdt_entry_count = 7;
 constexpr usize k_interrupt_count = 256;
 
+class CpuId {
+    uint32 m_eax{0};
+    uint32 m_ebx{0};
+    uint32 m_ecx{0};
+    uint32 m_edx{0};
+
+public:
+    explicit CpuId(uint32 function, uint32 sub_function = 0) {
+        asm volatile("cpuid" : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx) : "a"(function), "c"(sub_function));
+    }
+
+    uint32 eax() const { return m_eax; }
+    uint32 ebx() const { return m_ebx; }
+    uint32 ecx() const { return m_ecx; }
+    uint32 edx() const { return m_edx; }
+};
+
 enum class DescriptorType : uint8 {
     Code = 0b11010,
     Data = 0b10010,
@@ -116,6 +133,26 @@ struct [[gnu::packed]] Tss {
 
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 
+uint64 read_cr0() {
+    uint64 cr0 = 0;
+    asm volatile("mov %%cr0, %0" : "=r"(cr0));
+    return cr0;
+}
+
+uint64 read_cr4() {
+    uint64 cr4 = 0;
+    asm volatile("mov %%cr4, %0" : "=r"(cr4));
+    return cr4;
+}
+
+void write_cr0(uint64 cr0) {
+    asm volatile("mov %0, %%cr0" : : "r"(cr0));
+}
+
+void write_cr4(uint64 cr4) {
+    asm volatile("mov %0, %%cr4" : : "r"(cr4));
+}
+
 [[noreturn]] void unhandled_interrupt(InterruptFrame *frame) {
     logln(" cpu: Received unexpected interrupt {} in ring {}!", frame->num, frame->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
@@ -166,6 +203,24 @@ void Processor::initialise() {
     asm volatile("lidt %0" : : "m"(*idt));
     asm volatile("ltr %%ax" : : "a"(0x28));
     ustd::fill(s_interrupt_table, &unhandled_interrupt);
+
+    // Enable CR0.WP (Write Protect). This prevents the kernel from writing to read only pages.
+    write_cr0(read_cr0() | (1u << 16u));
+
+    // Enable some hardware protection features, if available.
+    CpuId extended_features(0x7);
+    if ((extended_features.ebx() & (1u << 7u)) != 0) {
+        // Enable CR4.SMEP (Supervisor Memory Execute Protection). This prevents the kernel from executing user
+        // accessible code.
+        logln(" cpu: Enabling SMEP");
+        write_cr4(read_cr4() | (1u << 20u));
+    }
+    if ((extended_features.ecx() & (1u << 2u)) != 0) {
+        // Enable CR4.UMIP (User-Mode Instruction Prevention). This prevents user code from executing instructions like
+        // sgdt and sidt.
+        logln(" cpu: Enabling UMIP");
+        write_cr4(read_cr4() | (1u << 11u));
+    }
 }
 
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
