@@ -12,6 +12,8 @@ namespace {
 constexpr usize k_gdt_entry_count = 7;
 constexpr usize k_interrupt_count = 256;
 
+constexpr uint32 k_msr_efer = 0xc0000080;
+
 class CpuId {
     uint32 m_eax{0};
     uint32 m_ebx{0};
@@ -153,6 +155,19 @@ void write_cr4(uint64 cr4) {
     asm volatile("mov %0, %%cr4" : : "r"(cr4));
 }
 
+uint64 read_msr(uint32 msr) {
+    uint64 rax = 0;
+    uint64 rdx = 0;
+    asm volatile("rdmsr" : "=a"(rax), "=d"(rdx) : "c"(msr));
+    return rax | (rdx << 32u);
+}
+
+void write_msr(uint32 msr, uint64 value) {
+    const uint64 rax = value & 0xffffffffu;
+    const uint64 rdx = (value >> 32u) & 0xffffffffu;
+    asm volatile("wrmsr" : : "a"(rax), "d"(rdx), "c"(msr));
+}
+
 [[noreturn]] void unhandled_interrupt(InterruptFrame *frame) {
     logln(" cpu: Received unexpected interrupt {} in ring {}!", frame->num, frame->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
@@ -221,6 +236,14 @@ void Processor::initialise() {
         logln(" cpu: Enabling UMIP");
         write_cr4(read_cr4() | (1u << 11u));
     }
+
+    // Perform an extended cpuid and ensure that the syscall/sysret and NX features are available.
+    CpuId extended_cpu_id(0x80000001);
+    ENSURE((extended_cpu_id.edx() & (1u << 11u)) != 0, "syscall/sysret not available!");
+    ENSURE((extended_cpu_id.edx() & (1u << 20u)) != 0, "NX not available!");
+
+    // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
+    write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 0u) | (1u << 11u));
 }
 
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
