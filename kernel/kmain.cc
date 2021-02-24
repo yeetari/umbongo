@@ -16,6 +16,11 @@ extern uint8 k_user_code_end;
 usize __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] extern "C" void __stack_chk_fail() {
+    auto *rbp = static_cast<uint64 *>(__builtin_frame_address(0));
+    while (rbp != nullptr && rbp[1] != 0) {
+        logln("{:h}", rbp[1]);
+        rbp = reinterpret_cast<uint64 *>(*rbp);
+    }
     ENSURE_NOT_REACHED("Stack smashing detected!");
 }
 
