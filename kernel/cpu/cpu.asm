@@ -11,3 +11,7 @@ flush_gdt:
     iretq
 .ret:
     ret
+
+global syscall_stub
+syscall_stub:
+    jmp $

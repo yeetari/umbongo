@@ -13,6 +13,10 @@ constexpr usize k_gdt_entry_count = 7;
 constexpr usize k_interrupt_count = 256;
 
 constexpr uint32 k_msr_efer = 0xc0000080;
+constexpr uint32 k_msr_star = 0xc0000081;
+constexpr uint32 k_msr_lstar = 0xc0000082;
+constexpr uint32 k_msr_sfmask = 0xc0000084;
+constexpr uint32 k_msr_kernel_gs_base = 0xc0000102;
 
 class CpuId {
     uint32 m_eax{0};
@@ -179,6 +183,7 @@ extern uint8 k_interrupt_stubs_start;
 extern uint8 k_interrupt_stubs_end;
 
 extern "C" void flush_gdt(Gdt *gdt);
+extern "C" void syscall_stub();
 
 extern "C" void interrupt_handler(InterruptFrame *frame) {
     ASSERT_PEDANTIC(frame->num < k_interrupt_count);
@@ -244,6 +249,21 @@ void Processor::initialise() {
 
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 0u) | (1u << 11u));
+
+    // Write selectors to STAR MSR. First write the sysret CS and SS (63:48), then write the syscall CS and SS (47:32).
+    // The bottom 32 bits for the target EIP are not used in long mode. 0x13 is used for the sysret CS/SS pair because
+    // CS is set to 0x13+16 (0x23), which is the user code segment and SS is set to 0x13+8 (0x1b) which is the user data
+    // segment. This is also the reason user code comes after user data in the GDT. 0x08 is used for the syscall CS/SS
+    // pair because CS is set to 0x08, which is the kernel code segment and SS is set to 0x08+8 (0x10), which is the
+    // kernel data segment.
+    uint64 star = 0;
+    star |= 0x13ul << 48u;
+    star |= 0x08ul << 32u;
+    write_msr(k_msr_star, star);
+
+    // Write syscall entry point to the LSTAR MSR. Also set the CPU to mask the IF bit when a syscall occurs.
+    write_msr(k_msr_lstar, reinterpret_cast<uintptr>(&syscall_stub));
+    write_msr(k_msr_sfmask, 1u << 9u);
 }
 
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
