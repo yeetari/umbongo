@@ -10,6 +10,12 @@ flush_gdt:
     push qword .ret ; rip
     iretq
 .ret:
+    ; Load data selectors with null segments.
+    mov ax, 0
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
     ret
 
 global syscall_stub
