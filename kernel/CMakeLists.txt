@@ -20,7 +20,8 @@ add_executable(kernel
     mem/VirtSpace.cc
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
-    kmain.cc)
+    kmain.cc
+    Syscall.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
     cpu/interrupts.asm)

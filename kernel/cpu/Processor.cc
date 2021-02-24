@@ -1,5 +1,6 @@
 #include <kernel/cpu/Processor.hh>
 
+#include <kernel/Syscall.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
@@ -137,7 +138,21 @@ struct [[gnu::packed]] Tss {
     uint16 iopb;
 };
 
+struct [[gnu::packed]] LocalStorage {
+    LocalStorage *self{this};
+    void *kernel_stack{nullptr};
+    void *user_stack{nullptr};
+};
+
+struct [[gnu::packed]] SyscallFrame {
+    uint64 r15, r14, r13, r12, r11, r10, r9, r8, rbp, rsi, rdi, rdx, rcx, rbx, rax;
+};
+
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
+using SyscallHandler = uint64 (*)(uint64 arg1, uint64 arg2, uint64 arg3);
+#define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&sys_##s)
+Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
+#undef ENUMERATE_SYSCALL
 
 uint64 read_cr0() {
     uint64 cr0 = 0;
@@ -191,6 +206,15 @@ extern "C" void interrupt_handler(InterruptFrame *frame) {
     s_interrupt_table[frame->num](frame);
 }
 
+extern "C" void syscall_handler(SyscallFrame *frame) {
+    // Syscall number passed in rax.
+    if (frame->rax >= s_syscall_table.size()) {
+        return;
+    }
+    ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
+    frame->rax = s_syscall_table[frame->rax](frame->rdi, frame->rsi, frame->rdx);
+}
+
 void Processor::initialise() {
     auto *gdt = new Gdt;
     auto *idt = new Idt;
@@ -212,9 +236,14 @@ void Processor::initialise() {
         idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr)));
     }
 
+    // Allocate CPU local storage struct and allocate some kernel stack for syscalls/interrupt handling.
+    auto *storage = new LocalStorage;
+    storage->kernel_stack = new char[4_KiB] + 4_KiB;
+    write_msr(k_msr_kernel_gs_base, reinterpret_cast<uintptr>(storage));
+
     // Set kernel stack for interrupt handling. Also set IO permission bitmap base to `sizeof(Tss)`. This makes any ring
     // 3 attempt to use IO ports fail with a #GP exception since the TSS limit is also its size.
-    tss->rsp0 = new char[4_KiB] + 4_KiB;
+    tss->rsp0 = storage->kernel_stack;
     tss->iopb = sizeof(Tss);
 
     // Load our new GDT, IDT and TSS. Flushing the GDT involves performing an iret to change the current code selector.
