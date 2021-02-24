@@ -8,6 +8,11 @@ SECTIONS {
         KEEP(*(.interrupt_stubs))
         k_interrupt_stubs_end = .;
         *(.text*)
+
+        . = ALIGN(4K);
+        k_user_code_start = .;
+        KEEP(*(.user_code*))
+        k_user_code_end = .;
     }
 
     .rodata : ALIGN(4K) {

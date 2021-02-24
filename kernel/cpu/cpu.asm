@@ -18,6 +18,16 @@ flush_gdt:
     mov gs, ax
     ret
 
+; void jump_to_user(void *stack, void (*callee)())
+global jump_to_user
+jump_to_user:
+    push qword 0x18 | 0x3 ; ss
+    push qword rdi ; rsp
+    push qword 0x202 ; rflags (IF set)
+    push qword 0x20 | 0x3 ; cs
+    push qword rsi ; rip
+    iretq
+
 extern syscall_handler
 global syscall_stub
 syscall_stub:
@@ -65,3 +75,12 @@ syscall_stub:
     mov rsp, [gs:16]
     swapgs
     o64 sysret
+
+section .user_code
+
+global user_code
+user_code:
+    xor rax, rax
+    syscall
+    syscall
+    jmp $

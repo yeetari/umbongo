@@ -5,9 +5,13 @@
 #include <kernel/Port.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
+#include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
+
+extern uint8 k_user_code_start;
+extern uint8 k_user_code_end;
 
 usize __stack_chk_guard = 0xdeadc0de;
 
@@ -22,9 +26,7 @@ void put_char(char ch) {
     }
 }
 
-void handle_interrupt(InterruptFrame *frame) {
-    logln("core: Received interrupt {}", frame->num);
-}
+extern "C" void jump_to_user(void *stack, void (*callee)());
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
@@ -42,10 +44,13 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     MemoryManager memory_manager(boot_info);
     Processor::initialise();
-    Processor::wire_interrupt(0, &handle_interrupt);
-    Processor::wire_interrupt(31, &handle_interrupt);
-    Processor::wire_interrupt(255, &handle_interrupt);
-    asm volatile("int $0");
-    asm volatile("int $31");
-    asm volatile("int $255");
+
+    auto *user_stack = static_cast<char *>(memory_manager.alloc_phys(4_KiB));
+
+    VirtSpace virt_space;
+    virt_space.map_4KiB(514_GiB, reinterpret_cast<uintptr>(&k_user_code_start), PageFlags::User);
+    virt_space.map_4KiB(515_GiB, reinterpret_cast<uintptr>(user_stack),
+                        PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
+    virt_space.switch_to();
+    jump_to_user(reinterpret_cast<void *>(515_GiB + 4_KiB), reinterpret_cast<void (*)()>(514_GiB));
 }
