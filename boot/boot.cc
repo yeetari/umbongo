@@ -77,14 +77,6 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
               "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
-    // Retrieve kernel file info.
-    EfiFileInfo kernel_file_info{};
-    usize kernel_file_info_size = sizeof(EfiFileInfo);
-    logln("Retrieving kernel file info...");
-    EFI_CHECK(kernel_file->get_info(kernel_file, &g_file_info_guid, &kernel_file_info_size, &kernel_file_info),
-              "Failed to get kernel file info!")
-    ENSURE(kernel_file_info.file_size != 0, "Failed to get kernel file size!");
-
     // Parse kernel ELF header.
     ElfHeader kernel_header{};
     uint64 kernel_header_size = sizeof(ElfHeader);
