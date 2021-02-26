@@ -23,3 +23,19 @@ extern "C" void *memset(void *bufptr, int value, usize size) {
     }
     return bufptr;
 }
+
+extern "C" usize strlen(const char *str) {
+    usize len = 0;
+    while (str[len] != '\0') {
+        len++;
+    }
+    return len;
+}
+
+extern "C" usize wstrlen(const wchar_t *str) {
+    usize len = 0;
+    while (str[len] != '\0') {
+        len++;
+    }
+    return len;
+}
