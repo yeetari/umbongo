@@ -73,8 +73,8 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     // Load kernel from disk.
     EfiFileProtocol *kernel_file = nullptr;
     logln("Loading kernel from disk...");
-    // TODO: Don't hardcode mode&flags.
-    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", 1u, 1u), "Failed to load kernel from disk!")
+    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", EfiFileMode::Read, EfiFileFlag::ReadOnly),
+              "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
     // Retrieve kernel file info.

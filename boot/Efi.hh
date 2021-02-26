@@ -137,6 +137,23 @@ struct EfiSystemTable : public EfiTableHeader {
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
+enum class EfiFileFlag : uint64 {
+    ReadOnly = 1ull << 0u,
+    Hidden = 1ull << 1u,
+    System = 1ull << 2u,
+    Reserved = 1ull << 3u,
+    Directory = 1ull << 4u,
+    Archive = 1ull << 5u,
+};
+
+// EFI File Protocol (UEFI specification 2.8B section 13.5)
+enum class EfiFileMode : uint64 {
+    Read = 1ull << 0u,
+    Write = 1ull << 1u,
+    Create = 1ull << 63u,
+};
+
+// EFI File Protocol (UEFI specification 2.8B section 13.5)
 struct EfiFileInfo {
     uint64 size;
     uint64 file_size;
@@ -147,7 +164,8 @@ struct EfiFileInfo {
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
 struct EfiFileProtocol {
     uint64 revision;
-    EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, uint64 mode, uint64 flags);
+    EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, EfiFileMode mode,
+                      EfiFileFlag flags);
     Array<void *, 2> unused0;
     EfiStatus (*read)(EfiFileProtocol *, usize *size, void *buffer);
     Array<void *, 2> unused1;
