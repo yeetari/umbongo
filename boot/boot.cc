@@ -9,6 +9,8 @@
 
 namespace {
 
+constexpr usize k_kernel_stack_page_count = 8;
+
 const EfiGuid g_acpi_table_guid{0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81}};
 
 const EfiGuid g_file_info_guid{0x9576e92, 0x6d3f, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
@@ -125,6 +127,13 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     }
 
     // TODO: Free memory. We could also just leave it and let the kernel reclaim it later.
+
+    // Allocate stack for kernel.
+    uintptr kernel_stack = 0;
+    EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAnyPages, EfiMemoryType::LoaderData,
+                                                k_kernel_stack_page_count, &kernel_stack),
+              "Failed to allocate memory for kernel stack!")
+    ENSURE(kernel_stack != 0, "Failed to allocate memory for kernel stack!");
 
     // Find ACPI RSDP.
     void *rsdp = nullptr;
@@ -271,6 +280,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     EFI_CHECK(st->boot_services->exit_boot_services(image_handle, map_key), "Failed to exit boot services!")
 
     // Call kernel and spin on return.
+    asm volatile("mov %0, %%rsp" : : "r"(kernel_stack) : "rsp");
     reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_entry)(&boot_info);
     while (true) {
         asm volatile("cli");
