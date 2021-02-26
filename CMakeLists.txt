@@ -88,6 +88,7 @@ endif()
 
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 add_subdirectory(boot)
+add_subdirectory(init)
 add_subdirectory(kernel)
 add_subdirectory(tools)
 add_subdirectory(ustd)
