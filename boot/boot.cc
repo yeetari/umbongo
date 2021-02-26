@@ -155,53 +155,21 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         "Failed to locate graphics output protocol!")
     ENSURE(gop != nullptr, "Failed to locate graphics output protocol!");
 
-    // Print video modes.
+    // Find best video mode.
+    uint32 pixel_count = 0;
+    uint32 preferred_mode = 0;
     for (uint32 i = 0; i < gop->mode->max_mode; i++) {
         EfiGraphicsOutputModeInfo *info = nullptr;
         usize info_size = 0;
         EFI_CHECK(gop->query_mode(gop, i, &info_size, &info), "Failed to query video mode!")
-        log("{} - {}x{}, ", i, info->width, info->height);
+        if (info->width * info->height > pixel_count) {
+            pixel_count = info->width * info->height;
+            preferred_mode = i;
+        }
     }
 
-    // Ask user for preferred video mode.
-    Array<unsigned char, 4> input{};
-    usize input_pos = 0;
-    log("\nVideo mode: ");
-    while (true) {
-        EfiInputKey input_key{};
-        while (st->con_in->read_key_stroke(st->con_in, &input_key) == EfiStatus::NotReady) {
-        }
-        uint16 key = input_key.unicode_char;
-        if (key == '\r' || key == '\n') {
-            break;
-        }
-        if (key == '\t' || (key == '\b' && input_pos == 0)) {
-            continue;
-        }
-        if (key == '\b') {
-            put_char(static_cast<char>(key));
-            input[input_pos--] = '\0';
-            continue;
-        }
-        if (input_pos == input.size()) {
-            continue;
-        }
-        put_char(static_cast<char>(key));
-        input[input_pos++] = static_cast<unsigned char>(key);
-    }
-
-    uint32 preferred_mode = 0;
-    for (usize i = 0; i < input.size(); i++) {
-        unsigned char ch = input[i];
-        if (ch == '\0') {
-            continue;
-        }
-        uint32 digit = ch - '0';
-        preferred_mode *= 10;
-        preferred_mode += digit;
-    }
-    logln("\nSelecting mode: {}", preferred_mode);
-    ENSURE(preferred_mode >= 0 && preferred_mode < gop->mode->max_mode, "Invalid mode!");
+    // Set video mode.
+    logln("Selecting mode {}", preferred_mode);
     EFI_CHECK(gop->set_mode(gop, preferred_mode), "Failed to set video mode!")
 
     // Get EFI memory map data.
