@@ -166,7 +166,8 @@ struct EfiFileProtocol {
     uint64 revision;
     EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, EfiFileMode mode,
                       EfiFileFlag flags);
-    Array<void *, 2> unused0;
+    EfiStatus (*close)(EfiFileProtocol *);
+    Array<void *, 1> unused0;
     EfiStatus (*read)(EfiFileProtocol *, usize *size, void *buffer);
     Array<void *, 2> unused1;
     EfiStatus (*set_position)(EfiFileProtocol *, uint64 position);

@@ -117,6 +117,8 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
                   "Failed to read kernel!")
     }
     EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!")
+    EFI_CHECK(kernel_file->close(kernel_file), "Failed to close kernel file!")
+    EFI_CHECK(directory->close(directory), "Failed to close directory!")
 
     // Allocate stack for kernel.
     uintptr kernel_stack = 0;
