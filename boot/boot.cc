@@ -93,7 +93,8 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     EFI_CHECK(
         st->boot_services->allocate_pool(EfiMemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
         "Failed to allocate memory for kernel program headers!")
-    EFI_CHECK(kernel_file->set_position(kernel_file, kernel_header.ph_off), "Failed to set position of kernel file!")
+    EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64>(kernel_header.ph_off)),
+              "Failed to set position of kernel file!")
     EFI_CHECK(kernel_file->read(kernel_file, &phdrs_size, phdrs), "Failed to read kernel program headers!")
 
     // Parse kernel load program headers.
@@ -115,7 +116,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         EFI_CHECK(kernel_file->read(kernel_file, &phdr.filesz, reinterpret_cast<void *>(phdr.paddr)),
                   "Failed to read kernel!")
     }
-    EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!");
+    EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!")
 
     // Allocate stack for kernel.
     uintptr kernel_stack = 0;
