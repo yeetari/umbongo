@@ -85,48 +85,45 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
               "Failed to get kernel file info!")
     ENSURE(kernel_file_info.file_size != 0, "Failed to get kernel file size!");
 
-    // Allocate memory for kernel and read kernel data.
-    void *kernel_data = nullptr;
-    uint64 kernel_size = kernel_file_info.file_size;
-    logln("Allocating memory for kernel...");
-    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, kernel_size,
-                                               reinterpret_cast<void **>(&kernel_data)),
-              "Failed to allocate memory for kernel!")
-    logln("Reading kernel data...");
-    EFI_CHECK(kernel_file->read(kernel_file, &kernel_size, kernel_data), "Failed to read kernel data!")
-
     // Parse kernel ELF header.
+    ElfHeader kernel_header{};
+    uint64 kernel_header_size = sizeof(ElfHeader);
     logln("Parsing kernel ELF header...");
-    auto *kernel_header = reinterpret_cast<ElfHeader *>(kernel_data);
-    ENSURE(kernel_header->magic[0] == 0x7f, "Kernel ELF header corrupt!");
-    ENSURE(kernel_header->magic[1] == 'E', "Kernel ELF header corrupt!");
-    ENSURE(kernel_header->magic[2] == 'L', "Kernel ELF header corrupt!");
-    ENSURE(kernel_header->magic[3] == 'F', "Kernel ELF header corrupt!");
+    EFI_CHECK(kernel_file->read(kernel_file, &kernel_header_size, &kernel_header), "Failed to read kernel header!")
+    ENSURE(kernel_header.magic[0] == 0x7f, "Kernel ELF header corrupt!");
+    ENSURE(kernel_header.magic[1] == 'E', "Kernel ELF header corrupt!");
+    ENSURE(kernel_header.magic[2] == 'L', "Kernel ELF header corrupt!");
+    ENSURE(kernel_header.magic[3] == 'F', "Kernel ELF header corrupt!");
+
+    // Allocate memory for and read kernel program headers.
+    ElfProgramHeader *phdrs = nullptr;
+    uint64 phdrs_size = kernel_header.ph_count * kernel_header.ph_size;
+    EFI_CHECK(
+        st->boot_services->allocate_pool(EfiMemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
+        "Failed to allocate memory for kernel program headers!")
+    EFI_CHECK(kernel_file->set_position(kernel_file, kernel_header.ph_off), "Failed to set position of kernel file!")
+    EFI_CHECK(kernel_file->read(kernel_file, &phdrs_size, phdrs), "Failed to read kernel program headers!")
 
     // Parse kernel load program headers.
-    uintptr kernel_entry = kernel_header->entry;
     logln("Parsing kernel load program headers...");
-    for (uint16 i = 0; i < kernel_header->ph_count; i++) {
-        auto *ph = reinterpret_cast<ElfProgramHeader *>(reinterpret_cast<uintptr>(kernel_data) +
-                                                        static_cast<uintptr>(kernel_header->ph_off) +
-                                                        kernel_header->ph_size * i);
-        if (ph->type != ElfProgramHeaderType::Load) {
+    for (uint16 i = 0; i < kernel_header.ph_count; i++) {
+        auto &phdr = phdrs[i];
+        if (phdr.type != ElfProgramHeaderType::Load) {
             continue;
         }
-        const usize page_count = (ph->memsz + 4096 - 1) / 4096;
+        const usize page_count = (phdr.memsz + 4096 - 1) / 4096;
         EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::LoaderData,
-                                                    page_count, &ph->paddr),
+                                                    page_count, &phdr.paddr),
                   "Failed to claim physical memory for kernel!")
         // Zero out any uninitialised data.
-        if (ph->filesz != ph->memsz) {
-            memset(reinterpret_cast<void *>(ph->paddr), 0, ph->memsz);
+        if (phdr.filesz != phdr.memsz) {
+            memset(reinterpret_cast<void *>(phdr.paddr), 0, phdr.memsz);
         }
-        kernel_file->set_position(kernel_file, static_cast<uint64>(ph->offset));
-        EFI_CHECK(kernel_file->read(kernel_file, &ph->filesz, reinterpret_cast<void *>(ph->paddr)),
+        kernel_file->set_position(kernel_file, static_cast<uint64>(phdr.offset));
+        EFI_CHECK(kernel_file->read(kernel_file, &phdr.filesz, reinterpret_cast<void *>(phdr.paddr)),
                   "Failed to read kernel!")
     }
-
-    // TODO: Free memory. We could also just leave it and let the kernel reclaim it later.
+    EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!");
 
     // Allocate stack for kernel.
     uintptr kernel_stack = 0;
@@ -249,7 +246,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Call kernel and spin on return.
     asm volatile("mov %0, %%rsp" : : "r"(kernel_stack) : "rsp");
-    reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_entry)(&boot_info);
+    reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_header.entry)(&boot_info);
     while (true) {
         asm volatile("cli");
         asm volatile("hlt");
