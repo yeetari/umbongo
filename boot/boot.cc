@@ -1,6 +1,6 @@
 #include <boot/BootInfo.hh>
 #include <boot/Efi.hh>
-#include <boot/Elf.hh>
+#include <libelf/Elf.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
