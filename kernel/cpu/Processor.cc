@@ -1,6 +1,7 @@
 #include <kernel/cpu/Processor.hh>
 
 #include <kernel/Syscall.hh>
+#include <kernel/Syscalls.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>

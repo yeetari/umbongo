@@ -21,7 +21,7 @@ add_executable(kernel
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
-    Syscall.cc)
+    Syscalls.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
     cpu/interrupts.asm)
