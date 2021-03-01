@@ -14,6 +14,12 @@ struct MemoryMapEntry {
     uint64 page_count;
 };
 
+struct RamFsEntry {
+    const char *name{nullptr};
+    const uint8 *data{nullptr};
+    RamFsEntry *next{nullptr};
+};
+
 struct BootInfo {
     // ACPI RSDP.
     void *rsdp;
@@ -27,4 +33,7 @@ struct BootInfo {
     // Memory map info.
     MemoryMapEntry *map;
     usize map_entry_count;
+
+    // RamFS.
+    RamFsEntry *ram_fs;
 };

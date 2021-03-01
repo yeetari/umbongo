@@ -158,7 +158,9 @@ struct EfiFileInfo {
     uint64 size;
     uint64 file_size;
     uint64 physical_size;
-    Array<uint8, 66> junk;
+    Array<uint8, 48> time;
+    EfiFileFlag flags;
+    wchar_t name[1]; // NOLINT
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
@@ -227,3 +229,7 @@ struct EfiSimpleFileSystemProtocol {
     uint64 revision;
     EfiStatus (*open_volume)(EfiSimpleFileSystemProtocol *, EfiFileProtocol **);
 };
+
+inline constexpr EfiFileFlag operator&(EfiFileFlag a, EfiFileFlag b) {
+    return static_cast<EfiFileFlag>(static_cast<usize>(a) & static_cast<usize>(b));
+}

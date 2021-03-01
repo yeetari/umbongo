@@ -50,6 +50,10 @@ extern "C" void kmain(BootInfo *boot_info) {
     MemoryManager memory_manager(boot_info);
     Processor::initialise();
 
+    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
+        logln("  fs: Found file {}", entry->name);
+    }
+
     auto *user_stack = static_cast<char *>(memory_manager.alloc_phys(4_KiB));
 
     VirtSpace virt_space;
