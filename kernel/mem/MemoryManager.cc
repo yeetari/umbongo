@@ -43,7 +43,7 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
     ENSURE(bitset_location);
 
     // Construct the frame bitset and then set reserved regions from the memory map.
-    m_frame_bitset = new (reinterpret_cast<void *>(*bitset_location)) usize[bucket_count];
+    m_frame_bitset = new (reinterpret_cast<void *>(*bitset_location)) usize[bucket_count]{};
     for (usize i = 0; i < boot_info->map_entry_count; i++) {
         auto &entry = boot_info->map[i];
         if (entry.type == MemoryType::Available) {
