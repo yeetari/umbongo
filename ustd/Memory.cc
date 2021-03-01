@@ -16,6 +16,15 @@ extern "C" int memcmp(const void *aptr, const void *bptr, usize size) {
     return 0;
 }
 
+extern "C" void *memcpy(void *dstptr, const void *srcptr, usize size) {
+    auto *dst = static_cast<unsigned char *>(dstptr);
+    const auto *src = static_cast<const unsigned char *>(srcptr);
+    for (usize i = 0; i < size; i++) {
+        dst[i] = src[i];
+    }
+    return dst;
+}
+
 extern "C" void *memset(void *bufptr, int value, usize size) {
     auto *buf = static_cast<unsigned char *>(bufptr);
     for (usize i = 0; i < size; i++) {
