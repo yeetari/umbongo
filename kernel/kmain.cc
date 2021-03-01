@@ -6,8 +6,10 @@
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
+#include <libelf/Elf.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
 extern uint8 k_user_code_start;
@@ -50,16 +52,47 @@ extern "C" void kmain(BootInfo *boot_info) {
     MemoryManager memory_manager(boot_info);
     Processor::initialise();
 
+    RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
+        if (strcmp(entry->name, "init") == 0) {
+            ASSERT(init_entry == nullptr);
+            init_entry = entry;
+        }
         logln("  fs: Found file {}", entry->name);
     }
-
-    auto *user_stack = static_cast<char *>(memory_manager.alloc_phys(4_KiB));
+    ENSURE(init_entry != nullptr, "Failed to find init program!");
 
     VirtSpace virt_space;
-    virt_space.map_4KiB(514_GiB, reinterpret_cast<uintptr>(&k_user_code_start), PageFlags::User);
-    virt_space.map_4KiB(515_GiB, reinterpret_cast<uintptr>(user_stack),
+    virt_space.map_4KiB(515_GiB, reinterpret_cast<uintptr>(memory_manager.alloc_phys(4_KiB)),
                         PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
+
+    const auto *header = reinterpret_cast<const ElfHeader *>(init_entry->data);
+    usize mem_size = 0;
+    for (uint16 i = 0; i < header->ph_count; i++) {
+        const auto *phdr = reinterpret_cast<const ElfProgramHeader *>(
+            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
+        if (phdr->type == ElfProgramHeaderType::Load) {
+            mem_size += phdr->memsz;
+        }
+    }
+
+    auto *data = new uint8[mem_size];
+    for (uint16 i = 0; i < header->ph_count; i++) {
+        const auto *phdr = reinterpret_cast<const ElfProgramHeader *>(
+            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
+        if (phdr->type != ElfProgramHeaderType::Load) {
+            continue;
+        }
+        ASSERT(phdr->filesz <= phdr->memsz);
+        memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
+    }
+
+    constexpr uintptr load_addr = 516_GiB;
+    for (uintptr addr = 0; addr <= round_up(mem_size, 4_KiB); addr += 4_KiB) {
+        virt_space.map_4KiB(load_addr + addr, reinterpret_cast<uintptr>(data) + addr,
+                            PageFlags::Writable | PageFlags::User);
+    }
+
     virt_space.switch_to();
-    jump_to_user(reinterpret_cast<void *>(515_GiB + 4_KiB), reinterpret_cast<void (*)()>(514_GiB));
+    jump_to_user(reinterpret_cast<void *>(515_GiB + 4_KiB), reinterpret_cast<void (*)()>(load_addr + header->entry));
 }
