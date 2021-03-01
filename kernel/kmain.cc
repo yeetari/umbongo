@@ -12,9 +12,6 @@
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
-extern uint8 k_user_code_start;
-extern uint8 k_user_code_end;
-
 usize __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] extern "C" void __stack_chk_fail() {

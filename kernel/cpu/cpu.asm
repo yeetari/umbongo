@@ -75,12 +75,3 @@ syscall_stub:
     mov rsp, [gs:16]
     swapgs
     o64 sysret
-
-section .user_code
-
-global user_code
-user_code:
-    xor rax, rax
-    syscall
-    syscall
-    jmp $
