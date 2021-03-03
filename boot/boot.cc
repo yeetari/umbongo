@@ -76,8 +76,8 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
     // Parse kernel ELF header.
-    ElfHeader kernel_header{};
-    uint64 kernel_header_size = sizeof(ElfHeader);
+    elf::Header kernel_header{};
+    uint64 kernel_header_size = sizeof(elf::Header);
     logln("Parsing kernel ELF header...");
     EFI_CHECK(kernel_file->read(kernel_file, &kernel_header_size, &kernel_header), "Failed to read kernel header!")
     ENSURE(kernel_header.magic[0] == 0x7f, "Kernel ELF header corrupt!");
@@ -86,7 +86,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     ENSURE(kernel_header.magic[3] == 'F', "Kernel ELF header corrupt!");
 
     // Allocate memory for and read kernel program headers.
-    ElfProgramHeader *phdrs = nullptr;
+    elf::ProgramHeader *phdrs = nullptr;
     uint64 phdrs_size = kernel_header.ph_count * kernel_header.ph_size;
     EFI_CHECK(
         st->boot_services->allocate_pool(EfiMemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
@@ -99,7 +99,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     logln("Parsing kernel load program headers...");
     for (uint16 i = 0; i < kernel_header.ph_count; i++) {
         auto &phdr = phdrs[i];
-        if (phdr.type != ElfProgramHeaderType::Load) {
+        if (phdr.type != elf::ProgramHeaderType::Load) {
             continue;
         }
         const usize page_count = (phdr.memsz + 4096 - 1) / 4096;

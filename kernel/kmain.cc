@@ -63,21 +63,21 @@ extern "C" void kmain(BootInfo *boot_info) {
     virt_space.map_4KiB(515_GiB, reinterpret_cast<uintptr>(memory_manager.alloc_phys(4_KiB)),
                         PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
 
-    const auto *header = reinterpret_cast<const ElfHeader *>(init_entry->data);
+    const auto *header = reinterpret_cast<const elf::Header *>(init_entry->data);
     usize mem_size = 0;
     for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const ElfProgramHeader *>(
+        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
             reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type == ElfProgramHeaderType::Load) {
+        if (phdr->type == elf::ProgramHeaderType::Load) {
             mem_size += phdr->memsz;
         }
     }
 
     auto *data = new uint8[mem_size];
     for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const ElfProgramHeader *>(
+        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
             reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type != ElfProgramHeaderType::Load) {
+        if (phdr->type != elf::ProgramHeaderType::Load) {
             continue;
         }
         ASSERT(phdr->filesz <= phdr->memsz);

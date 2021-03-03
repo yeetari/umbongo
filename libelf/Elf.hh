@@ -3,7 +3,9 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-struct ElfHeader {
+namespace elf {
+
+struct Header {
     Array<uint8, 4> magic;
     Array<uint8, 12> ident;
     uint16 type;
@@ -18,12 +20,12 @@ struct ElfHeader {
     uint16 ph_count;
 };
 
-enum class ElfProgramHeaderType : uint32 {
+enum class ProgramHeaderType : uint32 {
     Load = 1,
 };
 
-struct ElfProgramHeader {
-    ElfProgramHeaderType type;
+struct ProgramHeader {
+    ProgramHeaderType type;
     uint32 flags;
     ptrdiff offset;
     uintptr vaddr;
@@ -32,3 +34,5 @@ struct ElfProgramHeader {
     uint64 memsz;
     uint64 align;
 };
+
+} // namespace elf
