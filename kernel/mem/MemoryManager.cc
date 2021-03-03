@@ -12,10 +12,6 @@ namespace {
 constexpr usize k_bucket_bit_count = sizeof(usize) * 8;
 constexpr usize k_frame_size = 4_KiB;
 
-constexpr usize frame_round_up(usize x) {
-    return (x + k_frame_size - 1) & ~(k_frame_size - 1);
-}
-
 MemoryManager *s_memory_manager = nullptr;
 
 } // namespace
@@ -55,7 +51,7 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
     }
 
     // Also mark the memory for the frame bitset itself as reserved.
-    for (usize i = 0; i < frame_round_up(bucket_count * sizeof(usize)) / k_frame_size; i++) {
+    for (usize i = 0; i < round_up(bucket_count * sizeof(usize), k_frame_size) / k_frame_size; i++) {
         set_frame(*bitset_location / k_frame_size + i);
     }
 
@@ -73,7 +69,7 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
 }
 
 Optional<uintptr> MemoryManager::find_first_fit_region(usize size) {
-    const usize page_count = frame_round_up(size) / k_frame_size;
+    const usize page_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < m_boot_info->map_entry_count; i++) {
         auto &entry = m_boot_info->map[i];
         if (entry.type != MemoryType::Reserved && entry.page_count >= page_count) {
@@ -101,7 +97,7 @@ bool MemoryManager::is_frame_set(usize index) {
 }
 
 void *MemoryManager::alloc_phys(usize size) {
-    const usize frame_count = frame_round_up(size) / k_frame_size;
+    const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < m_total_frames; i += frame_count) {
         bool found_space = true;
         for (usize j = i; j < i + frame_count; j++) {
