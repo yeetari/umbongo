@@ -26,3 +26,7 @@ constexpr usize operator"" _MiB(unsigned long long num) {
 constexpr usize operator"" _GiB(unsigned long long num) {
     return num * 0x40000000;
 }
+
+constexpr usize round_up(usize roundee, usize roundend) {
+    return (roundee + roundend - 1) & ~(roundend - 1);
+}
