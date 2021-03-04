@@ -48,6 +48,11 @@ inline void log_single(const char *, const char *msg) {
     }
 }
 
+template <>
+inline void log_single(const char *, bool arg) {
+    log_single("", arg ? "true" : "false");
+}
+
 template <typename T>
 // NOLINTNEXTLINE
 void log_part(const char *&fmt, const T &arg) {
