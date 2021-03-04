@@ -303,7 +303,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     EFI_CHECK(st->boot_services->exit_boot_services(image_handle, map_key), "Failed to exit boot services!")
 
     // Call kernel and spin on return.
-    asm volatile("mov %0, %%rsp" : : "r"(kernel_stack) : "rsp");
+    asm volatile("mov %0, %%rsp" : : "r"(kernel_stack + k_kernel_stack_page_count * 4_KiB) : "rsp");
     reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_header.entry)(&boot_info);
     while (true) {
         asm volatile("cli");
