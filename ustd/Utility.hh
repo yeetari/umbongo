@@ -1,5 +1,6 @@
 #pragma once
 
+namespace ustd {
 namespace detail {
 
 template <typename T>
@@ -54,3 +55,5 @@ template <typename T>
 constexpr RemoveRef<T> &&move(T &&arg) noexcept {
     return static_cast<RemoveRef<T> &&>(arg);
 }
+
+} // namespace ustd

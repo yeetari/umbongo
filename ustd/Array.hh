@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace ustd {
+
 template <typename T, usize N>
 struct Array {
     // NOLINTNEXTLINE
@@ -20,3 +22,7 @@ struct Array {
 
 template <typename T, typename... Args>
 Array(T, Args...) -> Array<T, sizeof...(Args) + 1>;
+
+} // namespace ustd
+
+using ustd::Array;

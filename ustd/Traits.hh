@@ -3,6 +3,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
+namespace ustd {
+
 template <typename T, T V>
 struct IntegralConstant {
     static constexpr T value = V;
@@ -58,3 +60,9 @@ concept IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
 
 template <typename T, typename U>
 concept IsSame = detail::IsSameCheck<T, U>::value;
+
+} // namespace ustd
+
+using ustd::IsInteger;
+using ustd::IsPointer;
+using ustd::IsSame;

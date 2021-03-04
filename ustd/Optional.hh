@@ -5,6 +5,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
+namespace ustd {
+
 template <typename T>
 class Optional {
     Array<uint8, sizeof(T)> m_data{};
@@ -21,3 +23,7 @@ public:
         return *reinterpret_cast<const T *>(m_data.data());
     }
 };
+
+} // namespace ustd
+
+using ustd::Optional;

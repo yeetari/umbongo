@@ -6,6 +6,7 @@
 
 void put_char(char ch);
 
+namespace ustd {
 namespace detail {
 
 template <typename T>
@@ -92,3 +93,8 @@ void logln(const char *fmt, const Args &...args) {
     log(fmt, args...);
     put_char('\n');
 }
+
+} // namespace ustd
+
+using ustd::log;
+using ustd::logln;
