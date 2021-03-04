@@ -15,6 +15,8 @@ add_custom_command(OUTPUT Font.cc
 
 # Kernel target.
 add_executable(kernel
+    acpi/RootTable.cc
+    acpi/Table.cc
     cpu/Processor.cc
     mem/MemoryManager.cc
     mem/VirtSpace.cc

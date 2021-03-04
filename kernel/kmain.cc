@@ -3,6 +3,8 @@
 #include <kernel/Console.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
+#include <kernel/acpi/RootTable.hh>
+#include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
@@ -48,6 +50,19 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     MemoryManager memory_manager(boot_info);
     Processor::initialise();
+
+    auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);
+    ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
+
+    auto *xsdt = rsdp->xsdt();
+    logln("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
+    ENSURE(xsdt->valid());
+
+    for (auto *entry : *xsdt) {
+        logln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
+              entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
+        ENSURE(entry->valid());
+    }
 
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
