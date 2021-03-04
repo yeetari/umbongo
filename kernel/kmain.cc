@@ -48,7 +48,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     logln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
     logln("core: rsdp = {}", boot_info->rsdp);
 
-    MemoryManager memory_manager(boot_info);
+    MemoryManager::initialise(boot_info);
     Processor::initialise();
 
     auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);

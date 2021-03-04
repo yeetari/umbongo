@@ -12,9 +12,13 @@ namespace {
 constexpr usize k_bucket_bit_count = sizeof(usize) * 8;
 constexpr usize k_frame_size = 4_KiB;
 
-MemoryManager *s_memory_manager = nullptr;
+MemoryManager s_memory_manager;
 
 } // namespace
+
+void MemoryManager::initialise(BootInfo *boot_info) {
+    new (&s_memory_manager) MemoryManager(boot_info);
+}
 
 MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
     // Calculate end of physical memory.
@@ -63,9 +67,6 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
         total_bytes += k_frame_size;
     }
     logln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
-
-    // Set ourselves as the global memory manager. This effectively enables heap allocation in the kernel.
-    s_memory_manager = this;
 }
 
 Optional<uintptr> MemoryManager::find_first_fit_region(usize size) {
@@ -97,6 +98,7 @@ bool MemoryManager::is_frame_set(usize index) {
 }
 
 void *MemoryManager::alloc_phys(usize size) {
+    ASSERT(m_frame_bitset != nullptr, "Attempted heap allocation before memory manager setup!");
     const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < m_total_frames; i += frame_count) {
         bool found_space = true;
@@ -120,8 +122,7 @@ void *MemoryManager::alloc_phys(usize size) {
 }
 
 void *operator new(usize size) {
-    ASSERT(s_memory_manager != nullptr, "Attempted heap allocation before memory manager setup!");
-    return s_memory_manager->alloc_phys(size);
+    return s_memory_manager.alloc_phys(size);
 }
 
 void *operator new[](usize size) {
