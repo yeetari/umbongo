@@ -18,14 +18,14 @@ flush_gdt:
     mov gs, ax
     ret
 
-; void jump_to_user(void *stack, void (*callee)())
+; void jump_to_user(void (*entry)(), void *stack)
 global jump_to_user
 jump_to_user:
     push qword 0x18 | 0x3 ; ss
-    push qword rdi ; rsp
+    push qword rsi ; rsp
     push qword 0x202 ; rflags (IF set)
     push qword 0x20 | 0x3 ; cs
-    push qword rsi ; rip
+    push qword rdi ; rip
     iretq
 
 extern syscall_handler

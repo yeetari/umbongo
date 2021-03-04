@@ -32,7 +32,7 @@ void put_char(char ch) {
     }
 }
 
-extern "C" void jump_to_user(void *stack, void (*callee)());
+extern "C" void jump_to_user(void (*entry)(), void *stack);
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
@@ -97,6 +97,6 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     VirtSpace virt_space = VirtSpace::create_user(data, mem_size);
     virt_space.switch_to();
-    jump_to_user(reinterpret_cast<void *>(k_user_stack_head),
-                 reinterpret_cast<void (*)()>(k_user_binary_base + header->entry));
+    jump_to_user(reinterpret_cast<void (*)()>(k_user_binary_base + header->entry),
+                 reinterpret_cast<void *>(k_user_stack_head));
 }
