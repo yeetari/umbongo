@@ -5,6 +5,19 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
+VirtSpace VirtSpace::create_user(void *binary, usize binary_size) {
+    VirtSpace virt_space;
+    for (usize offset = 0; offset <= round_up(binary_size, 4_KiB); offset += 4_KiB) {
+        virt_space.map_4KiB(k_user_binary_base + offset, reinterpret_cast<uintptr>(binary) + offset, PageFlags::User);
+    }
+    auto *stack = new uint8[k_user_stack_page_count * 4_KiB];
+    for (usize offset = 0; offset < k_user_stack_page_count * 4_KiB; offset += 4_KiB) {
+        virt_space.map_4KiB(k_user_stack_base + offset, reinterpret_cast<uintptr>(stack) + offset,
+                            PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
+    }
+    return virt_space;
+}
+
 VirtSpace::VirtSpace() : m_pml4(new Pml4) {
     // Identity map physical memory up to 512GiB. Using 1GiB pages means this only takes 4KiB of page structures to do.
     // TODO: Mark these pages as global.

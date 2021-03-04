@@ -74,10 +74,6 @@ extern "C" void kmain(BootInfo *boot_info) {
     }
     ENSURE(init_entry != nullptr, "Failed to find init program!");
 
-    VirtSpace virt_space;
-    virt_space.map_4KiB(515_GiB, reinterpret_cast<uintptr>(memory_manager.alloc_phys(4_KiB)),
-                        PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
-
     const auto *header = reinterpret_cast<const elf::Header *>(init_entry->data);
     usize mem_size = 0;
     for (uint16 i = 0; i < header->ph_count; i++) {
@@ -99,12 +95,8 @@ extern "C" void kmain(BootInfo *boot_info) {
         memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
     }
 
-    constexpr uintptr load_addr = 516_GiB;
-    for (uintptr addr = 0; addr <= round_up(mem_size, 4_KiB); addr += 4_KiB) {
-        virt_space.map_4KiB(load_addr + addr, reinterpret_cast<uintptr>(data) + addr,
-                            PageFlags::Writable | PageFlags::User);
-    }
-
+    VirtSpace virt_space = VirtSpace::create_user(data, mem_size);
     virt_space.switch_to();
-    jump_to_user(reinterpret_cast<void *>(515_GiB + 4_KiB), reinterpret_cast<void (*)()>(load_addr + header->entry));
+    jump_to_user(reinterpret_cast<void *>(k_user_stack_head),
+                 reinterpret_cast<void (*)()>(k_user_binary_base + header->entry));
 }
