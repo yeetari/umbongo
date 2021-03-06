@@ -52,6 +52,11 @@ struct IsSameCheck<T, T> : public TrueType {};
 
 } // namespace detail
 
+template <typename T, typename U>
+concept IsConvertibleTo = requires(T obj) {
+    static_cast<U>(obj);
+};
+
 template <typename T>
 concept IsInteger = detail::IsIntegerCheck<RemoveQual<T>>::value;
 
@@ -61,8 +66,13 @@ concept IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
 template <typename T, typename U>
 concept IsSame = detail::IsSameCheck<T, U>::value;
 
+template <typename T>
+concept IsTriviallyCopyable = __is_trivially_copyable(T);
+
 } // namespace ustd
 
+using ustd::IsConvertibleTo;
 using ustd::IsInteger;
 using ustd::IsPointer;
 using ustd::IsSame;
+using ustd::IsTriviallyCopyable;
