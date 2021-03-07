@@ -272,10 +272,11 @@ void Processor::initialise() {
         write_cr4(read_cr4() | (1u << 11u));
     }
 
-    // Perform an extended cpuid and ensure that the syscall/sysret and NX features are available.
+    // Perform an extended cpuid and ensure that the syscall/sysret, NX and 1GiB page features are available.
     CpuId extended_cpu_id(0x80000001);
     ENSURE((extended_cpu_id.edx() & (1u << 11u)) != 0, "syscall/sysret not available!");
     ENSURE((extended_cpu_id.edx() & (1u << 20u)) != 0, "NX not available!");
+    ENSURE((extended_cpu_id.edx() & (1u << 26u)) != 0, "1GiB pages not available!");
 
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 0u) | (1u << 11u));
