@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/acpi/Table.hh>
+#include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 
 namespace acpi {
@@ -14,6 +15,9 @@ class [[gnu::packed]] RootTable : public Table {
 public:
     RootTableIterator begin() const;
     RootTableIterator end() const;
+
+    template <typename T>
+    T *find() const;
 
     Table *entry(usize index) const;
     usize entry_count() const;
@@ -46,6 +50,16 @@ inline RootTableIterator RootTable::begin() const {
 
 inline RootTableIterator RootTable::end() const {
     return {this, entry_count()};
+}
+
+template <typename T>
+T *RootTable::find() const {
+    for (auto *table : *this) {
+        if (ustd::equal(table->signature(), T::k_signature)) {
+            return static_cast<T *>(table);
+        }
+    }
+    return nullptr;
 }
 
 } // namespace acpi

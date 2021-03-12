@@ -3,8 +3,10 @@
 #include <kernel/Console.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
+#include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
+#include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
@@ -32,6 +34,23 @@ void put_char(char ch) {
     }
 }
 
+static bool s_pit_fired = false;
+static uint32 s_ticks = 0;
+
+void timer_handler(InterruptFrame *) {
+    auto *apic = reinterpret_cast<LocalApic *>(0xfee00000);
+    apic->send_ack();
+    logln("Timer");
+    apic->set_timer_count(s_ticks * 100);
+}
+
+void pit_handler(InterruptFrame *) {
+    auto *apic = reinterpret_cast<LocalApic *>(0xfee00000);
+    apic->send_ack();
+    apic->set_timer(LocalApic::TimerMode::Disabled, 255);
+    s_pit_fired = true;
+}
+
 extern "C" void jump_to_user(void (*entry)(), void *stack);
 
 extern "C" void kmain(BootInfo *boot_info) {
@@ -48,9 +67,6 @@ extern "C" void kmain(BootInfo *boot_info) {
     logln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
     logln("core: rsdp = {}", boot_info->rsdp);
 
-    MemoryManager::initialise(boot_info);
-    Processor::initialise();
-
     auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
 
@@ -63,6 +79,64 @@ extern "C" void kmain(BootInfo *boot_info) {
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
         ENSURE(entry->valid());
     }
+
+    auto *madt = xsdt->find<acpi::ApicTable>();
+    ENSURE(madt != nullptr);
+    if ((madt->flags() & (1u << 0u)) != 0) {
+        logln("apic: Legacy PIC detected, masking");
+        port_write(0x21, 0xff);
+        port_write(0xa1, 0xff);
+    }
+
+    volatile uint32 *io_apic = nullptr;
+    for (auto *controller : *madt) {
+        if (controller->type() == 1) {
+            ENSURE(io_apic == nullptr);
+            auto *a = reinterpret_cast<acpi::IoApicController *>(controller);
+            logln("acpi: IO APIC = {:h} {} {}", a->m_address, a->m_id, a->m_interrupt_base);
+            io_apic = reinterpret_cast<volatile uint32 *>(a->m_address);
+        }
+        if (controller->type() == 2) {
+            auto *iso = reinterpret_cast<acpi::InterruptSourceOverride *>(controller);
+            logln("acpi: Redirect {} -> {} on bus {}", iso->m_source, iso->m_global_system_interrupt, iso->m_bus);
+        }
+    }
+
+    MemoryManager::initialise(boot_info);
+    Processor::initialise();
+
+    auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
+    logln("acpi: Local APIC = {}", apic);
+    apic->enable();
+    apic->send_ack();
+
+    uint64 io_apic_entry = 0b00101001;
+    *io_apic = 0x10 + 2 * 2;
+    *(io_apic + 4) = static_cast<uint32>(io_apic_entry);
+    *io_apic = 0x10 + 2 * 2 + 1;
+    *(io_apic + 4) = static_cast<uint32>(io_apic_entry >> 32ul);
+    Processor::wire_interrupt(41, &pit_handler);
+
+    port_write(0x43, (uint8)0b00110010);
+    apic->set_timer(LocalApic::TimerMode::OneShot, 255);
+    apic->set_timer_count(0xffffffff);
+
+    uint16 divisor = 1193182 / 100;
+    port_write(0x40, (uint8)(divisor & 0xffu));
+    port_write(0x40, (uint8)((divisor >> 8u) & 0xffu));
+    asm volatile("sti");
+
+    while (!s_pit_fired) {
+    }
+
+    asm volatile("cli");
+    uint32 ticks = 0xffffffff - apic->read_timer_count();
+    logln("Ticks: {}", ticks);
+
+    s_ticks = ticks;
+    apic->set_timer(LocalApic::TimerMode::OneShot, 40);
+    apic->set_timer_count(s_ticks * 100);
+    Processor::wire_interrupt(40, &timer_handler);
 
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
