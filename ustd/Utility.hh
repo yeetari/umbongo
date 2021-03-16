@@ -56,4 +56,11 @@ constexpr RemoveRef<T> &&move(T &&arg) noexcept {
     return static_cast<RemoveRef<T> &&>(arg);
 }
 
+template <typename T, typename U = T>
+constexpr T exchange(T &obj, U &&new_value) {
+    T old_value = move(obj);
+    obj = forward<U>(new_value);
+    return old_value;
+}
+
 } // namespace ustd
