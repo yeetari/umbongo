@@ -98,7 +98,7 @@ bool MemoryManager::is_frame_set(usize index) {
 }
 
 void *MemoryManager::alloc_phys(usize size) {
-    ASSERT(m_frame_bitset != nullptr, "Attempted heap allocation before memory manager setup!");
+    ASSERT(m_boot_info != nullptr, "Attempted heap allocation before memory manager setup!");
     const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < m_total_frames; i += frame_count) {
         bool found_space = true;
