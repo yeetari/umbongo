@@ -26,6 +26,10 @@ VirtSpace::VirtSpace() : m_pml4(new Pml4) {
     }
 }
 
+VirtSpace::~VirtSpace() {
+    delete m_pml4;
+}
+
 void VirtSpace::map_4KiB(uintptr virt, uintptr phys, PageFlags flags) {
     ASSERT_PEDANTIC(virt % 4_KiB == 0);
     ASSERT_PEDANTIC(phys % 4_KiB == 0);
