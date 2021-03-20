@@ -73,6 +73,7 @@ if(QEMU_PROG)
         -cpu max
         -debugcon stdio
         -drive file=fs.img,if=ide,format=raw
+        -machine q35
         -nodefaults
         -vga std)
     add_custom_target(run
