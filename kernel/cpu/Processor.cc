@@ -188,8 +188,8 @@ void write_msr(uint32 msr, uint64 value) {
     asm volatile("wrmsr" : : "a"(rax), "d"(rdx), "c"(msr));
 }
 
-[[noreturn]] void unhandled_interrupt(InterruptFrame *frame) {
-    logln(" cpu: Received unexpected interrupt {} in ring {}!", frame->num, frame->cs & 3u);
+[[noreturn]] void unhandled_interrupt(RegisterState *regs) {
+    logln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 
@@ -201,10 +201,10 @@ extern uint8 k_interrupt_stubs_end;
 extern "C" void flush_gdt(Gdt *gdt);
 extern "C" void syscall_stub();
 
-extern "C" void interrupt_handler(InterruptFrame *frame) {
-    ASSERT_PEDANTIC(frame->num < k_interrupt_count);
-    ASSERT_PEDANTIC(s_interrupt_table[frame->num] != nullptr);
-    s_interrupt_table[frame->num](frame);
+extern "C" void interrupt_handler(RegisterState *regs) {
+    ASSERT_PEDANTIC(regs->int_num < k_interrupt_count);
+    ASSERT_PEDANTIC(s_interrupt_table[regs->int_num] != nullptr);
+    s_interrupt_table[regs->int_num](regs);
 }
 
 extern "C" void syscall_handler(SyscallFrame *frame) {
