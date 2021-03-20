@@ -4,7 +4,10 @@
 
 namespace Syscall {
 
-#define ENUMERATE_SYSCALLS(S) S(print)
+#define ENUMERATE_SYSCALLS(S)                                                                                          \
+    S(exit)                                                                                                            \
+    S(getpid)                                                                                                          \
+    S(print)
 
 enum Number {
 #define ENUMERATE_SYSCALL(s) s,

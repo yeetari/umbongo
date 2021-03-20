@@ -18,16 +18,33 @@ flush_gdt:
     mov gs, ax
     ret
 
-; void jump_to_user(void (*entry)(), void *stack)
-global jump_to_user
-jump_to_user:
-    push qword 0x18 | 0x3 ; ss
-    push qword rsi ; rsp
-    push qword 0x202 ; rflags (IF set)
-    push qword 0x20 | 0x3 ; cs
-    push qword rdi ; rip
+; void switch_now(RegisterState *regs)
+global switch_now
+switch_now:
+    push qword [rdi + 168] ; ss
+    push qword [rdi + 160] ; rsp
+    push qword [rdi + 152] ; rflags
+    push qword [rdi + 144] ; cs
+    push qword [rdi + 136] ; rip
+    mov r15, [rdi + 0]
+    mov r14, [rdi + 8]
+    mov r13, [rdi + 16]
+    mov r12, [rdi + 24]
+    mov r11, [rdi + 32]
+    mov r10, [rdi + 40]
+    mov r9, [rdi + 48]
+    mov r8, [rdi + 56]
+    mov rbp, [rdi + 64]
+    mov rsi, [rdi + 72]
+    mov rdx, [rdi + 88]
+    mov rcx, [rdi + 96]
+    mov rbx, [rdi + 104]
+    mov rax, [rdi + 112]
+    mov rdi, [rdi + 80]
+    swapgs
     iretq
 
+extern g_current_process
 extern syscall_handler
 global syscall_stub
 syscall_stub:
@@ -52,7 +69,11 @@ syscall_stub:
     push r14
     push r15
 
+    mov qword rax, [g_current_process]
+    mov qword [gs:24], rax
+
     mov rdi, rsp
+    mov rsi, [gs:0]
     call syscall_handler
 
     ; Pop back GP registers.

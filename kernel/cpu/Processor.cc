@@ -1,8 +1,9 @@
 #include <kernel/cpu/Processor.hh>
 
 #include <kernel/Syscall.hh>
-#include <kernel/Syscalls.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
+#include <kernel/proc/Process.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -139,10 +140,12 @@ struct [[gnu::packed]] Tss {
     uint16 iopb;
 };
 
+// A struct to store per core information. Packed because we access some fields from assembly.
 struct [[gnu::packed]] LocalStorage {
     LocalStorage *self{this};
     void *kernel_stack{nullptr};
     void *user_stack{nullptr};
+    Process *current_process{nullptr};
 };
 
 struct [[gnu::packed]] SyscallFrame {
@@ -150,8 +153,8 @@ struct [[gnu::packed]] SyscallFrame {
 };
 
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
-using SyscallHandler = uint64 (*)(uint64 arg1, uint64 arg2, uint64 arg3);
-#define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&sys_##s)
+using SyscallHandler = uint64 (Process::*)(uint64, uint64, uint64);
+#define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
 Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
 
@@ -199,6 +202,7 @@ extern uint8 k_interrupt_stubs_start;
 extern uint8 k_interrupt_stubs_end;
 
 extern "C" void flush_gdt(Gdt *gdt);
+extern "C" void switch_now(RegisterState *regs);
 extern "C" void syscall_stub();
 
 extern "C" void interrupt_handler(RegisterState *regs) {
@@ -207,13 +211,22 @@ extern "C" void interrupt_handler(RegisterState *regs) {
     s_interrupt_table[regs->int_num](regs);
 }
 
-extern "C" void syscall_handler(SyscallFrame *frame) {
+extern "C" void syscall_handler(SyscallFrame *frame, LocalStorage *storage) {
     // Syscall number passed in rax.
     if (frame->rax >= s_syscall_table.size()) {
         return;
     }
+    auto *process = storage->current_process;
+    ASSERT_PEDANTIC(process != nullptr);
     ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
-    frame->rax = s_syscall_table[frame->rax](frame->rdi, frame->rsi, frame->rdx);
+    const bool is_exit = frame->rax == Syscall::exit;
+    frame->rax = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
+    if (is_exit) {
+        process->kill();
+        RegisterState regs{};
+        Scheduler::switch_next(&regs);
+        switch_now(&regs);
+    }
 }
 
 void Processor::initialise() {

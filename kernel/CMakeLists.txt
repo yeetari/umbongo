@@ -24,6 +24,8 @@ add_executable(kernel
     intr/IoApic.cc
     mem/MemoryManager.cc
     mem/VirtSpace.cc
+    proc/Process.cc
+    proc/Scheduler.cc
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc

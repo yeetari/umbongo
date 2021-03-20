@@ -10,7 +10,8 @@
 #include <kernel/cpu/Processor.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/MemoryManager.hh>
-#include <kernel/mem/VirtSpace.hh>
+#include <kernel/proc/Process.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <libelf/Elf.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -62,8 +63,6 @@ void put_char(char ch) {
         port_write(0xe9, ch);
     }
 }
-
-extern "C" void jump_to_user(void (*entry)(), void *stack);
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
@@ -155,8 +154,11 @@ extern "C" void kmain(BootInfo *boot_info) {
         memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
     }
 
-    VirtSpace virt_space = VirtSpace::create_user(data, mem_size);
-    virt_space.switch_to();
-    jump_to_user(reinterpret_cast<void (*)()>(k_user_binary_base + header->entry),
-                 reinterpret_cast<void *>(k_user_stack_head));
+    Scheduler::initialise(apic);
+    for (int i = 0; i < 5; i++) {
+        auto *init_process = Process::create_user(data, mem_size);
+        init_process->set_entry_point(header->entry);
+        Scheduler::insert_process(init_process);
+    }
+    Scheduler::start();
 }
