@@ -18,6 +18,7 @@ add_executable(kernel
     acpi/ApicTable.cc
     acpi/RootTable.cc
     acpi/Table.cc
+    cpu/LocalApic.cc
     cpu/Processor.cc
     intr/InterruptManager.cc
     intr/IoApic.cc

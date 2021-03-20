@@ -6,6 +6,7 @@
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
+#include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/MemoryManager.hh>
@@ -116,6 +117,12 @@ extern "C" void kmain(BootInfo *boot_info) {
                                                 interrupt_trigger_mode(override->trigger_mode));
         }
     }
+
+    // Enable local APIC and acknowledge any outstanding interrupts.
+    auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
+    logln("acpi: Local APIC = {}", apic);
+    apic->enable();
+    apic->send_eoi();
 
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
