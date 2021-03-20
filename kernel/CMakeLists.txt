@@ -34,7 +34,6 @@ add_library(kernel_asm OBJECT
     cpu/cpu.asm
     cpu/interrupts.asm)
 install(TARGETS kernel DESTINATION .)
-target_compile_definitions(kernel PRIVATE KERNEL)
 target_compile_features(kernel PRIVATE cxx_std_20)
 target_compile_options(kernel PRIVATE
     -ffreestanding -fno-exceptions -fno-rtti
