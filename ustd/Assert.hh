@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ustd/Log.hh>
-
 #define ENSURE(expr, ...)                                                                                              \
     static_cast<bool>(expr) ? static_cast<void>(0) : assertion_failed(__FILE__, __LINE__, #expr, ##__VA_ARGS__)
 #ifdef ASSERTIONS
@@ -18,19 +16,4 @@
 #define ASSERT_NOT_REACHED(...) ASSERT(false, ##__VA_ARGS__)
 #define ENSURE_NOT_REACHED(...) ENSURE(false, ##__VA_ARGS__)
 
-template <typename... Args>
-[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, Args... args) {
-    logln("\nAssertion '{}' failed at {}:{}", expr, file, line);
-    (logln("=> {}", args), ...);
-#if defined(BOOTLOADER) || defined(KERNEL)
-    while (true) {
-        asm volatile("cli");
-        asm volatile("hlt");
-    }
-#else
-    // TODO: Abort in userland.
-    while (true) {
-        log("Assertion in userland!");
-    }
-#endif
-}
+[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg = nullptr);
