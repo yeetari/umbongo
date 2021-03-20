@@ -3,6 +3,7 @@
 #include <kernel/Console.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
+#include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/Processor.hh>
@@ -62,6 +63,14 @@ extern "C" void kmain(BootInfo *boot_info) {
         logln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
         ENSURE(entry->valid());
+    }
+
+    auto *madt = xsdt->find<acpi::ApicTable>();
+    ENSURE(madt != nullptr);
+    if ((madt->flags() & (1u << 0u)) != 0) {
+        logln("acpi: Found legacy PIC, masking");
+        port_write<uint8>(0x21, 0xff);
+        port_write<uint8>(0xa1, 0xff);
     }
 
     RamFsEntry *init_entry = nullptr;
