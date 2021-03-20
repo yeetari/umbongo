@@ -1,7 +1,7 @@
 #include <kernel/Syscall.hh>
 
-[[noreturn]] extern "C" void main() {
-    Syscall::invoke(Syscall::print, "Hello, world!");
-    while (true) {
-    }
+extern "C" void main() {
+    uint64 pid = Syscall::invoke(Syscall::getpid);
+    Syscall::invoke(Syscall::print, "Hello world!");
+    Syscall::invoke(Syscall::exit, pid);
 }
