@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace ustd {
@@ -9,9 +10,14 @@ struct Array {
     // NOLINTNEXTLINE
     alignas(T) T m_data[N];
 
-    // TODO: Assert index in bounds.
-    constexpr T &operator[](usize index) { return m_data[index]; }
-    constexpr const T &operator[](usize index) const { return m_data[index]; }
+    constexpr T &operator[](usize index) {
+        ASSERT(index < N);
+        return m_data[index];
+    }
+    constexpr const T &operator[](usize index) const {
+        ASSERT(index < N);
+        return m_data[index];
+    }
 
     constexpr T *data() { return static_cast<T *>(m_data); }
     constexpr const T *data() const { return static_cast<const T *>(m_data); }
