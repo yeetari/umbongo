@@ -1,0 +1,52 @@
+name: Static Analysis
+on: [push, pull_request]
+jobs:
+  clang-tidy:
+    name: Clang Tidy
+    runs-on: ubuntu-latest
+    container: ubuntu:devel
+    env:
+      DEBIAN_FRONTEND: "noninteractive"
+    steps:
+      - name: Install tools
+        run: |
+          apt update -qq
+          apt install -y clang cmake clang-tidy lld nasm
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure CMake
+        run: |
+          cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Run clang-tidy
+        run: |
+          find . \
+            -name '*.cc' \
+            -and -not -name 'FontGenerator.cc' \
+            -exec clang-tidy -p build --header-filter=.* --quiet {} \; \
+            | tee output
+          if [ -s output ]; then exit 1; fi
+
+  cppcheck:
+    name: Cppcheck
+    runs-on: ubuntu-latest
+    container: ubuntu:devel
+    env:
+      DEBIAN_FRONTEND: "noninteractive"
+    steps:
+      - name: Install tools
+        run: |
+          apt update -qq
+          apt install -y clang cmake cppcheck lld nasm
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure CMake
+        run: |
+          cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Run cppcheck
+        run: |
+          cppcheck \
+            --project=build/compile_commands.json \
+            --suppress=*:*freetype\* \
+            --quiet \
+            2>&1 | tee output
+          if [ -s output ]; then exit 1; fi
