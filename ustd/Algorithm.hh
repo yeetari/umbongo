@@ -5,11 +5,13 @@
 
 namespace ustd {
 
+// clang-format off
 template <typename Container>
 concept IsContainer = requires(const Container &container) {
     { container.data() } -> IsConvertibleTo<const void *>;
     { container.size() } -> IsSame<usize>;
 };
+// clang-format on
 
 // TODO: Find a way to use "template <Container<T> ContainerA>" syntax.
 #define CONTAINER_1                                                                                                    \
@@ -18,7 +20,7 @@ concept IsContainer = requires(const Container &container) {
 #define CONTAINER_2                                                                                                    \
     template <typename T, auto... Ts, template <typename, auto...> typename ContainerA, typename U, auto... Us,        \
               template <typename, auto...> typename ContainerB>                                                        \
-    requires IsContainer<ContainerA<T, Ts...>> && IsContainer<ContainerB<U, Us...>>
+    requires IsContainer<ContainerA<T, Ts...>> &&IsContainer<ContainerB<U, Us...>>
 
 CONTAINER_2
 constexpr bool equal(const ContainerA<T, Ts...> &a, const ContainerB<U, Us...> &b) {
