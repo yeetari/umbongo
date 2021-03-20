@@ -1,0 +1,28 @@
+name: Build
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: ubuntu:devel
+    env:
+      DEBIAN_FRONTEND: "noninteractive"
+    steps:
+      - name: Install tools
+        run: |
+          apt update -qq
+          apt install -y clang cmake libfreetype-dev lld nasm ninja-build
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure CMake
+        run: |
+          cmake . \
+            -Bbuild \
+            -DBUILD_TYPE=Release \
+            -DBUILD_WARNINGS=ON \
+            -DENABLE_ASSERTIONS=ON \
+            -DLINK_TIME_OPT=ON \
+            -GNinja
+      - name: Build
+        run: |
+          cmake --build build
