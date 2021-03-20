@@ -19,6 +19,8 @@ add_executable(kernel
     acpi/RootTable.cc
     acpi/Table.cc
     cpu/Processor.cc
+    intr/InterruptManager.cc
+    intr/IoApic.cc
     mem/MemoryManager.cc
     mem/VirtSpace.cc
     Console.cc

@@ -7,6 +7,7 @@
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <libelf/Elf.hh>
@@ -14,6 +15,34 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
+
+namespace {
+
+InterruptPolarity interrupt_polarity(uint8 polarity) {
+    switch (polarity) {
+    case 0b00:
+    case 0b01:
+        return InterruptPolarity::ActiveHigh;
+    case 0b11:
+        return InterruptPolarity::ActiveLow;
+    default:
+        ENSURE_NOT_REACHED();
+    }
+}
+
+InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
+    switch (trigger_mode) {
+    case 0b00:
+    case 0b01:
+        return InterruptTriggerMode::EdgeTriggered;
+    case 0b11:
+        return InterruptTriggerMode::LevelTriggered;
+    default:
+        ENSURE_NOT_REACHED();
+    }
+}
+
+} // namespace
 
 usize __stack_chk_guard = 0xdeadc0de;
 
@@ -71,6 +100,21 @@ extern "C" void kmain(BootInfo *boot_info) {
         logln("acpi: Found legacy PIC, masking");
         port_write<uint8>(0x21, 0xff);
         port_write<uint8>(0xa1, 0xff);
+    }
+
+    for (auto *controller : *madt) {
+        // TODO: Handle local APIC address override.
+        ENSURE(controller->type != 5);
+        if (controller->type == 1) {
+            auto *io_apic = reinterpret_cast<acpi::IoApicController *>(controller);
+            InterruptManager::register_io_apic(io_apic->address, io_apic->gsi_base);
+        }
+        if (controller->type == 2) {
+            auto *override = reinterpret_cast<acpi::InterruptSourceOverride *>(controller);
+            ENSURE(override->bus == 0);
+            InterruptManager::register_override(override->isa, override->gsi, interrupt_polarity(override->polarity),
+                                                interrupt_trigger_mode(override->trigger_mode));
+        }
     }
 
     RamFsEntry *init_entry = nullptr;
