@@ -28,8 +28,6 @@ const char *polarity_str(InterruptPolarity polarity) {
         return "active-high";
     case InterruptPolarity::ActiveLow:
         return "active-low";
-    default:
-        ENSURE_NOT_REACHED();
     }
 }
 
@@ -39,8 +37,6 @@ const char *trigger_mode_str(InterruptTriggerMode trigger_mode) {
         return "edge-triggered";
     case InterruptTriggerMode::LevelTriggered:
         return "level-triggered";
-    default:
-        ENSURE_NOT_REACHED();
     }
 }
 

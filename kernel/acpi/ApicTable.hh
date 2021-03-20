@@ -16,7 +16,7 @@ class [[gnu::packed]] ApicTable : public Table {
     Array<InterruptController, 1> m_controllers;
 
 public:
-    static constexpr Array k_signature{'A', 'P', 'I', 'C'};
+    static constexpr Array<uint8, 4> k_signature{'A', 'P', 'I', 'C'};
 
     ApicTableIterator begin() const;
     ApicTableIterator end() const;

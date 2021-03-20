@@ -4,19 +4,19 @@
 
 namespace acpi {
 
-struct [[gnu::packed]] InterruptController {
+struct InterruptController {
     uint8 type;
     uint8 length;
 };
 
-struct [[gnu::packed]] IoApicController : public InterruptController {
+struct IoApicController : public InterruptController {
     uint8 id;
     uint8 : 8;
     uint32 address;
     uint32 gsi_base;
 };
 
-struct [[gnu::packed]] InterruptSourceOverride : public InterruptController {
+struct InterruptSourceOverride : public InterruptController {
     uint8 bus;
     uint8 isa;
     uint32 gsi;

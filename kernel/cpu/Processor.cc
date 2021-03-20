@@ -152,11 +152,16 @@ struct [[gnu::packed]] SyscallFrame {
     uint64 r15, r14, r13, r12, r11, r10, r9, r8, rbp, rsi, rdi, rdx, rcx, rbx, rax;
 };
 
+// For some reason the clang global constructor warning thinks the syscall table requires global constructors, even
+// though it doesn't.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wglobal-constructors"
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 using SyscallHandler = uint64 (Process::*)(uint64, uint64, uint64);
 #define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
 Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
+#pragma clang diagnostic pop
 
 uint64 read_cr0() {
     uint64 cr0 = 0;

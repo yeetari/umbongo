@@ -4,7 +4,7 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Types.hh>
 
-class Scheduler;
+struct Scheduler;
 
 enum class ProcessState {
     Alive,

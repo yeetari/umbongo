@@ -21,7 +21,7 @@ constexpr uint8 k_pit_vector = 39;
 constexpr uint8 k_timer_vector = 40;
 
 LocalApic *s_apic = nullptr;
-usize s_ticks = 0;
+uint32 s_ticks = 0;
 
 Process *s_base_process = nullptr;
 bool s_pit_fired = false;
@@ -47,7 +47,7 @@ void calibrate_timer() {
     // Calculate the divisor based on what frequency we want and send it to the PIT in two parts.
     constexpr uint16 divisor = 1193182ul / k_scheduler_frequency;
     port_write<uint8>(0x40, divisor & 0xffu);
-    port_write<uint8>(0x40, (divisor >> 8u) & 0xffu);
+    port_write<uint8>(0x40, (divisor >> 8u) & 0xffu); // NOLINT
 
     // Enable interrupts and wait for PIT to fire.
     asm volatile("sti");

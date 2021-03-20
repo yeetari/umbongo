@@ -4,10 +4,7 @@
 
 namespace {
 
-constexpr usize k_reg_tpr = 0x80;
 constexpr usize k_reg_eoi = 0xb0;
-constexpr usize k_reg_ldr = 0xd0;
-constexpr usize k_reg_dfr = 0xe0;
 constexpr usize k_reg_siv = 0xf0;
 
 constexpr usize k_reg_timer = 0x320;
