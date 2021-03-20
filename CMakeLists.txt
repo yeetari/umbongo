@@ -46,6 +46,7 @@ if(BUILD_WARNINGS)
         -Weverything
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
+        -Wno-gnu-anonymous-struct
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-missing-noreturn
         -Wno-missing-prototypes
