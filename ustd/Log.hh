@@ -21,19 +21,26 @@ void log_single(const char *opts, T arg) requires IsInteger<T> {
     }
     const usize base = opts[1] == 'h' ? 16 : 10;
     Array<char, 20> buf{};
-    uint32 len = 0;
+    uint8 len = 0;
     do {
         const char digit = static_cast<char>(arg % base);
         buf[len++] = (digit < 10 ? '0' + digit : 'a' + digit - 10);
         arg /= base;
     } while (arg > 0);
 
+    char pad = opts[2];
+    if (pad != '\0') {
+        for (uint8 i = len; i < pad - '0'; i++) {
+            buf[len++] = '0';
+        }
+    }
+
     if (base == 16) {
         buf[len++] = 'x';
         buf[len++] = '0';
     }
 
-    for (uint32 i = len; i > 0; i--) {
+    for (uint8 i = len; i > 0; i--) {
         put_char(buf[i - 1]);
     }
 }
