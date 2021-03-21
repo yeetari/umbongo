@@ -72,6 +72,7 @@ if(QEMU_PROG)
         -bios ${OVMF_BINARY}
         -cpu max
         -debugcon stdio
+        -device qemu-xhci
         -drive file=fs.img,if=ide,format=raw
         -machine q35
         -nodefaults
