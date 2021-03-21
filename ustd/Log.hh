@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ustd/Array.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 
@@ -65,7 +66,7 @@ void log_part(const char *&fmt, const T &arg) {
         fmt++;
         uint32 i = 0;
         while (*fmt != '}') {
-            // TODO: Assert not more than 4 chars inside braces.
+            ASSERT(i < opts.size());
             opts[i++] = *fmt++;
         }
         log_single(opts.data(), arg);
