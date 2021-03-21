@@ -1,5 +1,6 @@
 #include <kernel/intr/InterruptManager.hh>
 
+#include <kernel/Port.hh>
 #include <kernel/intr/IoApic.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -51,6 +52,12 @@ IoApic *io_apic_for_gsi(uint32 gsi) {
 }
 
 } // namespace
+
+void InterruptManager::mask_pic() {
+    logln("intr: Found legacy PIC, masking");
+    port_write<uint8>(0x21, 0xff);
+    port_write<uint8>(0xa1, 0xff);
+}
 
 void InterruptManager::register_io_apic(uint32 base, uint32 gsi_base) {
     ENSURE(s_io_apic_count < s_io_apics.size());

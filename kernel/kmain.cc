@@ -97,9 +97,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     auto *madt = xsdt->find<acpi::ApicTable>();
     ENSURE(madt != nullptr);
     if ((madt->flags() & (1u << 0u)) != 0) {
-        logln("acpi: Found legacy PIC, masking");
-        port_write<uint8>(0x21, 0xff);
-        port_write<uint8>(0xa1, 0xff);
+        InterruptManager::mask_pic();
     }
 
     for (auto *controller : *madt) {
