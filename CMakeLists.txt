@@ -73,6 +73,7 @@ if(QEMU_PROG)
         -cpu max
         -debugcon stdio
         -device qemu-xhci
+        -device usb-kbd
         -drive file=fs.img,if=ide,format=raw
         -machine q35
         -nodefaults
