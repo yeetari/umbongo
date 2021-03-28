@@ -8,6 +8,8 @@ enum class PageFlags : usize {
     Present = 1ul << 0ul,
     Writable = 1ul << 1ul,
     User = 1ul << 2ul,
+    WriteThrough = 1ul << 3ul,
+    CacheDisable = 1ul << 4ul,
     Large = 1ul << 7ul,
     NoExecute = 1ul << 63ul,
 };
