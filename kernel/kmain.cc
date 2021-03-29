@@ -4,12 +4,15 @@
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
 #include <kernel/acpi/ApicTable.hh>
+#include <kernel/acpi/PciTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/MemoryManager.hh>
+#include <kernel/pci/Bus.hh>
+#include <kernel/pci/Device.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <libelf/Elf.hh>
@@ -17,6 +20,7 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 namespace {
 
@@ -44,7 +48,57 @@ InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
     }
 }
 
-void kernel_init(BootInfo *boot_info) {
+void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
+    auto *mcfg = xsdt->find<acpi::PciTable>();
+    ENSURE(mcfg != nullptr);
+    for (const auto *segment : *mcfg) {
+        logln("acpi: Found PCI segment {} at {:h} (start_bus={}, end_bus={})", segment->num, segment->base,
+              segment->start_bus, segment->end_bus);
+    }
+
+    struct PciDevice {
+        pci::Bus *bus;
+        uint8 device;
+        uint8 function;
+        uint16 vendor_id;
+        uint16 device_id;
+        uint8 clas;
+        uint8 subc;
+        uint8 prif;
+    };
+
+    // Enumerate all PCI devices.
+    Vector<PciDevice> pci_devices;
+    for (const auto *segment : *mcfg) {
+        const uint8 bus_count = segment->end_bus - segment->start_bus;
+        for (uint8 bus_num = 0; bus_num < bus_count; bus_num++) {
+            auto *bus = new pci::Bus(segment->base, segment->num, bus_num);
+            for (uint8 device_num = 0; device_num < 32; device_num++) {
+                for (uint8 function = 0; function < 8; function++) {
+                    pci::Device device(bus, device_num, function);
+                    if (device.vendor_id() == 0xffffu) {
+                        continue;
+                    }
+                    auto class_info = device.class_info();
+                    uint8 clas = (class_info >> 24u) & 0xffu;
+                    uint8 subc = (class_info >> 16u) & 0xffu;
+                    uint8 prif = (class_info >> 8u) & 0xffu;
+                    pci_devices.push(
+                        {bus, device_num, function, device.vendor_id(), device.device_id(), clas, subc, prif});
+                }
+            }
+        }
+    }
+
+    // List all found PCI devices.
+    logln(" pci: Found {} devices total", pci_devices.size());
+    logln(" pci:  - SEGM   BUS  DEV  FUNC   VENDID DEVID   CLAS SUBC PRIF");
+    for (auto &device : pci_devices) {
+        logln(" pci:  - {:h4}:{:h2}:{:h2}:{:h2} - {:h4}:{:h4} ({:h2}:{:h2}:{:h2})", device.bus->segment_num(),
+              device.bus->num(), device.device, device.function, device.vendor_id, device.device_id, device.clas,
+              device.subc, device.prif);
+    }
+
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
         if (strcmp(entry->name, "init") == 0) {
@@ -169,6 +223,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     auto *kernel_init_process = Process::create_kernel();
     kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
     kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
+    kernel_init_process->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 
     Scheduler::initialise(apic);
     Scheduler::insert_process(kernel_init_process);
