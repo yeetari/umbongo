@@ -10,7 +10,7 @@ class RootTableIterator;
 
 // Extended System Description Table (ACPI specification 6.4 section 5.2.8)
 class [[gnu::packed]] RootTable : public Table {
-    Array<Table *, 1> m_entries;
+    Array<Table *, 0> m_entries;
 
 public:
     RootTableIterator begin() const;

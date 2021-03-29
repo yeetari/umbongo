@@ -13,7 +13,7 @@ class ApicTableIterator;
 class [[gnu::packed]] ApicTable : public Table {
     uint32 m_local_apic;
     uint32 m_flags;
-    Array<InterruptController, 1> m_controllers;
+    Array<InterruptController, 0> m_controllers;
 
 public:
     static constexpr Array<uint8, 4> k_signature{'A', 'P', 'I', 'C'};
