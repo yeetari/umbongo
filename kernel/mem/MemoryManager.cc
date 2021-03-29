@@ -1,6 +1,7 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
@@ -11,6 +12,13 @@ namespace {
 
 constexpr usize k_bucket_bit_count = sizeof(usize) * 8;
 constexpr usize k_frame_size = 4_KiB;
+
+constexpr usize k_allocation_header_check = 0xdeadbeef;
+struct AllocationHeader {
+    usize check;
+    usize size;
+    Array<uint8, 0> data;
+};
 
 MemoryManager s_memory_manager;
 
@@ -124,18 +132,54 @@ void *MemoryManager::alloc_phys(usize size) {
     ENSURE_NOT_REACHED("No available physical memory!");
 }
 
+void MemoryManager::free_phys(void *ptr, usize size) {
+    ASSERT(m_boot_info != nullptr, "Attempted heap deallocation before memory manager setup!");
+    const auto first_frame = reinterpret_cast<uintptr>(ptr);
+    ASSERT(first_frame % k_frame_size == 0);
+    const auto first_frame_index = first_frame / k_frame_size;
+    const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
+    for (usize i = first_frame_index; i < first_frame_index + frame_count; i++) {
+        ASSERT(is_frame_set(i));
+        clear_frame(i);
+    }
+}
+
 void *operator new(usize size) {
-    return s_memory_manager.alloc_phys(size);
+    auto *header = static_cast<AllocationHeader *>(s_memory_manager.alloc_phys(size + sizeof(AllocationHeader)));
+    header->check = k_allocation_header_check;
+    header->size = size;
+    return header->data.data();
 }
 
 void *operator new[](usize size) {
     return operator new(size);
 }
 
-void operator delete(void *) {
-    ENSURE_NOT_REACHED();
+void *operator new(usize size, std::align_val_t align) {
+    const auto alignment = static_cast<usize>(align);
+    auto *ptr = operator new(size + alignment);
+    return reinterpret_cast<void *>(round_up(reinterpret_cast<uintptr>(ptr), alignment));
+}
+
+void *operator new[](usize size, std::align_val_t align) {
+    return operator new(size, align);
+}
+
+void operator delete(void *ptr) {
+    auto *header = reinterpret_cast<AllocationHeader *>(static_cast<uint8 *>(ptr) - sizeof(AllocationHeader));
+    ASSERT(header->check == k_allocation_header_check);
+    s_memory_manager.free_phys(header, header->size + sizeof(AllocationHeader));
 }
 
 void operator delete[](void *ptr) {
     return operator delete(ptr);
+}
+
+void operator delete(void *ptr, std::align_val_t align) {
+    const auto alignment = static_cast<usize>(align);
+    operator delete(reinterpret_cast<void *>(reinterpret_cast<uintptr>(ptr) - alignment + sizeof(AllocationHeader)));
+}
+
+void operator delete[](void *ptr, std::align_val_t align) {
+    return operator delete(ptr, align);
 }

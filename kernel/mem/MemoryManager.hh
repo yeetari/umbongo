@@ -22,6 +22,7 @@ public:
     constexpr MemoryManager() = default;
     explicit MemoryManager(BootInfo *boot_info);
 
-    // Allocate contiguous, eternal, page-aligned physical memory.
+    // Allocate contiguous, page-aligned physical memory.
     void *alloc_phys(usize size);
+    void free_phys(void *ptr, usize size);
 };

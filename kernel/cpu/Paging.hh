@@ -37,7 +37,7 @@ public:
 };
 
 template <typename Entry>
-class PageLevel {
+class [[gnu::aligned(4_KiB)]] PageLevel {
     Array<PageLevelEntry<Entry>, 512> m_entries{};
 
 public:
