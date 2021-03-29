@@ -44,6 +44,51 @@ InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
     }
 }
 
+void kernel_init(BootInfo *boot_info) {
+    RamFsEntry *init_entry = nullptr;
+    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
+        if (strcmp(entry->name, "init") == 0) {
+            ASSERT(init_entry == nullptr);
+            init_entry = entry;
+        }
+        logln("  fs: Found file {}", entry->name);
+    }
+    ENSURE(init_entry != nullptr, "Failed to find init program!");
+
+    const auto *header = reinterpret_cast<const elf::Header *>(init_entry->data);
+    usize mem_size = 0;
+    for (uint16 i = 0; i < header->ph_count; i++) {
+        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
+            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
+        if (phdr->type == elf::ProgramHeaderType::Load) {
+            mem_size += phdr->memsz;
+        }
+    }
+
+    auto *data = new (std::align_val_t(4_KiB)) uint8[mem_size];
+    for (uint16 i = 0; i < header->ph_count; i++) {
+        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
+            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
+        if (phdr->type != elf::ProgramHeaderType::Load) {
+            continue;
+        }
+        ASSERT(phdr->filesz <= phdr->memsz);
+        memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
+    }
+
+    // Spawn 5 identical user processes.
+    for (int i = 0; i < 5; i++) {
+        auto *init_process = Process::create_user(data, mem_size);
+        init_process->set_entry_point(header->entry);
+        Scheduler::insert_process(init_process);
+    }
+
+    // TODO: Kill current process and yield.
+    while (true) {
+        asm volatile("hlt");
+    }
+}
+
 } // namespace
 
 usize __stack_chk_guard = 0xdeadc0de;
@@ -96,7 +141,7 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     auto *madt = xsdt->find<acpi::ApicTable>();
     ENSURE(madt != nullptr);
-    if ((madt->flags() & (1u << 0u)) != 0) {
+    if ((madt->flags() & 1u) != 0) {
         InterruptManager::mask_pic();
     }
 
@@ -121,42 +166,11 @@ extern "C" void kmain(BootInfo *boot_info) {
     apic->enable();
     apic->send_eoi();
 
-    RamFsEntry *init_entry = nullptr;
-    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
-        if (strcmp(entry->name, "init") == 0) {
-            ASSERT(init_entry == nullptr);
-            init_entry = entry;
-        }
-        logln("  fs: Found file {}", entry->name);
-    }
-    ENSURE(init_entry != nullptr, "Failed to find init program!");
-
-    const auto *header = reinterpret_cast<const elf::Header *>(init_entry->data);
-    usize mem_size = 0;
-    for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
-            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type == elf::ProgramHeaderType::Load) {
-            mem_size += phdr->memsz;
-        }
-    }
-
-    auto *data = new (std::align_val_t(4_KiB)) uint8[mem_size];
-    for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
-            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type != elf::ProgramHeaderType::Load) {
-            continue;
-        }
-        ASSERT(phdr->filesz <= phdr->memsz);
-        memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
-    }
+    auto *kernel_init_process = Process::create_kernel();
+    kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
+    kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
 
     Scheduler::initialise(apic);
-    for (int i = 0; i < 5; i++) {
-        auto *init_process = Process::create_user(data, mem_size);
-        init_process->set_entry_point(header->entry);
-        Scheduler::insert_process(init_process);
-    }
+    Scheduler::insert_process(kernel_init_process);
     Scheduler::start();
 }

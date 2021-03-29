@@ -37,4 +37,5 @@ public:
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
+    RegisterState &register_state() { return m_register_state; }
 };
