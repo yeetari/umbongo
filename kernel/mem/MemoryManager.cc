@@ -157,6 +157,7 @@ void *operator new[](usize size) {
 
 void *operator new(usize size, std::align_val_t align) {
     const auto alignment = static_cast<usize>(align);
+    ASSERT(alignment != 0);
     auto *ptr = operator new(size + alignment);
     return reinterpret_cast<void *>(round_up(reinterpret_cast<uintptr>(ptr), alignment));
 }
