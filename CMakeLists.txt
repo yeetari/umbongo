@@ -54,7 +54,8 @@ if(BUILD_WARNINGS)
         -Wno-padded
         -Wno-switch-enum
         -Wno-unused-member-function
-        -Wno-unused-private-field)
+        -Wno-unused-private-field
+        -Wno-zero-length-array)
 endif()
 
 add_custom_target(image
