@@ -1,6 +1,7 @@
 #include <kernel/cpu/Processor.hh>
 
 #include <kernel/Syscall.hh>
+#include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
@@ -163,6 +164,8 @@ Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENU
 #undef ENUMERATE_SYSCALL
 #pragma clang diagnostic pop
 
+LocalApic *s_apic = nullptr;
+
 uint64 read_cr0() {
     uint64 cr0 = 0;
     asm volatile("mov %%cr0, %0" : "=r"(cr0));
@@ -214,6 +217,10 @@ extern "C" void interrupt_handler(RegisterState *regs) {
     ASSERT_PEDANTIC(regs->int_num < k_interrupt_count);
     ASSERT_PEDANTIC(s_interrupt_table[regs->int_num] != nullptr);
     s_interrupt_table[regs->int_num](regs);
+    if (regs->int_num >= 32) {
+        ASSERT_PEDANTIC(s_apic != nullptr);
+        s_apic->send_eoi();
+    }
 }
 
 extern "C" void syscall_handler(SyscallFrame *frame, LocalStorage *storage) {
@@ -315,6 +322,11 @@ void Processor::initialise() {
     write_msr(k_msr_sfmask, 1u << 9u);
 }
 
+void Processor::set_apic(LocalApic *apic) {
+    ASSERT(s_apic == nullptr);
+    s_apic = apic;
+}
+
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
     ASSERT(vector < k_interrupt_count);
     ASSERT(handler != nullptr);
@@ -327,4 +339,9 @@ void Processor::write_cr3(void *pml4) {
     // of CR3 are used for flags and should be clear in the PML4 base address since it should be page-aligned.
     ASSERT_PEDANTIC((reinterpret_cast<uintptr>(pml4) & 0xfff0000000000fffu) == 0);
     asm volatile("mov %0, %%cr3" : : "r"(pml4) : "memory");
+}
+
+LocalApic *Processor::apic() {
+    ASSERT_PEDANTIC(s_apic != nullptr);
+    return s_apic;
 }

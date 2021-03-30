@@ -219,13 +219,14 @@ extern "C" void kmain(BootInfo *boot_info) {
     logln("acpi: Local APIC = {}", apic);
     apic->enable();
     apic->send_eoi();
+    Processor::set_apic(apic);
 
     auto *kernel_init_process = Process::create_kernel();
     kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
     kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
     kernel_init_process->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 
-    Scheduler::initialise(apic);
+    Scheduler::initialise();
     Scheduler::insert_process(kernel_init_process);
     Scheduler::start();
 }

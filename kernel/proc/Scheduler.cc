@@ -20,15 +20,12 @@ constexpr uint16 k_scheduler_frequency = 250;
 constexpr uint8 k_pit_vector = 39;
 constexpr uint8 k_timer_vector = 40;
 
-LocalApic *s_apic = nullptr;
-uint32 s_ticks = 0;
-
 Process *s_base_process = nullptr;
 bool s_pit_fired = false;
+uint32 s_ticks = 0;
 
 void pit_handler(RegisterState *) {
-    s_apic->send_eoi();
-    s_apic->set_timer(LocalApic::TimerMode::Disabled, 255);
+    Processor::apic()->set_timer(LocalApic::TimerMode::Disabled, 255);
     s_pit_fired = true;
 }
 
@@ -41,8 +38,8 @@ void calibrate_timer() {
     port_write<uint8>(0x43, 0b00110010);
 
     // Start the APIC timer counting down from its max value.
-    s_apic->set_timer(LocalApic::TimerMode::OneShot, 255);
-    s_apic->set_timer_count(0xffffffff);
+    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
+    Processor::apic()->set_timer_count(0xffffffff);
 
     // Calculate the divisor based on what frequency we want and send it to the PIT in two parts.
     constexpr uint16 divisor = 1193182ul / k_scheduler_frequency;
@@ -57,7 +54,7 @@ void calibrate_timer() {
     asm volatile("cli");
 
     // Work out how many ticks have passed.
-    s_ticks = 0xffffffff - s_apic->read_timer_count();
+    s_ticks = 0xffffffff - Processor::apic()->read_timer_count();
 
     // TODO: We should probably remask the PIT interrupt here.
 }
@@ -73,8 +70,7 @@ void handle_page_fault(RegisterState *regs) {
 
 } // namespace
 
-void Scheduler::initialise(LocalApic *apic) {
-    s_apic = apic;
+void Scheduler::initialise() {
     calibrate_timer();
 
     // Initialise idle process.
@@ -84,8 +80,8 @@ void Scheduler::initialise(LocalApic *apic) {
 
     // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
     // depending on the process' priority.
-    apic->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
-    apic->set_timer_count(s_ticks);
+    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
+    Processor::apic()->set_timer_count(s_ticks);
     Processor::wire_interrupt(14, &handle_page_fault);
     Processor::wire_interrupt(k_timer_vector, &switch_next);
 }
@@ -110,6 +106,5 @@ void Scheduler::switch_next(RegisterState *regs) {
     } while (g_current_process->m_state != ProcessState::Alive);
     memcpy(regs, &g_current_process->m_register_state, sizeof(RegisterState));
     g_current_process->m_virt_space.switch_to();
-    s_apic->send_eoi();
-    s_apic->set_timer_count(s_ticks);
+    Processor::apic()->set_timer_count(s_ticks);
 }
