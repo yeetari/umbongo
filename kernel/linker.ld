@@ -11,6 +11,9 @@ SECTIONS {
     }
 
     .rodata : ALIGN(4K) {
+        k_ctors_start = .;
+        *(.init_array)
+        k_ctors_end = .;
         *(.rodata*)
     }
 

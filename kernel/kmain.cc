@@ -145,6 +145,9 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
 } // namespace
 
+extern void (*k_ctors_start)();
+extern void (*k_ctors_end)();
+
 usize __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] extern "C" void __stack_chk_fail() {
@@ -179,6 +182,12 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     MemoryManager::initialise(boot_info);
     Processor::initialise();
+
+    // Invoke global constructors.
+    logln("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
+    for (void (**ctor)() = &k_ctors_start; ctor < &k_ctors_end; ctor++) {
+        (*ctor)();
+    }
 
     auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
@@ -229,4 +238,8 @@ extern "C" void kmain(BootInfo *boot_info) {
     Scheduler::initialise();
     Scheduler::insert_process(kernel_init_process);
     Scheduler::start();
+}
+
+extern "C" int __cxa_atexit(void (*)(void *), void *, void *) {
+    return 0;
 }
