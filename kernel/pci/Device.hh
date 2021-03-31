@@ -13,13 +13,6 @@ class Device {
 
     uintptr address_for(uint16 offset) const;
 
-protected:
-    template <typename T>
-    T read_config(uint16 offset) const;
-
-    template <typename T>
-    void write_config(uint16 offset, T value);
-
 public:
     Device(const Bus *bus, uint8 device, uint8 function) : m_bus(bus), m_device(device), m_function(function) {}
     Device(const Device &) = delete;
@@ -29,8 +22,13 @@ public:
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
-    virtual void enable();
+    template <typename T>
+    T read_config(uint16 offset) const;
 
+    template <typename T>
+    void write_config(uint16 offset, T value);
+
+    virtual void enable();
     uintptr read_bar(uint8 index);
 
     uint16 vendor_id() const;
