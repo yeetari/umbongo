@@ -23,7 +23,7 @@ protected:
 public:
     Device(const Bus *bus, uint8 device, uint8 function) : m_bus(bus), m_device(device), m_function(function) {}
     Device(const Device &) = delete;
-    Device(Device &&) = delete;
+    Device(Device &&) noexcept = default;
     virtual ~Device() = default;
 
     Device &operator=(const Device &) = delete;
