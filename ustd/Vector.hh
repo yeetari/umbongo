@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ustd/Assert.hh>
+#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -31,7 +32,9 @@ public:
 
     void ensure_capacity(usize capacity);
     void reallocate(usize capacity);
-    void resize(usize size);
+
+    template <typename... Args>
+    void resize(usize size, Args &&...args);
 
     template <typename... Args>
     T &emplace(Args &&...args);
@@ -89,8 +92,13 @@ void Vector<T>::reallocate(usize capacity) {
 }
 
 template <typename T>
-void Vector<T>::resize(usize size) {
-    ensure_capacity(m_size = size);
+template <typename... Args>
+void Vector<T>::resize(usize size, Args &&...args) {
+    ensure_capacity(size);
+    for (usize i = m_size; i < size; i++) {
+        new (begin() + i) T(forward<Args>(args)...);
+    }
+    m_size = size;
 }
 
 template <typename T>
