@@ -167,6 +167,9 @@ void *operator new[](usize size, std::align_val_t align) {
 }
 
 void operator delete(void *ptr) {
+    if (ptr == nullptr) {
+        return;
+    }
     auto *header = reinterpret_cast<AllocationHeader *>(static_cast<uint8 *>(ptr) - sizeof(AllocationHeader));
     ASSERT(header->check == k_allocation_header_check);
     s_memory_manager.free_phys(header, header->size + sizeof(AllocationHeader));
