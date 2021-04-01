@@ -216,8 +216,9 @@ extern "C" void syscall_stub();
 extern "C" void interrupt_handler(RegisterState *regs) {
     ASSERT_PEDANTIC(regs->int_num < k_interrupt_count);
     ASSERT_PEDANTIC(s_interrupt_table[regs->int_num] != nullptr);
+    const bool should_send_eoi = regs->int_num >= 32;
     s_interrupt_table[regs->int_num](regs);
-    if (regs->int_num >= 32) {
+    if (should_send_eoi) {
         ASSERT_PEDANTIC(s_apic != nullptr);
         s_apic->send_eoi();
     }
