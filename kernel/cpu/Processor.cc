@@ -305,7 +305,7 @@ void Processor::initialise() {
     ENSURE((extended_cpu_id.edx() & (1u << 26u)) != 0, "1GiB pages not available!");
 
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
-    write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 0u) | (1u << 11u));
+    write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 11u) | (1u << 0u));
 
     // Write selectors to STAR MSR. First write the sysret CS and SS (63:48), then write the syscall CS and SS (47:32).
     // The bottom 32 bits for the target EIP are not used in long mode. 0x13 is used for the sysret CS/SS pair because
