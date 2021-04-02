@@ -119,7 +119,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
         }
     }
 
-    auto *data = new (std::align_val_t(4_KiB)) uint8[mem_size];
+    auto *data = new (ustd::align_val_t(4_KiB)) uint8[mem_size];
     for (uint16 i = 0; i < header->ph_count; i++) {
         const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
             reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
