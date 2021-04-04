@@ -15,6 +15,7 @@ public:
     constexpr T *begin() const { return m_data; }
     constexpr T *end() const { return m_data + m_size; }
 
+    constexpr T *data() const { return m_data; }
     constexpr usize size() const { return m_size; }
     constexpr usize size_in_bytes() const { return m_size * sizeof(T); }
 };
