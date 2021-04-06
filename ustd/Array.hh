@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ustd/Assert.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
 namespace ustd {
@@ -18,6 +19,9 @@ struct Array {
         ASSERT(index < N);
         return m_data[index];
     }
+
+    constexpr operator Span<T>() { return {data(), size()}; }
+    constexpr operator Span<const T>() const { return {data(), size()}; }
 
     constexpr T *data() { return static_cast<T *>(m_data); }
     constexpr const T *data() const { return static_cast<const T *>(m_data); }

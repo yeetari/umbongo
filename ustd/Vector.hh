@@ -3,6 +3,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -43,6 +44,9 @@ public:
 
     T &operator[](usize index);
     const T &operator[](usize index) const;
+
+    operator Span<T>() { return {m_data, m_size}; }
+    operator Span<const T>() const { return {m_data, m_size}; }
 
     T *begin() { return m_data; }
     T *end() { return m_data + m_size; }
