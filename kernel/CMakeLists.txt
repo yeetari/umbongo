@@ -28,6 +28,14 @@ add_executable(kernel
     pci/Device.cc
     proc/Process.cc
     proc/Scheduler.cc
+    usb/hid/KeyboardDevice.cc
+    usb/Device.cc
+    usb/Endpoint.cc
+    usb/HostController.cc
+    usb/Interrupter.cc
+    usb/Port.cc
+    usb/TrbRing.cc
+    usb/UsbManager.cc
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
@@ -42,7 +50,10 @@ target_compile_options(kernel PRIVATE
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-strong>
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
     -mno-red-zone
-    -nostdinc++ -nostdlib)
+    -nostdinc++ -nostdlib
+    # Allow non-trivial globals in the kernel.
+    -Wno-exit-time-destructors
+    -Wno-global-constructors)
 target_gc_sections(kernel)
 target_link_libraries(kernel PRIVATE kernel_asm ustd)
 target_link_options(kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
