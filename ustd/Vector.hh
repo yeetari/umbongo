@@ -24,8 +24,8 @@ public:
     explicit Vector(usize size);
     Vector(const Vector &) = delete;
     Vector(Vector &&other) noexcept
-        : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0)),
-          m_size(exchange(other.m_size, 0)) {}
+        : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0ul)),
+          m_size(exchange(other.m_size, 0ul)) {}
     ~Vector();
 
     Vector &operator=(const Vector &) = delete;
