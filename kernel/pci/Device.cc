@@ -42,7 +42,7 @@ void Device::enable() {
     write_config(4, command);
 }
 
-uintptr Device::read_bar(uint8 index) {
+uintptr Device::read_bar(uint8 index) const {
     auto bar = static_cast<uintptr>(read_config<uint32>(0x10 + index * sizeof(uint32)));
     ENSURE((bar & 1u) == 0, "Port I/O not supported");
     if (((bar >> 1u) & 0b11u) == 2) {

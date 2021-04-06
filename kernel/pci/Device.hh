@@ -29,7 +29,7 @@ public:
     void write_config(uint16 offset, T value);
 
     virtual void enable();
-    uintptr read_bar(uint8 index);
+    uintptr read_bar(uint8 index) const;
 
     uint16 vendor_id() const;
     uint16 device_id() const;
