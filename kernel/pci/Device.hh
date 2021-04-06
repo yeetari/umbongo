@@ -36,4 +36,12 @@ public:
     uint32 class_info() const;
 };
 
+extern template uint8 Device::read_config(uint16) const;
+extern template uint16 Device::read_config(uint16) const;
+extern template uint32 Device::read_config(uint16) const;
+
+extern template void Device::write_config(uint16, uint8);
+extern template void Device::write_config(uint16, uint16);
+extern template void Device::write_config(uint16, uint32);
+
 } // namespace pci
