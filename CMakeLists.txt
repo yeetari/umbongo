@@ -51,6 +51,7 @@ if(BUILD_WARNINGS)
         -Wno-missing-noreturn
         -Wno-missing-prototypes
         -Wno-missing-variable-declarations
+        -Wno-nested-anon-types
         -Wno-padded
         -Wno-switch-enum
         -Wno-unused-member-function
