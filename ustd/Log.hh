@@ -23,7 +23,7 @@ void log_single(const char *opts, T arg) requires IsInteger<T> {
     Array<char, 20> buf{};
     uint8 len = 0;
     do {
-        const char digit = static_cast<char>(arg % base);
+        const char digit = static_cast<char>(static_cast<usize>(arg) % base);
         buf[len++] = (digit < 10 ? '0' + digit : 'a' + digit - 10);
         arg /= base;
     } while (arg > 0);
