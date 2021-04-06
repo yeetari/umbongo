@@ -70,7 +70,7 @@ Vector<T>::~Vector() {
     for (auto *elem = end(); elem != begin();) {
         (--elem)->~T();
     }
-    delete m_data;
+    delete reinterpret_cast<uint8 *>(m_data);
 }
 
 template <typename T>
@@ -90,7 +90,7 @@ void Vector<T>::reallocate(usize capacity) {
     for (auto *elem = end(); elem != begin();) {
         (--elem)->~T();
     }
-    delete m_data;
+    delete reinterpret_cast<uint8 *>(m_data);
     m_data = new_data;
     m_capacity = capacity;
 }
