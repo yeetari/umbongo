@@ -56,6 +56,7 @@ if(BUILD_WARNINGS)
         -Wno-switch-enum
         -Wno-unused-member-function
         -Wno-unused-private-field
+        -Wno-weak-vtables
         -Wno-zero-length-array)
 endif()
 
