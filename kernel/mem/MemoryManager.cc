@@ -17,6 +17,7 @@ constexpr usize k_allocation_header_check = 0xdeadbeef;
 struct AllocationHeader {
     usize check;
     usize size;
+    void *mem;
     Array<uint8, 0> data;
 };
 
@@ -158,8 +159,17 @@ void *operator new[](usize size) {
 void *operator new(usize size, ustd::align_val_t align) {
     const auto alignment = static_cast<usize>(align);
     ASSERT(alignment != 0);
-    auto *ptr = operator new(size + alignment);
-    return reinterpret_cast<void *>(round_up(reinterpret_cast<uintptr>(ptr), alignment));
+    void *unaligned_ptr = s_memory_manager.alloc_phys(size + alignment + sizeof(AllocationHeader));
+    auto unaligned = reinterpret_cast<uintptr>(unaligned_ptr) + sizeof(AllocationHeader);
+    uintptr aligned = round_up(unaligned, alignment);
+    auto *header = reinterpret_cast<AllocationHeader *>(aligned - sizeof(AllocationHeader));
+    ASSERT(reinterpret_cast<uintptr>(header) >= reinterpret_cast<uintptr>(unaligned_ptr));
+    header->check = k_allocation_header_check;
+    header->size = size;
+    header->mem = unaligned_ptr;
+    ASSERT(reinterpret_cast<uintptr>(header->data.data() + size) <
+           reinterpret_cast<uintptr>(unaligned_ptr) + size + alignment + sizeof(AllocationHeader));
+    return header->data.data();
 }
 
 void *operator new[](usize size, ustd::align_val_t align) {
@@ -180,8 +190,14 @@ void operator delete[](void *ptr) {
 }
 
 void operator delete(void *ptr, ustd::align_val_t align) {
+    if (ptr == nullptr) {
+        return;
+    }
     const auto alignment = static_cast<usize>(align);
-    operator delete(reinterpret_cast<void *>(reinterpret_cast<uintptr>(ptr) - alignment + sizeof(AllocationHeader)));
+    auto *header = reinterpret_cast<AllocationHeader *>(reinterpret_cast<uintptr>(ptr) - sizeof(AllocationHeader));
+    ASSERT(header->check == k_allocation_header_check);
+    ASSERT(header->mem != nullptr);
+    s_memory_manager.free_phys(header->mem, header->size + alignment + sizeof(AllocationHeader));
 }
 
 void operator delete[](void *ptr, ustd::align_val_t align) {
