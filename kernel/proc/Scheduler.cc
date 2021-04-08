@@ -38,7 +38,7 @@ void calibrate_timer() {
     port_write<uint8>(0x43, 0b00110010);
 
     // Start the APIC timer counting down from its max value.
-    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
+    Processor::apic()->set_timer(LocalApic::TimerMode::Periodic, 255);
     Processor::apic()->set_timer_count(0xffffffff);
 
     // Calculate the divisor based on what frequency we want and send it to the PIT in two parts.
@@ -80,7 +80,7 @@ void Scheduler::initialise() {
 
     // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
     // depending on the process' priority.
-    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
+    Processor::apic()->set_timer(LocalApic::TimerMode::Periodic, k_timer_vector);
     Processor::apic()->set_timer_count(s_ticks);
     Processor::wire_interrupt(14, &handle_page_fault);
     Processor::wire_interrupt(k_timer_vector, &switch_next);

@@ -240,6 +240,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     apic->send_eoi();
     Processor::set_apic(apic);
 
+    logln("core: Creating init process");
     auto *kernel_init_process = Process::create_kernel();
     kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
     kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
