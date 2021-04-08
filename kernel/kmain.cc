@@ -108,6 +108,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
             usb::UsbManager::register_host_controller(device.bus, device.device, device.function);
         }
     }
+    usb::UsbManager::spawn_watch_threads();
 
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {

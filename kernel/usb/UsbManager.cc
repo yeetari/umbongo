@@ -42,6 +42,12 @@ void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uin
     controller.enable();
 }
 
+void UsbManager::spawn_watch_threads() {
+    for (auto &controller : s_controllers) {
+        controller.spawn_watch_thread();
+    }
+}
+
 Device *UsbManager::register_device(Device &&device, const DeviceDescriptor *descriptor) {
     if (descriptor->dclass != 0) {
         logln(" usb: Found device {:h2}:{:h2}:{:h2}", descriptor->dclass, descriptor->dsubclass, descriptor->dprotocol);

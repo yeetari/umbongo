@@ -42,6 +42,7 @@ public:
     void on_attach(Port &port);
     void on_detach(Port &port);
     void send_command(TransferRequestBlock *command);
+    void spawn_watch_thread();
 
     uintptr op_offset() const { return m_base + m_cap_length; }
     Vector<Port> &ports() { return m_ports; }
