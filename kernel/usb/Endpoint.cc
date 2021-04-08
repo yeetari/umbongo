@@ -3,9 +3,12 @@
 #include <kernel/Port.hh>
 #include <kernel/usb/Contexts.hh>
 #include <kernel/usb/Device.hh>
+#include <kernel/usb/EndpointType.hh>
+#include <kernel/usb/TransferType.hh>
 #include <kernel/usb/Transfers.hh>
 #include <kernel/usb/TrbRing.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
 namespace usb {

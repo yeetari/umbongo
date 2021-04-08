@@ -90,8 +90,7 @@ int main(int argc, char **argv) {
     }
 
     output_file << "#include <kernel/Font.hh>\n";
-    output_file << "#include <ustd/Array.hh>\n";
-    output_file << "#include <ustd/Assert.hh>\n\n";
+    output_file << "#include <ustd/Array.hh>\n\n";
 
     FreeType freetype;
     auto face = freetype.new_face(argv[1], 0);

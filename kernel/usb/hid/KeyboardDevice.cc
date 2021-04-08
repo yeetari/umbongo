@@ -1,6 +1,8 @@
 #include <kernel/usb/hid/KeyboardDevice.hh>
 
 #include <kernel/usb/Descriptors.hh>
+#include <kernel/usb/Device.hh>
+#include <kernel/usb/EndpointType.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>

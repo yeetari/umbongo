@@ -2,12 +2,13 @@
 
 #include <kernel/pci/Device.hh>
 #include <kernel/usb/Port.hh>
-#include <kernel/usb/TrbRing.hh>
 #include <ustd/Vector.hh>
 
 namespace usb {
 
 class Interrupter;
+class TrbRing;
+struct TransferRequestBlock;
 
 class HostController final : public pci::Device {
     uintptr m_base{0};

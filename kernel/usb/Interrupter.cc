@@ -1,6 +1,5 @@
 #include <kernel/usb/Interrupter.hh>
 
-#include <kernel/usb/TrbRing.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 

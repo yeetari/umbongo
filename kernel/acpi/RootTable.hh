@@ -3,6 +3,7 @@
 #include <kernel/acpi/Table.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
+#include <ustd/Types.hh>
 
 namespace acpi {
 

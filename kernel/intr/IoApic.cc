@@ -1,5 +1,6 @@
 #include <kernel/intr/IoApic.hh>
 
+#include <kernel/intr/InterruptType.hh>
 #include <ustd/Types.hh>
 
 namespace {

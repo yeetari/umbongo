@@ -2,7 +2,6 @@
 
 #include <boot/BootInfo.hh>
 #include <kernel/Font.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace {

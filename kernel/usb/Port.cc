@@ -2,7 +2,6 @@
 
 #include <kernel/Port.hh>
 #include <kernel/usb/HostController.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace usb {

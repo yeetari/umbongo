@@ -6,6 +6,8 @@
 
 namespace usb {
 
+class Endpoint;
+
 class KeyboardDevice final : public Device {
     Array<uint8, 8> m_buffer{};
     Array<uint8, 8> m_compare_buffer{};

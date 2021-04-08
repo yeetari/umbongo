@@ -1,4 +1,5 @@
 #include <kernel/Syscall.hh>
+#include <ustd/Types.hh>
 
 extern "C" void main() {
     uint64 pid = Syscall::invoke(Syscall::getpid);

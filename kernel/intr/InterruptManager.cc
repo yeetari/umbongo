@@ -1,6 +1,7 @@
 #include <kernel/intr/InterruptManager.hh>
 
 #include <kernel/Port.hh>
+#include <kernel/intr/InterruptType.hh>
 #include <kernel/intr/IoApic.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>

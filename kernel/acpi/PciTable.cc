@@ -1,5 +1,6 @@
 #include <kernel/acpi/PciTable.hh>
 
+#include <kernel/acpi/Table.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <kernel/cpu/RegisterState.hh>
 #include <ustd/Types.hh>
 
 class LocalApic;
+struct RegisterState;
 
 using InterruptHandler = void (*)(RegisterState *);
 

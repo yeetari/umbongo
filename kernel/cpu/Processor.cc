@@ -3,6 +3,7 @@
 #include <kernel/Syscall.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
+#include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <ustd/Algorithm.hh>

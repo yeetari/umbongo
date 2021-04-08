@@ -1,5 +1,6 @@
 #include <kernel/proc/Process.hh>
 
+#include <kernel/mem/VirtSpace.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

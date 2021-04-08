@@ -4,12 +4,14 @@
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
 #include <kernel/acpi/ApicTable.hh>
+#include <kernel/acpi/InterruptController.hh>
 #include <kernel/acpi/PciTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/intr/InterruptManager.hh>
+#include <kernel/intr/InterruptType.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/pci/Device.hh>

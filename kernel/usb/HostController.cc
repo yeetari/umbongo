@@ -7,13 +7,16 @@
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Interrupter.hh>
-#include <kernel/usb/Transfers.hh>
+#include <kernel/usb/Port.hh>
+#include <kernel/usb/SlotState.hh>
+#include <kernel/usb/TrbRing.hh>
 #include <kernel/usb/UsbManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 namespace usb {
 namespace {

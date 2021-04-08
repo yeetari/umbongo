@@ -3,8 +3,16 @@
 #include <kernel/usb/Contexts.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Endpoint.hh>
+#include <kernel/usb/EndpointType.hh>
 #include <kernel/usb/HostController.hh>
+#include <kernel/usb/Port.hh>
+#include <kernel/usb/SlotState.hh>
+#include <kernel/usb/TransferType.hh>
 #include <kernel/usb/Transfers.hh>
+#include <kernel/usb/TrbRing.hh>
+#include <ustd/Array.hh>
+#include <ustd/Span.hh>
+#include <ustd/Types.hh>
 
 namespace usb {
 

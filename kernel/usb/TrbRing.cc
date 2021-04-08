@@ -2,6 +2,8 @@
 
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Span.hh>
+#include <ustd/Types.hh>
 
 namespace usb {
 

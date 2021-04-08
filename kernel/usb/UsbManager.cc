@@ -4,11 +4,10 @@
 #include <kernel/pci/Bus.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
-#include <kernel/usb/Endpoint.hh>
 #include <kernel/usb/HostController.hh>
-#include <kernel/usb/Transfers.hh>
 #include <kernel/usb/hid/KeyboardDevice.hh>
 #include <ustd/Log.hh>
+#include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
