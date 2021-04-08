@@ -1,7 +1,6 @@
 #include <kernel/usb/UsbManager.hh>
 
 #include <kernel/cpu/Processor.hh>
-#include <kernel/intr/InterruptManager.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
@@ -31,13 +30,13 @@ void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uin
     logln(" usb: Registered xHCI controller at {:h4}:{:h2}:{:h2}:{:h2}", bus->segment_num(), bus->num(), device,
           function);
     auto &controller = s_controllers.emplace(bus, device, function);
-    auto irq = controller.read_config<uint8>(0x3c);
-    if (irq == 0xff) {
-        logln(" usb: Controller doesn't support regular IRQs, skipping!");
+    if (!controller.msix_supported()) {
+        logln(" usb: Controller doesn't support MSI-X, skipping!");
         return;
     }
-    InterruptManager::wire_interrupt(irq, s_vector_base);
-    Processor::wire_interrupt(s_vector_base++, &irq_handler);
+    Processor::wire_interrupt(s_vector_base, &irq_handler);
+    controller.configure();
+    controller.enable_msix(s_vector_base++);
     controller.enable();
 }
 

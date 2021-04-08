@@ -36,7 +36,7 @@ public:
 
     void ring_doorbell(uint8 slot, uint8 endpoint) const;
 
-    void enable() override;
+    void enable();
     void handle_interrupt();
     void on_attach(Port &port);
     void on_detach(Port &port);

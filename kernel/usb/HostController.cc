@@ -91,7 +91,6 @@ void HostController::ring_doorbell(uint8 slot, uint8 endpoint) const {
 }
 
 void HostController::enable() {
-    Device::enable();
     m_base = read_bar(0);
     m_cap_length = read_cap<uint8>(k_cap_reg_length);
     m_db_offset = read_cap<uint32>(k_cap_reg_db_offset) & ~0b11u;
@@ -235,12 +234,16 @@ void HostController::enable() {
 }
 
 void HostController::handle_interrupt() {
-    write_op(k_op_reg_status, read_op<uint32>(k_op_reg_status));
+    auto status = read_op<uint32>(k_op_reg_status) & ((1u << 10u) | (1u << 4u) | (1u << 3u) | (1u << 2u));
+    if (status != 0) {
+        write_op(k_op_reg_status, status);
+    }
+
     if (!m_interrupter->interrupt_pending()) {
         return;
     }
-    m_interrupter->clear_pending();
 
+    m_interrupter->clear_pending();
     for (auto &event : m_event_ring->dequeue()) {
         const auto event_type = static_cast<uint8>(event.type);
         if (((event.status >> 24u) & 0xffu) != 1) {
