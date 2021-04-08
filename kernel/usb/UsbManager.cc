@@ -29,13 +29,16 @@ void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uin
     logln(" usb: Registered xHCI controller at {:h4}:{:h2}:{:h2}:{:h2}", bus->segment_num(), bus->num(), device,
           function);
     auto &controller = s_controllers.emplace(bus, device, function);
-    if (!controller.msix_supported()) {
-        logln(" usb: Controller doesn't support MSI-X, skipping!");
+    controller.configure();
+    if (controller.msix_supported()) {
+        controller.enable_msix(s_vector_base);
+    } else if (controller.msi_supported()) {
+        controller.enable_msi(s_vector_base);
+    } else {
+        logln(" usb: Controller doesn't support MSI or MSI-X, skipping!");
         return;
     }
-    Processor::wire_interrupt(s_vector_base, &irq_handler);
-    controller.configure();
-    controller.enable_msix(s_vector_base++);
+    Processor::wire_interrupt(s_vector_base++, &irq_handler);
     controller.enable();
 }
 

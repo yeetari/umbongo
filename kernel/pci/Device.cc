@@ -69,6 +69,30 @@ void Device::walk_capabilities(F callback) const {
     }
 }
 
+void Device::enable_msi(uint8 vector) {
+    uint32 reg_ptr = 0;
+    walk_capabilities([&reg_ptr](uint32 cap_ptr, uint32 cap_reg) {
+        if ((cap_reg & 0xffu) == 0x05) {
+            reg_ptr = cap_ptr;
+        }
+    });
+    ENSURE(reg_ptr != 0);
+
+    // Enable MSI and ensure 64-bit is available.
+    write_config<uint32>(reg_ptr, read_config<uint32>(reg_ptr) | (1u << 16u));
+    ENSURE((read_config<uint32>(reg_ptr) & (1u << 23u)) != 0);
+
+    // x86 specific data for the MSI table entry.
+    uint64 msi_addr = 0xfee00000;
+    uint16 msi_data = (1u << 14u) | vector;
+
+    // Write message address (low then high), then message data, and then make sure the mask is clear.
+    write_config<uint32>(reg_ptr + 4, msi_addr & 0xffffffffu);
+    write_config<uint32>(reg_ptr + 8, msi_addr >> 32u);
+    write_config<uint32>(reg_ptr + 12, msi_data);
+    write_config<uint32>(reg_ptr + 16, 0);
+}
+
 void Device::enable_msix(uint8 vector) {
     uint32 reg_ptr = 0;
     walk_capabilities([&reg_ptr](uint32 cap_ptr, uint32 cap_reg) {
@@ -93,7 +117,7 @@ void Device::enable_msix(uint8 vector) {
     uint32 table_offset = read_config<uint32>(reg_ptr + 4) & ~0b111u;
     ENSURE(table_length >= 1 && table_length <= 2048);
 
-    // x86 specific data for the MSI table entry.
+    // x86 specific data for the MSI-X table entry.
     uint64 msix_addr = 0xfee00000;
     uint32 msix_data = (1u << 14u) | vector;
 
@@ -105,6 +129,16 @@ void Device::enable_msix(uint8 vector) {
         table[i * 4 + 2] = msix_data;
         table[i * 4 + 3] = 0;
     }
+}
+
+bool Device::msi_supported() const {
+    bool supported = false;
+    walk_capabilities([&supported](uint32, uint32 cap_reg) {
+        if ((cap_reg & 0xffu) == 0x05) {
+            supported = true;
+        }
+    });
+    return supported;
 }
 
 bool Device::msix_supported() const {

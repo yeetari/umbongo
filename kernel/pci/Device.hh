@@ -34,7 +34,9 @@ public:
     template <typename F>
     void walk_capabilities(F callback) const;
 
+    void enable_msi(uint8 vector);
     void enable_msix(uint8 vector);
+    bool msi_supported() const;
     bool msix_supported() const;
 
     uint16 vendor_id() const;
