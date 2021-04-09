@@ -11,7 +11,9 @@
 
 namespace usb {
 
-struct DeviceContext;
+struct EndpointContext;
+struct InputControlContext;
+struct SlotContext;
 class HostController;
 class Port;
 
@@ -21,7 +23,7 @@ class Device {
 private:
     HostController *const m_controller;
     const uint8 m_slot;
-    DeviceContext *m_context;
+    void *m_context;
 
     uint8 *m_configuration{nullptr};
     uint16 m_configuration_length{0};
@@ -29,6 +31,8 @@ private:
     Endpoint *m_control_endpoint{nullptr};
     Vector<Endpoint> m_endpoints;
 
+    EndpointContext &endpoint_context(uint8 endpoint);
+    InputControlContext &input_context();
     void ring_doorbell(uint8 endpoint);
 
 public:
@@ -66,9 +70,10 @@ public:
         }
     }
 
+    SlotContext &slot_context();
+
     uint8 slot() const { return m_slot; }
-    DeviceContext *context() const { return m_context; }
-    Endpoint *control_endpoint() const { return m_control_endpoint; }
+    void *context() const { return m_context; }
     SlotState slot_state() const;
 };
 

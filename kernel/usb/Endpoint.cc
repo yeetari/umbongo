@@ -32,7 +32,7 @@ Endpoint::~Endpoint() {
 }
 
 void Endpoint::setup(EndpointType type, uint16 packet_size) {
-    auto &context = m_device->context()->endpoints[m_id];
+    auto &context = m_device->endpoint_context(m_id);
     context.ep_type = type;
     context.max_packet_size = packet_size;
     context.error_count = 3;
@@ -87,7 +87,7 @@ void Endpoint::send_control(ControlTransfer *transfer, TransferType transfer_typ
 }
 
 void Endpoint::setup_interval_input(Span<uint8> buffer, uint8 interval) {
-    m_device->context()->endpoints[m_id].interval = calculate_interval(interval);
+    m_device->endpoint_context(m_id).interval = calculate_interval(interval);
     TransferRequestBlock in_trb{
         .data_ptr = buffer.data(),
         .status = static_cast<uint16>(buffer.size()),

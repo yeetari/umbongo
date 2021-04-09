@@ -16,7 +16,9 @@ class HostController final : public pci::Device {
     uint32 m_db_offset{0};
     uint32 m_run_offset{0};
 
+    uint8 m_context_size{0};
     void **m_context_table{nullptr};
+
     TrbRing *m_command_ring{nullptr};
     TrbRing *m_event_ring{nullptr};
     Interrupter *m_interrupter{nullptr};
@@ -45,6 +47,7 @@ public:
     void spawn_watch_thread();
 
     uintptr op_offset() const { return m_base + m_cap_length; }
+    uint8 context_size() const { return m_context_size; }
     Vector<Port> &ports() { return m_ports; }
 };
 

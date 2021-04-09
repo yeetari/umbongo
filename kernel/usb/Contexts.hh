@@ -65,4 +65,22 @@ struct [[gnu::aligned(4_KiB)]] DeviceContext {
     Array<EndpointContext, 31> endpoints;
 };
 
+struct LargeInputControlContext : public InputControlContext {
+    Array<uint8, 32> extra;
+};
+
+struct LargeSlotContext : public SlotContext {
+    Array<uint8, 32> extra;
+};
+
+struct LargeEndpointContext : public EndpointContext {
+    Array<uint8, 32> extra;
+};
+
+struct [[gnu::aligned(4_KiB)]] LargeDeviceContext {
+    LargeInputControlContext input;
+    LargeSlotContext slot;
+    Array<LargeEndpointContext, 31> endpoints;
+};
+
 } // namespace usb

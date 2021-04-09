@@ -119,12 +119,12 @@ void HostController::enable() {
         port_write(0x80, 0);
     }
 
-    // Retrieve capability and structural parameters and ensure that 64-bit addressing (bit 0) is available and 32-byte
-    // contexts are used.
+    // Retrieve capability and structural parameters to get the context size and ensure that 64-bit addressing (bit 0)
+    // is available.
     const auto hcc_params1 = read_cap<uint32>(k_cap_reg_hccparams1);
     const auto hcs_params1 = read_cap<uint32>(k_cap_reg_hcsparams1);
+    m_context_size = (hcc_params1 & (1u << 2u)) == 0 ? 32 : 64;
     ENSURE((hcc_params1 & (1u << 0u)) != 0, "64-bit addressing not available!");
-    ENSURE((hcc_params1 & (1u << 2u)) == 0, "64-byte contexts not supported!");
 
     const uint8 slot_count = (hcs_params1 >> 0u) & 0xffu;
     const uint8 port_count = (hcs_params1 >> 24u) & 0xffu;
@@ -299,10 +299,14 @@ void HostController::on_attach(Port &port) {
     };
     send_command(&enable_slot);
 
+    // Setup initial identifying device. This device object is only constructed to retrieve the device descriptor. If we
+    // end up having a suitable driver for the device, this device gets moved into a heap object. We also pass "this" to
+    // the device constructor, which is ok here since all HostController vector reallocation has already been performed
+    // at this point.
     const uint8 slot = enable_slot.data & 0xffu;
     usb::Device id_device(this, slot);
     id_device.setup(port);
-    m_context_table[slot] = &id_device.context()->slot;
+    m_context_table[slot] = &id_device.slot_context();
 
     // Put device into default state.
     TransferRequestBlock set_address_first{
