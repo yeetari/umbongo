@@ -8,7 +8,6 @@ class Device;
 class HostController;
 
 class Port {
-    HostController *const m_controller;
     Device *m_device{nullptr};
     Port *m_paired{nullptr};
     volatile uint32 *m_status{nullptr};
@@ -20,9 +19,7 @@ class Port {
     uint8 m_socket{0};
 
 public:
-    explicit Port(HostController *controller) : m_controller(controller) {}
-
-    bool initialise();
+    bool initialise(HostController *controller);
     bool reset();
 
     bool connected() const;

@@ -128,7 +128,7 @@ void HostController::enable() {
 
     const uint8 slot_count = (hcs_params1 >> 0u) & 0xffu;
     const uint8 port_count = (hcs_params1 >> 24u) & 0xffu;
-    m_ports.resize(port_count, this);
+    m_ports.resize(port_count);
 
     // Iterate extended capabilities to build port info and relinquish BIOS control if present.
     uint16 xecp = (hcc_params1 >> 16u) & 0xffffu;
@@ -210,7 +210,7 @@ void HostController::enable() {
         if (port.major() != 3 || (port.major() == 2 && port.paired() != nullptr)) {
             continue;
         }
-        if (port.initialise() && port.connected()) {
+        if (port.initialise(this) && port.connected()) {
             if (!port.reset()) {
                 logln(" usb: Failed to reset port {}!", port.number());
             }
@@ -220,7 +220,7 @@ void HostController::enable() {
         if (port.major() == 3) {
             auto *paired = port.paired();
             ASSERT(paired != nullptr);
-            if (paired->initialise() && paired->connected()) {
+            if (paired->initialise(this) && paired->connected()) {
                 if (!paired->reset()) {
                     logln(" usb: Failed to reset port {}!", port.number());
                 }

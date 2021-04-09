@@ -6,8 +6,8 @@
 
 namespace usb {
 
-bool Port::initialise() {
-    m_status = reinterpret_cast<volatile uint32 *>(m_controller->op_offset() + 0x400 + m_number * 16);
+bool Port::initialise(HostController *controller) {
+    m_status = reinterpret_cast<volatile uint32 *>(controller->op_offset() + 0x400 + m_number * 16);
 
     // Enable power if it's not already.
     if ((*m_status & (1u << 9u)) == 0) {
