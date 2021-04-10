@@ -2,6 +2,7 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 
 enum class PageFlags : usize {
@@ -41,6 +42,22 @@ class [[gnu::aligned(4_KiB)]] PageLevel {
     Array<PageLevelEntry<Entry>, 512> m_entries{};
 
 public:
+    constexpr PageLevel() = default;
+    PageLevel(const PageLevel &) = delete;
+    PageLevel(PageLevel &&) = delete;
+    ~PageLevel() {
+        if constexpr (!ustd::IsSame<Entry, uintptr>) {
+            for (auto &entry : m_entries) {
+                if (!entry.empty() && (entry.flags() & PageFlags::Large) != PageFlags::Large) {
+                    delete entry.entry();
+                }
+            }
+        }
+    }
+
+    PageLevel &operator=(const PageLevel &) = delete;
+    PageLevel &operator=(PageLevel &&) = delete;
+
     void set(usize index, uintptr phys, PageFlags flags = static_cast<PageFlags>(0)) {
         ASSERT(index < 512);
         ASSERT(m_entries[index].empty());
