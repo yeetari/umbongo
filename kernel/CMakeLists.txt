@@ -26,6 +26,7 @@ add_executable(kernel
     mem/MemoryManager.cc
     mem/VirtSpace.cc
     pci/Device.cc
+    proc/Hpet.cc
     proc/Process.cc
     proc/Scheduler.cc
     usb/hid/KeyboardDevice.cc

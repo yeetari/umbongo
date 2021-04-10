@@ -4,6 +4,7 @@
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
 #include <kernel/acpi/ApicTable.hh>
+#include <kernel/acpi/HpetTable.hh>
 #include <kernel/acpi/InterruptController.hh>
 #include <kernel/acpi/PciTable.hh>
 #include <kernel/acpi/RootTable.hh>
@@ -241,13 +242,16 @@ extern "C" void kmain(BootInfo *boot_info) {
     apic->send_eoi();
     Processor::set_apic(apic);
 
+    auto *hpet_table = xsdt->find<acpi::HpetTable>();
+    ENSURE(hpet_table != nullptr);
+
     logln("core: Creating init process");
     auto *kernel_init_process = Process::create_kernel();
     kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
     kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
     kernel_init_process->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 
-    Scheduler::initialise();
+    Scheduler::initialise(hpet_table);
     Scheduler::insert_process(kernel_init_process);
     Scheduler::start();
 }

@@ -1,10 +1,10 @@
 #include <kernel/proc/Scheduler.hh>
 
-#include <kernel/Port.hh>
+#include <kernel/acpi/HpetTable.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/intr/InterruptManager.hh>
+#include <kernel/proc/Hpet.hh>
 #include <kernel/proc/Process.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -16,48 +16,11 @@ Process *g_current_process = nullptr;
 namespace {
 
 constexpr uint16 k_scheduler_frequency = 250;
-
-constexpr uint8 k_pit_vector = 39;
 constexpr uint8 k_timer_vector = 40;
 
 Process *s_base_process = nullptr;
-bool s_pit_fired = false;
+Hpet *s_hpet = nullptr;
 uint32 s_ticks = 0;
-
-void pit_handler(RegisterState *) {
-    Processor::apic()->set_timer(LocalApic::TimerMode::Disabled, 255);
-    s_pit_fired = true;
-}
-
-void calibrate_timer() {
-    // Configure PIT interrupts.
-    InterruptManager::wire_interrupt(0, k_pit_vector);
-    Processor::wire_interrupt(k_pit_vector, &pit_handler);
-
-    // Initialise PIT to one shot mode for channel 0.
-    port_write<uint8>(0x43, 0b00110010);
-
-    // Start the APIC timer counting down from its max value.
-    Processor::apic()->set_timer(LocalApic::TimerMode::Periodic, 255);
-    Processor::apic()->set_timer_count(0xffffffff);
-
-    // Calculate the divisor based on what frequency we want and send it to the PIT in two parts.
-    constexpr uint16 divisor = 1193182ul / k_scheduler_frequency;
-    port_write<uint8>(0x40, divisor & 0xffu);
-    port_write<uint8>(0x40, (divisor >> 8u) & 0xffu); // NOLINT
-
-    // Enable interrupts and wait for PIT to fire.
-    asm volatile("sti");
-    while (!s_pit_fired) {
-        asm volatile("hlt");
-    }
-    asm volatile("cli");
-
-    // Work out how many ticks have passed.
-    s_ticks = 0xffffffff - Processor::apic()->read_timer_count();
-
-    // TODO: We should probably remask the PIT interrupt here.
-}
 
 void handle_page_fault(RegisterState *regs) {
     if ((regs->cs & 3u) == 0u) {
@@ -70,8 +33,27 @@ void handle_page_fault(RegisterState *regs) {
 
 } // namespace
 
-void Scheduler::initialise() {
-    calibrate_timer();
+void Scheduler::initialise(acpi::HpetTable *hpet_table) {
+    // Retrieve HPET address from ACPI tables and make sure the values are sane.
+    const auto &hpet_address = hpet_table->base_address();
+    ENSURE(hpet_address.address_space == acpi::AddressSpace::SystemMemory);
+    ENSURE(hpet_address.register_bit_offset == 0);
+
+    // Allocate the HPET and enable the main counter.
+    s_hpet = new Hpet(hpet_address.address);
+    s_hpet->enable();
+
+    // Start the APIC timer counting down from its max value.
+    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
+    Processor::apic()->set_timer_count(0xffffffff);
+
+    // Spin for 100ms and then calculate the total number of ticks occured in 100ms by the APIC timer.
+    s_hpet->spin(100);
+    s_ticks = 0xffffffff - Processor::apic()->read_timer_count();
+
+    // Calculate the number of ticks for our desired frequency.
+    s_ticks /= k_scheduler_frequency;
+    s_ticks *= 10;
 
     // Initialise idle process.
     s_base_process = Process::create_kernel();
