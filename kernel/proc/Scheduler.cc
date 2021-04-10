@@ -90,3 +90,10 @@ void Scheduler::switch_next(RegisterState *regs) {
     g_current_process->m_virt_space.switch_to();
     Processor::apic()->set_timer_count(s_ticks);
 }
+
+void Scheduler::wait(usize millis) {
+    // TODO: Yield instead of spinning. Currently, the code that calls this function is the USB code, which is in
+    //       another thread and can potentially yield.
+    ASSERT_PEDANTIC(s_hpet != nullptr);
+    s_hpet->spin(millis);
+}

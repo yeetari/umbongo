@@ -1,6 +1,6 @@
 #include <kernel/usb/Endpoint.hh>
 
-#include <kernel/Port.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <kernel/usb/Contexts.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/EndpointType.hh>
@@ -82,7 +82,7 @@ void Endpoint::send_control(ControlTransfer *transfer, TransferType transfer_typ
 
     m_device->ring_doorbell(m_id);
     while ((status_trb.status & (1u << 31u)) == 0) {
-        port_write(0x80, 0);
+        Scheduler::wait(1);
     }
 }
 

@@ -1,6 +1,5 @@
 #include <kernel/usb/HostController.hh>
 
-#include <kernel/Port.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/usb/Contexts.hh>
@@ -105,7 +104,7 @@ void HostController::enable() {
     // the controller is halted.
     write_op<uint32>(k_op_reg_command, read_op<uint32>(k_op_reg_command) & ~1u);
     while ((read_op<uint32>(k_op_reg_status) & 1u) == 0) {
-        port_write(0x80, 0);
+        Scheduler::wait(1);
     }
 
     // Write the default value of 0x20 to the FLADJ register in case the BIOS didn't. This sets the frame length.
@@ -116,7 +115,7 @@ void HostController::enable() {
     write_op<uint32>(k_op_reg_command, 1u << 1u);
     while ((read_op<uint32>(k_op_reg_command) & (1u << 1u)) != 0 ||
            (read_op<uint32>(k_op_reg_status) & (1u << 11u)) != 0) {
-        port_write(0x80, 0);
+        Scheduler::wait(1);
     }
 
     // Retrieve capability and structural parameters to get the context size and ensure that 64-bit addressing (bit 0)
@@ -142,7 +141,7 @@ void HostController::enable() {
             // for the BIOS to clear the BIOS Owned Semaphore bit.
             write_cap<uint32>(xecp * sizeof(uint32), ext_cap | (1u << 24u));
             while ((read_cap<uint32>(xecp * sizeof(uint32)) & (1u << 16u)) != 0) {
-                port_write(0x80, 0);
+                Scheduler::wait(1);
             }
             break;
         case 2:
@@ -369,7 +368,7 @@ void HostController::send_command(TransferRequestBlock *command) {
     auto *trb = m_command_ring->enqueue(command);
     ring_doorbell(0, 0);
     while ((trb->status & (1u << 31u)) == 0) {
-        port_write(0x80, 0);
+        Scheduler::wait(1);
     }
     memcpy(command, trb, sizeof(TransferRequestBlock));
 }

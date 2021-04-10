@@ -1,6 +1,6 @@
 #include <kernel/usb/Port.hh>
 
-#include <kernel/Port.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <kernel/usb/HostController.hh>
 #include <ustd/Types.hh>
 
@@ -12,9 +12,7 @@ bool Port::initialise(HostController *controller) {
     // Enable power if it's not already.
     if ((*m_status & (1u << 9u)) == 0) {
         *m_status = 1u << 9u;
-        for (usize i = 0; i < 250; i++) {
-            port_write(0x80, 0);
-        }
+        Scheduler::wait(100);
     }
 
     // Port is not powering.
@@ -34,7 +32,7 @@ bool Port::reset() {
         if (reset_timeout-- == 0) {
             return false;
         }
-        port_write(0x80, 0);
+        Scheduler::wait(1);
     }
     return true;
 }
