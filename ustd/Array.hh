@@ -23,6 +23,11 @@ struct Array {
     constexpr operator Span<T>() { return {data(), size()}; }
     constexpr operator Span<const T>() const { return {data(), size()}; }
 
+    constexpr T *begin() { return data(); }
+    constexpr T *end() { return data() + size(); }
+    constexpr const T *begin() const { return data(); }
+    constexpr const T *end() const { return data() + size(); }
+
     constexpr T *data() { return static_cast<T *>(m_data); }
     constexpr const T *data() const { return static_cast<const T *>(m_data); }
 
