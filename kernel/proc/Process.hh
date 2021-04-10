@@ -1,10 +1,10 @@
 #pragma once
 
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/mem/VirtSpace.hh>
 #include <ustd/Types.hh>
 
 struct Scheduler;
+class VirtSpace;
 
 enum class ProcessState {
     Alive,
@@ -17,16 +17,23 @@ class Process {
 private:
     const usize m_pid;
     const bool m_is_kernel;
-    VirtSpace m_virt_space;
+    VirtSpace *const m_virt_space;
     ProcessState m_state{ProcessState::Alive};
     RegisterState m_register_state{};
     Process *m_next{nullptr};
 
-    Process(usize pid, bool is_kernel, VirtSpace &&virt_space);
+    Process(usize pid, bool is_kernel, VirtSpace *virt_space);
 
 public:
     static Process *create_kernel();
     static Process *create_user(void *binary, usize binary_size);
+
+    Process(const Process &) = delete;
+    Process(Process &&) = delete;
+    ~Process();
+
+    Process &operator=(const Process &) = delete;
+    Process &operator=(Process &&) = delete;
 
     void kill();
     void set_entry_point(uintptr entry);

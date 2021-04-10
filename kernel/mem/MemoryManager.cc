@@ -1,6 +1,7 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <kernel/mem/VirtSpace.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -27,6 +28,10 @@ MemoryManager s_memory_manager;
 
 void MemoryManager::initialise(BootInfo *boot_info) {
     new (&s_memory_manager) MemoryManager(boot_info);
+}
+
+VirtSpace *MemoryManager::kernel_space() {
+    return s_memory_manager.m_kernel_space;
 }
 
 MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
@@ -79,6 +84,14 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
         total_bytes += k_frame_size;
     }
     logln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+
+    // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
+    // takes 4KiB of page structures to do.
+    // TODO: Mark these pages as global.
+    m_kernel_space = new VirtSpace;
+    for (usize i = 0; i < 512; i++) {
+        m_kernel_space->map_1GiB(i * 1_GiB, i * 1_GiB, PageFlags::Writable);
+    }
 }
 
 Optional<uintptr> MemoryManager::find_first_fit_region(usize size) {

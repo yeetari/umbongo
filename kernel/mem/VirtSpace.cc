@@ -2,30 +2,25 @@
 
 #include <kernel/cpu/Paging.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/mem/MemoryManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
-VirtSpace VirtSpace::create_user(void *binary, usize binary_size) {
-    VirtSpace virt_space;
+VirtSpace *VirtSpace::create_user(void *binary, usize binary_size) {
+    auto *virt_space = MemoryManager::kernel_space()->clone();
     for (usize offset = 0; offset <= round_up(binary_size, 4_KiB); offset += 4_KiB) {
-        virt_space.map_4KiB(k_user_binary_base + offset, reinterpret_cast<uintptr>(binary) + offset, PageFlags::User);
+        virt_space->map_4KiB(k_user_binary_base + offset, reinterpret_cast<uintptr>(binary) + offset, PageFlags::User);
     }
     auto *stack = new (ustd::align_val_t(4_KiB)) uint8[k_user_stack_page_count * 4_KiB];
     for (usize offset = 0; offset < k_user_stack_page_count * 4_KiB; offset += 4_KiB) {
-        virt_space.map_4KiB(k_user_stack_base + offset, reinterpret_cast<uintptr>(stack) + offset,
-                            PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
+        virt_space->map_4KiB(k_user_stack_base + offset, reinterpret_cast<uintptr>(stack) + offset,
+                             PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
     }
     return virt_space;
 }
 
-VirtSpace::VirtSpace() : m_pml4(new Pml4) {
-    // Identity map physical memory up to 512GiB. Using 1GiB pages means this only takes 4KiB of page structures to do.
-    // TODO: Mark these pages as global.
-    for (usize i = 0; i < 512; i++) {
-        map_1GiB(i * 1_GiB, i * 1_GiB, PageFlags::Writable);
-    }
-}
+VirtSpace::VirtSpace() : m_pml4(new Pml4) {}
 
 VirtSpace::~VirtSpace() {
     delete m_pml4;
@@ -55,4 +50,45 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
 
 void VirtSpace::switch_to() {
     Processor::write_cr3(m_pml4);
+}
+
+VirtSpace *VirtSpace::clone() const {
+    // Deep clone this virt space. Note that pdpt_index means the index of the PD in the PDPT, rather than the index of
+    // the PDPT in the PML4.
+    auto *new_space = new VirtSpace;
+    for (usize pml4_index = 0; pml4_index < 512; pml4_index++) {
+        const auto &pdpt = m_pml4->entries()[pml4_index];
+        if (pdpt.empty()) {
+            continue;
+        }
+        for (usize pdpt_index = 0; pdpt_index < 512; pdpt_index++) {
+            const auto &pd = pdpt.entry()->entries()[pdpt_index];
+            if (pd.empty()) {
+                continue;
+            }
+            if ((pd.flags() & PageFlags::Large) == PageFlags::Large) {
+                const auto virt = (pml4_index * 512_GiB) + (pdpt_index * 1_GiB);
+                const auto phys = reinterpret_cast<uintptr>(pd.entry());
+                new_space->map_1GiB(virt, phys, pd.flags());
+                continue;
+            }
+            for (usize pd_index = 0; pd_index < 512; pd_index++) {
+                const auto &pt = pd.entry()->entries()[pd_index];
+                if (pt.empty()) {
+                    continue;
+                }
+                for (usize pt_index = 0; pt_index < 512; pt_index++) {
+                    const auto &page = pt.entry()->entries()[pt_index];
+                    if (page.empty()) {
+                        continue;
+                    }
+                    const auto virt =
+                        (pml4_index * 512_GiB) + (pdpt_index * 1_GiB) + (pd_index * 2_MiB) + (pt_index * 4_KiB);
+                    const auto phys = reinterpret_cast<uintptr>(page.entry());
+                    new_space->map_4KiB(virt, phys, page.flags());
+                }
+            }
+        }
+    }
+    return new_space;
 }

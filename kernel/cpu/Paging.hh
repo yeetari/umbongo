@@ -31,7 +31,7 @@ public:
     constexpr PageLevelEntry(uintptr entry, PageFlags flags)
         : m_raw((entry & 0xfffffffffffffu) | static_cast<usize>(flags | PageFlags::Present)) {}
 
-    bool is_empty() const { return m_raw == 0; }
+    bool empty() const { return m_raw == 0; }
     Entry *entry() const { return reinterpret_cast<Entry *>(m_raw & 0xffffffffff000ul); }
     PageFlags flags() const { return static_cast<PageFlags>(m_raw & 0xffu); }
 };
@@ -43,19 +43,21 @@ class [[gnu::aligned(4_KiB)]] PageLevel {
 public:
     void set(usize index, uintptr phys, PageFlags flags = static_cast<PageFlags>(0)) {
         ASSERT(index < 512);
-        ASSERT(m_entries[index].is_empty());
+        ASSERT(m_entries[index].empty());
         m_entries[index] = PageLevelEntry<Entry>(phys, flags);
     }
 
     Entry *ensure(usize index) {
         ASSERT(index < 512);
         ASSERT((m_entries[index].flags() & PageFlags::Large) != PageFlags::Large);
-        if (m_entries[index].is_empty()) {
+        if (m_entries[index].empty()) {
             // Top level page structures have all access bits set.
             set(index, reinterpret_cast<uintptr>(new Entry), PageFlags::Writable | PageFlags::User);
         }
         return m_entries[index].entry();
     }
+
+    const Array<PageLevelEntry<Entry>, 512> &entries() const { return m_entries; }
 };
 
 using Page = uintptr;                                   // PTE

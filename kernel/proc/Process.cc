@@ -1,6 +1,8 @@
 #include <kernel/proc/Process.hh>
 
+#include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -11,15 +13,15 @@ usize s_pid_counter = 0;
 } // namespace
 
 Process *Process::create_kernel() {
-    return new Process(s_pid_counter++, true, {});
+    return new Process(s_pid_counter++, true, MemoryManager::kernel_space());
 }
 
 Process *Process::create_user(void *binary, usize binary_size) {
     return new Process(s_pid_counter++, false, VirtSpace::create_user(binary, binary_size));
 }
 
-Process::Process(usize pid, bool is_kernel, VirtSpace &&virt_space)
-    : m_pid(pid), m_is_kernel(is_kernel), m_virt_space(ustd::move(virt_space)) {
+Process::Process(usize pid, bool is_kernel, VirtSpace *virt_space)
+    : m_pid(pid), m_is_kernel(is_kernel), m_virt_space(virt_space) {
     m_register_state.cs = is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
@@ -28,6 +30,11 @@ Process::Process(usize pid, bool is_kernel, VirtSpace &&virt_space)
     } else {
         m_register_state.rsp = k_user_stack_head;
     }
+}
+
+Process::~Process() {
+    // TODO: Delete virt space if not kernel task.
+    ENSURE_NOT_REACHED();
 }
 
 void Process::kill() {

@@ -4,9 +4,11 @@
 #include <ustd/Types.hh>
 
 struct BootInfo;
+class VirtSpace;
 
 class MemoryManager {
     BootInfo *const m_boot_info{nullptr};
+    VirtSpace *m_kernel_space{nullptr};
     usize *m_frame_bitset{nullptr};
     usize m_total_frames{0};
 
@@ -18,6 +20,7 @@ class MemoryManager {
 
 public:
     static void initialise(BootInfo *boot_info);
+    static VirtSpace *kernel_space();
 
     constexpr MemoryManager() = default;
     explicit MemoryManager(BootInfo *boot_info);

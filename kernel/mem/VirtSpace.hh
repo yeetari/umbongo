@@ -10,15 +10,21 @@ constexpr usize k_user_stack_page_count = 8;
 
 constexpr uintptr k_user_stack_head = k_user_stack_base + k_user_stack_page_count * 4_KiB;
 
+class MemoryManager;
+
 class VirtSpace {
+    friend MemoryManager;
+
+private:
     Pml4 *m_pml4;
 
-public:
-    static VirtSpace create_user(void *binary, usize binary_size);
-
     VirtSpace();
+
+public:
+    static VirtSpace *create_user(void *binary, usize binary_size);
+
     VirtSpace(const VirtSpace &) = delete;
-    VirtSpace(VirtSpace &&other) noexcept : m_pml4(ustd::exchange(other.m_pml4, nullptr)) {}
+    VirtSpace(VirtSpace &&) = default;
     ~VirtSpace();
 
     VirtSpace &operator=(const VirtSpace &) = delete;
@@ -27,4 +33,6 @@ public:
     void map_4KiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
     void map_1GiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
     void switch_to();
+
+    VirtSpace *clone() const;
 };
