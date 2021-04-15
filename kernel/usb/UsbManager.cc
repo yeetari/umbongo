@@ -1,6 +1,7 @@
 #include <kernel/usb/UsbManager.hh>
 
 #include <kernel/cpu/Processor.hh>
+#include <kernel/cpu/RegisterState.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
@@ -14,13 +15,13 @@
 namespace usb {
 namespace {
 
-Vector<HostController> s_controllers;
-uint8 s_vector_base = 70;
+constexpr uint8 k_base_vector = 70;
 
-void irq_handler(RegisterState *) {
-    for (auto &controller : s_controllers) {
-        controller.handle_interrupt();
-    }
+Vector<HostController> s_controllers;
+uint8 s_current_vector = k_base_vector;
+
+void irq_handler(RegisterState *regs) {
+    s_controllers[regs->int_num - k_base_vector].handle_interrupt();
 }
 
 } // namespace
@@ -31,14 +32,14 @@ void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uin
     auto &controller = s_controllers.emplace(bus, device, function);
     controller.configure();
     if (controller.msix_supported()) {
-        controller.enable_msix(s_vector_base);
+        controller.enable_msix(s_current_vector);
     } else if (controller.msi_supported()) {
-        controller.enable_msi(s_vector_base);
+        controller.enable_msi(s_current_vector);
     } else {
         logln(" usb: Controller doesn't support MSI or MSI-X, skipping!");
         return;
     }
-    Processor::wire_interrupt(s_vector_base++, &irq_handler);
+    Processor::wire_interrupt(s_current_vector++, &irq_handler);
     controller.enable();
 }
 
