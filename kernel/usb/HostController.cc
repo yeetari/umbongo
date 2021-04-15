@@ -234,7 +234,7 @@ void HostController::handle_interrupt() {
         write_op(k_op_reg_status, status);
     }
 
-    if (!m_interrupter->interrupt_pending()) {
+    if (m_interrupter == nullptr || !m_interrupter->interrupt_pending()) {
         return;
     }
 
