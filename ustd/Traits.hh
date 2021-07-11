@@ -17,6 +17,15 @@ using TrueType = BoolConstant<true>;
 
 namespace detail {
 
+template <bool B, typename T, typename F>
+struct Conditional {
+    using type = T;
+};
+template <typename T, typename F>
+struct Conditional<false, T, F> {
+    using type = F;
+};
+
 template <typename>
 struct IsIntegerCheck : public FalseType {};
 template <>
@@ -52,6 +61,9 @@ struct IsSameCheck<T, T> : public TrueType {};
 
 } // namespace detail
 
+template <bool B, typename T, typename F>
+using Conditional = typename detail::Conditional<B, T, F>::type;
+
 template <typename T, typename U>
 concept IsConvertibleTo = requires(T obj) {
     static_cast<U>(obj);
@@ -71,6 +83,7 @@ concept IsTriviallyCopyable = __is_trivially_copyable(T);
 
 } // namespace ustd
 
+using ustd::Conditional;
 using ustd::IsConvertibleTo;
 using ustd::IsInteger;
 using ustd::IsPointer;

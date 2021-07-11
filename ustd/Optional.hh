@@ -9,7 +9,7 @@ namespace ustd {
 
 template <typename T>
 class Optional {
-    Array<uint8, sizeof(T)> m_data{};
+    alignas(T) Array<uint8, sizeof(T)> m_data{};
     bool m_present{false};
 
 public:
@@ -21,6 +21,10 @@ public:
     constexpr const T &operator*() const {
         ASSERT(m_present);
         return *reinterpret_cast<const T *>(m_data.data());
+    }
+    constexpr const T *operator->() const {
+        ASSERT(m_present);
+        return reinterpret_cast<const T *>(m_data.data());
     }
 };
 
