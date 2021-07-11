@@ -2,6 +2,7 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 
@@ -54,6 +55,13 @@ template <>
 inline void log_single(const char *, const char *msg) {
     while (*msg != '\0') {
         put_char(*msg++);
+    }
+}
+
+template <>
+inline void log_single(const char *, StringView msg) {
+    for (char ch : msg) {
+        put_char(ch);
     }
 }
 
