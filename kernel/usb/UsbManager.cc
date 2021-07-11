@@ -21,7 +21,7 @@ Vector<HostController> s_controllers;
 uint8 s_current_vector = k_base_vector;
 
 void irq_handler(RegisterState *regs) {
-    s_controllers[regs->int_num - k_base_vector].handle_interrupt();
+    s_controllers[static_cast<uint32>(regs->int_num) - k_base_vector].handle_interrupt();
 }
 
 } // namespace
