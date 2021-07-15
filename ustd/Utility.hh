@@ -63,4 +63,11 @@ constexpr T exchange(T &obj, U &&new_value) {
     return old_value;
 }
 
+template <typename T>
+constexpr void swap(T &lhs, T &rhs) {
+    T tmp(move(lhs));
+    lhs = move(rhs);
+    rhs = move(tmp);
+}
+
 } // namespace ustd
