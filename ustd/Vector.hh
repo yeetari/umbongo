@@ -72,7 +72,7 @@ Vector<T, SizeType>::Vector(SizeType size, Args &&...args) {
 
 template <typename T, typename SizeType>
 Vector<T, SizeType>::~Vector() {
-    if constexpr (!IsTriviallyCopyable<T>) {
+    if constexpr (!IsTriviallyDestructible<T>) {
         for (auto *elem = end(); elem != begin();) {
             (--elem)->~T();
         }
@@ -82,7 +82,7 @@ Vector<T, SizeType>::~Vector() {
 
 template <typename T, typename SizeType>
 void Vector<T, SizeType>::clear() {
-    if constexpr (!IsTriviallyCopyable<T>) {
+    if constexpr (!IsTriviallyDestructible<T>) {
         for (auto *elem = end(); elem != begin();) {
             (--elem)->~T();
         }
@@ -159,12 +159,13 @@ void Vector<T, SizeType>::push(T &&elem) {
 template <typename T, typename SizeType>
 Conditional<IsTriviallyCopyable<T>, T, void> Vector<T, SizeType>::pop() {
     ASSERT(!empty());
-    auto *elem = end() - 1;
     m_size--;
-    if constexpr (!IsTriviallyCopyable<T>) {
-        elem->~T();
-    } else {
+    auto *elem = end();
+    if constexpr (IsTriviallyCopyable<T>) {
         return *elem;
+    }
+    if constexpr (!IsTriviallyDestructible<T>) {
+        elem->~T();
     }
 }
 

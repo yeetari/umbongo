@@ -73,6 +73,11 @@ template <typename T>
 concept IsInteger = detail::IsIntegerCheck<RemoveQual<T>>::value;
 
 template <typename T>
+concept IsMoveConstructible = requires(T &&t) {
+    new T(move(t));
+};
+
+template <typename T>
 concept IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
 
 template <typename T, typename U>
@@ -80,12 +85,16 @@ concept IsSame = detail::IsSameCheck<T, U>::value;
 
 template <typename T>
 concept IsTriviallyCopyable = __is_trivially_copyable(T);
+template <typename T>
+concept IsTriviallyDestructible = __is_trivially_destructible(T);
 
 } // namespace ustd
 
 using ustd::Conditional;
 using ustd::IsConvertibleTo;
 using ustd::IsInteger;
+using ustd::IsMoveConstructible;
 using ustd::IsPointer;
 using ustd::IsSame;
 using ustd::IsTriviallyCopyable;
+using ustd::IsTriviallyDestructible;
