@@ -5,13 +5,18 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     container: ubuntu:devel
-    env:
-      DEBIAN_FRONTEND: "noninteractive"
     steps:
       - name: Install tools
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           apt update -qq
-          apt install -y clang cmake libfreetype-dev lld nasm ninja-build
+          apt install -y \
+            clang \
+            cmake \
+            libfreetype-dev \
+            lld \
+            nasm \
+            ninja-build
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure CMake

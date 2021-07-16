@@ -5,13 +5,18 @@ jobs:
     name: Clang Tidy
     runs-on: ubuntu-latest
     container: ubuntu:devel
-    env:
-      DEBIAN_FRONTEND: "noninteractive"
     steps:
       - name: Install tools
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           apt update -qq
-          apt install -y clang cmake clang-tidy lld nasm
+          apt install -y \
+            clang \
+            cmake \
+            clang-tidy \
+            lld \
+            nasm \
+            parallel
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure CMake
@@ -22,21 +27,27 @@ jobs:
           find . \
             -name '*.cc' \
             -and -not -name 'FontGenerator.cc' \
-            -exec clang-tidy -p build --header-filter=.* --quiet {} \; \
-            | tee output
+            -print0 |
+          parallel -0 \
+            clang-tidy -p build --header-filter=.* --quiet {} |
+          tee output
           if [ -s output ]; then exit 1; fi
 
   cppcheck:
     name: Cppcheck
     runs-on: ubuntu-latest
     container: ubuntu:devel
-    env:
-      DEBIAN_FRONTEND: "noninteractive"
     steps:
       - name: Install tools
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           apt update -qq
-          apt install -y clang cmake cppcheck lld nasm
+          apt install -y \
+            clang \
+            cmake \
+            cppcheck \
+            lld \
+            nasm
       - name: Checkout
         uses: actions/checkout@v2
       - name: Configure CMake
