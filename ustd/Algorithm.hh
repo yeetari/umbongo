@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ustd/Concepts.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Traits.hh>
 
@@ -8,8 +9,8 @@ namespace ustd {
 // clang-format off
 template <typename Container>
 concept IsContainer = requires(const Container &container) {
-    { container.data() } -> IsConvertibleTo<const void *>;
-    { container.size() } -> IsSame<usize>;
+    { container.data() } -> ConvertibleTo<const void *>;
+    { container.size() } -> SameAs<usize>;
 };
 // clang-format on
 

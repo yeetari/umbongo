@@ -15,7 +15,7 @@ template <typename T>
 void log_single(const char *, T);
 
 template <typename T>
-void log_single(const char *opts, T arg) requires IsInteger<T> {
+void log_single(const char *opts, T arg) requires IsIntegral<T> {
     if (opts[1] == 'c') {
         put_char(static_cast<char>(arg));
         return;

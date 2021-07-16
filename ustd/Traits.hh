@@ -27,27 +27,27 @@ struct Conditional<false, T, F> {
 };
 
 template <typename>
-struct IsIntegerCheck : public FalseType {};
+struct IsIntegralCheck : public FalseType {};
 template <>
-struct IsIntegerCheck<bool> : public TrueType {};
+struct IsIntegralCheck<bool> : public TrueType {};
 template <>
-struct IsIntegerCheck<char> : public TrueType {};
+struct IsIntegralCheck<char> : public TrueType {};
 template <>
-struct IsIntegerCheck<int8> : public TrueType {};
+struct IsIntegralCheck<int8> : public TrueType {};
 template <>
-struct IsIntegerCheck<int16> : public TrueType {};
+struct IsIntegralCheck<int16> : public TrueType {};
 template <>
-struct IsIntegerCheck<int32> : public TrueType {};
+struct IsIntegralCheck<int32> : public TrueType {};
 template <>
-struct IsIntegerCheck<int64> : public TrueType {};
+struct IsIntegralCheck<int64> : public TrueType {};
 template <>
-struct IsIntegerCheck<uint8> : public TrueType {};
+struct IsIntegralCheck<uint8> : public TrueType {};
 template <>
-struct IsIntegerCheck<uint16> : public TrueType {};
+struct IsIntegralCheck<uint16> : public TrueType {};
 template <>
-struct IsIntegerCheck<uint32> : public TrueType {};
+struct IsIntegralCheck<uint32> : public TrueType {};
 template <>
-struct IsIntegerCheck<uint64> : public TrueType {};
+struct IsIntegralCheck<uint64> : public TrueType {};
 
 template <typename T>
 struct IsPointerCheck : public FalseType {};
@@ -65,23 +65,23 @@ template <bool B, typename T, typename F>
 using Conditional = typename detail::Conditional<B, T, F>::type;
 
 template <typename T, typename U>
-concept IsConvertibleTo = requires(T obj) {
+inline constexpr bool IsConvertibleTo = requires(T obj) {
     static_cast<U>(obj);
 };
 
 template <typename T>
-concept IsInteger = detail::IsIntegerCheck<RemoveQual<T>>::value;
+inline constexpr bool IsIntegral = detail::IsIntegralCheck<RemoveQual<T>>::value;
 
 template <typename T>
-concept IsMoveConstructible = requires(T &&t) {
+inline constexpr bool IsMoveConstructible = requires(T &&t) {
     new T(move(t));
 };
 
 template <typename T>
-concept IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
+inline constexpr bool IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
 
 template <typename T, typename U>
-concept IsSame = detail::IsSameCheck<T, U>::value;
+inline constexpr bool IsSame = detail::IsSameCheck<T, U>::value;
 
 template <typename T>
 concept IsTriviallyCopyable = __is_trivially_copyable(T);
@@ -92,7 +92,7 @@ concept IsTriviallyDestructible = __is_trivially_destructible(T);
 
 using ustd::Conditional;
 using ustd::IsConvertibleTo;
-using ustd::IsInteger;
+using ustd::IsIntegral;
 using ustd::IsMoveConstructible;
 using ustd::IsPointer;
 using ustd::IsSame;
