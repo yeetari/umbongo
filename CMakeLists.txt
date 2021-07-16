@@ -22,9 +22,14 @@ set(CMAKE_BUILD_TYPE ${BUILD_TYPE} CACHE INTERNAL "" FORCE)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${LINK_TIME_OPT} CACHE INTERNAL "" FORCE)
 set(CMAKE_INSTALL_PREFIX sysroot)
 
-# Disable SSE.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mno-sse")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-sse")
+# Enable PIC and disable SSE.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -mno-sse")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -mno-sse")
+
+# Use C++ 20 globally.
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Use -O2 instead of -O3.
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
@@ -60,6 +65,7 @@ if(BUILD_WARNINGS)
         -Wno-zero-length-array)
 endif()
 
+# TODO: Don't add this target if mtools not found.
 add_custom_target(image
     BYPRODUCTS fs.img
     # Can't depend on install target, call it manually instead.
@@ -93,9 +99,15 @@ else()
     message(WARNING "Qemu not found, run target will be unavailable!")
 endif()
 
+# Build host targets first so they aren't affected by the upcoming options.
+add_subdirectory(tools)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding -nostdinc -nostdlib")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffreestanding -fno-exceptions -fno-rtti -nostdinc -nostdinc++ -nostdlib")
+add_link_options(-pie -nostdlib -Wno-unused-command-line-argument)
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
+
 add_subdirectory(boot)
 add_subdirectory(init)
 add_subdirectory(kernel)
-add_subdirectory(tools)
 add_subdirectory(ustd)
