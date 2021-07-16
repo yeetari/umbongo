@@ -18,3 +18,41 @@ jobs:
           find . -name '*.cc' -or -name '*.hh' | xargs clang-format -i
           git diff | tee format-diff
           if [ -s format-diff ]; then exit 1; fi
+
+  include-what-you-use:
+    name: Include What You Use
+    runs-on: ubuntu-latest
+    container: ubuntu:devel
+    steps:
+      - name: Install tools
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt update -qq
+          apt install -y \
+            clang \
+            cmake \
+            libclang-dev \
+            lld \
+            nasm \
+            parallel \
+            wget
+          mkdir /opt/include-what-you-use
+          wget -qO /opt/include-what-you-use.tar.gz https://include-what-you-use.org/downloads/include-what-you-use-0.15.src.tar.gz
+          tar xfz /opt/include-what-you-use.tar.gz -C /opt/include-what-you-use
+          cmake -B/opt/include-what-you-use/build /opt/include-what-you-use
+          cmake --build /opt/include-what-you-use/build --target install
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Configure CMake
+        run: |
+          cmake . -Bbuild
+      - name: Run include-what-you-use
+        run: |
+          find . \
+            -name '*.cc' \
+            -and -not -name 'FontGenerator.cc' \
+            -print0 |
+          parallel -0 \
+            include-what-you-use -std=c++20 -I. -Ibuild {} 2>&1 |
+          grep -v correct | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' | tee output
+          if [ -s output ]; then exit 1; fi
