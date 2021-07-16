@@ -61,7 +61,6 @@ Checks: >
   google-build-explicit-make-pair,
   google-build-namespaces,
   google-build-using-namespace,
-  google-default-arguments,
   google-readability-casting,
   google-runtime-int,
   google-runtime-operator,

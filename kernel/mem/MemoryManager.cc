@@ -34,6 +34,10 @@ VirtSpace *MemoryManager::kernel_space() {
     return s_memory_manager.m_kernel_space;
 }
 
+MemoryManager &MemoryManager::instance() {
+    return s_memory_manager;
+}
+
 MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
     // Calculate end of physical memory.
     uintptr memory_end = 0;

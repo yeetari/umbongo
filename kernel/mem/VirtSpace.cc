@@ -7,11 +7,8 @@
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
-VirtSpace *VirtSpace::create_user(void *binary, usize binary_size) {
+VirtSpace *VirtSpace::create_user() {
     auto *virt_space = MemoryManager::kernel_space()->clone();
-    for (usize offset = 0; offset <= round_up(binary_size, 4_KiB); offset += 4_KiB) {
-        virt_space->map_4KiB(k_user_binary_base + offset, reinterpret_cast<uintptr>(binary) + offset, PageFlags::User);
-    }
     auto *stack = new (ustd::align_val_t(4_KiB)) uint8[k_user_stack_page_count * 4_KiB];
     for (usize offset = 0; offset < k_user_stack_page_count * 4_KiB; offset += 4_KiB) {
         virt_space->map_4KiB(k_user_stack_base + offset, reinterpret_cast<uintptr>(stack) + offset,

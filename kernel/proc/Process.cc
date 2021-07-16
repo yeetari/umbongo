@@ -4,7 +4,6 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
-#include <ustd/Utility.hh>
 
 namespace {
 
@@ -16,8 +15,8 @@ Process *Process::create_kernel() {
     return new Process(s_pid_counter++, true, MemoryManager::kernel_space());
 }
 
-Process *Process::create_user(void *binary, usize binary_size) {
-    return new Process(s_pid_counter++, false, VirtSpace::create_user(binary, binary_size));
+Process *Process::create_user(VirtSpace *virt_space) {
+    return new Process(s_pid_counter++, false, virt_space);
 }
 
 Process::Process(usize pid, bool is_kernel, VirtSpace *virt_space)
@@ -35,6 +34,17 @@ Process::Process(usize pid, bool is_kernel, VirtSpace *virt_space)
 Process::~Process() {
     // TODO: Delete virt space if not kernel task.
     ENSURE_NOT_REACHED();
+}
+
+uint32 Process::allocate_fd() {
+    // TODO: Limits/error handling. Allocating 2^32 fds would overflow the vector.
+    for (uint32 i = 0; i < m_fds.size(); i++) {
+        if (!m_fds[i]) {
+            return i;
+        }
+    }
+    m_fds.emplace();
+    return m_fds.size() - 1;
 }
 
 void Process::kill() {

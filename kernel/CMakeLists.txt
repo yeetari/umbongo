@@ -21,6 +21,10 @@ add_executable(kernel
     acpi/Table.cc
     cpu/LocalApic.cc
     cpu/Processor.cc
+    fs/FileHandle.cc
+    fs/InodeFile.cc
+    fs/RamFs.cc
+    fs/Vfs.cc
     intr/InterruptManager.cc
     intr/IoApic.cc
     mem/MemoryManager.cc

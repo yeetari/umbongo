@@ -21,6 +21,7 @@ class MemoryManager {
 public:
     static void initialise(BootInfo *boot_info);
     static VirtSpace *kernel_space();
+    static MemoryManager &instance();
 
     constexpr MemoryManager() = default;
     explicit MemoryManager(BootInfo *boot_info);

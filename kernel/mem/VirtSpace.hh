@@ -21,7 +21,7 @@ private:
     VirtSpace();
 
 public:
-    static VirtSpace *create_user(void *binary, usize binary_size);
+    static VirtSpace *create_user();
 
     VirtSpace(const VirtSpace &) = delete;
     VirtSpace(VirtSpace &&) = default;

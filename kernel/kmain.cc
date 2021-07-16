@@ -11,9 +11,12 @@
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/fs/RamFs.hh>
+#include <kernel/fs/Vfs.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/intr/InterruptType.hh>
 #include <kernel/mem/MemoryManager.hh>
+#include <kernel/mem/VirtSpace.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/pci/Device.hh>
 #include <kernel/proc/Process.hh>
@@ -22,8 +25,8 @@
 #include <libelf/Elf.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
 namespace {
@@ -111,43 +114,56 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     }
     usb::UsbManager::spawn_watch_threads();
 
-    RamFsEntry *init_entry = nullptr;
+    // Setup in-memory file system.
+    auto root_fs = ustd::make_unique<RamFs>();
+    Vfs::initialise();
+    Vfs::mount_root(ustd::move(root_fs));
+
+    // Copy over files loaded by UEFI into the ramdisk.
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
-        if (strcmp(entry->name, "/init") == 0) {
-            ASSERT(init_entry == nullptr);
-            init_entry = entry;
-        }
-        logln("  fs: Found file {}", entry->name);
-    }
-    ENSURE(init_entry != nullptr, "Failed to find init program!");
-
-    const auto *header = reinterpret_cast<const elf::Header *>(init_entry->data);
-    usize mem_size = 0;
-    for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
-            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type == elf::ProgramHeaderType::Load) {
-            mem_size += phdr->memsz;
-        }
-    }
-
-    auto *data = new (ustd::align_val_t(4_KiB)) uint8[mem_size];
-    for (uint16 i = 0; i < header->ph_count; i++) {
-        const auto *phdr = reinterpret_cast<const elf::ProgramHeader *>(
-            reinterpret_cast<uintptr>(header) + static_cast<uintptr>(header->ph_off) + header->ph_size * i);
-        if (phdr->type != elf::ProgramHeaderType::Load) {
+        if (entry->is_directory) {
+            Vfs::mkdir(entry->name);
             continue;
         }
-        ASSERT(phdr->filesz <= phdr->memsz);
-        memcpy(data + phdr->vaddr, init_entry->data + phdr->offset, phdr->filesz);
+        auto file = Vfs::create(entry->name);
+        file->write({entry->data, entry->data_size});
     }
 
-    // Spawn 5 identical user processes.
-    for (int i = 0; i < 5; i++) {
-        auto *init_process = Process::create_user(data, mem_size);
-        init_process->set_entry_point(header->entry);
-        Scheduler::insert_process(init_process);
+    // TODO: Tell the MemoryManager to make available reclaimable memory too. Once LoaderData is marked as reclaimable
+    //       in the bootloader, we can reclaim the initial ramfs data after copying it over.
+
+    auto init_file = Vfs::open("/init");
+    auto *virt_space = VirtSpace::create_user();
+    virt_space->switch_to();
+
+    elf::Header header{};
+    init_file->read({&header, sizeof(elf::Header)});
+    for (uint16 i = 0; i < header.ph_count; i++) {
+        elf::ProgramHeader phdr{};
+        init_file->read({&phdr, sizeof(elf::ProgramHeader)}, static_cast<usize>(header.ph_off + header.ph_size * i));
+        if (phdr.type != elf::ProgramHeaderType::Load) {
+            continue;
+        }
+        ASSERT(phdr.filesz <= phdr.memsz);
+        uintptr segment_start = round_down(k_user_binary_base + phdr.vaddr, 4_KiB);
+        uintptr segment_end = round_up(k_user_binary_base + phdr.vaddr + phdr.memsz, 4_KiB);
+        for (uintptr page = segment_start; page < segment_end; page += 4_KiB) {
+            // TODO: Don't always map writable. Also map NoExecute where possible.
+            auto frame = reinterpret_cast<uintptr>(MemoryManager::instance().alloc_phys(4_KiB));
+            virt_space->map_4KiB(page, frame, PageFlags::Writable | PageFlags::User);
+        }
+
+        // Force flush TLB to get the new mappings so we can memcpy the data in.
+        virt_space->switch_to();
+
+        usize copy_offset = phdr.vaddr & 0xfffu;
+        init_file->read({reinterpret_cast<void *>(segment_start + copy_offset), phdr.memsz},
+                        static_cast<usize>(phdr.offset));
     }
+
+    auto *init_process = Process::create_user(virt_space);
+    init_process->set_entry_point(header.entry);
+    Scheduler::insert_process(init_process);
 
     // TODO: Kill current process and yield.
     while (true) {
@@ -258,4 +274,8 @@ extern "C" void kmain(BootInfo *boot_info) {
 
 extern "C" int __cxa_atexit(void (*)(void *), void *, void *) {
     return 0;
+}
+
+[[noreturn]] extern "C" void __cxa_pure_virtual() {
+    ENSURE_NOT_REACHED("__cxa_pure_virtual");
 }

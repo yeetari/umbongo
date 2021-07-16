@@ -7,7 +7,10 @@ namespace Syscall {
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
-    S(putchar)
+    S(open)                                                                                                            \
+    S(putchar)                                                                                                         \
+    S(read)                                                                                                            \
+    S(write)
 
 enum Number {
 #define ENUMERATE_SYSCALL(s) s,
