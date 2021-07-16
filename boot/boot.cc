@@ -41,6 +41,82 @@ void put_char(char ch) {
         ENSURE(status == EfiStatus::Success, (msg));                                                                   \
     }
 
+static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, EfiFileProtocol *directory,
+                               const char *path, usize path_length) {
+    // Get size of file info struct.
+    EfiFileInfo *info = nullptr;
+    usize info_size = 0;
+    directory->read(directory, &info_size, info);
+    if (info_size == 0) {
+        return false;
+    }
+
+    // Allocate memory for file info struct.
+    EFI_CHECK(
+        s_st->boot_services->allocate_pool(EfiMemoryType::LoaderData, info_size, reinterpret_cast<void **>(&info)),
+        "Failed to allocate memory for file info struct!")
+    EFI_CHECK(directory->read(directory, &info_size, info), "Failed to read file info!")
+
+    const auto *name = static_cast<const wchar_t *>(info->name);
+    const usize name_length = wstrlen(name) + 1;
+    if (strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"kernel")) == 0 ||
+        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"NvVars")) == 0 ||
+        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L".")) == 0 ||
+        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"..")) == 0) {
+        EFI_CHECK(s_st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
+        return true;
+    }
+
+    // Open file for reading.
+    EfiFileProtocol *file = nullptr;
+    EFI_CHECK(directory->open(directory, &file, name, EfiFileMode::Read, EfiFileFlag::ReadOnly),
+              "Failed to load file from disk!")
+    ENSURE(file != nullptr, "Failed to load file from disk!");
+
+    bool is_directory = (info->flags & EfiFileFlag::Directory) == EfiFileFlag::Directory;
+    ENSURE(info->physical_size >= info->file_size);
+
+    // Allocate memory for ramfs entry.
+    const usize entry_size = sizeof(RamFsEntry) + path_length + 1 + name_length + (!is_directory ? info->file_size : 0);
+    const usize page_count = (entry_size + 4096 - 1) / 4096;
+    auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &ram_fs;
+    EFI_CHECK(s_st->boot_services->allocate_pages(EfiAllocateType::AllocateAnyPages, EfiMemoryType::LoaderData,
+                                                  page_count, reinterpret_cast<uintptr *>(next_entry_ptr)),
+              "Failed to allocate memory for ramfs entry!")
+    current_entry = *next_entry_ptr;
+
+    // Setup header.
+    auto *header = new (*next_entry_ptr) RamFsEntry;
+    header->name = reinterpret_cast<const char *>(&header->next) + sizeof(void *);
+    header->data = !is_directory
+                       ? reinterpret_cast<const uint8 *>(&header->next) + sizeof(void *) + path_length + 1 + name_length
+                       : nullptr;
+    header->data_size = info->file_size;
+    header->is_directory = is_directory;
+
+    // Copy name. We can't use memcpy since the UEFI file name is made up of wide chars.
+    for (usize i = 0; i < path_length; i++) {
+        const_cast<char *>(header->name)[i] = path[i];
+    }
+    const_cast<char *>(header->name)[path_length] = '/';
+    for (usize i = 0; i < name_length; i++) {
+        const_cast<char *>(header->name)[path_length + i + 1] = static_cast<char>(info->name[i]);
+    }
+
+    if (is_directory) {
+        while (traverse_directory(ram_fs, current_entry, file, header->name, path_length + name_length)) {
+        }
+    } else {
+        // Copy data.
+        EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8 *>(header->data)), "Failed to read from file!")
+    }
+
+    // Finally close file and free memory for file info struct.
+    EFI_CHECK(file->close(file), "Failed to close file!")
+    EFI_CHECK(s_st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
+    return true;
+}
+
 EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     s_st = st;
 
@@ -63,15 +139,15 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     ENSURE(file_system != nullptr, "File system protocol not present!");
 
     // Open volume.
-    EfiFileProtocol *directory = nullptr;
+    EfiFileProtocol *root_directory = nullptr;
     logln("Opening volume...");
-    EFI_CHECK(file_system->open_volume(file_system, &directory), "Failed to open volume!")
-    ENSURE(directory != nullptr, "Failed to open volume!");
+    EFI_CHECK(file_system->open_volume(file_system, &root_directory), "Failed to open volume!")
+    ENSURE(root_directory != nullptr, "Failed to open volume!");
 
     // Load kernel from disk.
     EfiFileProtocol *kernel_file = nullptr;
     logln("Loading kernel from disk...");
-    EFI_CHECK(directory->open(directory, &kernel_file, L"kernel", EfiFileMode::Read, EfiFileFlag::ReadOnly),
+    EFI_CHECK(root_directory->open(root_directory, &kernel_file, L"kernel", EfiFileMode::Read, EfiFileFlag::ReadOnly),
               "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
@@ -117,70 +193,11 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!")
     EFI_CHECK(kernel_file->close(kernel_file), "Failed to close kernel file!")
 
-    // Load files from disk into ramfs.
     RamFsEntry *ram_fs = nullptr;
     RamFsEntry *current_entry = nullptr;
-    while (true) {
-        // Get size of file info struct.
-        EfiFileInfo *info = nullptr;
-        usize info_size = 0;
-        directory->read(directory, &info_size, info);
-        if (info_size == 0) {
-            break;
-        }
-
-        // Allocate memory for file info struct.
-        EFI_CHECK(
-            st->boot_services->allocate_pool(EfiMemoryType::LoaderData, info_size, reinterpret_cast<void **>(&info)),
-            "Failed to allocate memory for file info struct!")
-        EFI_CHECK(directory->read(directory, &info_size, info), "Failed to read file info!")
-
-        if ((info->flags & EfiFileFlag::Directory) == EfiFileFlag::Directory) {
-            EFI_CHECK(st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
-            continue;
-        }
-
-        const auto *name = static_cast<const wchar_t *>(info->name);
-        const usize name_length = wstrlen(name) + 1;
-        if (strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"kernel")) == 0 ||
-            strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"NvVars")) == 0) {
-            EFI_CHECK(st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
-            continue;
-        }
-
-        // Allocate memory for ramfs entry.
-        const usize entry_size = sizeof(RamFsEntry) + name_length + info->physical_size;
-        const usize page_count = (entry_size + 4096 - 1) / 4096;
-        auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &ram_fs;
-        EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAnyPages, EfiMemoryType::LoaderData,
-                                                    page_count, reinterpret_cast<uintptr *>(next_entry_ptr)),
-                  "Failed to allocate memory for ramfs entry!")
-        current_entry = *next_entry_ptr;
-
-        // Setup header.
-        auto *header = new (*next_entry_ptr) RamFsEntry;
-        header->name = reinterpret_cast<const char *>(&header->next) + sizeof(void *);
-        header->data = reinterpret_cast<const uint8 *>(&header->next) + sizeof(void *) + name_length;
-
-        // Copy name. We can't use memcpy since the UEFI file name is made up of wide chars.
-        for (usize i = 0; i < name_length; i++) {
-            const_cast<char *>(header->name)[i] = static_cast<char>(info->name[i]);
-        }
-
-        // Open file for reading.
-        EfiFileProtocol *file = nullptr;
-        EFI_CHECK(directory->open(directory, &file, name, EfiFileMode::Read, EfiFileFlag::ReadOnly),
-                  "Failed to load file from disk!")
-        ENSURE(file != nullptr, "Failed to load file from disk!");
-
-        // Copy data.
-        EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8 *>(header->data)), "Failed to read from file!")
-
-        // Finally close file and free memory for file info struct.
-        EFI_CHECK(file->close(file), "Failed to close file!")
-        EFI_CHECK(st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
+    while (traverse_directory(ram_fs, current_entry, root_directory, nullptr, 0)) {
     }
-    EFI_CHECK(directory->close(directory), "Failed to close directory!")
+    EFI_CHECK(root_directory->close(root_directory), "Failed to close directory!")
 
     // Allocate stack for kernel.
     uintptr kernel_stack = 0;

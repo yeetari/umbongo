@@ -17,6 +17,8 @@ struct MemoryMapEntry {
 struct RamFsEntry {
     const char *name{nullptr};
     const uint8 *data{nullptr};
+    usize data_size{0};
+    bool is_directory{false};
     RamFsEntry *next{nullptr};
 };
 

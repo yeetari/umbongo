@@ -113,7 +113,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
     RamFsEntry *init_entry = nullptr;
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
-        if (strcmp(entry->name, "init") == 0) {
+        if (strcmp(entry->name, "/init") == 0) {
             ASSERT(init_entry == nullptr);
             init_entry = entry;
         }
