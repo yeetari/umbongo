@@ -12,7 +12,7 @@ uint64 Process::sys_getpid() const {
     return m_pid;
 }
 
-uint64 Process::sys_print(const char *str) const {
-    logln("[#{}]: {}", m_pid, str);
+uint64 Process::sys_putchar(char ch) const {
+    put_char(ch);
     return 0;
 }

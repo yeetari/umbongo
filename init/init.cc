@@ -1,8 +1,13 @@
 #include <kernel/Syscall.hh>
+#include <ustd/Log.hh>
 #include <ustd/Types.hh>
+
+void put_char(char ch) {
+    Syscall::invoke(Syscall::putchar, ch);
+}
 
 extern "C" void main() {
     uint64 pid = Syscall::invoke(Syscall::getpid);
-    Syscall::invoke(Syscall::print, "Hello world!");
+    logln("Hello, world!");
     Syscall::invoke(Syscall::exit, pid);
 }

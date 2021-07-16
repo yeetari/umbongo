@@ -40,7 +40,7 @@ public:
 
     uint64 sys_exit(uint64 code) const;
     uint64 sys_getpid() const;
-    uint64 sys_print(const char *str) const;
+    uint64 sys_putchar(char ch) const;
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
