@@ -1,8 +1,15 @@
 #pragma once
 
 #include <kernel/pci/Device.hh>
-#include <kernel/usb/Port.hh>
+#include <kernel/usb/Port.hh> // IWYU pragma: keep
+#include <ustd/Types.hh>
 #include <ustd/Vector.hh>
+
+namespace pci {
+
+class Bus;
+
+} // namespace pci
 
 namespace usb {
 

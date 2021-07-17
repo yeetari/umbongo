@@ -1,8 +1,13 @@
 #include <kernel/proc/Process.hh>
 
+#include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/Vfs.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Memory.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 uint64 Process::sys_close(uint32 fd) {
     if (fd < m_fds.size()) {

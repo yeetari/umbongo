@@ -1,6 +1,7 @@
 #include <ustd/String.hh>
 
 #include <ustd/Memory.hh>
+#include <ustd/Types.hh>
 
 namespace ustd {
 

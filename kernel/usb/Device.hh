@@ -1,10 +1,10 @@
 #pragma once
 
 #include <kernel/usb/Descriptors.hh>
-#include <kernel/usb/Endpoint.hh>
+#include <kernel/usb/Endpoint.hh> // IWYU pragma: keep
 #include <kernel/usb/SlotState.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Span.hh>
+#include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>

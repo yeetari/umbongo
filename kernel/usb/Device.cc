@@ -11,8 +11,10 @@
 #include <kernel/usb/Transfers.hh>
 #include <kernel/usb/TrbRing.hh>
 #include <ustd/Array.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 namespace usb {
 

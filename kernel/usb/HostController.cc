@@ -1,8 +1,8 @@
 #include <kernel/usb/HostController.hh>
 
+#include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
-#include <kernel/usb/Contexts.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Interrupter.hh>
@@ -14,7 +14,9 @@
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace usb {

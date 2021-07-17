@@ -2,7 +2,10 @@
 
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
 class RamFsInode final : public Inode {

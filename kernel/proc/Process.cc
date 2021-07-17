@@ -1,9 +1,13 @@
 #include <kernel/proc/Process.hh>
 
+#include <kernel/cpu/RegisterState.hh>
+#include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 namespace {
 

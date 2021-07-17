@@ -2,7 +2,7 @@
 
 #include <kernel/usb/EndpointType.hh>
 #include <kernel/usb/TransferType.hh>
-#include <ustd/Span.hh>
+#include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

@@ -2,6 +2,7 @@
 
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/Types.hh>
 
 class FileHandle {
     SharedPtr<File> m_file;

@@ -1,6 +1,7 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <kernel/cpu/Paging.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>

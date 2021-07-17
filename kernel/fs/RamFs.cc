@@ -1,5 +1,13 @@
 #include <kernel/fs/RamFs.hh>
 
+#include <kernel/fs/Inode.hh>
+#include <ustd/Memory.hh>
+#include <ustd/Span.hh>
+#include <ustd/String.hh>
+#include <ustd/StringView.hh>
+#include <ustd/Types.hh>
+#include <ustd/Vector.hh>
+
 Inode *RamFsInode::create(StringView name, InodeType type) {
     return &m_children.emplace(type, name, this);
 }

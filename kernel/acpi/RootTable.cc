@@ -1,6 +1,7 @@
 #include <kernel/acpi/RootTable.hh>
 
 #include <kernel/acpi/Table.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 

@@ -3,6 +3,7 @@
 #include <kernel/cpu/Paging.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>

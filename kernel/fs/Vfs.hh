@@ -2,11 +2,10 @@
 
 #include <ustd/SharedPtr.hh>
 #include <ustd/StringView.hh>
-#include <ustd/UniquePtr.hh>
+#include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
 class File;
 class FileSystem;
-class Inode;
 
 struct Vfs {
     static void initialise();

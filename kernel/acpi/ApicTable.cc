@@ -1,6 +1,7 @@
 #include <kernel/acpi/ApicTable.hh>
 
 #include <kernel/acpi/InterruptController.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 

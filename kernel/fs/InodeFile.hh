@@ -1,6 +1,8 @@
 #pragma once
 
 #include <kernel/fs/File.hh>
+#include <ustd/Span.hh> // IWYU pragma: keep
+#include <ustd/Types.hh>
 
 class Inode;
 

@@ -2,7 +2,6 @@
 
 #include <kernel/cpu/Paging.hh>
 #include <ustd/Types.hh>
-#include <ustd/Utility.hh>
 
 constexpr uintptr k_user_binary_base = 700_GiB;
 constexpr uintptr k_user_stack_base = 600_GiB;

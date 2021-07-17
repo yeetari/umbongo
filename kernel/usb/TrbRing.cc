@@ -1,5 +1,6 @@
 #include <kernel/usb/TrbRing.hh>
 
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Span.hh>

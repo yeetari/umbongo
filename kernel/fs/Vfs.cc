@@ -4,7 +4,13 @@
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
+#include <ustd/Assert.hh>
+#include <ustd/SharedPtr.hh>
+#include <ustd/Span.hh>
+#include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace {

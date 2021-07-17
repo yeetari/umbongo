@@ -2,7 +2,7 @@
 
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/FileHandle.hh>
-#include <ustd/Optional.hh>
+#include <ustd/Optional.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 

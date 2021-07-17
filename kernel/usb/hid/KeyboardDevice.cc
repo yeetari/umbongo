@@ -2,7 +2,9 @@
 
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
+#include <kernel/usb/Endpoint.hh>
 #include <kernel/usb/EndpointType.hh>
+#include <ustd/Array.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>

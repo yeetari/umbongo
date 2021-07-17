@@ -1,5 +1,6 @@
 #include <kernel/proc/Scheduler.hh>
 
+#include <kernel/acpi/GenericAddress.hh>
 #include <kernel/acpi/HpetTable.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>

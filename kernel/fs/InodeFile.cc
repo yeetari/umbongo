@@ -1,6 +1,8 @@
 #include <kernel/fs/InodeFile.hh>
 
 #include <kernel/fs/Inode.hh>
+#include <ustd/Span.hh>
+#include <ustd/Types.hh>
 
 usize InodeFile::read(Span<void> data, usize offset) {
     return m_inode->read(data, offset);

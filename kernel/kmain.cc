@@ -9,8 +9,13 @@
 #include <kernel/acpi/PciTable.hh>
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
+#include <kernel/acpi/Table.hh>
 #include <kernel/cpu/LocalApic.hh>
+#include <kernel/cpu/Paging.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/cpu/RegisterState.hh>
+#include <kernel/fs/File.hh>
+#include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/intr/InterruptManager.hh>
@@ -23,10 +28,13 @@
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/usb/UsbManager.hh>
 #include <libelf/Elf.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace {
