@@ -20,10 +20,6 @@ VirtSpace *VirtSpace::create_user() {
 
 VirtSpace::VirtSpace() : m_pml4(new Pml4) {}
 
-VirtSpace::~VirtSpace() {
-    delete m_pml4;
-}
-
 void VirtSpace::map_4KiB(uintptr virt, uintptr phys, PageFlags flags) {
     ASSERT_PEDANTIC(virt % 4_KiB == 0);
     ASSERT_PEDANTIC(phys % 4_KiB == 0);
@@ -47,7 +43,7 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
 }
 
 void VirtSpace::switch_to() {
-    Processor::write_cr3(m_pml4);
+    Processor::write_cr3(m_pml4.obj());
 }
 
 VirtSpace *VirtSpace::clone() const {

@@ -2,6 +2,7 @@
 
 #include <kernel/cpu/Paging.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 
 constexpr uintptr k_user_binary_base = 700_GiB;
 constexpr uintptr k_user_stack_base = 600_GiB;
@@ -15,7 +16,7 @@ class VirtSpace {
     friend MemoryManager;
 
 private:
-    Pml4 *m_pml4;
+    UniquePtr<Pml4> m_pml4;
 
     VirtSpace();
 
@@ -24,7 +25,7 @@ public:
 
     VirtSpace(const VirtSpace &) = delete;
     VirtSpace(VirtSpace &&) = default;
-    ~VirtSpace();
+    ~VirtSpace() = default;
 
     VirtSpace &operator=(const VirtSpace &) = delete;
     VirtSpace &operator=(VirtSpace &&) = delete;

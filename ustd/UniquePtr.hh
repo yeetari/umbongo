@@ -20,12 +20,14 @@ public:
     UniquePtr &operator=(const UniquePtr &) = delete;
     UniquePtr &operator=(UniquePtr &&other) noexcept;
 
-    T *disown() { return exchange(m_obj, nullptr); }
-
+    T &operator*() const { return *m_obj; }
     T *operator->() const {
         ASSERT(m_obj != nullptr);
         return m_obj;
     }
+
+    T *disown() { return exchange(m_obj, nullptr); }
+    T *obj() const { return m_obj; }
 };
 
 template <typename T>
