@@ -193,7 +193,7 @@ void *operator new[](usize size, ustd::align_val_t align) {
     return operator new(size, align);
 }
 
-void operator delete(void *ptr) {
+void operator delete(void *ptr) noexcept {
     if (ptr == nullptr) {
         return;
     }
@@ -202,11 +202,11 @@ void operator delete(void *ptr) {
     s_memory_manager.free_phys(header, header->size + sizeof(AllocationHeader));
 }
 
-void operator delete[](void *ptr) {
+void operator delete[](void *ptr) noexcept {
     return operator delete(ptr);
 }
 
-void operator delete(void *ptr, ustd::align_val_t align) {
+void operator delete(void *ptr, ustd::align_val_t align) noexcept {
     if (ptr == nullptr) {
         return;
     }
@@ -217,6 +217,6 @@ void operator delete(void *ptr, ustd::align_val_t align) {
     s_memory_manager.free_phys(header->mem, header->size + alignment + sizeof(AllocationHeader));
 }
 
-void operator delete[](void *ptr, ustd::align_val_t align) {
+void operator delete[](void *ptr, ustd::align_val_t align) noexcept {
     return operator delete(ptr, align);
 }
