@@ -22,7 +22,7 @@ public:
     constexpr Vector() = default;
     template <typename... Args>
     explicit Vector(SizeType size, Args &&...args);
-    Vector(const Vector &) = delete;
+    Vector(const Vector &other);
     Vector(Vector &&other) noexcept
         : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0u)),
           m_size(exchange(other.m_size, 0u)) {}
@@ -68,6 +68,18 @@ template <typename T, typename SizeType>
 template <typename... Args>
 Vector<T, SizeType>::Vector(SizeType size, Args &&...args) {
     resize(size, forward<Args>(args)...);
+}
+
+template <typename T, typename SizeType>
+Vector<T, SizeType>::Vector(const Vector &other) {
+    ensure_capacity(m_size = other.size());
+    if constexpr (!IsTriviallyCopyable<T>) {
+        for (auto *data = m_data; const auto &elem : other) {
+            new (data++) T(elem);
+        }
+    } else {
+        memcpy(m_data, other.data(), other.size_bytes());
+    }
 }
 
 template <typename T, typename SizeType>
