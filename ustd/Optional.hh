@@ -33,6 +33,8 @@ public:
     constexpr T &emplace(Args &&...args);
 
     constexpr explicit operator bool() const noexcept { return m_present; }
+    constexpr bool has_value() const noexcept { return m_present; }
+
     constexpr T &operator*() {
         ASSERT(m_present);
         return *reinterpret_cast<T *>(m_data.data());
