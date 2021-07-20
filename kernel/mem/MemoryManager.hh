@@ -1,32 +1,21 @@
 #pragma once
 
-#include <ustd/Optional.hh>
 #include <ustd/Types.hh>
 
 struct BootInfo;
 class VirtSpace;
 
-class MemoryManager {
-    BootInfo *const m_boot_info{nullptr};
-    VirtSpace *m_kernel_space{nullptr};
-    usize *m_frame_bitset{nullptr};
-    usize m_total_frames{0};
-
-    Optional<uintptr> find_first_fit_region(usize size);
-    usize &frame_bitset_bucket(usize index);
-    void clear_frame(usize index);
-    void set_frame(usize index);
-    bool is_frame_set(usize index);
-
-public:
+struct MemoryManager {
     static void initialise(BootInfo *boot_info);
+    static void switch_space(VirtSpace &virt_space);
+
+    static uintptr alloc_frame();
+    static void free_frame(uintptr frame);
+    static bool is_frame_free(uintptr frame);
+
+    static void *alloc_contiguous(usize size);
+    static void free_contiguous(void *ptr, usize size);
+
+    static VirtSpace *current_space();
     static VirtSpace *kernel_space();
-    static MemoryManager &instance();
-
-    constexpr MemoryManager() = default;
-    explicit MemoryManager(BootInfo *boot_info);
-
-    // Allocate contiguous, page-aligned physical memory.
-    void *alloc_phys(usize size);
-    void free_phys(void *ptr, usize size);
 };

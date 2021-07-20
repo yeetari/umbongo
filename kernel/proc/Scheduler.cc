@@ -5,12 +5,13 @@
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/mem/VirtSpace.hh>
+#include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Hpet.hh>
 #include <kernel/proc/Process.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
 Process *g_current_process = nullptr;
@@ -92,7 +93,7 @@ void Scheduler::switch_next(RegisterState *regs) {
         ASSERT_PEDANTIC(g_current_process != nullptr);
     } while (g_current_process->m_state != ProcessState::Alive);
     memcpy(regs, &g_current_process->m_register_state, sizeof(RegisterState));
-    g_current_process->m_virt_space->switch_to();
+    MemoryManager::switch_space(*g_current_process->m_virt_space);
     Processor::apic()->set_timer_count(s_ticks);
 }
 

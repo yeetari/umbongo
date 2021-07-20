@@ -20,7 +20,10 @@ public:
     UniquePtr &operator=(const UniquePtr &) = delete;
     UniquePtr &operator=(UniquePtr &&other) noexcept;
 
-    T &operator*() const { return *m_obj; }
+    T &operator*() const {
+        ASSERT(m_obj != nullptr);
+        return *m_obj;
+    }
     T *operator->() const {
         ASSERT(m_obj != nullptr);
         return m_obj;

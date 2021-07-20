@@ -1,38 +1,41 @@
 #pragma once
 
 #include <kernel/cpu/Paging.hh>
+#include <kernel/mem/Region.hh>
+#include <ustd/Array.hh>
+#include <ustd/Optional.hh>
+#include <ustd/Shareable.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Vector.hh>
 
-constexpr uintptr k_user_binary_base = 700_GiB;
-constexpr uintptr k_user_stack_base = 600_GiB;
-constexpr usize k_user_stack_page_count = 8;
+struct MemoryManager;
 
-constexpr uintptr k_user_stack_head = k_user_stack_base + k_user_stack_page_count * 4_KiB;
-
-class MemoryManager;
-
-class VirtSpace {
+class VirtSpace : public Shareable<VirtSpace> {
     friend MemoryManager;
+    friend Region;
 
 private:
+    // TODO: Use a better data structure for regions.
     UniquePtr<Pml4> m_pml4;
+    Vector<UniquePtr<Region>> m_regions;
 
     VirtSpace();
+    explicit VirtSpace(const Vector<UniquePtr<Region>> &regions);
+
+    void map_4KiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
+    void map_1GiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
 
 public:
-    static VirtSpace *create_user();
-
     VirtSpace(const VirtSpace &) = delete;
-    VirtSpace(VirtSpace &&) = default;
+    VirtSpace(VirtSpace &&) = delete;
     ~VirtSpace() = default;
 
     VirtSpace &operator=(const VirtSpace &) = delete;
     VirtSpace &operator=(VirtSpace &&) = delete;
 
-    void map_4KiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
-    void map_1GiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
-    void switch_to();
-
-    VirtSpace *clone() const;
+    Region &allocate_region(usize size, RegionAccess access, Optional<uintptr> phys_base = {});
+    Region &create_region(uintptr base, usize size, RegionAccess access, Optional<uintptr> phys_base = {});
+    SharedPtr<VirtSpace> clone() const;
 };

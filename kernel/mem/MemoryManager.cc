@@ -1,46 +1,58 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
-#include <kernel/cpu/Paging.hh>
+#include <kernel/cpu/Processor.hh>
+#include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
-#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 
 namespace {
 
 constexpr usize k_bucket_bit_count = sizeof(usize) * 8;
 constexpr usize k_frame_size = 4_KiB;
 
-constexpr usize k_allocation_header_check = 0xdeadbeef;
-struct AllocationHeader {
-    usize check;
-    usize size;
-    void *mem;
-    Array<uint8, 0> data;
-};
+struct MemoryManagerData {
+    usize *frame_bitset{nullptr};
+    usize frame_count{0};
+    VirtSpace *current_space{nullptr};
+    VirtSpace *kernel_space{nullptr};
+} s_data;
 
-MemoryManager s_memory_manager;
-
-} // namespace
-
-void MemoryManager::initialise(BootInfo *boot_info) {
-    new (&s_memory_manager) MemoryManager(boot_info);
+Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
+    const usize page_count = round_up(size, k_frame_size) / k_frame_size;
+    for (usize i = 0; i < boot_info->map_entry_count; i++) {
+        auto &entry = boot_info->map[i];
+        if (entry.type != MemoryType::Reserved && entry.page_count >= page_count) {
+            return entry.base;
+        }
+    }
+    return {};
 }
 
-VirtSpace *MemoryManager::kernel_space() {
-    return s_memory_manager.m_kernel_space;
+usize &frame_bitset_bucket(usize index) {
+    ASSERT(index < s_data.frame_count);
+    return s_data.frame_bitset[(index + k_bucket_bit_count) / k_bucket_bit_count];
 }
 
-MemoryManager &MemoryManager::instance() {
-    return s_memory_manager;
+void clear_frame(usize index) {
+    frame_bitset_bucket(index) &= ~(1ul << (index % k_bucket_bit_count));
 }
 
-MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
-    // Calculate end of physical memory.
+void set_frame(usize index) {
+    frame_bitset_bucket(index) |= 1ul << (index % k_bucket_bit_count);
+}
+
+bool is_frame_set(usize index) {
+    return (frame_bitset_bucket(index) & (1ul << (index % k_bucket_bit_count))) != 0;
+}
+
+void parse_memory_map(BootInfo *boot_info) {
+    // Calculate the end of physical memory.
     uintptr memory_end = 0;
     for (usize i = 0; i < boot_info->map_entry_count; i++) {
         auto &entry = boot_info->map[i];
@@ -54,18 +66,19 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
 
     // Calculate total frame count.
     ASSERT(memory_end % k_frame_size == 0);
-    m_total_frames = memory_end / k_frame_size;
+    s_data.frame_count = memory_end / k_frame_size;
 
     // Find some free memory for the physical frame bitset. We do this by finding the first fit entry in the memory map.
-    const usize bucket_count = m_total_frames / k_bucket_bit_count;
-    const auto bitset_location = find_first_fit_region(bucket_count * sizeof(usize));
-    ENSURE(bitset_location);
+    const usize bucket_count = s_data.frame_count / k_bucket_bit_count + 1;
+    const auto bitset_location = find_first_fit_region(boot_info, bucket_count * sizeof(usize));
+    ENSURE(bitset_location, "Failed to allocate memory for physical frame bitset!");
 
-    // Construct the frame bitset and then set reserved regions from the memory map.
-    m_frame_bitset = new (reinterpret_cast<void *>(*bitset_location)) usize[bucket_count];
-    for (usize i = 0; i < m_total_frames; i++) {
-        set_frame(i);
-    }
+    // Construct the frame bitset and initially mark all frames as reserved.
+    s_data.frame_bitset = new (reinterpret_cast<void *>(*bitset_location)) usize[bucket_count];
+    memset(s_data.frame_bitset, 0xff, bucket_count * sizeof(usize));
+
+    // Mark available frames as usable. Reclaimable memory will be reclaimed later, after the initial kernel stack is no
+    // longer in use.
     for (usize i = 0; i < boot_info->map_entry_count; i++) {
         auto &entry = boot_info->map[i];
         if (entry.type != MemoryType::Available) {
@@ -76,61 +89,65 @@ MemoryManager::MemoryManager(BootInfo *boot_info) : m_boot_info(boot_info) {
         }
     }
 
-    // Also mark the memory for the frame bitset itself as reserved.
+    // Remark the memory for the frame bitset itself as reserved.
     for (usize i = 0; i < round_up(bucket_count * sizeof(usize), k_frame_size) / k_frame_size; i++) {
         set_frame(*bitset_location / k_frame_size + i);
     }
 
-    // Print some memory stats.
+    // Print some memory info.
     usize free_bytes = 0;
     usize total_bytes = 0;
-    for (usize i = 0; i < m_total_frames; i++) {
+    for (usize i = 0; i < s_data.frame_count; i++) {
         free_bytes += !is_frame_set(i) ? k_frame_size : 0;
         total_bytes += k_frame_size;
     }
     logln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+}
+
+} // namespace
+
+void MemoryManager::initialise(BootInfo *boot_info) {
+    parse_memory_map(boot_info);
 
     // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
     // takes 4KiB of page structures to do.
-    // TODO: Mark these pages as global.
-    m_kernel_space = new VirtSpace;
-    for (usize i = 0; i < 512; i++) {
-        m_kernel_space->map_1GiB(i * 1_GiB, i * 1_GiB, PageFlags::Writable);
-    }
+    s_data.kernel_space = new VirtSpace;
+    s_data.kernel_space->create_region(0, 512_GiB, RegionAccess::Writable | RegionAccess::Executable, 0);
+
+    // Leak a ref for the kernel space to ensure it never gets deleted by a kernel process being destroyed.
+    s_data.kernel_space->leak_ref();
 }
 
-Optional<uintptr> MemoryManager::find_first_fit_region(usize size) {
-    const usize page_count = round_up(size, k_frame_size) / k_frame_size;
-    for (usize i = 0; i < m_boot_info->map_entry_count; i++) {
-        auto &entry = m_boot_info->map[i];
-        if (entry.type != MemoryType::Reserved && entry.page_count >= page_count) {
-            return entry.base;
+void MemoryManager::switch_space(VirtSpace &virt_space) {
+    s_data.current_space = &virt_space;
+    Processor::write_cr3(virt_space.m_pml4.obj());
+}
+
+uintptr MemoryManager::alloc_frame() {
+    for (usize i = 0; i < s_data.frame_count; i++) {
+        if (!is_frame_set(i)) {
+            set_frame(i);
+            return i * k_frame_size;
         }
     }
-    return {};
+    ENSURE_NOT_REACHED("No available physical memory!");
 }
 
-usize &MemoryManager::frame_bitset_bucket(usize index) {
-    ASSERT(index < m_total_frames);
-    return m_frame_bitset[(index + k_bucket_bit_count) / k_bucket_bit_count];
+void MemoryManager::free_frame(uintptr frame) {
+    ASSERT(frame % k_frame_size == 0);
+    const auto index = frame / k_frame_size;
+    ASSERT(is_frame_set(index));
+    clear_frame(index);
 }
 
-void MemoryManager::clear_frame(usize index) {
-    frame_bitset_bucket(index) &= ~(1ul << (index % k_bucket_bit_count));
+bool MemoryManager::is_frame_free(uintptr frame) {
+    ASSERT(frame % k_frame_size == 0);
+    return !is_frame_set(frame / k_frame_size);
 }
 
-void MemoryManager::set_frame(usize index) {
-    frame_bitset_bucket(index) |= 1ul << (index % k_bucket_bit_count);
-}
-
-bool MemoryManager::is_frame_set(usize index) {
-    return (frame_bitset_bucket(index) & (1ul << (index % k_bucket_bit_count))) != 0;
-}
-
-void *MemoryManager::alloc_phys(usize size) {
-    ASSERT(m_boot_info != nullptr, "Attempted heap allocation before memory manager setup!");
+void *MemoryManager::alloc_contiguous(usize size) {
     const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
-    for (usize i = 0; i < m_total_frames; i += frame_count) {
+    for (usize i = 0; i < s_data.frame_count; i += frame_count) {
         bool found_space = true;
         for (usize j = i; j < i + frame_count; j++) {
             if (is_frame_set(j)) {
@@ -151,8 +168,7 @@ void *MemoryManager::alloc_phys(usize size) {
     ENSURE_NOT_REACHED("No available physical memory!");
 }
 
-void MemoryManager::free_phys(void *ptr, usize size) {
-    ASSERT(m_boot_info != nullptr, "Attempted heap deallocation before memory manager setup!");
+void MemoryManager::free_contiguous(void *ptr, usize size) {
     const auto first_frame = reinterpret_cast<uintptr>(ptr);
     ASSERT(first_frame % k_frame_size == 0);
     const auto first_frame_index = first_frame / k_frame_size;
@@ -163,61 +179,10 @@ void MemoryManager::free_phys(void *ptr, usize size) {
     }
 }
 
-void *operator new(usize size) {
-    auto *header = static_cast<AllocationHeader *>(s_memory_manager.alloc_phys(size + sizeof(AllocationHeader)));
-    header->check = k_allocation_header_check;
-    header->size = size;
-    return header->data.data();
+VirtSpace *MemoryManager::current_space() {
+    return s_data.current_space;
 }
 
-void *operator new[](usize size) {
-    return operator new(size);
-}
-
-void *operator new(usize size, ustd::align_val_t align) {
-    const auto alignment = static_cast<usize>(align);
-    ASSERT(alignment != 0);
-    void *unaligned_ptr = s_memory_manager.alloc_phys(size + alignment + sizeof(AllocationHeader));
-    auto unaligned = reinterpret_cast<uintptr>(unaligned_ptr) + sizeof(AllocationHeader);
-    uintptr aligned = round_up(unaligned, alignment);
-    auto *header = reinterpret_cast<AllocationHeader *>(aligned - sizeof(AllocationHeader));
-    ASSERT(reinterpret_cast<uintptr>(header) >= reinterpret_cast<uintptr>(unaligned_ptr));
-    header->check = k_allocation_header_check;
-    header->size = size;
-    header->mem = unaligned_ptr;
-    ASSERT(reinterpret_cast<uintptr>(header->data.data() + size) <
-           reinterpret_cast<uintptr>(unaligned_ptr) + size + alignment + sizeof(AllocationHeader));
-    return header->data.data();
-}
-
-void *operator new[](usize size, ustd::align_val_t align) {
-    return operator new(size, align);
-}
-
-void operator delete(void *ptr) noexcept {
-    if (ptr == nullptr) {
-        return;
-    }
-    auto *header = reinterpret_cast<AllocationHeader *>(static_cast<uint8 *>(ptr) - sizeof(AllocationHeader));
-    ASSERT(header->check == k_allocation_header_check);
-    s_memory_manager.free_phys(header, header->size + sizeof(AllocationHeader));
-}
-
-void operator delete[](void *ptr) noexcept {
-    return operator delete(ptr);
-}
-
-void operator delete(void *ptr, ustd::align_val_t align) noexcept {
-    if (ptr == nullptr) {
-        return;
-    }
-    const auto alignment = static_cast<usize>(align);
-    auto *header = reinterpret_cast<AllocationHeader *>(reinterpret_cast<uintptr>(ptr) - sizeof(AllocationHeader));
-    ASSERT(header->check == k_allocation_header_check);
-    ASSERT(header->mem != nullptr);
-    s_memory_manager.free_phys(header->mem, header->size + alignment + sizeof(AllocationHeader));
-}
-
-void operator delete[](void *ptr, ustd::align_val_t align) noexcept {
-    return operator delete(ptr, align);
+VirtSpace *MemoryManager::kernel_space() {
+    return s_data.kernel_space;
 }

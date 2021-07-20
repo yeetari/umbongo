@@ -27,7 +27,10 @@ add_executable(kernel
     fs/Vfs.cc
     intr/InterruptManager.cc
     intr/IoApic.cc
+    mem/Heap.cc
     mem/MemoryManager.cc
+    mem/PhysicalPage.cc
+    mem/Region.cc
     mem/VirtSpace.cc
     pci/Device.cc
     proc/Hpet.cc

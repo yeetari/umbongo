@@ -1,24 +1,29 @@
 #include <kernel/mem/VirtSpace.hh>
 
 #include <kernel/cpu/Paging.hh>
-#include <kernel/cpu/Processor.hh>
-#include <kernel/mem/MemoryManager.hh>
-#include <ustd/Array.hh>
+#include <kernel/mem/Region.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Optional.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
+#include <ustd/Vector.hh>
 
-VirtSpace *VirtSpace::create_user() {
-    auto *virt_space = MemoryManager::kernel_space()->clone();
-    auto *stack = new (ustd::align_val_t(4_KiB)) uint8[k_user_stack_page_count * 4_KiB];
-    for (usize offset = 0; offset < k_user_stack_page_count * 4_KiB; offset += 4_KiB) {
-        virt_space->map_4KiB(k_user_stack_base + offset, reinterpret_cast<uintptr>(stack) + offset,
-                             PageFlags::Writable | PageFlags::User | PageFlags::NoExecute);
-    }
-    return virt_space;
+VirtSpace::VirtSpace() : m_pml4(new Pml4) {
+    m_regions.push(ustd::make_unique<Region>(0ul, 256_TiB, static_cast<RegionAccess>(0), true, 0ul));
 }
 
-VirtSpace::VirtSpace() : m_pml4(new Pml4) {}
+VirtSpace::VirtSpace(const Vector<UniquePtr<Region>> &regions) : m_pml4(new Pml4) {
+    m_regions.ensure_capacity(regions.size());
+    for (const auto &region : regions) {
+        m_regions.push(ustd::make_unique<Region>(*region));
+    }
+    for (auto &region : m_regions) {
+        region->map(this);
+    }
+}
 
 void VirtSpace::map_4KiB(uintptr virt, uintptr phys, PageFlags flags) {
     ASSERT_PEDANTIC(virt % 4_KiB == 0);
@@ -42,47 +47,47 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
     pdpt->set(pdpt_index, phys, flags | PageFlags::Large);
 }
 
-void VirtSpace::switch_to() {
-    Processor::write_cr3(m_pml4.obj());
-}
-
-VirtSpace *VirtSpace::clone() const {
-    // Deep clone this virt space. Note that pdpt_index means the index of the PD in the PDPT, rather than the index of
-    // the PDPT in the PML4.
-    auto *new_space = new VirtSpace;
-    for (usize pml4_index = 0; pml4_index < 512; pml4_index++) {
-        const auto &pdpt = m_pml4->entries()[pml4_index];
-        if (pdpt.empty()) {
+Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uintptr> phys_base) {
+    // Find first fit region to split.
+    size = round_up(size, 4_KiB);
+    for (auto &region : m_regions) {
+        if (!region->free()) {
             continue;
         }
-        for (usize pdpt_index = 0; pdpt_index < 512; pdpt_index++) {
-            const auto &pd = pdpt.entry()->entries()[pdpt_index];
-            if (pd.empty()) {
-                continue;
-            }
-            if ((pd.flags() & PageFlags::Large) == PageFlags::Large) {
-                const auto virt = (pml4_index * 512_GiB) + (pdpt_index * 1_GiB);
-                const auto phys = reinterpret_cast<uintptr>(pd.entry());
-                new_space->map_1GiB(virt, phys, pd.flags());
-                continue;
-            }
-            for (usize pd_index = 0; pd_index < 512; pd_index++) {
-                const auto &pt = pd.entry()->entries()[pd_index];
-                if (pt.empty()) {
-                    continue;
-                }
-                for (usize pt_index = 0; pt_index < 512; pt_index++) {
-                    const auto &page = pt.entry()->entries()[pt_index];
-                    if (page.empty()) {
-                        continue;
-                    }
-                    const auto virt =
-                        (pml4_index * 512_GiB) + (pdpt_index * 1_GiB) + (pd_index * 2_MiB) + (pt_index * 4_KiB);
-                    const auto phys = reinterpret_cast<uintptr>(page.entry());
-                    new_space->map_4KiB(virt, phys, page.flags());
-                }
-            }
+        if (region->size() >= size) {
+            uintptr base = region->base();
+            region->set_base(region->base() + size);
+            region->set_size(region->size() - size);
+            auto &new_region =
+                m_regions.emplace(ustd::make_unique<Region>(base, size, access, false, ustd::move(phys_base)));
+            new_region->map(this);
+            return *new_region;
         }
     }
-    return new_space;
+    ENSURE_NOT_REACHED("Failed to allocate region");
+}
+
+Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, Optional<uintptr> phys_base) {
+    size = round_up(size, 4_KiB);
+    for (auto &region : m_regions) {
+        if (!region->free()) {
+            continue;
+        }
+        if (base >= region->base() && base + size < region->base() + region->size()) {
+            usize preceding_size = base - region->base();
+            usize succeeding_size = (region->base() + region->size()) - (base + size);
+            region = ustd::make_unique<Region>(region->base(), preceding_size, static_cast<RegionAccess>(0), true, 0ul);
+            auto &new_region =
+                *m_regions.emplace(ustd::make_unique<Region>(base, size, access, false, ustd::move(phys_base)));
+            m_regions.emplace(
+                ustd::make_unique<Region>(base + size, succeeding_size, static_cast<RegionAccess>(0), true, 0ul));
+            new_region.map(this);
+            return new_region;
+        }
+    }
+    ENSURE_NOT_REACHED("Failed to allocate fixed region");
+}
+
+SharedPtr<VirtSpace> VirtSpace::clone() const {
+    return SharedPtr<VirtSpace>(new VirtSpace(m_regions));
 }

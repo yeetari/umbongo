@@ -23,6 +23,10 @@ inline constexpr PageFlags operator|(PageFlags a, PageFlags b) {
     return static_cast<PageFlags>(static_cast<usize>(a) | static_cast<usize>(b));
 }
 
+inline constexpr PageFlags &operator|=(PageFlags &a, PageFlags b) {
+    return a = (a | b);
+}
+
 template <typename Entry>
 class [[gnu::packed]] PageLevelEntry {
     uintptr m_raw{0};

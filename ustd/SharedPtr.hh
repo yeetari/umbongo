@@ -27,6 +27,10 @@ public:
     SharedPtr &operator=(const SharedPtr &) = delete;
     SharedPtr &operator=(SharedPtr &&) = delete;
 
+    T &operator*() const {
+        ASSERT(m_obj != nullptr);
+        return *m_obj;
+    }
     T *operator->() const {
         ASSERT(m_obj != nullptr);
         return m_obj;

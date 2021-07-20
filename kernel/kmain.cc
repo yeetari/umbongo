@@ -11,7 +11,6 @@
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/acpi/Table.hh>
 #include <kernel/cpu/LocalApic.hh>
-#include <kernel/cpu/Paging.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -21,13 +20,11 @@
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/intr/InterruptType.hh>
 #include <kernel/mem/MemoryManager.hh>
-#include <kernel/mem/VirtSpace.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/pci/Device.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/usb/UsbManager.hh>
-#include <libelf/Elf.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -140,37 +137,8 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // TODO: Tell the MemoryManager to make available reclaimable memory too. Once LoaderData is marked as reclaimable
     //       in the bootloader, we can reclaim the initial ramfs data after copying it over.
 
-    auto init_file = Vfs::open("/init");
-    auto *virt_space = VirtSpace::create_user();
-    virt_space->switch_to();
-
-    elf::Header header{};
-    init_file->read({&header, sizeof(elf::Header)});
-    for (uint16 i = 0; i < header.ph_count; i++) {
-        elf::ProgramHeader phdr{};
-        init_file->read({&phdr, sizeof(elf::ProgramHeader)}, static_cast<usize>(header.ph_off + header.ph_size * i));
-        if (phdr.type != elf::SegmentType::Load) {
-            continue;
-        }
-        ASSERT(phdr.filesz <= phdr.memsz);
-        uintptr segment_start = round_down(k_user_binary_base + phdr.vaddr, 4_KiB);
-        uintptr segment_end = round_up(k_user_binary_base + phdr.vaddr + phdr.memsz, 4_KiB);
-        for (uintptr page = segment_start; page < segment_end; page += 4_KiB) {
-            // TODO: Don't always map writable. Also map NoExecute where possible.
-            auto frame = reinterpret_cast<uintptr>(MemoryManager::instance().alloc_phys(4_KiB));
-            virt_space->map_4KiB(page, frame, PageFlags::Writable | PageFlags::User);
-        }
-
-        // Force flush TLB to get the new mappings so we can memcpy the data in.
-        virt_space->switch_to();
-
-        usize copy_offset = phdr.vaddr & 0xfffu;
-        init_file->read({reinterpret_cast<void *>(segment_start + copy_offset), phdr.memsz},
-                        static_cast<usize>(phdr.offset));
-    }
-
-    auto *init_process = Process::create_user(virt_space);
-    init_process->set_entry_point(header.entry);
+    auto *init_process = Process::create_user();
+    init_process->exec("/init");
     Scheduler::insert_process(init_process);
 
     // TODO: Kill current process and yield.

@@ -1,6 +1,5 @@
 #include <kernel/fs/Vfs.hh>
 
-#include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>

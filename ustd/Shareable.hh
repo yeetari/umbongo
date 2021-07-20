@@ -30,6 +30,8 @@ public:
 
     Shareable &operator=(const Shareable &) = delete;
     Shareable &operator=(Shareable &&) = delete;
+
+    void leak_ref() { const_cast<Shareable *>(this)->add_ref(); }
 };
 
 } // namespace ustd
