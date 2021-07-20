@@ -25,10 +25,13 @@ Hpet *s_hpet = nullptr;
 uint32 s_ticks = 0;
 
 void handle_page_fault(RegisterState *regs) {
+    uint64 cr2 = 0;
+    asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
+        logln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
     }
-    logln("[#{}]: Page fault at {:h}!", g_current_process->pid(), regs->rip);
+    logln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", g_current_process->pid(), cr2, regs->rip);
     g_current_process->kill();
     Scheduler::switch_next(regs);
 }
