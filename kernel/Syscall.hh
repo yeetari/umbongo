@@ -5,6 +5,7 @@
 namespace Syscall {
 
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
+    S(close)                                                                                                           \
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
     S(open)                                                                                                            \
