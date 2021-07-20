@@ -1,3 +1,4 @@
+#include <core/File.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
@@ -8,10 +9,15 @@ void put_char(char ch) {
 }
 
 int main() {
-    uint64 pid = Syscall::invoke(Syscall::getpid);
-    uint64 fd = Syscall::invoke(Syscall::open, "/home/hello");
+    core::File file("/home/hello");
+    if (!file) {
+        return 1;
+    }
+
     Array<char, 20> data{'\0'};
-    Syscall::invoke(Syscall::read, fd, data.data(), data.size());
+    file.read(data.span());
+
+    uint64 pid = Syscall::invoke(Syscall::getpid);
     logln("[#{}]: {}", pid, static_cast<const char *>(data.data()));
     return static_cast<int>(pid);
 }
