@@ -17,8 +17,7 @@ private:
 
     void add_ref() const { m_ref_count.fetch_add(1, MemoryOrder::Relaxed); }
     void sub_ref() const {
-        auto prev_ref_count = m_ref_count.fetch_sub(1, MemoryOrder::AcqRel);
-        if (prev_ref_count - 1 == 0) {
+        if (m_ref_count.fetch_sub(1, MemoryOrder::AcqRel) == 1) {
             delete static_cast<const Derived *>(this);
         }
     }
