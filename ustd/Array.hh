@@ -11,9 +11,8 @@ struct Array {
     // NOLINTNEXTLINE
     alignas(T) T m_data[N];
 
-    // Allow implicit conversion from `Array<T>` to `Span<T>`, or from `const Array<T>` to `Span<const T>`.
-    constexpr operator Span<T>() { return {data(), size()}; }
-    constexpr operator Span<const T>() const { return {data(), size()}; }
+    constexpr Span<T> span() { return {data(), size()}; }
+    constexpr Span<const T> span() const { return {data(), size()}; }
 
     constexpr T *begin() { return data(); }
     constexpr T *end() { return data() + size(); }

@@ -16,8 +16,8 @@ public:
     constexpr Span(T *data, usize size) : m_data(data), m_size(size) {}
 
     // Allow implicit conversion of `Span<T>` to `Span<void>`.
-    constexpr operator Span<void>() { return {m_data, m_size}; }
-    constexpr operator Span<const void>() const { return {m_data, m_size}; }
+    constexpr operator Span<void>() { return {data(), size_bytes()}; }
+    constexpr operator Span<const void>() const { return {data(), size_bytes()}; }
 
     constexpr T *begin() const { return m_data; }
     constexpr T *end() const { return m_data + m_size; }

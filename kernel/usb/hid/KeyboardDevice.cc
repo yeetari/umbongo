@@ -45,7 +45,7 @@ KeyboardDevice::KeyboardDevice(Device &&device) : Device(ustd::move(device)) {
             }
             m_input_endpoint = create_endpoint(endpoint_descriptor->address);
             m_input_endpoint->setup(EndpointType::InterruptIn, endpoint_descriptor->packet_size);
-            m_input_endpoint->setup_interval_input(m_buffer, endpoint_descriptor->interval);
+            m_input_endpoint->setup_interval_input(m_buffer.span(), endpoint_descriptor->interval);
             configure_endpoint(m_input_endpoint);
         }
     });

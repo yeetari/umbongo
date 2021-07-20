@@ -321,7 +321,7 @@ void HostController::on_attach(Port &port) {
 
     // Request first 8 bytes of device descriptor.
     Array<uint8, 8> early_device_descriptor{};
-    id_device.read_descriptor(early_device_descriptor);
+    id_device.read_descriptor(early_device_descriptor.span());
 
     // Reset port again.
     if (!port.reset()) {
@@ -342,7 +342,7 @@ void HostController::on_attach(Port &port) {
     ENSURE(device_descriptor_length >= sizeof(DeviceDescriptor));
 
     Vector<uint8> device_descriptor_bytes(device_descriptor_length);
-    id_device.read_descriptor(device_descriptor_bytes);
+    id_device.read_descriptor(device_descriptor_bytes.span());
 
     auto *device_descriptor = reinterpret_cast<DeviceDescriptor *>(device_descriptor_bytes.data());
     auto *device = UsbManager::register_device(ustd::move(id_device), device_descriptor);
