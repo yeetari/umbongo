@@ -149,7 +149,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     for (uint16 i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         init_file->read({&phdr, sizeof(elf::ProgramHeader)}, static_cast<usize>(header.ph_off + header.ph_size * i));
-        if (phdr.type != elf::ProgramHeaderType::Load) {
+        if (phdr.type != elf::SegmentType::Load) {
             continue;
         }
         ASSERT(phdr.filesz <= phdr.memsz);

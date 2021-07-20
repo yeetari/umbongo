@@ -20,13 +20,19 @@ struct Header {
     uint16 ph_count;
 };
 
-enum class ProgramHeaderType : uint32 {
+enum class SegmentType : uint32 {
     Load = 1,
 };
 
+enum class SegmentFlags : uint32 {
+    Executable = 1u << 0u,
+    Writable = 1u << 1u,
+    Readable = 1u << 2u,
+};
+
 struct ProgramHeader {
-    ProgramHeaderType type;
-    uint32 flags;
+    SegmentType type;
+    SegmentFlags flags;
     ptrdiff offset;
     uintptr vaddr;
     uintptr paddr;
@@ -34,5 +40,9 @@ struct ProgramHeader {
     uint64 memsz;
     uint64 align;
 };
+
+inline constexpr SegmentFlags operator&(SegmentFlags a, SegmentFlags b) {
+    return static_cast<SegmentFlags>(static_cast<uint32>(a) & static_cast<uint32>(b));
+}
 
 } // namespace elf

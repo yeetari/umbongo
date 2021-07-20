@@ -175,7 +175,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     logln("Parsing kernel load program headers...");
     for (uint16 i = 0; i < kernel_header.ph_count; i++) {
         auto &phdr = phdrs[i];
-        if (phdr.type != elf::ProgramHeaderType::Load) {
+        if (phdr.type != elf::SegmentType::Load) {
             continue;
         }
         const usize page_count = (phdr.memsz + 4096 - 1) / 4096;
