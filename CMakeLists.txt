@@ -106,7 +106,7 @@ add_subdirectory(tools)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding -nostdinc -nostdlib")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffreestanding -fno-exceptions -fno-rtti -nostdinc -nostdinc++ -nostdlib")
 add_link_options(-pie -nostdlib -Wno-unused-command-line-argument)
-include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 
 add_subdirectory(boot)
 add_subdirectory(init)
