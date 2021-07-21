@@ -27,6 +27,9 @@ public:
     SharedPtr &operator=(const SharedPtr &) = delete;
     SharedPtr &operator=(SharedPtr &&) = delete;
 
+    explicit operator bool() const noexcept { return m_obj != nullptr; }
+    bool has_value() const noexcept { return m_obj != nullptr; }
+
     T &operator*() const {
         ASSERT(m_obj != nullptr);
         return *m_obj;
