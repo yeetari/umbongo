@@ -25,6 +25,16 @@ Process *s_base_process = nullptr;
 Hpet *s_hpet = nullptr;
 uint32 s_ticks = 0;
 
+void handle_fault(RegisterState *regs) {
+    if ((regs->cs & 3u) == 0u) {
+        logln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
+        ENSURE_NOT_REACHED("Fault in ring 0!");
+    }
+    logln("[#{}]: Fault {} caused by instruction at {:h}!", g_current_process->pid(), regs->int_num, regs->rip);
+    g_current_process->kill();
+    Scheduler::switch_next(regs);
+}
+
 void handle_page_fault(RegisterState *regs) {
     uint64 cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
@@ -70,6 +80,9 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     // depending on the process' priority.
     Processor::apic()->set_timer(LocalApic::TimerMode::Periodic, k_timer_vector);
     Processor::apic()->set_timer_count(s_ticks);
+    Processor::wire_interrupt(0, &handle_fault);
+    Processor::wire_interrupt(6, &handle_fault);
+    Processor::wire_interrupt(13, &handle_fault);
     Processor::wire_interrupt(14, &handle_page_fault);
     Processor::wire_interrupt(k_timer_vector, &switch_next);
 }
