@@ -53,6 +53,6 @@ jobs:
             -and -not -name 'FontGenerator.cc' \
             -print0 |
           parallel -0 \
-            include-what-you-use -std=c++20 -I. -Ibuild {} 2>&1 |
+            include-what-you-use -std=c++20 -I. -Ibuild -Ilibs {} 2>&1 |
           grep -v correct | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba' | tee output
           if [ -s output ]; then exit 1; fi
