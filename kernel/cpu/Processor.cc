@@ -1,5 +1,6 @@
 #include <kernel/cpu/Processor.hh>
 
+#include <kernel/SysResult.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
@@ -159,7 +160,7 @@ struct [[gnu::packed]] SyscallFrame {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
-using SyscallHandler = uint64 (Process::*)(uint64, uint64, uint64);
+using SyscallHandler = SysResult (Process::*)(uint64, uint64, uint64);
 #define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
 Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
@@ -234,7 +235,8 @@ extern "C" void syscall_handler(SyscallFrame *frame, LocalStorage *storage) {
     ASSERT_PEDANTIC(process != nullptr);
     ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
     const bool is_exit = frame->rax == Syscall::exit;
-    frame->rax = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
+    const auto result = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
+    frame->rax = result.is_error() ? static_cast<uint64>(result.error()) : result.value();
     if (is_exit) {
         process->kill();
         RegisterState regs{};

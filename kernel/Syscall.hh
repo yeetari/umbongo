@@ -20,29 +20,30 @@ enum Number {
         __Count__,
 };
 
-inline usize invoke(Number number) {
-    usize result; // NOLINT
+template <typename Ret = ssize>
+inline Ret invoke(Number number) {
+    Ret result; // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number) : "rcx", "r11", "memory");
     return result;
 }
 
-template <typename T>
-inline usize invoke(Number number, const T &rdi) {
-    usize result;                                                                            // NOLINT
+template <typename Ret = ssize, typename T>
+inline Ret invoke(Number number, const T &rdi) {
+    Ret result;                                                                              // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number), "D"(rdi) : "rcx", "r11", "memory"); // NOLINT
     return result;
 }
 
-template <typename T, typename U>
-inline usize invoke(Number number, const T &rdi, const U &rsi) {
-    usize result;                                                                                      // NOLINT
+template <typename Ret = ssize, typename T, typename U>
+inline Ret invoke(Number number, const T &rdi, const U &rsi) {
+    Ret result;                                                                                        // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number), "D"(rdi), "S"(rsi) : "rcx", "r11", "memory"); // NOLINT
     return result;
 }
 
-template <typename T, typename U, typename V>
-inline usize invoke(Number number, const T &rdi, const U &rsi, const V &rdx) {
-    usize result; // NOLINT
+template <typename Ret = ssize, typename T, typename U, typename V>
+inline Ret invoke(Number number, const T &rdi, const U &rsi, const V &rdx) {
+    Ret result; // NOLINT
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(number), "D"(rdi), "S"(rsi), "d"(rdx)

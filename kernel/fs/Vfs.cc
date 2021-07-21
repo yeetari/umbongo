@@ -60,7 +60,9 @@ Inode *resolve_path(StringView path, Inode **out_parent = nullptr, StringView *o
         if (out_parent != nullptr) {
             *out_parent = current;
         }
-        ASSERT(current != nullptr);
+        if (current == nullptr) {
+            return nullptr;
+        }
         current = current->lookup(part);
         if (out_part != nullptr) {
             *out_part = part;
@@ -112,6 +114,8 @@ void Vfs::mkdir(StringView path) {
 
 SharedPtr<File> Vfs::open(StringView path) {
     auto *inode = resolve_path(path);
-    ASSERT(inode != nullptr);
+    if (inode == nullptr) {
+        return {};
+    }
     return ustd::make_shared<InodeFile>(inode);
 }
