@@ -1,5 +1,10 @@
 #include <core/File.hh>
 #include <kernel/Syscall.hh>
+#include <ustd/Memory.hh>
+#include <ustd/Optional.hh>
+#include <ustd/Span.hh>
+#include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 
 namespace core {
 
