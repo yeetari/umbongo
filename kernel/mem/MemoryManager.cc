@@ -1,6 +1,7 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
@@ -90,6 +91,7 @@ void parse_memory_map(BootInfo *boot_info) {
     }
 
     // Remark the memory for the frame bitset itself as reserved.
+    set_frame(0);
     for (usize i = 0; i < round_up(bucket_count * sizeof(usize), k_frame_size) / k_frame_size; i++) {
         set_frame(*bitset_location / k_frame_size + i);
     }
@@ -116,6 +118,28 @@ void MemoryManager::initialise(BootInfo *boot_info) {
 
     // Leak a ref for the kernel space to ensure it never gets deleted by a kernel process being destroyed.
     s_data.kernel_space->leak_ref();
+}
+
+void MemoryManager::reclaim(BootInfo *boot_info) {
+    InterruptDisabler disabler;
+    usize total_reclaimed = 0;
+    for (usize i = 0; i < boot_info->map_entry_count; i++) {
+        auto &entry = boot_info->map[i];
+        if (entry.base == 0 || entry.type != MemoryType::Reclaimable) {
+            continue;
+        }
+        for (usize j = 0; j < entry.page_count; j++) {
+            clear_frame(entry.base / k_frame_size + j);
+            total_reclaimed += k_frame_size;
+        }
+    }
+    if (total_reclaimed >= 1_MiB) {
+        logln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
+    } else if (total_reclaimed >= 1_KiB) {
+        logln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
+    } else {
+        logln(" mem: Reclaimed {}B of memory", total_reclaimed);
+    }
 }
 
 void MemoryManager::switch_space(VirtSpace &virt_space) {

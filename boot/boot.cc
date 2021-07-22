@@ -179,7 +179,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
             continue;
         }
         const usize page_count = (phdr.memsz + 4096 - 1) / 4096;
-        EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::LoaderData,
+        EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::Reserved,
                                                     page_count, &phdr.paddr),
                   "Failed to claim physical memory for kernel!")
         // Zero out any uninitialised data.
@@ -289,8 +289,11 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         case EfiMemoryType::Conventional:
             entry->type = MemoryType::Available;
             break;
-        case EfiMemoryType::AcpiReclaimable:
-            // TODO: Mark LoaderCode+LoaderData as reclaimable too.
+        case EfiMemoryType::BootServicesCode:
+        case EfiMemoryType::BootServicesData:
+        case EfiMemoryType::LoaderCode:
+        case EfiMemoryType::LoaderData:
+            // TODO: Mark EfiMemoryType::AcpiReclaimable as reclaimable too?
             entry->type = MemoryType::Reclaimable;
             break;
         default:

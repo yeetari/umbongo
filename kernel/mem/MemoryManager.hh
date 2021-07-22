@@ -7,6 +7,7 @@ class VirtSpace;
 
 struct MemoryManager {
     static void initialise(BootInfo *boot_info);
+    static void reclaim(BootInfo *boot_info);
     static void switch_space(VirtSpace &virt_space);
 
     static uintptr alloc_frame();

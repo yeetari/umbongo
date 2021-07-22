@@ -134,8 +134,8 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
         file->write({entry->data, entry->data_size});
     }
 
-    // TODO: Tell the MemoryManager to make available reclaimable memory too. Once LoaderData is marked as reclaimable
-    //       in the bootloader, we can reclaim the initial ramfs data after copying it over.
+    // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
+    MemoryManager::reclaim(boot_info);
 
     auto *init_process = Process::create_user();
     init_process->exec("/init");
@@ -237,7 +237,8 @@ extern "C" void kmain(BootInfo *boot_info) {
     auto *hpet_table = xsdt->find<acpi::HpetTable>();
     ENSURE(hpet_table != nullptr);
 
-    logln("core: Creating init process");
+    // Start a new kernel process that will perform the rest of the initialisation. We do this so we can safely start
+    // kernel threads, and so that the current stack we are using is no longer in use and we can reclaim the memory.
     auto *kernel_init_process = Process::create_kernel();
     kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
     kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
