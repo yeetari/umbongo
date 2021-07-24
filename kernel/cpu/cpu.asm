@@ -41,14 +41,12 @@ switch_now:
     mov rbx, [rdi + 104]
     mov rax, [rdi + 112]
     mov rdi, [rdi + 80]
-    swapgs
     iretq
 
 extern g_current_process
 extern syscall_handler
 global syscall_stub
 syscall_stub:
-    swapgs
     mov [gs:16], rsp
     mov rsp, [gs:8]
 
@@ -94,5 +92,4 @@ syscall_stub:
     pop rax
 
     mov rsp, [gs:16]
-    swapgs
     o64 sysret

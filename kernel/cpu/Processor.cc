@@ -22,7 +22,7 @@ constexpr uint32 k_msr_efer = 0xc0000080;
 constexpr uint32 k_msr_star = 0xc0000081;
 constexpr uint32 k_msr_lstar = 0xc0000082;
 constexpr uint32 k_msr_sfmask = 0xc0000084;
-constexpr uint32 k_msr_kernel_gs_base = 0xc0000102;
+constexpr uint32 k_msr_gs_base = 0xc0000101;
 
 class CpuId {
     uint32 m_eax{0};
@@ -283,7 +283,7 @@ void Processor::initialise() {
     // Allocate CPU local storage struct and allocate some kernel stack for syscalls/interrupt handling.
     auto *storage = new LocalStorage;
     storage->kernel_stack = new char[4_KiB] + 4_KiB;
-    write_msr(k_msr_kernel_gs_base, reinterpret_cast<uintptr>(storage));
+    write_msr(k_msr_gs_base, reinterpret_cast<uintptr>(storage));
 
     // Set kernel stack for interrupt handling. Also set IO permission bitmap base to `sizeof(Tss)`. This makes any ring
     // 3 attempt to use IO ports fail with a #GP exception since the TSS limit is also its size.
