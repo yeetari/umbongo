@@ -335,9 +335,10 @@ void Processor::initialise() {
     star |= 0x08ul << 32u;
     write_msr(k_msr_star, star);
 
-    // Write syscall entry point to the LSTAR MSR. Also set the CPU to mask the IF bit when a syscall occurs.
+    // Write syscall entry point to the LSTAR MSR. Also set the CPU to clear rflags when a syscall occurs. The original
+    // rflags will be preserved in r11 by the CPU.
     write_msr(k_msr_lstar, reinterpret_cast<uintptr>(&syscall_stub));
-    write_msr(k_msr_sfmask, 1u << 9u);
+    write_msr(k_msr_sfmask, ~0x2u);
 }
 
 void Processor::set_apic(LocalApic *apic) {
