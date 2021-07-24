@@ -152,7 +152,21 @@ struct [[gnu::packed]] LocalStorage {
 };
 
 struct [[gnu::packed]] SyscallFrame {
-    uint64 r15, r14, r13, r12, r11, r10, r9, r8, rbp, rsi, rdi, rdx, rcx, rbx, rax;
+    uint64 r15;
+    uint64 r14;
+    uint64 r13;
+    uint64 r12;
+    uint64 rflags;
+    uint64 r10;
+    uint64 r9;
+    uint64 r8;
+    uint64 rbp;
+    uint64 rsi;
+    uint64 rdi;
+    uint64 rdx;
+    uint64 rip;
+    uint64 rbx;
+    uint64 rax;
 };
 
 // For some reason the clang global constructor warning thinks the syscall table requires global constructors, even
