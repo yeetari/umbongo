@@ -84,7 +84,7 @@ void Process::exec(StringView path) {
 
         // Segment contains entry point.
         if (header.entry >= phdr.vaddr && header.entry < phdr.vaddr + phdr.memsz) {
-            m_register_state.rip = region.base() + (header.entry & 0xfffu);
+            m_register_state.rip = region.base() + (header.entry) - (phdr.vaddr & ~4095u);
         }
 
         usize copy_offset = phdr.vaddr & 0xfffu;
