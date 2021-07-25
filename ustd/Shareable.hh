@@ -13,7 +13,7 @@ class Shareable {
     friend class SharedPtr;
 
 private:
-    mutable Atomic<RefCountType> m_ref_count{1};
+    mutable Atomic<RefCountType> m_ref_count{0};
 
     void add_ref() const { m_ref_count.fetch_add(1, MemoryOrder::Relaxed); }
     void sub_ref() const {
