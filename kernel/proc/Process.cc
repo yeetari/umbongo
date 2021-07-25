@@ -92,6 +92,9 @@ void Process::exec(StringView path) {
         file->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.memsz},
                    static_cast<usize>(phdr.offset));
     }
+
+    // Allocate some space for heap storage.
+    m_virt_space->create_region(6_TiB, 2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
 }
 
 void Process::kill() {
