@@ -109,7 +109,7 @@ add_link_options(-pie -nostdlib -Wno-unused-command-line-argument)
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 
 add_subdirectory(boot)
-add_subdirectory(init)
 add_subdirectory(kernel)
 add_subdirectory(libs)
+add_subdirectory(servers)
 add_subdirectory(ustd)

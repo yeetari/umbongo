@@ -138,7 +138,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     MemoryManager::reclaim(boot_info);
 
     auto *init_process = Process::create_user();
-    init_process->exec("/init");
+    init_process->exec("/system-server");
     Scheduler::insert_process(init_process);
 
     // TODO: Kill current process and yield.

@@ -7,11 +7,11 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-void put_char(char ch) {
-    Syscall::invoke(Syscall::putchar, ch);
-}
-
 int main() {
+    if (Syscall::invoke(Syscall::create_process, "/console-server") < 0) {
+        ENSURE_NOT_REACHED("Failed to start console server!");
+    }
+
     core::File file("/home/hello");
     ENSURE(file, "Failed to open /home/hello");
 
@@ -21,8 +21,4 @@ int main() {
     auto pid = Syscall::invoke<uint64>(Syscall::getpid);
     logln("[#{}]: {}", pid, static_cast<const char *>(data.data()));
     return static_cast<int>(pid);
-}
-
-extern "C" void _start() {
-    Syscall::invoke(Syscall::exit, main());
 }
