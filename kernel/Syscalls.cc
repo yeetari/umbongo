@@ -4,6 +4,7 @@
 #include <kernel/SysResult.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/Vfs.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
@@ -18,6 +19,13 @@ SysResult Process::sys_close(uint32 fd) {
     }
     m_fds[fd].clear();
     return 0;
+}
+
+SysResult Process::sys_create_process(const char *path) {
+    auto *process = Process::create_user();
+    process->exec(path);
+    Scheduler::insert_process(process);
+    return process->pid();
 }
 
 SysResult Process::sys_exit(usize code) const {
