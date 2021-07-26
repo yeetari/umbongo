@@ -3,6 +3,7 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/FileHandle.hh>
+#include <kernel/fs/Pipe.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <ustd/Log.hh>
@@ -21,6 +22,18 @@ SysResult Process::sys_close(uint32 fd) {
     return 0;
 }
 
+SysResult Process::sys_create_pipe(uint32 *fds) {
+    auto pipe = ustd::make_shared<Pipe>();
+    uint32 read_fd = allocate_fd();
+    m_fds[read_fd].emplace(pipe);
+    fds[0] = read_fd;
+
+    uint32 write_fd = allocate_fd();
+    m_fds[write_fd].emplace(pipe);
+    fds[1] = write_fd;
+    return SysError::BadFd;
+}
+
 SysResult Process::sys_create_process(const char *path) {
     auto *process = Process::create_user();
     process->m_fds.resize(m_fds.size());
@@ -32,6 +45,19 @@ SysResult Process::sys_create_process(const char *path) {
     process->exec(path);
     Scheduler::insert_process(process);
     return process->pid();
+}
+
+SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
+    // TODO: Which check should happen first?
+    if (src >= m_fds.size() || !m_fds[src]) {
+        return SysError::BadFd;
+    }
+    if (src == dst) {
+        return 0;
+    }
+    m_fds.resize(dst + 1);
+    m_fds[dst].emplace(*m_fds[src]);
+    return 0;
 }
 
 SysResult Process::sys_exit(usize code) const {

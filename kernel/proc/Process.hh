@@ -50,7 +50,9 @@ public:
     void set_entry_point(uintptr entry);
 
     SysResult sys_close(uint32 fd);
+    SysResult sys_create_pipe(uint32 *fds);
     SysResult sys_create_process(const char *path);
+    SysResult sys_dup_fd(uint32 src, uint32 dst);
     SysResult sys_exit(usize code) const;
     SysResult sys_getpid() const;
     SysResult sys_open(const char *path);

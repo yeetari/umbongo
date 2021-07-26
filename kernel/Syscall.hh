@@ -6,7 +6,9 @@ namespace Syscall {
 
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
     S(close)                                                                                                           \
+    S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
+    S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
     S(open)                                                                                                            \
