@@ -88,7 +88,7 @@ void Process::exec(StringView path) {
         }
 
         usize copy_offset = phdr.vaddr & 0xfffu;
-        ASSERT(region.base() + copy_offset + phdr.memsz < region.base() + region.size());
+        ASSERT(region.base() + copy_offset + phdr.memsz <= region.base() + region.size());
         file->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.memsz},
                    static_cast<usize>(phdr.offset));
     }
