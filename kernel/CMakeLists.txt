@@ -23,6 +23,7 @@ add_executable(kernel
     cpu/Processor.cc
     fs/FileHandle.cc
     fs/InodeFile.cc
+    fs/Pipe.cc
     fs/RamFs.cc
     fs/Vfs.cc
     intr/InterruptManager.cc
