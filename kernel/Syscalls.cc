@@ -23,6 +23,12 @@ SysResult Process::sys_close(uint32 fd) {
 
 SysResult Process::sys_create_process(const char *path) {
     auto *process = Process::create_user();
+    process->m_fds.resize(m_fds.size());
+    for (uint32 i = 0; i < m_fds.size(); i++) {
+        if (m_fds[i]) {
+            process->m_fds[i].emplace(*m_fds[i]);
+        }
+    }
     process->exec(path);
     Scheduler::insert_process(process);
     return process->pid();
