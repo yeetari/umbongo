@@ -57,8 +57,8 @@ public:
     SysResult sys_getpid() const;
     SysResult sys_open(const char *path);
     SysResult sys_putchar(char ch) const;
-    SysResult sys_read(uint32 fd, void *data, usize size) const;
-    SysResult sys_write(uint32 fd, void *data, usize size) const;
+    SysResult sys_read(uint32 fd, void *data, usize size);
+    SysResult sys_write(uint32 fd, void *data, usize size);
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }

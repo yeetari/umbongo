@@ -4,10 +4,14 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
-uint64 FileHandle::read(void *data, usize size) const {
+usize FileHandle::read(void *data, usize size) const {
     return m_file->read({data, size});
 }
 
-uint64 FileHandle::write(void *data, usize size) const {
+usize FileHandle::write(void *data, usize size) const {
     return m_file->write({data, size});
+}
+
+bool FileHandle::valid() const {
+    return m_file->valid();
 }

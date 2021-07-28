@@ -85,16 +85,24 @@ SysResult Process::sys_putchar(char ch) const {
     return 0;
 }
 
-SysResult Process::sys_read(uint32 fd, void *data, usize size) const {
+SysResult Process::sys_read(uint32 fd, void *data, usize size) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
+    }
+    if (!m_fds[fd]->valid()) {
+        m_fds[fd].clear();
+        return SysError::BrokenHandle;
     }
     return m_fds[fd]->read(data, size);
 }
 
-SysResult Process::sys_write(uint32 fd, void *data, usize size) const {
+SysResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
+    }
+    if (!m_fds[fd]->valid()) {
+        m_fds[fd].clear();
+        return SysError::BrokenHandle;
     }
     return m_fds[fd]->write(data, size);
 }

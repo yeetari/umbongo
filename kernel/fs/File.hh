@@ -17,4 +17,5 @@ public:
     virtual usize read(Span<void> data, usize offset = 0) = 0;
     virtual usize size() = 0;
     virtual usize write(Span<const void> data, usize offset = 0) = 0;
+    virtual bool valid() { return true; }
 };

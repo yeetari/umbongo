@@ -10,6 +10,7 @@ class FileHandle {
 public:
     explicit FileHandle(const SharedPtr<File> &file) : m_file(file) {}
 
-    uint64 read(void *data, usize size) const;
-    uint64 write(void *data, usize size) const;
+    usize read(void *data, usize size) const;
+    usize write(void *data, usize size) const;
+    bool valid() const;
 };
