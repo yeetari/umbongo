@@ -11,6 +11,8 @@ namespace Syscall {
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
+    S(mkdir)                                                                                                           \
+    S(mount)                                                                                                           \
     S(open)                                                                                                            \
     S(putchar)                                                                                                         \
     S(read)                                                                                                            \

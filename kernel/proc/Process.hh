@@ -55,6 +55,8 @@ public:
     SysResult sys_dup_fd(uint32 src, uint32 dst);
     SysResult sys_exit(usize code) const;
     SysResult sys_getpid() const;
+    SysResult sys_mkdir(const char *path) const;
+    SysResult sys_mount(const char *target, const char *fs_type) const;
     SysResult sys_open(const char *path);
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);

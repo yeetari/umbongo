@@ -2,15 +2,20 @@
 
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
+#include <kernel/devices/DevFs.hh>
 #include <kernel/fs/FileHandle.hh>
+#include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Pipe.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/proc/Scheduler.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
@@ -67,6 +72,22 @@ SysResult Process::sys_exit(usize code) const {
 
 SysResult Process::sys_getpid() const {
     return m_pid;
+}
+
+SysResult Process::sys_mkdir(const char *path) const {
+    Vfs::mkdir(path);
+    return 0;
+}
+
+SysResult Process::sys_mount(const char *target, const char *fs_type) const {
+    UniquePtr<FileSystem> fs;
+    if (StringView(fs_type) == "dev") {
+        fs = ustd::make_unique<DevFs>();
+    } else {
+        ENSURE_NOT_REACHED();
+    }
+    Vfs::mount(target, ustd::move(fs));
+    return 0;
 }
 
 SysResult Process::sys_open(const char *path) {
