@@ -1,7 +1,10 @@
 #include <kernel/fs/RamFs.hh>
 
+#include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeFile.hh>
 #include <ustd/Memory.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -25,6 +28,10 @@ Inode *RamFsInode::lookup(StringView name) {
         }
     }
     return nullptr;
+}
+
+SharedPtr<File> RamFsInode::open() {
+    return ustd::make_shared<InodeFile>(this);
 }
 
 usize RamFsInode::read(Span<void> data, usize offset) {

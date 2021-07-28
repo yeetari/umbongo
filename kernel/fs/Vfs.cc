@@ -1,8 +1,8 @@
 #include <kernel/fs/Vfs.hh>
 
+#include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeFile.hh>
 #include <ustd/Assert.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
@@ -99,7 +99,7 @@ SharedPtr<File> Vfs::create(StringView path) {
     }
     ASSERT(parent != nullptr && !name.empty());
     auto *inode = parent->create(name, InodeType::RegularFile);
-    return ustd::make_shared<InodeFile>(inode);
+    return inode->open();
 }
 
 void Vfs::mkdir(StringView path) {
@@ -117,5 +117,5 @@ SharedPtr<File> Vfs::open(StringView path) {
     if (inode == nullptr) {
         return {};
     }
-    return ustd::make_shared<InodeFile>(inode);
+    return inode->open();
 }

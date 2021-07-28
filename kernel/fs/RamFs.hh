@@ -1,7 +1,9 @@
 #pragma once
 
+#include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -20,6 +22,7 @@ public:
 
     Inode *create(StringView name, InodeType type) override;
     Inode *lookup(StringView name) override;
+    SharedPtr<File> open() override;
     usize read(Span<void> data, usize offset) override;
     usize size() override;
     usize write(Span<const void> data, usize offset) override;

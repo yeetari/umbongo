@@ -1,5 +1,7 @@
 #pragma once
 
+#include <kernel/fs/File.hh>
+#include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -23,6 +25,7 @@ public:
 
     virtual Inode *create(StringView name, InodeType type) = 0;
     virtual Inode *lookup(StringView name) = 0;
+    virtual SharedPtr<File> open() = 0;
     virtual usize read(Span<void> data, usize offset) = 0;
     virtual usize size() = 0;
     virtual usize write(Span<const void> data, usize offset) = 0;
