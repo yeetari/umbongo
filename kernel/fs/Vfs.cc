@@ -15,10 +15,14 @@
 namespace {
 
 class Mount {
+    Inode *m_host;
     UniquePtr<FileSystem> m_fs;
 
 public:
-    explicit Mount(UniquePtr<FileSystem> &&fs) : m_fs(ustd::move(fs)) {}
+    Mount(Inode *host, UniquePtr<FileSystem> &&fs) : m_host(host), m_fs(ustd::move(fs)) {}
+
+    Inode *host() const { return m_host; }
+    FileSystem &fs() const { return *m_fs; }
 };
 
 // clang-format off
@@ -27,6 +31,15 @@ struct VfsData {
     Vector<Mount> mounts;
 } *s_data;
 // clang-format on
+
+Mount *find_mount(Inode *host) {
+    for (auto &mount : s_data->mounts) {
+        if (mount.host() == host) {
+            return &mount;
+        }
+    }
+    return nullptr;
+}
 
 Inode *resolve_path(StringView path, Inode **out_parent = nullptr, StringView *out_part = nullptr) {
     usize path_position = 0;
@@ -74,6 +87,8 @@ Inode *resolve_path(StringView path, Inode **out_parent = nullptr, StringView *o
                     *out_parent = nullptr;
                 }
             }
+        } else if (auto *mount = find_mount(current)) {
+            current = mount->fs().root_inode();
         }
     }
     return current;
@@ -88,7 +103,7 @@ void Vfs::initialise() {
 void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
     ASSERT(s_data->root_inode == nullptr);
     s_data->root_inode = fs->root_inode();
-    s_data->mounts.emplace(ustd::move(fs));
+    s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
 
 SharedPtr<File> Vfs::create(StringView path) {
@@ -110,6 +125,12 @@ void Vfs::mkdir(StringView path) {
     }
     ASSERT(parent != nullptr && !name.empty());
     parent->create(name, InodeType::Directory);
+}
+
+void Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
+    auto *host = resolve_path(path);
+    ENSURE(host != nullptr);
+    s_data->mounts.emplace(host, ustd::move(fs));
 }
 
 SharedPtr<File> Vfs::open(StringView path) {

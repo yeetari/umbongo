@@ -13,5 +13,6 @@ struct Vfs {
 
     static SharedPtr<File> create(StringView path);
     static void mkdir(StringView path);
+    static void mount(StringView path, UniquePtr<FileSystem> &&fs);
     static SharedPtr<File> open(StringView path);
 };
