@@ -42,6 +42,7 @@ public:
     void push(const T &elem);
     void push(T &&elem);
     Conditional<IsTriviallyCopyable<T>, T, void> pop();
+    void remove(SizeType index);
 
     Span<T> span() { return {m_data, m_size}; }
     Span<const T> span() const { return {m_data, m_size}; }
@@ -178,6 +179,23 @@ Conditional<IsTriviallyCopyable<T>, T, void> Vector<T, SizeType>::pop() {
     }
     if constexpr (!IsTriviallyDestructible<T>) {
         elem->~T();
+    }
+}
+
+template <typename T, typename SizeType>
+void Vector<T, SizeType>::remove(SizeType index) {
+    ASSERT(index < m_size);
+    if constexpr (!IsTriviallyDestructible<T>) {
+        begin()[index].~T();
+    }
+    m_size--;
+    if constexpr (IsTriviallyCopyable<T>) {
+        memcpy(begin() + index, begin() + index + 1, (m_size - index) * sizeof(T));
+        return;
+    }
+    for (SizeType i = index; i < m_size; i++) {
+        new (begin() + i) T(move(begin()[i + 1]));
+        begin()[i + 1].~T();
     }
 }
 
