@@ -29,7 +29,6 @@ Checks: >
   bugprone-redundant-branch-condition,
   bugprone-signed-char-misuse,
   bugprone-sizeof-container,
-  bugprone-sizeof-expression,
   bugprone-suspicious-enum-usage,
   bugprone-suspicious-include,
   bugprone-suspicious-memset-usage,
