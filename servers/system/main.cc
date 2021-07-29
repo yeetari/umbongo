@@ -33,5 +33,20 @@ int main() {
 
     auto pid = Syscall::invoke<uint64>(Syscall::getpid);
     logln("[#{}]: {}", pid, static_cast<const char *>(data.data()));
-    return static_cast<int>(pid);
+
+    // Mount devfs.
+    Syscall::invoke(Syscall::mkdir, "/dev");
+    Syscall::invoke(Syscall::mount, "/dev", "dev");
+
+    core::File keyboard;
+    while (true) {
+        char ch = '\0';
+        auto nread = keyboard.read({&ch, 1});
+        if (nread < 0) {
+            while (!keyboard.open("/dev/kb")) {
+            }
+        } else if (nread == 1) {
+            log("{:c}", ch);
+        }
+    }
 }
