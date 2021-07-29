@@ -356,14 +356,13 @@ void HostController::on_detach(Port &port) {
         return;
     }
 
-    const uint8 slot = device->slot();
-    delete device;
-
+    device->disconnect();
     TransferRequestBlock disable_slot{
         .type = TrbType::DisableSlot,
-        .slot = slot,
+        .slot = device->slot(),
     };
     send_command(&disable_slot);
+    port.set_device(nullptr);
 }
 
 void HostController::send_command(TransferRequestBlock *command) {

@@ -2,11 +2,12 @@
 
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
+#include <kernel/devices/DevFs.hh>
+#include <kernel/devices/UsbKeyboardDevice.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/HostController.hh>
-#include <kernel/usb/hid/KeyboardDevice.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -68,7 +69,8 @@ Device *UsbManager::register_device(Device &&device, const DeviceDescriptor *des
             logln(" usb: Found HID device {:h2}:{:h2}", interface->isubclass, interface->iprotocol);
             if (interface->isubclass == 1 && interface->iprotocol == 1) {
                 logln(" usb: Found HID keyboard");
-                ret = new KeyboardDevice(ustd::move(device));
+                ret = new UsbKeyboardDevice(ustd::move(device));
+                DevFs::notify_attach(ret);
             }
         }
     });

@@ -23,6 +23,7 @@ add_executable(kernel
     cpu/Processor.cc
     devices/DevFs.cc
     devices/Device.cc
+    devices/UsbKeyboardDevice.cc
     fs/FileHandle.cc
     fs/InodeFile.cc
     fs/Pipe.cc
@@ -39,7 +40,6 @@ add_executable(kernel
     proc/Hpet.cc
     proc/Process.cc
     proc/Scheduler.cc
-    usb/hid/KeyboardDevice.cc
     usb/Device.cc
     usb/Endpoint.cc
     usb/HostController.cc

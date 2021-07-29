@@ -1,16 +1,16 @@
-#include <kernel/usb/hid/KeyboardDevice.hh>
+#include <kernel/devices/UsbKeyboardDevice.hh>
 
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Endpoint.hh>
 #include <kernel/usb/EndpointType.hh>
 #include <ustd/Array.hh>
-#include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/RingBuffer.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
-namespace usb {
 namespace {
 
 const Array s_scancode_table{
@@ -33,25 +33,25 @@ const Array s_scancode_table_shift{
 
 } // namespace
 
-KeyboardDevice::KeyboardDevice(Device &&device) : Device(ustd::move(device)) {
-    walk_configuration([this](void *descriptor, DescriptorType type) {
-        if (type == DescriptorType::Configuration) {
-            auto *config_descriptor = static_cast<ConfigDescriptor *>(descriptor);
+UsbKeyboardDevice::UsbKeyboardDevice(usb::Device &&device) : usb::Device(ustd::move(device)) {
+    walk_configuration([this](void *descriptor, usb::DescriptorType type) {
+        if (type == usb::DescriptorType::Configuration) {
+            auto *config_descriptor = static_cast<usb::ConfigDescriptor *>(descriptor);
             set_configuration(config_descriptor->config_value);
-        } else if (type == DescriptorType::Endpoint) {
-            auto *endpoint_descriptor = static_cast<EndpointDescriptor *>(descriptor);
+        } else if (type == usb::DescriptorType::Endpoint) {
+            auto *endpoint_descriptor = static_cast<usb::EndpointDescriptor *>(descriptor);
             if ((endpoint_descriptor->address & (1u << 7u)) == 0) {
                 return;
             }
             m_input_endpoint = create_endpoint(endpoint_descriptor->address);
-            m_input_endpoint->setup(EndpointType::InterruptIn, endpoint_descriptor->packet_size);
+            m_input_endpoint->setup(usb::EndpointType::InterruptIn, endpoint_descriptor->packet_size);
             m_input_endpoint->setup_interval_input(m_buffer.span(), endpoint_descriptor->interval);
             configure_endpoint(m_input_endpoint);
         }
     });
 }
 
-bool KeyboardDevice::key_already_pressed(uint8 key) const {
+bool UsbKeyboardDevice::key_already_pressed(uint8 key) const {
     for (uint8 i = 2; i < 8; i++) {
         if (key == m_compare_buffer[i]) {
             return true;
@@ -60,7 +60,7 @@ bool KeyboardDevice::key_already_pressed(uint8 key) const {
     return false;
 }
 
-void KeyboardDevice::poll() {
+void UsbKeyboardDevice::poll() {
     for (uint8 i = 0; i < 8; i++) {
         bool pressed_now = (m_buffer[0] & (1u << i)) != 0;
         bool pressed_bef = (m_compare_buffer[0] & (1u << i)) != 0;
@@ -74,10 +74,19 @@ void KeyboardDevice::poll() {
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
         const auto ch = static_cast<uint8>(table[key]);
         if (ch != '\0') {
-            log("{:c}", ch);
+            m_ring_buffer.enqueue(ch);
         }
     }
     memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
 }
 
-} // namespace usb
+usize UsbKeyboardDevice::read(Span<void> data, usize) {
+    usize nread = 0;
+    for (usize i = 0; i < data.size(); i++, nread++) {
+        if (m_ring_buffer.empty()) {
+            break;
+        }
+        data.as<uint8>()[i] = m_ring_buffer.dequeue();
+    }
+    return nread;
+}
