@@ -24,6 +24,7 @@ public:
     Inode *lookup(StringView name) override;
     SharedPtr<File> open() override;
     usize read(Span<void> data, usize offset) override;
+    void remove(StringView name) override;
     usize size() override;
     usize write(Span<const void> data, usize offset) override;
 };

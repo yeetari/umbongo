@@ -6,7 +6,8 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-enum InodeType {
+enum class InodeType {
+    Device,
     Directory,
     RegularFile,
 };
@@ -27,6 +28,7 @@ public:
     virtual Inode *lookup(StringView name) = 0;
     virtual SharedPtr<File> open() = 0;
     virtual usize read(Span<void> data, usize offset) = 0;
+    virtual void remove(StringView name) = 0;
     virtual usize size() = 0;
     virtual usize write(Span<const void> data, usize offset) = 0;
 };

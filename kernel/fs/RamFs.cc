@@ -3,6 +3,7 @@
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
@@ -42,6 +43,11 @@ usize RamFsInode::read(Span<void> data, usize offset) {
     }
     memcpy(data.data(), m_data.data() + offset, size);
     return size;
+}
+
+void RamFsInode::remove(StringView) {
+    // TODO: Implement.
+    ENSURE_NOT_REACHED();
 }
 
 usize RamFsInode::size() {
