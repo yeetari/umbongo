@@ -23,7 +23,6 @@ namespace usb {
 namespace {
 
 constexpr uint16 k_config_reg_sbrn = 0x60;
-constexpr uint16 k_config_reg_fladj = 0x61;
 
 constexpr uint16 k_cap_reg_length = 0x00;
 constexpr uint16 k_cap_reg_hcsparams1 = 0x04;
@@ -108,9 +107,6 @@ void HostController::enable() {
     while ((read_op<uint32>(k_op_reg_status) & 1u) == 0) {
         Scheduler::wait(1);
     }
-
-    // Write the default value of 0x20 to the FLADJ register in case the BIOS didn't. This sets the frame length.
-    write_config<uint8>(k_config_reg_fladj, 0x20);
 
     // Reset the controller by setting the reset bit and then waiting for the reset and controller not ready bits to be
     // clear.
