@@ -19,9 +19,9 @@ public:
     SharedPtr(const SharedPtr &other) : SharedPtr(other.m_obj) {}
     template <typename U>
     SharedPtr(const SharedPtr<U> &other) : SharedPtr(other.m_obj) {}
-    SharedPtr(SharedPtr &&other) noexcept : m_obj(exchange(other.m_obj, nullptr)) {}
+    SharedPtr(SharedPtr &&other) noexcept : m_obj(other.disown()) {}
     template <typename U>
-    SharedPtr(SharedPtr<U> &&other) noexcept : m_obj(exchange(other.m_obj, nullptr)) {}
+    SharedPtr(SharedPtr<U> &&other) noexcept : m_obj(other.disown()) {}
     ~SharedPtr();
 
     SharedPtr &operator=(const SharedPtr &) = delete;
@@ -38,6 +38,9 @@ public:
         ASSERT(m_obj != nullptr);
         return m_obj;
     }
+
+    T *disown() { return exchange(m_obj, nullptr); }
+    T *obj() const { return m_obj; }
 };
 
 template <typename T>
