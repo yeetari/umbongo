@@ -12,6 +12,7 @@ namespace Syscall {
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
     S(mkdir)                                                                                                           \
+    S(mmap)                                                                                                            \
     S(mount)                                                                                                           \
     S(open)                                                                                                            \
     S(putchar)                                                                                                         \

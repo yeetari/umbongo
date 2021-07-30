@@ -79,6 +79,13 @@ SysResult Process::sys_mkdir(const char *path) const {
     return 0;
 }
 
+SysResult Process::sys_mmap(uint32 fd) const {
+    if (fd >= m_fds.size() || !m_fds[fd]) {
+        return SysError::BadFd;
+    }
+    return m_fds[fd]->mmap(*m_virt_space);
+}
+
 SysResult Process::sys_mount(const char *target, const char *fs_type) const {
     UniquePtr<FileSystem> fs;
     if (StringView(fs_type) == "dev") {

@@ -56,6 +56,7 @@ public:
     SysResult sys_exit(usize code) const;
     SysResult sys_getpid() const;
     SysResult sys_mkdir(const char *path) const;
+    SysResult sys_mmap(uint32 fd) const;
     SysResult sys_mount(const char *target, const char *fs_type) const;
     SysResult sys_open(const char *path);
     SysResult sys_putchar(char ch) const;

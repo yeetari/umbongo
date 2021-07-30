@@ -4,6 +4,8 @@
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
+class VirtSpace;
+
 class File : public Shareable<File> {
 public:
     File() = default;
@@ -14,6 +16,8 @@ public:
     File &operator=(const File &) = delete;
     File &operator=(File &&) = delete;
 
+    // TODO: Const some of these?
+    virtual uintptr mmap(VirtSpace &) { return 0; }
     virtual usize read(Span<void> data, usize offset = 0) = 0;
     virtual usize size() = 0;
     virtual usize write(Span<const void> data, usize offset = 0) = 0;
