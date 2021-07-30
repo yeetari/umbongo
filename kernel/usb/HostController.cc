@@ -26,6 +26,7 @@ constexpr uint16 k_config_reg_sbrn = 0x60;
 
 constexpr uint16 k_cap_reg_length = 0x00;
 constexpr uint16 k_cap_reg_hcsparams1 = 0x04;
+constexpr uint16 k_cap_reg_hcsparams2 = 0x08;
 constexpr uint16 k_cap_reg_hccparams1 = 0x10;
 constexpr uint16 k_cap_reg_db_offset = 0x14;
 constexpr uint16 k_cap_reg_run_offset = 0x18;
@@ -40,21 +41,22 @@ constexpr uint16 k_op_reg_config = 0x38;
 void watch_thread(HostController *controller) {
     while (true) {
         for (auto &port : controller->ports()) {
-            if (port.status_changed()) {
-                port.clear_status_changed();
-                if (port.connected()) {
-                    if (!port.enabled()) {
-                        if (!port.reset()) {
-                            logln(" usb: Failed to reset port {}!", port.number());
-                        }
-                        continue;
+            if (!port.status_changed()) {
+                continue;
+            }
+            port.clear_status_changed();
+            if (port.connected()) {
+                if (!port.enabled()) {
+                    if (!port.reset()) {
+                        logln(" usb: Failed to reset port {}!", port.number());
                     }
-                    logln(" usb: Device attached to port {}", port.number());
-                    controller->on_attach(port);
-                } else {
-                    logln(" usb: Device removed from port {}", port.number());
-                    controller->on_detach(port);
+                    continue;
                 }
+                logln(" usb: Device attached to port {}", port.number());
+                controller->on_attach(port);
+            } else {
+                logln(" usb: Device removed from port {}", port.number());
+                controller->on_detach(port);
             }
         }
         // TODO: Yield.
@@ -120,6 +122,7 @@ void HostController::enable() {
     // is available.
     const auto hcc_params1 = read_cap<uint32>(k_cap_reg_hccparams1);
     const auto hcs_params1 = read_cap<uint32>(k_cap_reg_hcsparams1);
+    const auto hcs_params2 = read_cap<uint32>(k_cap_reg_hcsparams2);
     m_context_size = (hcc_params1 & (1u << 2u)) == 0 ? 32 : 64;
     ENSURE((hcc_params1 & (1u << 0u)) != 0, "64-bit addressing not available!");
 
@@ -178,8 +181,17 @@ void HostController::enable() {
         }
     }
 
+    uint32 scratch_buffer_count = ((hcs_params2 >> 27u) & 0x1fu) | ((hcs_params2 >> 16u) & 0x3e0u);
+    auto *scratchpad = new (ustd::align_val_t(4_KiB)) void *[scratch_buffer_count];
+    for (uint32 i = 0; i < scratch_buffer_count; i++) {
+        auto *buffer = new (ustd::align_val_t(4_KiB)) uint8[4_KiB];
+        memset(buffer, 0, 4_KiB);
+        scratchpad[i] = buffer;
+    }
+
     // Array of void * because first element is for scratchpad.
     m_context_table = new (ustd::align_val_t(64_KiB)) void *[slot_count + 1];
+    m_context_table[0] = scratchpad;
     write_op(k_op_reg_dcbapp, m_context_table);
 
     // Allocate the command ring and store it into the Command Ring Control Register.
@@ -201,6 +213,11 @@ void HostController::enable() {
 
     // Start the schedule by setting the run/stop, interrupter enable, and host system error enable bits.
     write_op(k_op_reg_command, (1u << 3u) | (1u << 2u) | (1u << 0u));
+
+    // Wait for startup.
+    while ((read_op<uint32>(k_op_reg_status) & 1u) != 0) {
+        Scheduler::wait(1);
+    }
 
     // Initialise ports and reset any already-connected ones.
     for (auto &port : m_ports) {
