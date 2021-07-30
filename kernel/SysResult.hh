@@ -2,6 +2,7 @@
 
 #include <kernel/SysError.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Concepts.hh>
 #include <ustd/Types.hh>
 
 class SysResult {
@@ -13,8 +14,10 @@ class SysResult {
 
 public:
     SysResult(SysError error) : m_error(error), m_is_error(true) {} // NOLINT
-    template <typename T>
+    template <ConvertibleTo<usize> T>
     SysResult(T value) : m_value(static_cast<usize>(value)), m_is_error(false) {} // NOLINT
+    template <typename T>
+    SysResult(T value) : m_value(reinterpret_cast<usize>(value)), m_is_error(false) {} // NOLINT
 
     bool is_error() const { return m_is_error; }
     SysError error() const {
