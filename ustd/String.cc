@@ -11,6 +11,11 @@ String::String(const char *data, usize length) : m_length(length) {
     memcpy(m_data, data, length);
 }
 
+String::String(usize length) : m_length(length) {
+    m_data = new char[length + 1];
+    m_data[length] = '\0';
+}
+
 String::~String() {
     delete[] m_data;
 }
