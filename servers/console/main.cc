@@ -3,7 +3,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
-int main() {
+usize main(usize, const char **) {
     while (true) {
         // NOLINTNEXTLINE
         Array<char, 8192> buf;

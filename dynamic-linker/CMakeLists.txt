@@ -1,0 +1,5 @@
+add_executable(dynamic-linker main.cc)
+install(TARGETS dynamic-linker DESTINATION .)
+target_gc_sections(dynamic-linker)
+target_link_libraries(dynamic-linker PRIVATE core)
+target_link_options(dynamic-linker PRIVATE LINKER:-no-dynamic-linker)

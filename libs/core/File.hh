@@ -23,8 +23,11 @@ public:
     void close();
     bool open(StringView path);
     ssize read(Span<void> data);
+    ssize read(Span<void> data, usize offset);
 
     explicit operator bool() const { return m_fd.has_value(); }
+
+    uint32 fd() { return *m_fd; }
 };
 
 } // namespace core

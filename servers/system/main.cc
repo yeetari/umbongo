@@ -7,7 +7,11 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-int main() {
+usize main(usize, const char **) {
+    // Mount devfs.
+    Syscall::invoke(Syscall::mkdir, "/dev");
+    Syscall::invoke(Syscall::mount, "/dev", "dev");
+
     Array<uint32, 2> pipe_fds{};
     Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
 
@@ -33,10 +37,6 @@ int main() {
 
     auto pid = Syscall::invoke<uint64>(Syscall::getpid);
     logln("[#{}]: {}", pid, static_cast<const char *>(data.data()));
-
-    // Mount devfs.
-    Syscall::invoke(Syscall::mkdir, "/dev");
-    Syscall::invoke(Syscall::mount, "/dev", "dev");
 
     core::File keyboard;
     while (true) {

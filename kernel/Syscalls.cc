@@ -16,6 +16,7 @@
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -62,7 +63,8 @@ SysResult Process::sys_create_process(const char *path) {
             process->m_fds[i].emplace(*m_fds[i]);
         }
     }
-    process->exec(path);
+    String copied_path(path);
+    process->exec(copied_path.view());
     Scheduler::insert_process(process);
     return process->pid();
 }

@@ -51,6 +51,7 @@ if(BUILD_WARNINGS)
         -Weverything
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
+        -Wno-covered-switch-default
         -Wno-gnu-anonymous-struct
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-missing-noreturn
@@ -109,6 +110,9 @@ add_link_options(-pie -nostdlib -Wno-unused-command-line-argument)
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 
 add_subdirectory(boot)
+add_subdirectory(dynamic-linker)
+
+add_link_options(LINKER:-dynamic-linker,/dynamic-linker)
 add_subdirectory(kernel)
 add_subdirectory(libs)
 add_subdirectory(servers)
