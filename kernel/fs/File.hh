@@ -1,5 +1,7 @@
 #pragma once
 
+#include <kernel/SysResult.hh>
+#include <kernel/SyscallTypes.hh>
 #include <ustd/Shareable.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
@@ -17,6 +19,7 @@ public:
     File &operator=(File &&) = delete;
 
     // TODO: Const some of these?
+    virtual SysResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
     virtual uintptr mmap(VirtSpace &) { return 0; }
     virtual usize read(Span<void> data, usize offset = 0) = 0;
     virtual usize size() = 0;

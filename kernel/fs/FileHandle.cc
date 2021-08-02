@@ -1,8 +1,14 @@
 #include <kernel/fs/FileHandle.hh>
 
+#include <kernel/SysResult.hh>
+#include <kernel/SyscallTypes.hh>
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
+
+SysResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
+    return m_file->ioctl(request, arg);
+}
 
 uintptr FileHandle::mmap(VirtSpace &virt_space) const {
     return m_file->mmap(virt_space);

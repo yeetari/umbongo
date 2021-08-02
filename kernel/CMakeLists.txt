@@ -23,6 +23,7 @@ add_executable(kernel
     cpu/Processor.cc
     devices/DevFs.cc
     devices/Device.cc
+    devices/FramebufferDevice.cc
     devices/UsbKeyboardDevice.cc
     fs/FileHandle.cc
     fs/InodeFile.cc

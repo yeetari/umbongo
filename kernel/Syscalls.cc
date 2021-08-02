@@ -91,6 +91,13 @@ SysResult Process::sys_getpid() const {
     return m_pid;
 }
 
+SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
+    if (fd >= m_fds.size() || !m_fds[fd]) {
+        return SysError::BadFd;
+    }
+    return m_fds[fd]->ioctl(request, arg);
+}
+
 SysResult Process::sys_mkdir(const char *path) const {
     Vfs::mkdir(path);
     return 0;

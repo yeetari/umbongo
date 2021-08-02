@@ -12,6 +12,7 @@ namespace Syscall {
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
+    S(ioctl)                                                                                                           \
     S(mkdir)                                                                                                           \
     S(mmap)                                                                                                            \
     S(mount)                                                                                                           \

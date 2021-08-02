@@ -2,6 +2,16 @@
 
 #include <ustd/Types.hh>
 
+struct FramebufferInfo {
+    uint32 width;
+    uint32 height;
+};
+
+enum class IoctlRequest : usize {
+    FramebufferClear,
+    FramebufferGetInfo,
+};
+
 enum class MemoryProt : usize {
     Write = 1u << 0u,
     Exec = 1u << 1u,

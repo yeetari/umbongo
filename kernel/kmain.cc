@@ -13,6 +13,7 @@
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
+#include <kernel/devices/FramebufferDevice.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/RamFs.hh>
@@ -133,6 +134,10 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
         auto file = Vfs::create(entry->name);
         file->write({entry->data, entry->data_size});
     }
+
+    auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
+                                     boot_info->pixels_per_scan_line * sizeof(uint32));
+    fb->leak_ref();
 
     // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
     MemoryManager::reclaim(boot_info);
