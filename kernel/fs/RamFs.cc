@@ -56,7 +56,7 @@ usize RamFsInode::size() {
 
 usize RamFsInode::write(Span<const void> data, usize offset) {
     usize size = data.size();
-    m_data.resize(offset + size);
+    m_data.grow(offset + size);
     memcpy(m_data.data() + offset, data.data(), size);
     return size;
 }

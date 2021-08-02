@@ -56,7 +56,7 @@ SysResult Process::sys_create_pipe(uint32 *fds) {
 
 SysResult Process::sys_create_process(const char *path) {
     auto *process = Process::create_user();
-    process->m_fds.resize(m_fds.size());
+    process->m_fds.grow(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
         if (m_fds[i]) {
             process->m_fds[i].emplace(*m_fds[i]);
@@ -75,7 +75,7 @@ SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
     if (src == dst) {
         return 0;
     }
-    m_fds.resize(dst + 1);
+    m_fds.grow(dst + 1);
     m_fds[dst].emplace(*m_fds[src]);
     return 0;
 }

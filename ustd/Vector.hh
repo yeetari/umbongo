@@ -35,7 +35,7 @@ public:
     void ensure_capacity(SizeType capacity);
     void reallocate(SizeType capacity);
     template <typename... Args>
-    void resize(SizeType size, Args &&...args);
+    void grow(SizeType size, Args &&...args);
 
     template <typename... Args>
     T &emplace(Args &&...args);
@@ -68,7 +68,7 @@ using LargeVector = Vector<T, usize>;
 template <typename T, typename SizeType>
 template <typename... Args>
 Vector<T, SizeType>::Vector(SizeType size, Args &&...args) {
-    resize(size, forward<Args>(args)...);
+    grow(size, forward<Args>(args)...);
 }
 
 template <typename T, typename SizeType>
@@ -131,7 +131,10 @@ void Vector<T, SizeType>::reallocate(SizeType capacity) {
 
 template <typename T, typename SizeType>
 template <typename... Args>
-void Vector<T, SizeType>::resize(SizeType size, Args &&...args) {
+void Vector<T, SizeType>::grow(SizeType size, Args &&...args) {
+    if (size <= m_size) {
+        return;
+    }
     ensure_capacity(size);
     if constexpr (!IsTriviallyCopyable<T> || sizeof...(Args) != 0) {
         for (SizeType i = m_size; i < size; i++) {
