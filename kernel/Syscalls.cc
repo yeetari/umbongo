@@ -133,7 +133,7 @@ SysResult Process::sys_open(const char *path) {
 }
 
 SysResult Process::sys_putchar(char ch) const {
-    put_char(ch);
+    dbg_put_char(ch);
     return 0;
 }
 

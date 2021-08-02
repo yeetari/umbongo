@@ -7,12 +7,6 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-void put_char(char ch) {
-    // TODO: Have some kind of dbgln function that uses a syscall to print to both QEMU port e9 and the screen before
-    //       the console server is setup.
-    Syscall::invoke(Syscall::putchar, ch);
-}
-
 usize main(usize argc, const char **argv) {
     if (argc != 2) {
         return 1;
@@ -82,7 +76,7 @@ usize main(usize argc, const char **argv) {
             relocation_entry_size = entry.value;
             break;
         default:
-            logln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[1]);
+            dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[1]);
             ENSURE_NOT_REACHED();
         }
     }
@@ -106,7 +100,7 @@ usize main(usize argc, const char **argv) {
             *ptr = static_cast<usize>(static_cast<ssize>(base_offset) + rela.addend);
             break;
         default:
-            logln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[1]);
+            dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[1]);
             ENSURE_NOT_REACHED();
         }
     }

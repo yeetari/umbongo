@@ -9,7 +9,7 @@
 
 usize main(usize, const char **) {
     core::File framebuffer("/dev/fb");
-    ENSURE(framebuffer);
+    ENSURE(framebuffer, "Failed to open framebuffer");
 
     auto *fb = Syscall::invoke<uint32 *>(Syscall::mmap, framebuffer.fd());
     Syscall::invoke(Syscall::ioctl, framebuffer.fd(), IoctlRequest::FramebufferClear);

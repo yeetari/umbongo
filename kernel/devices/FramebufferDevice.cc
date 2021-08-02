@@ -8,6 +8,8 @@
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
+extern bool g_console_enabled;
+
 SysResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
     switch (request) {
     case IoctlRequest::FramebufferClear:
@@ -27,6 +29,7 @@ SysResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
 }
 
 uintptr FramebufferDevice::mmap(VirtSpace &virt_space) {
+    g_console_enabled = false;
     const usize size = m_pitch * m_height;
     auto &region = virt_space.allocate_region(size, RegionAccess::Writable | RegionAccess::UserAccessible, m_base);
     return region.base();

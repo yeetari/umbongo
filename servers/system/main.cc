@@ -21,7 +21,7 @@ usize main(usize, const char **) {
     }
 
     if (Syscall::invoke(Syscall::create_process, "/console-server") < 0) {
-        ENSURE_NOT_REACHED();
+        ENSURE_NOT_REACHED("Failed to start console server");
     }
 
     Syscall::invoke(Syscall::dup_fd, pipe_fds[1], 1);

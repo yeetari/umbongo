@@ -6,18 +6,21 @@
 #include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 
-void put_char(char ch);
+void dbg_put_char(char ch);
+void log_put_char(char ch);
 
 namespace ustd {
 namespace detail {
 
-template <typename T>
-void log_single(const char *, T);
+using LogFn = void (*)(char);
 
 template <typename T>
-void log_single(const char *opts, T arg) requires IsIntegral<T> {
+void log_single(LogFn fn, const char *, T);
+
+template <typename T>
+void log_single(LogFn fn, const char *opts, T arg) requires IsIntegral<T> {
     if (opts[1] == 'c') {
-        put_char(static_cast<char>(arg));
+        fn(static_cast<char>(arg));
         return;
     }
     const usize base = opts[1] == 'h' ? 16 : 10;
@@ -42,39 +45,39 @@ void log_single(const char *opts, T arg) requires IsIntegral<T> {
     }
 
     for (uint8 i = len; i > 0; i--) {
-        put_char(buf[i - 1]);
+        fn(buf[i - 1]);
     }
 }
 
 template <typename T>
-void log_single(const char *, T arg) requires IsPointer<T> {
-    log_single(":h", reinterpret_cast<uintptr>(arg));
+void log_single(LogFn fn, const char *, T arg) requires IsPointer<T> {
+    log_single(fn, ":h", reinterpret_cast<uintptr>(arg));
 }
 
 template <>
-inline void log_single(const char *, const char *msg) {
+inline void log_single(LogFn fn, const char *, const char *msg) {
     while (*msg != '\0') {
-        put_char(*msg++);
+        fn(*msg++);
     }
 }
 
 template <>
-inline void log_single(const char *, StringView msg) {
+inline void log_single(LogFn fn, const char *, StringView msg) {
     for (char ch : msg) {
-        put_char(ch);
+        fn(ch);
     }
 }
 
 template <>
-inline void log_single(const char *, bool arg) {
-    log_single("", arg ? "true" : "false");
+inline void log_single(LogFn fn, const char *, bool arg) {
+    log_single(fn, "", arg ? "true" : "false");
 }
 
 template <typename T>
 // NOLINTNEXTLINE
-void log_part(const char *&fmt, const T &arg) {
+void log_part(LogFn fn, const char *&fmt, const T &arg) {
     while (*fmt != '\0' && *fmt != '{') {
-        put_char(*fmt++);
+        fn(*fmt++);
     }
     if (*fmt == '{') {
         Array<char, 4> opts{};
@@ -84,33 +87,47 @@ void log_part(const char *&fmt, const T &arg) {
             ASSERT(i < opts.size());
             opts[i++] = *fmt++;
         }
-        log_single(opts.data(), arg);
+        log_single(fn, opts.data(), arg);
         fmt++;
     }
 }
 
 // NOLINTNEXTLINE
-inline void log_part(const char *&fmt) {
+inline void log_part(LogFn fn, const char *&fmt) {
     while (*fmt != '\0') {
-        put_char(*fmt++);
+        fn(*fmt++);
     }
 }
 
 } // namespace detail
 
 template <typename... Args>
+void dbg(const char *fmt, const Args &...args) {
+    (detail::log_part(&dbg_put_char, fmt, args), ...);
+    detail::log_part(&dbg_put_char, fmt);
+}
+
+template <typename... Args>
+void dbgln(const char *fmt, const Args &...args) {
+    dbg(fmt, args...);
+    dbg_put_char('\n');
+}
+
+template <typename... Args>
 void log(const char *fmt, const Args &...args) {
-    (detail::log_part(fmt, args), ...);
-    detail::log_part(fmt);
+    (detail::log_part(&log_put_char, fmt, args), ...);
+    detail::log_part(&log_put_char, fmt);
 }
 
 template <typename... Args>
 void logln(const char *fmt, const Args &...args) {
     log(fmt, args...);
-    put_char('\n');
+    log_put_char('\n');
 }
 
 } // namespace ustd
 
+using ustd::dbg;
+using ustd::dbgln;
 using ustd::log;
 using ustd::logln;
