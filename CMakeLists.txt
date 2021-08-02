@@ -39,7 +39,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 function(target_gc_sections target)
     if(BUILD_TYPE STREQUAL "Release")
         target_compile_options(${target} PRIVATE -fdata-sections -ffunction-sections)
-        target_link_options(${target} PRIVATE -Wl,--gc-sections,-s)
+        target_link_options(${target} PRIVATE LINKER:--gc-sections,-s)
     endif()
 endfunction()
 
