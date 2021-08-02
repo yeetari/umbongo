@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
+#include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh>
@@ -49,6 +50,7 @@ public:
     void kill();
     void set_entry_point(uintptr entry);
 
+    SysResult sys_allocate_region(usize size, MemoryProt prot);
     SysResult sys_close(uint32 fd);
     SysResult sys_create_pipe(uint32 *fds);
     SysResult sys_create_process(const char *path);
@@ -61,6 +63,7 @@ public:
     SysResult sys_open(const char *path);
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);
+    SysResult sys_seek(uint32 fd, usize offset);
     SysResult sys_write(uint32 fd, void *data, usize size);
 
     usize pid() const { return m_pid; }

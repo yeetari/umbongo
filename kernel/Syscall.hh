@@ -5,6 +5,7 @@
 namespace Syscall {
 
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
+    S(allocate_region)                                                                                                 \
     S(close)                                                                                                           \
     S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
@@ -17,6 +18,7 @@ namespace Syscall {
     S(open)                                                                                                            \
     S(putchar)                                                                                                         \
     S(read)                                                                                                            \
+    S(seek)                                                                                                            \
     S(write)
 
 enum Number {

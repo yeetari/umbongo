@@ -2,11 +2,14 @@
 
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
+#include <kernel/SyscallTypes.hh>
 #include <kernel/devices/DevFs.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Pipe.hh>
 #include <kernel/fs/Vfs.hh>
+#include <kernel/mem/Region.hh>
+#include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -18,6 +21,18 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
+
+SysResult Process::sys_allocate_region(usize size, MemoryProt prot) {
+    auto access = RegionAccess::UserAccessible;
+    if ((prot & MemoryProt::Write) == MemoryProt::Write) {
+        access |= RegionAccess::Writable;
+    }
+    if ((prot & MemoryProt::Exec) == MemoryProt::Exec) {
+        access |= RegionAccess::Executable;
+    }
+    auto &region = m_virt_space->allocate_region(size, access);
+    return region.base();
+}
 
 SysResult Process::sys_close(uint32 fd) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
@@ -36,7 +51,7 @@ SysResult Process::sys_create_pipe(uint32 *fds) {
     uint32 write_fd = allocate_fd();
     m_fds[write_fd].emplace(pipe);
     fds[1] = write_fd;
-    return SysError::BadFd;
+    return 0;
 }
 
 SysResult Process::sys_create_process(const char *path) {
@@ -122,6 +137,18 @@ SysResult Process::sys_read(uint32 fd, void *data, usize size) {
         return SysError::BrokenHandle;
     }
     return m_fds[fd]->read(data, size);
+}
+
+SysResult Process::sys_seek(uint32 fd, usize offset) {
+    if (fd >= m_fds.size() || !m_fds[fd]) {
+        return SysError::BadFd;
+    }
+    if (!m_fds[fd]->valid()) {
+        m_fds[fd].clear();
+        return SysError::BrokenHandle;
+    }
+    m_fds[fd]->seek(offset);
+    return 0;
 }
 
 SysResult Process::sys_write(uint32 fd, void *data, usize size) {
