@@ -25,12 +25,22 @@ Process *s_base_process = nullptr;
 Hpet *s_hpet = nullptr;
 uint32 s_ticks = 0;
 
+void dump_backtrace(RegisterState *regs) {
+    auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
+    while (rbp != nullptr && rbp[1] != 0) {
+        logln("{:h}", rbp[1]);
+        rbp = reinterpret_cast<uint64 *>(*rbp);
+    }
+}
+
 void handle_fault(RegisterState *regs) {
     if ((regs->cs & 3u) == 0u) {
         logln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
+        dump_backtrace(regs);
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }
     logln("[#{}]: Fault {} caused by instruction at {:h}!", g_current_process->pid(), regs->int_num, regs->rip);
+    dump_backtrace(regs);
     g_current_process->kill();
     Scheduler::switch_next(regs);
 }
@@ -40,9 +50,11 @@ void handle_page_fault(RegisterState *regs) {
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
         logln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
+        dump_backtrace(regs);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
     }
     logln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", g_current_process->pid(), cr2, regs->rip);
+    dump_backtrace(regs);
     g_current_process->kill();
     Scheduler::switch_next(regs);
 }
