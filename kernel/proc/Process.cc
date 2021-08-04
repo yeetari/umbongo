@@ -60,6 +60,11 @@ Process::Process(usize pid, bool is_kernel, SharedPtr<VirtSpace> virt_space)
     }
 }
 
+Process::~Process() {
+    m_prev->m_next = m_next;
+    m_next->m_prev = m_prev;
+}
+
 uint32 Process::allocate_fd() {
     // TODO: Limits/error handling. Allocating 2^32 fds would overflow the vector.
     for (uint32 i = 0; i < m_fds.size(); i++) {

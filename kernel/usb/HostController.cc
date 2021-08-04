@@ -59,8 +59,7 @@ void watch_thread(HostController *controller) {
                 controller->on_detach(port);
             }
         }
-        // TODO: Yield.
-        asm volatile("hlt");
+        Scheduler::yield();
     }
 }
 

@@ -6,7 +6,6 @@
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Process.hh>
-#include <kernel/proc/Scheduler.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -226,7 +225,6 @@ extern uint8 k_interrupt_stubs_start;
 extern uint8 k_interrupt_stubs_end;
 
 extern "C" void flush_gdt(Gdt *gdt);
-extern "C" void switch_now(RegisterState *regs);
 extern "C" void syscall_stub();
 
 extern "C" void interrupt_handler(RegisterState *regs) {
@@ -248,15 +246,8 @@ extern "C" void syscall_handler(SyscallFrame *frame, LocalStorage *storage) {
     auto *process = storage->current_process;
     ASSERT_PEDANTIC(process != nullptr);
     ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
-    const bool is_exit = frame->rax == Syscall::exit;
     const auto result = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
     frame->rax = result.is_error() ? static_cast<uint64>(result.error()) : result.value();
-    if (is_exit) {
-        process->kill();
-        RegisterState regs{};
-        Scheduler::switch_next(&regs);
-        switch_now(&regs);
-    }
 }
 
 void Processor::initialise() {

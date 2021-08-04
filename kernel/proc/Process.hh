@@ -26,6 +26,7 @@ private:
     const bool m_is_kernel;
     SharedPtr<VirtSpace> m_virt_space;
 
+    Process *m_prev{nullptr};
     Process *m_next{nullptr};
     ProcessState m_state{ProcessState::Alive};
     RegisterState m_register_state{};
@@ -41,7 +42,7 @@ public:
 
     Process(const Process &) = delete;
     Process(Process &&) = delete;
-    ~Process() = default;
+    ~Process();
 
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;

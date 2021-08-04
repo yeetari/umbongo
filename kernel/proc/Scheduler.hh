@@ -16,5 +16,8 @@ struct Scheduler {
     static void insert_process(Process *process);
     static void start();
     static void switch_next(RegisterState *);
+    static void timer_handler(RegisterState *);
     static void wait(usize millis);
+    static void yield();
+    static void yield_and_kill();
 };

@@ -147,11 +147,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     auto *init_process = Process::create_user();
     init_process->exec("/system-server");
     Scheduler::insert_process(init_process);
-
-    // TODO: Kill current process and yield.
-    while (true) {
-        asm volatile("hlt");
-    }
+    Scheduler::yield_and_kill();
 }
 
 } // namespace

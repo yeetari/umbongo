@@ -83,7 +83,10 @@ SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
 }
 
 SysResult Process::sys_exit(usize code) const {
-    logln("[#{}]: sys_exit called with code {}", m_pid, code);
+    if (code != 0) {
+        dbgln("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
+    }
+    Scheduler::yield_and_kill();
     return 0;
 }
 

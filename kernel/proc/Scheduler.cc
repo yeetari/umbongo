@@ -61,6 +61,8 @@ void handle_page_fault(RegisterState *regs) {
 
 } // namespace
 
+extern "C" void switch_now(RegisterState *regs);
+
 void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     // Retrieve HPET address from ACPI tables and make sure the values are sane.
     const auto &hpet_address = hpet_table->base_address();
@@ -86,6 +88,7 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     // Initialise idle process.
     s_base_process = Process::create_kernel();
     g_current_process = s_base_process;
+    g_current_process->m_prev = g_current_process;
     g_current_process->m_next = g_current_process;
 
     // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
@@ -96,30 +99,47 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     Processor::wire_interrupt(6, &handle_fault);
     Processor::wire_interrupt(13, &handle_fault);
     Processor::wire_interrupt(14, &handle_page_fault);
-    Processor::wire_interrupt(k_timer_vector, &switch_next);
+    Processor::wire_interrupt(k_timer_vector, &timer_handler);
 }
 
 void Scheduler::insert_process(Process *process) {
-    process->m_next = s_base_process->m_next;
-    s_base_process->m_next = process;
+    auto *prev = s_base_process->m_prev;
+    process->m_prev = prev;
+    process->m_next = s_base_process;
+    s_base_process->m_prev = process;
+    prev->m_next = process;
 }
 
 void Scheduler::start() {
     asm volatile("sti");
     while (true) {
+        auto *process = s_base_process;
+        do {
+            auto *next = process->m_next;
+            if (process->m_state == ProcessState::Dead) {
+                delete process;
+            }
+            process = next;
+        } while (process != s_base_process);
         asm volatile("hlt");
     }
 }
 
 void Scheduler::switch_next(RegisterState *regs) {
-    memcpy(&g_current_process->m_register_state, regs, sizeof(RegisterState));
     do {
         g_current_process = g_current_process->m_next;
         ASSERT_PEDANTIC(g_current_process != nullptr);
     } while (g_current_process->m_state != ProcessState::Alive);
     memcpy(regs, &g_current_process->m_register_state, sizeof(RegisterState));
-    MemoryManager::switch_space(*g_current_process->m_virt_space);
+    if (MemoryManager::current_space() != g_current_process->m_virt_space.obj()) {
+        MemoryManager::switch_space(*g_current_process->m_virt_space);
+    }
     Processor::apic()->set_timer_count(s_ticks);
+}
+
+void Scheduler::timer_handler(RegisterState *regs) {
+    memcpy(&g_current_process->m_register_state, regs, sizeof(RegisterState));
+    switch_next(regs);
 }
 
 void Scheduler::wait(usize millis) {
@@ -127,4 +147,15 @@ void Scheduler::wait(usize millis) {
     //       another thread and can potentially yield.
     ASSERT_PEDANTIC(s_hpet != nullptr);
     s_hpet->spin(millis);
+}
+
+void Scheduler::yield() {
+    RegisterState regs{};
+    switch_next(&regs);
+    switch_now(&regs);
+}
+
+void Scheduler::yield_and_kill() {
+    g_current_process->kill();
+    yield();
 }
