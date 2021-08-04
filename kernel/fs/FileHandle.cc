@@ -14,16 +14,20 @@ uintptr FileHandle::mmap(VirtSpace &virt_space) const {
     return m_file->mmap(virt_space);
 }
 
-usize FileHandle::read(void *data, usize size) const {
-    return m_file->read({data, size}, m_offset);
+usize FileHandle::read(void *data, usize size) {
+    usize bytes_read = m_file->read({data, size}, m_offset);
+    m_offset += bytes_read;
+    return bytes_read;
 }
 
 void FileHandle::seek(uint64 offset) {
     m_offset = offset;
 }
 
-usize FileHandle::write(void *data, usize size) const {
-    return m_file->write({data, size}, m_offset);
+usize FileHandle::write(void *data, usize size) {
+    usize bytes_written = m_file->write({data, size}, m_offset);
+    m_offset += bytes_written;
+    return bytes_written;
 }
 
 bool FileHandle::valid() const {

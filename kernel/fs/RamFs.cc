@@ -36,10 +36,12 @@ SharedPtr<File> RamFsInode::open() {
 }
 
 usize RamFsInode::read(Span<void> data, usize offset) {
-    // TODO: Verify offset in range.
+    if (offset >= m_data.size()) {
+        return 0;
+    }
     usize size = data.size();
-    if (size > m_data.size()) {
-        size = m_data.size();
+    if (size > m_data.size() - offset) {
+        size = m_data.size() - offset;
     }
     memcpy(data.data(), m_data.data() + offset, size);
     return size;

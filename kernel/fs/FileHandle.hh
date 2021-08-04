@@ -17,8 +17,8 @@ public:
 
     SysResult ioctl(IoctlRequest request, void *arg) const;
     uintptr mmap(VirtSpace &virt_space) const;
-    usize read(void *data, usize size) const;
+    usize read(void *data, usize size);
     void seek(uint64 offset);
-    usize write(void *data, usize size) const;
+    usize write(void *data, usize size);
     bool valid() const;
 };
