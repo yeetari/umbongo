@@ -73,7 +73,8 @@ Vector<T, SizeType>::Vector(SizeType size, Args &&...args) {
 
 template <typename T, typename SizeType>
 Vector<T, SizeType>::Vector(const Vector &other) {
-    ensure_capacity(m_size = other.size());
+    ensure_capacity(other.size());
+    m_size = other.size();
     if constexpr (!IsTriviallyCopyable<T>) {
         for (auto *data = m_data; const auto &elem : other) {
             new (data++) T(elem);
