@@ -22,7 +22,9 @@ public:
 
     // TODO: Implement these.
     String &operator=(const String &) = delete;
-    String &operator=(String &&) = delete;
+    String &operator=(String &&) noexcept;
+
+    char operator[](usize index) const;
 
     StringView view() const { return {m_data, m_length}; }
 
