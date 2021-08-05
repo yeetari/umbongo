@@ -31,6 +31,13 @@ usize main(usize, const char **) {
         }
 
         for (usize i = 0; i < static_cast<usize>(nread); i++) {
+            // Clear cursor.
+            for (uint32 y = 0; y < g_font.line_height() - 2; y++) {
+                for (uint32 x = 0; x < g_font.advance(); x++) {
+                    fb[(current_y + y) * fb_info.height + (current_x + x)] = 0;
+                }
+            }
+
             char ch = buf[i];
             if (ch == '\n') {
                 current_x = 0;
@@ -60,6 +67,13 @@ usize main(usize, const char **) {
                 }
             }
             current_x += g_font.advance();
+        }
+
+        // Draw cursor.
+        for (uint32 y = 0; y < g_font.line_height() - 2; y++) {
+            for (uint32 x = 0; x < g_font.advance(); x++) {
+                fb[(current_y + y) * fb_info.height + (current_x + x)] = 0xffffffff;
+            }
         }
     }
 }
