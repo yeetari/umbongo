@@ -1,10 +1,7 @@
-#include <core/File.hh>
+#include <core/Process.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
-#include <ustd/Span.hh>
-#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 usize main(usize, const char **) {
@@ -20,7 +17,7 @@ usize main(usize, const char **) {
         Syscall::invoke(Syscall::close, pipe_fds[0]);
     }
 
-    if (Syscall::invoke(Syscall::create_process, "/console-server") < 0) {
+    if (core::create_process("/console-server") < 0) {
         ENSURE_NOT_REACHED("Failed to start console server");
     }
 
@@ -29,24 +26,17 @@ usize main(usize, const char **) {
         Syscall::invoke(Syscall::close, pipe_fds[1]);
     }
 
-    core::File file("/home/hello");
-    ENSURE(file, "Failed to open /home/hello");
-
-    Array<char, 20> data{'\0'};
-    file.read(data.span());
-
-    auto pid = Syscall::invoke<uint64>(Syscall::getpid);
-    logln("[#{}]: {}", pid, static_cast<const char *>(data.data()));
-
-    core::File keyboard;
-    while (true) {
-        char ch = '\0';
-        auto nread = keyboard.read({&ch, 1});
-        if (nread < 0) {
-            while (!keyboard.open("/dev/kb")) {
-            }
-        } else if (nread == 1) {
-            log("{:c}", ch);
-        }
+    ssize kb_fd = -1;
+    while (kb_fd < 0) {
+        kb_fd = Syscall::invoke(Syscall::open, "/dev/kb");
     }
+    Syscall::invoke(Syscall::dup_fd, kb_fd, 0);
+    if (kb_fd != 0) {
+        Syscall::invoke(Syscall::close, kb_fd);
+    }
+
+    if (core::create_process("/shell") < 0) {
+        ENSURE_NOT_REACHED("Failed to start shell");
+    }
+    return 0;
 }
