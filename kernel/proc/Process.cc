@@ -1,6 +1,8 @@
 #include <kernel/proc/Process.hh>
 
 #include <elf/Elf.hh>
+#include <kernel/SysError.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -76,9 +78,12 @@ uint32 Process::allocate_fd() {
     return m_fds.size() - 1;
 }
 
-void Process::exec(StringView path) {
-    // TODO: Proper validation, check file opened successfully etc.
+SysResult Process::exec(StringView path, const Vector<String> &args) {
     auto file = Vfs::open(path);
+    if (!file) {
+        return SysError::NonExistent;
+    }
+    // TODO: Proper validation.
     auto &stack_region = m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     m_register_state.rsp = stack_region.base() + stack_region.size();
 
@@ -127,9 +132,11 @@ void Process::exec(StringView path) {
         *(reinterpret_cast<char *>(m_register_state.rsp) + arg.length()) = '\0';
         argv.push(m_register_state.rsp);
     };
-    push_arg(!interpreter_path.empty() ? interpreter_path.view() : path);
     if (!interpreter_path.empty()) {
         push_arg(path);
+    }
+    for (const auto &arg : args) {
+        push_arg(arg.view());
     }
 
     for (uint32 i = 0; i < argv.size(); i++) {
@@ -143,6 +150,7 @@ void Process::exec(StringView path) {
     // Allocate some space for heap storage.
     m_virt_space->create_region(6_TiB, 2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     MemoryManager::switch_space(*original_space);
+    return 0;
 }
 
 void Process::kill() {

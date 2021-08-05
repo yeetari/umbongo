@@ -4,9 +4,10 @@
 #include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/FileHandle.hh>
-#include <kernel/mem/VirtSpace.hh>
-#include <ustd/Optional.hh> // IWYU pragma: keep
+#include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
+#include <ustd/Optional.hh>        // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
+#include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -47,14 +48,14 @@ public:
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;
 
-    void exec(StringView path);
+    SysResult exec(StringView path, const Vector<String> &args = {});
     void kill();
     void set_entry_point(uintptr entry);
 
     SysResult sys_allocate_region(usize size, MemoryProt prot);
     SysResult sys_close(uint32 fd);
     SysResult sys_create_pipe(uint32 *fds);
-    SysResult sys_create_process(const char *path);
+    SysResult sys_create_process(const char *path, const char **argv, FdPair *copy_fds);
     SysResult sys_dup_fd(uint32 src, uint32 dst);
     SysResult sys_exit(usize code) const;
     SysResult sys_getpid() const;

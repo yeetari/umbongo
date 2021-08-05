@@ -2,6 +2,11 @@
 
 #include <ustd/Types.hh>
 
+struct FdPair {
+    uint32 parent;
+    uint32 child;
+};
+
 struct FramebufferInfo {
     uint32 width;
     uint32 height;

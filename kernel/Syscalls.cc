@@ -55,7 +55,7 @@ SysResult Process::sys_create_pipe(uint32 *fds) {
     return 0;
 }
 
-SysResult Process::sys_create_process(const char *path) {
+SysResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
     auto *process = Process::create_user();
     process->m_fds.grow(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
@@ -63,8 +63,31 @@ SysResult Process::sys_create_process(const char *path) {
             process->m_fds[i].emplace(*m_fds[i]);
         }
     }
+
+    // TODO: Proper validation.
+    ASSERT(argv != nullptr);
+    ASSERT(copy_fds != nullptr);
+
+    Vector<String> args;
+    for (usize i = 0;; i++) {
+        if (argv[i] == nullptr) {
+            break;
+        }
+        args.push(argv[i]);
+    }
+    for (usize i = 0;; i++) {
+        if (copy_fds[i].parent == 0 && copy_fds[i].child == 0) {
+            break;
+        }
+        auto &fd_pair = copy_fds[i];
+        process->m_fds.grow(fd_pair.child + 1);
+        process->m_fds[fd_pair.child].emplace(*m_fds[fd_pair.parent]);
+    }
+
     String copied_path(path);
-    process->exec(copied_path.view());
+    if (auto rc = process->exec(copied_path.view(), args); rc.is_error()) {
+        return rc;
+    }
     Scheduler::insert_process(process);
     return process->pid();
 }

@@ -8,11 +8,7 @@
 #include <ustd/Types.hh>
 
 usize main(usize argc, const char **argv) {
-    if (argc != 2) {
-        return 1;
-    }
-
-    core::File file(argv[1]);
+    core::File file(argv[0]);
     if (!file) {
         return 1;
     }
@@ -76,7 +72,7 @@ usize main(usize argc, const char **argv) {
             relocation_entry_size = entry.value;
             break;
         default:
-            dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[1]);
+            dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
@@ -100,7 +96,7 @@ usize main(usize argc, const char **argv) {
             *ptr = static_cast<usize>(static_cast<ssize>(base_offset) + rela.addend);
             break;
         default:
-            dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[1]);
+            dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
