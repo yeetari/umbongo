@@ -14,6 +14,7 @@ jobs:
             clang \
             cmake \
             clang-tidy \
+            libstdc++-11-dev \
             lld \
             nasm \
             parallel
@@ -46,6 +47,7 @@ jobs:
             clang \
             cmake \
             cppcheck \
+            libstdc++-11-dev \
             lld \
             nasm
       - name: Checkout

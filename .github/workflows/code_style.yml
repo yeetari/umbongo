@@ -32,6 +32,7 @@ jobs:
             clang \
             cmake \
             libclang-dev \
+            libstdc++-11-dev \
             lld \
             nasm \
             parallel \
