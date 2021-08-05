@@ -124,6 +124,19 @@ SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
     return m_fds[fd]->ioctl(request, arg);
 }
 
+SysResult Process::sys_is_alive(usize pid) {
+    Process *current = this;
+    Process *found = nullptr;
+    do {
+        if (current->m_pid == pid) {
+            found = current;
+            break;
+        }
+        current = current->m_next;
+    } while (current != this);
+    return found != nullptr && found->m_state == ProcessState::Alive;
+}
+
 SysResult Process::sys_mkdir(const char *path) const {
     Vfs::mkdir(path);
     return 0;

@@ -13,6 +13,7 @@ namespace Syscall {
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
     S(ioctl)                                                                                                           \
+    S(is_alive)                                                                                                        \
     S(mkdir)                                                                                                           \
     S(mmap)                                                                                                            \
     S(mount)                                                                                                           \
