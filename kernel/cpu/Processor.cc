@@ -274,7 +274,6 @@ void Processor::initialise() {
     // Allocate CPU local storage struct and allocate some kernel stack for syscalls/interrupt handling.
     auto *storage = new LocalStorage;
     storage->kernel_stack = new char[4_KiB] + 4_KiB;
-    write_msr(k_msr_gs_base, reinterpret_cast<uintptr>(storage));
 
     // Set kernel stack for interrupt handling. Also set IO permission bitmap base to `sizeof(Tss)`. This makes any ring
     // 3 attempt to use IO ports fail with a #GP exception since the TSS limit is also its size.
@@ -290,6 +289,7 @@ void Processor::initialise() {
 
     // Enable CR0.WP (Write Protect). This prevents the kernel from writing to read only pages.
     write_cr0(read_cr0() | (1u << 16u));
+    write_msr(k_msr_gs_base, reinterpret_cast<uintptr>(storage));
 
     // Enable some hardware protection features, if available.
     CpuId extended_features(0x7);
