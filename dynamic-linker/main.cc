@@ -40,6 +40,8 @@ usize main(usize argc, const char **argv) {
             dynamic_entry_count = phdr.filesz / sizeof(elf::DynamicEntry);
             dynamic_table_offset = phdr.offset;
         } else if (phdr.type == elf::SegmentType::Load) {
+            // TODO: Only bother zeroing bss.
+            memset(reinterpret_cast<void *>(base_offset + phdr.vaddr), 0, phdr.memsz);
             file.read({reinterpret_cast<void *>(base_offset + phdr.vaddr), phdr.filesz}, phdr.offset);
         }
     }
