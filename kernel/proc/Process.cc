@@ -121,7 +121,7 @@ SysResult Process::exec(StringView path, const Vector<String> &args) {
 
         usize copy_offset = phdr.vaddr & 0xfffu;
         ASSERT(region.base() + copy_offset + phdr.memsz <= region.base() + region.size());
-        executable->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.memsz}, phdr.offset);
+        executable->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.filesz}, phdr.offset);
     }
 
     // Setup user stack.
