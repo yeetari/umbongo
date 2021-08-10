@@ -1,5 +1,6 @@
 #include <kernel/fs/Vfs.hh>
 
+#include <kernel/SyscallTypes.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -133,10 +134,16 @@ void Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
     s_data->mounts.emplace(host, ustd::move(fs));
 }
 
-SharedPtr<File> Vfs::open(StringView path) {
+SharedPtr<File> Vfs::open(StringView path, OpenMode mode) {
     auto *inode = resolve_path(path);
     if (inode == nullptr) {
+        if ((mode & OpenMode::Create) == OpenMode::Create) {
+            return Vfs::create(path);
+        }
         return {};
+    }
+    if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
+        inode->truncate();
     }
     return inode->open();
 }

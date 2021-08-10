@@ -1,5 +1,6 @@
 #include <core/Error.hh>
 #include <kernel/Syscall.hh>
+#include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
 #include <ustd/Types.hh>
@@ -8,7 +9,7 @@
 usize main(usize argc, const char **argv) {
     Vector<uint32> fds;
     for (usize i = 1; i < argc; i++) {
-        ssize fd = Syscall::invoke(Syscall::open, argv[i]);
+        ssize fd = Syscall::invoke(Syscall::open, argv[i], OpenMode::None);
         if (fd < 0) {
             logln("cat: {}: {}", argv[i], core::error_string(fd));
             return 1;

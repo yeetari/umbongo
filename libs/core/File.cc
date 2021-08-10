@@ -1,5 +1,6 @@
 #include <core/File.hh>
 #include <kernel/Syscall.hh>
+#include <kernel/SyscallTypes.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Span.hh>
@@ -9,7 +10,7 @@
 namespace core {
 
 File::File(StringView path) {
-    auto fd = Syscall::invoke(Syscall::open, path.data());
+    auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
     if (fd >= 0) {
         m_fd.emplace(static_cast<uint32>(fd));
     }
@@ -28,7 +29,7 @@ void File::close() {
 
 bool File::open(StringView path) {
     close();
-    auto fd = Syscall::invoke(Syscall::open, path.data());
+    auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
     if (fd >= 0) {
         m_fd.emplace(static_cast<uint32>(fd));
         return true;

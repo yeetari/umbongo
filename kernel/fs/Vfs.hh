@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SyscallTypes.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/StringView.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
@@ -14,5 +15,5 @@ struct Vfs {
     static SharedPtr<File> create(StringView path);
     static void mkdir(StringView path);
     static void mount(StringView path, UniquePtr<FileSystem> &&fs);
-    static SharedPtr<File> open(StringView path);
+    static SharedPtr<File> open(StringView path, OpenMode mode);
 };

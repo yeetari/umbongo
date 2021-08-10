@@ -160,9 +160,9 @@ SysResult Process::sys_mount(const char *target, const char *fs_type) const {
     return 0;
 }
 
-SysResult Process::sys_open(const char *path) {
+SysResult Process::sys_open(const char *path, OpenMode mode) {
     // Open file first so we don't leak a file descriptor.
-    auto file = Vfs::open(path);
+    auto file = Vfs::open(path, mode);
     if (!file) {
         return SysError::NonExistent;
     }

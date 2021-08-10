@@ -3,6 +3,7 @@
 #include <elf/Elf.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
+#include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -79,7 +80,7 @@ uint32 Process::allocate_fd() {
 }
 
 SysResult Process::exec(StringView path, const Vector<String> &args) {
-    auto file = Vfs::open(path);
+    auto file = Vfs::open(path, OpenMode::None);
     if (!file) {
         return SysError::NonExistent;
     }
@@ -93,7 +94,7 @@ SysResult Process::exec(StringView path, const Vector<String> &args) {
     MemoryManager::switch_space(*m_virt_space);
 
     auto interpreter_path = interpreter_for(*file);
-    auto executable = !interpreter_path.empty() ? Vfs::open(interpreter_path.view()) : file;
+    auto executable = !interpreter_path.empty() ? Vfs::open(interpreter_path.view(), OpenMode::None) : file;
 
     // TODO: Check file read success.
     elf::Header header{};

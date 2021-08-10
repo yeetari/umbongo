@@ -1,5 +1,6 @@
 #include <core/Process.hh>
 #include <kernel/Syscall.hh>
+#include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
@@ -28,7 +29,7 @@ usize main(usize, const char **) {
 
     ssize kb_fd = -1;
     while (kb_fd < 0) {
-        kb_fd = Syscall::invoke(Syscall::open, "/dev/kb");
+        kb_fd = Syscall::invoke(Syscall::open, "/dev/kb", OpenMode::None);
     }
     Syscall::invoke(Syscall::dup_fd, kb_fd, 0);
     if (kb_fd != 0) {

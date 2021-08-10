@@ -64,7 +64,7 @@ public:
     SysResult sys_mkdir(const char *path) const;
     SysResult sys_mmap(uint32 fd) const;
     SysResult sys_mount(const char *target, const char *fs_type) const;
-    SysResult sys_open(const char *path);
+    SysResult sys_open(const char *path, OpenMode mode);
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);
     SysResult sys_seek(uint32 fd, usize offset);
