@@ -140,6 +140,8 @@ SysResult Process::exec(StringView path, const Vector<String> &args) {
         push_arg(arg.view());
     }
 
+    m_register_state.rsp -= sizeof(uintptr);
+    *reinterpret_cast<uintptr *>(m_register_state.rsp) = 0;
     for (uint32 i = 0; i < argv.size(); i++) {
         m_register_state.rsp -= sizeof(uintptr);
         *reinterpret_cast<uintptr *>(m_register_state.rsp) = argv[argv.size() - i - 1];
