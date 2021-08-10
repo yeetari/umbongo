@@ -8,8 +8,16 @@
 
 namespace {
 
-bool is_alpha(char ch) {
-    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+// TODO: Duplicated with libposix.
+char *strchrnul(const char *str, int c) {
+    for (auto ch = static_cast<char>(c); *str != '\0' && *str != ch; str++) {
+    }
+    return const_cast<char *>(str);
+}
+
+char *strchr(const char *str, int c) {
+    char *ret = strchrnul(str, c);
+    return *ret == c ? ret : nullptr;
 }
 
 bool is_space(char ch) {
@@ -17,7 +25,7 @@ bool is_space(char ch) {
 }
 
 bool is_identifier_character(char ch) {
-    return is_alpha(ch) || ch == '_' || ch == '/';
+    return strchr(" |\n", ch) == nullptr;
 }
 
 } // namespace
