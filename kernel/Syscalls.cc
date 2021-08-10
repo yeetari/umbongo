@@ -187,7 +187,7 @@ SysResult Process::sys_read(uint32 fd, void *data, usize size) {
     return m_fds[fd]->read(data, size);
 }
 
-SysResult Process::sys_seek(uint32 fd, usize offset) {
+SysResult Process::sys_seek(uint32 fd, usize offset, SeekMode mode) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
     }
@@ -195,8 +195,7 @@ SysResult Process::sys_seek(uint32 fd, usize offset) {
         m_fds[fd].clear();
         return SysError::BrokenHandle;
     }
-    m_fds[fd]->seek(offset);
-    return 0;
+    return m_fds[fd]->seek(offset, mode);
 }
 
 SysResult Process::sys_write(uint32 fd, void *data, usize size) {

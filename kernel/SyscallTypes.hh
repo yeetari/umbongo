@@ -28,6 +28,11 @@ enum class OpenMode : usize {
     Truncate = 1u << 1u,
 };
 
+enum class SeekMode {
+    Add,
+    Set,
+};
+
 inline constexpr MemoryProt operator&(MemoryProt a, MemoryProt b) {
     return static_cast<MemoryProt>(static_cast<usize>(a) & static_cast<usize>(b));
 }

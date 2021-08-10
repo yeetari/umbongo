@@ -48,7 +48,7 @@ ssize File::read(Span<void> data, usize offset) {
     if (!m_fd) {
         return -1;
     }
-    if (auto rc = Syscall::invoke(Syscall::seek, *m_fd, offset); rc < 0) {
+    if (auto rc = Syscall::invoke(Syscall::seek, *m_fd, offset, SeekMode::Set); rc < 0) {
         return rc;
     }
     return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());

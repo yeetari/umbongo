@@ -67,7 +67,7 @@ public:
     SysResult sys_open(const char *path, OpenMode mode);
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);
-    SysResult sys_seek(uint32 fd, usize offset);
+    SysResult sys_seek(uint32 fd, usize offset, SeekMode mode);
     SysResult sys_write(uint32 fd, void *data, usize size);
 
     usize pid() const { return m_pid; }

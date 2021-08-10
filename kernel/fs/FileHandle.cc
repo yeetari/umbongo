@@ -20,8 +20,16 @@ usize FileHandle::read(void *data, usize size) {
     return bytes_read;
 }
 
-void FileHandle::seek(uint64 offset) {
-    m_offset = offset;
+usize FileHandle::seek(usize offset, SeekMode mode) {
+    switch (mode) {
+    case SeekMode::Add:
+        m_offset += offset;
+        break;
+    case SeekMode::Set:
+        m_offset = offset;
+        break;
+    }
+    return m_offset;
 }
 
 usize FileHandle::write(void *data, usize size) {

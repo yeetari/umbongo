@@ -10,7 +10,7 @@ class VirtSpace;
 
 class FileHandle {
     SharedPtr<File> m_file;
-    uint64 m_offset{0};
+    usize m_offset{0};
 
 public:
     explicit FileHandle(const SharedPtr<File> &file) : m_file(file) {}
@@ -18,7 +18,7 @@ public:
     SysResult ioctl(IoctlRequest request, void *arg) const;
     uintptr mmap(VirtSpace &virt_space) const;
     usize read(void *data, usize size);
-    void seek(uint64 offset);
+    usize seek(usize offset, SeekMode mode);
     usize write(void *data, usize size);
     bool valid() const;
 };
