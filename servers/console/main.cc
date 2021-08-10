@@ -34,7 +34,7 @@ usize main(usize, const char **) {
             // Clear cursor.
             for (uint32 y = 0; y < g_font.line_height() - 2; y++) {
                 for (uint32 x = 0; x < g_font.advance(); x++) {
-                    fb[(current_y + y) * fb_info.height + (current_x + x)] = 0;
+                    fb[(current_y + y) * fb_info.width + (current_x + x)] = 0;
                 }
             }
 
@@ -51,7 +51,7 @@ usize main(usize, const char **) {
                 current_x -= g_font.advance();
                 for (uint32 y = 0; y < g_font.line_height(); y++) {
                     for (uint32 x = 0; x < g_font.advance(); x++) {
-                        fb[(current_y + y) * fb_info.height + (current_x + x)] = 0;
+                        fb[(current_y + y) * fb_info.width + (current_x + x)] = 0;
                     }
                 }
                 continue;
@@ -63,7 +63,7 @@ usize main(usize, const char **) {
                     const auto x2 = static_cast<uint32>(static_cast<int32>(x1 + current_x) + glyph->left);
                     const auto y2 =
                         static_cast<uint32>(static_cast<int32>(y1 + current_y + g_font.ascender()) - glyph->top);
-                    fb[y2 * fb_info.height + x2] = colour | (colour << 8u) | (colour << 16u);
+                    fb[y2 * fb_info.width + x2] = colour | (colour << 8u) | (colour << 16u);
                 }
             }
             current_x += g_font.advance();
@@ -72,7 +72,7 @@ usize main(usize, const char **) {
         // Draw cursor.
         for (uint32 y = 0; y < g_font.line_height() - 2; y++) {
             for (uint32 x = 0; x < g_font.advance(); x++) {
-                fb[(current_y + y) * fb_info.height + (current_x + x)] = 0xffffffff;
+                fb[(current_y + y) * fb_info.width + (current_x + x)] = 0xffffffff;
             }
         }
     }
