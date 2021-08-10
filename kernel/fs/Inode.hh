@@ -30,5 +30,6 @@ public:
     virtual usize read(Span<void> data, usize offset) = 0;
     virtual void remove(StringView name) = 0;
     virtual usize size() = 0;
+    virtual void truncate() = 0;
     virtual usize write(Span<const void> data, usize offset) = 0;
 };

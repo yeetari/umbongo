@@ -26,6 +26,7 @@ public:
     usize read(Span<void> data, usize offset) override;
     void remove(StringView name) override;
     usize size() override;
+    void truncate() override;
     usize write(Span<const void> data, usize offset) override;
 };
 
