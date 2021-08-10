@@ -71,8 +71,8 @@ add_custom_target(image
     BYPRODUCTS fs.img
     # Can't depend on install target, call it manually instead.
     COMMAND ${CMAKE_COMMAND} --build . --target install
-    COMMAND dd if=/dev/zero of=fs.img bs=1k count=1440
-    COMMAND mformat -i fs.img -f 1440 ::
+    COMMAND dd if=/dev/zero of=fs.img bs=1k count=28800
+    COMMAND mformat -i fs.img -f 2880 -h 20 ::
     COMMAND mcopy -si fs.img ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
     COMMAND mcopy -si fs.img ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
     USES_TERMINAL)
