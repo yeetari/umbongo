@@ -1,0 +1,29 @@
+From f691c868f9bea7d14c6ace5a4c1b663e076283fc Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Sun, 8 Aug 2021 14:46:58 +0100
+Subject: [PATCH] Disable standard header check
+
+---
+ configure | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/configure b/configure
+index d58618b..633fe49 100755
+--- a/configure
++++ b/configure
+@@ -5233,12 +5233,6 @@ fi
+ 
+ done
+ 
+-
+-# REQUIRE standard C headers
+-if test "$ac_cv_header_stdc" != yes; then
+-	as_fn_error $? "Standard (ANSI/ISO C89) header files are required." "$LINENO" 5
+-fi
+-
+ #
+ # Checks for typedefs, structures, and compiler characteristics.
+ #
+-- 
+2.32.0
+

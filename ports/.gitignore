@@ -1,0 +1,5 @@
+*/*
+!*/install.sh
+!*/patches
+!*/patches/*
+!*/.gitignore
