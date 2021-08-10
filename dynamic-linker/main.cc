@@ -4,6 +4,7 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Memory.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
