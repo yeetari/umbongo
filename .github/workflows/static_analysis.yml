@@ -61,6 +61,7 @@ jobs:
             --project=build/compile_commands.json \
             --suppress=*:*freetype\* \
             --suppress=*:*Vector.hh \
+            --suppress=va_list_usedBeforeStarted \
             --quiet \
             2>&1 | tee output
           if [ -s output ]; then exit 1; fi

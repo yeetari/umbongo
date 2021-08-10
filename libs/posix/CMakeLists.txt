@@ -1,0 +1,6 @@
+add_library(posix assert.cc ctype.cc init.cc stdio.cc stdlib.cc string.cc time.cc)
+install(TARGETS posix DESTINATION lib)
+target_compile_options(posix PRIVATE -Wno-keyword-macro -Wno-reserved-id-macro)
+target_gc_sections(posix)
+target_include_directories(posix PUBLIC .)
+target_link_libraries(posix PRIVATE ustd)
