@@ -1,0 +1,69 @@
+From 8ba6f27ba7765442954ff7f8368c3e088c13f71e Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Thu, 12 Aug 2021 11:19:50 +0100
+Subject: [PATCH 1/3] add umbongo target
+
+---
+ bfd/config.bfd    | 5 +++++
+ config.sub        | 1 +
+ gas/configure.tgt | 1 +
+ ld/configure.tgt  | 3 +++
+ 4 files changed, 10 insertions(+)
+
+diff --git a/bfd/config.bfd b/bfd/config.bfd
+index 30087e3b..9ace9101 100644
+--- a/bfd/config.bfd
++++ b/bfd/config.bfd
+@@ -694,6 +694,11 @@ case "${targ}" in
+     targ_selvecs=i386_elf32_vec
+     want64=true
+     ;;
++  x86_64-*-umbongo*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
+ #endif
+   i[3-7]86-*-lynxos*)
+     targ_defvec=i386_elf32_vec
+diff --git a/config.sub b/config.sub
+index 7384e919..9b488e6e 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1700,6 +1700,7 @@ case $os in
+ 	# The portable systems comes first.
+ 	# Each alternative MUST end in a * to match a version number.
+ 	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++        | umbongo* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
+diff --git a/gas/configure.tgt b/gas/configure.tgt
+index 338892ad..9b11fa75 100644
+--- a/gas/configure.tgt
++++ b/gas/configure.tgt
+@@ -235,6 +235,7 @@ case ${generic_target} in
+     esac ;;
+   i386-*-lynxos*)			fmt=elf em=lynx ;;
+   i386-*-redox*)			fmt=elf ;;
++  i386-*-umbongo*)                      fmt=elf ;;
+   i386-*-solaris*)			fmt=elf em=solaris ;;
+   i386-*-freebsd* \
+   | i386-*-kfreebsd*-gnu)		fmt=elf em=freebsd ;;
+diff --git a/ld/configure.tgt b/ld/configure.tgt
+index 6205d7c9..be47bad9 100644
+--- a/ld/configure.tgt
++++ b/ld/configure.tgt
+@@ -945,6 +945,9 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+ x86_64-*-redox*)	targ_emul=elf_x86_64
+ 			targ_extra_emuls=elf_i386
+ 			;;
++x86_64-*-umbongo*)      targ_emul=elf_x86_64
++                        targ_extra_emuls=elf_i386
++                        ;;
+ x86_64-*-solaris2*)	targ_emul=elf_x86_64_sol2
+ 			targ_extra_emuls="elf_x86_64 elf_i386_sol2 elf_i386_ldso elf_i386 elf_iamcu elf_l1om elf_k1om"
+ 			targ_extra_libpath=$targ_extra_emuls
+-- 
+2.32.0
+

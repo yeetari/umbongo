@@ -1,0 +1,29 @@
+From 814f7c414cbd0e3e749d23ee6ab158e6d3fb7194 Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Thu, 12 Aug 2021 11:33:21 +0100
+Subject: [PATCH 2/3] remove uint
+
+---
+ libiberty/rust-demangle.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libiberty/rust-demangle.c b/libiberty/rust-demangle.c
+index df09b7b8..21566f5f 100644
+--- a/libiberty/rust-demangle.c
++++ b/libiberty/rust-demangle.c
+@@ -75,10 +75,10 @@ struct rust_demangler
+   int version;
+ 
+   /* Recursion depth.  */
+-  uint recursion;
++  unsigned int recursion;
+   /* Maximum number of times demangle_path may be called recursively.  */
+ #define RUST_MAX_RECURSION_COUNT  1024
+-#define RUST_NO_RECURSION_LIMIT   ((uint) -1)
++#define RUST_NO_RECURSION_LIMIT   ((unsigned int) -1)
+ 
+   uint64_t bound_lifetime_depth;
+ };
+-- 
+2.32.0
+

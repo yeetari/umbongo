@@ -1,0 +1,24 @@
+From 94a2c510b3c65176f1e9dcf7e2b87c0f5387ee1f Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Thu, 12 Aug 2021 11:42:19 +0100
+Subject: [PATCH 3/3] remove memory header
+
+---
+ binutils/testsuite/gentestdlls.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/binutils/testsuite/gentestdlls.c b/binutils/testsuite/gentestdlls.c
+index 6eef3a9b..01d591fb 100644
+--- a/binutils/testsuite/gentestdlls.c
++++ b/binutils/testsuite/gentestdlls.c
+@@ -25,7 +25,6 @@
+    See:
+    https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-335.pdf  */
+ 
+-#include <memory.h>
+ #include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+-- 
+2.32.0
+
