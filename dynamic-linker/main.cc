@@ -22,7 +22,6 @@ usize main(usize argc, const char **argv) {
         elf::ProgramHeader phdr{};
         file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i);
         if (phdr.type == elf::SegmentType::Load) {
-            ASSERT(phdr.align == 4_KiB);
             ASSERT(phdr.filesz <= phdr.memsz);
             region_size += round_up(phdr.memsz + (phdr.vaddr & 0xfffu), phdr.align);
         }
