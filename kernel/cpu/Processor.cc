@@ -330,6 +330,11 @@ void Processor::initialise() {
     // rflags will be preserved in r11 by the CPU.
     write_msr(k_msr_lstar, reinterpret_cast<uintptr>(&syscall_stub));
     write_msr(k_msr_sfmask, ~0x2u);
+
+    // Enable SSE.
+    // TODO: Save SSE state on context switch. Also remove `-mno-sse` from applications, and maybe the kernel.
+    write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
+    write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
 }
 
 void Processor::set_apic(LocalApic *apic) {
