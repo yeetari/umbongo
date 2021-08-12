@@ -20,5 +20,7 @@ public:
     usize read(void *data, usize size);
     usize seek(usize offset, SeekMode mode);
     usize write(void *data, usize size);
+
+    usize size() const;
     bool valid() const;
 };

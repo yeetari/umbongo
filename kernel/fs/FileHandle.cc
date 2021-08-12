@@ -38,6 +38,10 @@ usize FileHandle::write(void *data, usize size) {
     return bytes_written;
 }
 
+usize FileHandle::size() const {
+    return m_file->size();
+}
+
 bool FileHandle::valid() const {
     return m_file->valid();
 }

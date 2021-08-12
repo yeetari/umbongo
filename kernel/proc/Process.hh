@@ -68,6 +68,7 @@ public:
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);
     SysResult sys_seek(uint32 fd, usize offset, SeekMode mode);
+    SysResult sys_size(uint32 fd);
     SysResult sys_write(uint32 fd, void *data, usize size);
 
     usize pid() const { return m_pid; }

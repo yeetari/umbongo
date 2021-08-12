@@ -21,6 +21,7 @@ namespace Syscall {
     S(putchar)                                                                                                         \
     S(read)                                                                                                            \
     S(seek)                                                                                                            \
+    S(size)                                                                                                            \
     S(write)
 
 enum Number {
