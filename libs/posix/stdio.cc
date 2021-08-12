@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -39,6 +40,7 @@ public:
     ssize_t tell();
     size_t write(const void *data, size_t size);
 
+    uint32_t fd() const { return m_fd; }
     int error() const { return m_error; }
     bool eof() const { return m_eof; }
 };
@@ -64,11 +66,12 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
             continue;
         }
 
+        bool has_dot = false;
         bool left_pad = false;
         size_t long_qualifiers = 0;
         size_t field_width = 0;
         auto put_string = [&](StringView string) {
-            if (field_width == 0 || field_width < string.length()) {
+            if (!has_dot && (field_width == 0 || field_width < string.length())) {
                 field_width = string.length();
             }
             size_t pad_amount = field_width > string.length() ? field_width - string.length() : 0;
@@ -90,8 +93,22 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
 
     has_more:
         p++;
+        if (*p == '.') {
+            has_dot = true;
+            if (*(p + 1) != '\0') {
+                // NOLINTNEXTLINE
+                goto has_more;
+            }
+        }
         if (*p == '-') {
             left_pad = true;
+            if (*(p + 1) != '\0') {
+                // NOLINTNEXTLINE
+                goto has_more;
+            }
+        }
+        if (*p == '*') {
+            field_width = va_arg(ap, size_t);
             if (*(p + 1) != '\0') {
                 // NOLINTNEXTLINE
                 goto has_more;
@@ -123,7 +140,8 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
             break;
         }
         case 'd':
-        case 'u': {
+        case 'u':
+        case 'x': {
             Array<char, 20> buf{};
             bool negative = false;
             size_t num = 0;
@@ -139,16 +157,22 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
                 break;
             }
             case 'u':
+            case 'x':
                 num = long_qualifiers >= 2 ? va_arg(ap, uint64_t) : va_arg(ap, uint32_t);
                 break;
             default:
                 ENSURE_NOT_REACHED();
             }
+            const size_t base = *p == 'x' ? 16 : 10;
             do {
-                const auto digit = static_cast<char>(num % 10);
+                const auto digit = static_cast<char>(num % base);
                 buf[num_len++] = static_cast<char>(digit < 10 ? '0' + digit : 'a' + digit - 10);
-                num /= 10;
+                num /= base;
             } while (num > 0);
+            if (base == 16) {
+                buf[num_len++] = 'x';
+                buf[num_len++] = '0';
+            }
             if (negative) {
                 buf[num_len++] = '-';
             }
@@ -177,11 +201,19 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
     return static_cast<int>(len);
 }
 
+int scanf_impl(const char *str, [[maybe_unused]] const char *fmt, va_list ap) {
+    // TODO: Implement properly.
+    ASSERT(strcmp(fmt, "%lu") == 0);
+    *va_arg(ap, size_t *) = static_cast<size_t>(atoi(str));
+    return 1;
+}
+
 OpenMode parse_mode(const char *mode) {
     auto ret = OpenMode::None;
     for (const auto *ch = mode; *ch != '\0'; ch++) {
         switch (*ch) {
         case 'r':
+        case '+':
             break;
         case 'w':
             ret |= OpenMode::Create | OpenMode::Truncate;
@@ -317,6 +349,13 @@ int ferror(FILE *stream) {
     return stream->error();
 }
 
+int fflush(FILE *stream) {
+    if (stream == nullptr) {
+        ENSURE_NOT_REACHED("TODO: Flush all open streams");
+    }
+    return 0;
+}
+
 int fclose(FILE *stream) {
     delete stream;
     return 0;
@@ -371,11 +410,48 @@ int fputs(const char *str, FILE *stream) {
     return stream->write(str, len) < len ? EOF : 1;
 }
 
+int getc(FILE *stream) {
+    return fgetc(stream);
+}
+
+int putc(int c, FILE *stream) {
+    return fputc(c, stream);
+}
+
 int puts(const char *str) {
     if (fputs(str, stdout) == EOF) {
         return EOF;
     }
     return fputc('\n', stdout);
+}
+
+int ungetc(int, FILE *) {
+    ENSURE_NOT_REACHED();
+}
+
+void clearerr(FILE *) {
+    ENSURE_NOT_REACHED();
+}
+
+void perror(const char *) {
+    ENSURE_NOT_REACHED();
+}
+
+int fileno(FILE *stream) {
+    ASSERT(stream != nullptr);
+    return static_cast<int>(stream->fd());
+}
+
+int getchar(void) {
+    ENSURE_NOT_REACHED();
+}
+
+int putchar(int c) {
+    return putc(c, stdout);
+}
+
+FILE *fdopen(int, const char *) {
+    ENSURE_NOT_REACHED();
 }
 
 int printf(const char *fmt, ...) {
@@ -414,8 +490,40 @@ int vsprintf(char *str, const char *fmt, va_list ap) {
     return printf_impl(str, fmt, ap, nullptr);
 }
 
-int sscanf(const char *, const char *, ...) {
-    ENSURE_NOT_REACHED();
+int scanf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vscanf(fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+int fscanf(FILE *stream, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vfscanf(stream, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+int sscanf(const char *str, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsscanf(str, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
+int vscanf(const char *fmt, va_list ap) {
+    return vfscanf(stdin, fmt, ap);
+}
+
+int vfscanf(FILE *, const char *, va_list) {
+    ENSURE_NOT_REACHED("TODO");
+}
+
+int vsscanf(const char *str, const char *fmt, va_list ap) {
+    return scanf_impl(str, fmt, ap);
 }
 
 int remove(const char *) {

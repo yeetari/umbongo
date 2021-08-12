@@ -5,6 +5,7 @@
 __BEGIN_DECLS
 
 int errno;
+char **environ;
 
 void __stdio_init();
 int main(int argc, char **argv);

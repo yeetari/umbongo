@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <sys/cdefs.h>
 
+#include <ustd/Assert.hh>
+
 __BEGIN_DECLS
 
 void *memmove(void *dst, const void *src, size_t size) {
@@ -20,6 +22,10 @@ void *memmove(void *dst, const void *src, size_t size) {
 char *strcat(char *dst, const char *src) {
     strcpy(dst + strlen(dst), src);
     return dst;
+}
+
+int strcoll(const char *, const char *) {
+    ENSURE_NOT_REACHED();
 }
 
 char *strcpy(char *dst, const char *src) {
