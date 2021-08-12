@@ -151,7 +151,7 @@ SysResult Process::exec(StringView path, const Vector<String> &args) {
     m_register_state.rsi = m_register_state.rsp; // argv
 
     // Allocate some space for heap storage.
-    m_virt_space->create_region(6_TiB, 2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
+    m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     MemoryManager::switch_space(*original_space);
     return 0;
 }
