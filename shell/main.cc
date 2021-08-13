@@ -4,6 +4,7 @@
 #include "Value.hh"
 
 #include <core/Process.hh>
+#include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
@@ -23,15 +24,15 @@ String read_line() {
     uint32 cursor_pos = 0;
     while (true) {
         // NOLINTNEXTLINE
-        Array<char, 16> buf;
+        Array<KeyEvent, 16> buf;
         usize bytes_read = 0;
         while (bytes_read == 0) {
-            ssize rc = Syscall::invoke(Syscall::read, 0, buf.data(), buf.size());
+            ssize rc = Syscall::invoke(Syscall::read, 0, buf.data(), buf.size_bytes());
             ENSURE(rc >= 0);
             bytes_read = static_cast<usize>(rc);
         }
-        for (usize i = 0; i < bytes_read; i++) {
-            char ch = buf[i];
+        for (usize i = 0; i < bytes_read / sizeof(KeyEvent); i++) {
+            auto ch = static_cast<char>(buf[i].code());
             if (ch == '\b') {
                 if (cursor_pos == 0) {
                     continue;

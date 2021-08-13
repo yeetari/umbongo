@@ -1,5 +1,6 @@
 #include <kernel/devices/UsbKeyboardDevice.hh>
 
+#include <kernel/KeyEvent.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Endpoint.hh>
@@ -74,7 +75,10 @@ void UsbKeyboardDevice::poll() {
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
         const auto ch = static_cast<uint8>(table[key]);
         if (ch != '\0') {
-            m_ring_buffer.enqueue(ch);
+            // TODO: Add an emplace function to RingBuffer.
+            const bool alt_pressed = m_modifiers[2] || m_modifiers[6];
+            const bool ctrl_pressed = m_modifiers[0] || m_modifiers[4];
+            m_ring_buffer.enqueue(KeyEvent(ch, alt_pressed, ctrl_pressed));
         }
     }
     memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
@@ -82,11 +86,11 @@ void UsbKeyboardDevice::poll() {
 
 usize UsbKeyboardDevice::read(Span<void> data, usize) {
     usize nread = 0;
-    for (usize i = 0; i < data.size(); i++, nread++) {
+    for (usize i = 0; i < data.size(); i += sizeof(KeyEvent), nread += sizeof(KeyEvent)) {
         if (m_ring_buffer.empty()) {
             break;
         }
-        data.as<uint8>()[i] = m_ring_buffer.dequeue();
+        data.as<KeyEvent>()[i / sizeof(KeyEvent)] = m_ring_buffer.dequeue();
     }
     return nread;
 }

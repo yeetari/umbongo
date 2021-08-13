@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/KeyEvent.hh>
 #include <kernel/usb/Device.hh>
 #include <ustd/Array.hh>
 #include <ustd/RingBuffer.hh>
@@ -16,7 +17,7 @@ class UsbKeyboardDevice final : public usb::Device {
     Array<uint8, 8> m_buffer{};
     Array<uint8, 8> m_compare_buffer{};
     Array<bool, 8> m_modifiers{};
-    RingBuffer<uint8, 8> m_ring_buffer;
+    RingBuffer<KeyEvent, 8> m_ring_buffer;
     usb::Endpoint *m_input_endpoint{nullptr};
 
     bool key_already_pressed(uint8 key) const;
