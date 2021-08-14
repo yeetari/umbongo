@@ -1,5 +1,6 @@
 #include "Ast.hh"
 #include "Lexer.hh"
+#include "LineEditor.hh"
 #include "Parser.hh"
 #include "Value.hh"
 
@@ -7,52 +8,13 @@
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
-#include <ustd/Array.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
-
-namespace {
-
-String read_line() {
-    // TODO: Make Vector with inline stack capacity.
-    Vector<char> buffer;
-    uint32 cursor_pos = 0;
-    while (true) {
-        // NOLINTNEXTLINE
-        Array<KeyEvent, 16> buf;
-        usize bytes_read = 0;
-        while (bytes_read == 0) {
-            ssize rc = Syscall::invoke(Syscall::read, 0, buf.data(), buf.size_bytes());
-            ENSURE(rc >= 0);
-            bytes_read = static_cast<usize>(rc);
-        }
-        for (usize i = 0; i < bytes_read / sizeof(KeyEvent); i++) {
-            auto ch = buf[i].character();
-            if (ch == '\b') {
-                if (cursor_pos == 0) {
-                    continue;
-                }
-                log_put_char(ch);
-                buffer.remove(cursor_pos - 1);
-                cursor_pos--;
-                continue;
-            }
-            log_put_char(ch);
-            if (ch == '\n') {
-                return String(buffer.data(), buffer.size());
-            }
-            buffer.push(ch);
-            cursor_pos++;
-        }
-    }
-}
-
-} // namespace
 
 void Job::await_completion() const {
     if (m_pid == 0) {
@@ -72,18 +34,33 @@ void Job::spawn(const Vector<FdPair> &copy_fds) {
 }
 
 usize main(usize, const char **) {
+    LineEditor editor;
     while (true) {
-        log("$ ");
-        String line = read_line();
-        if (line.empty()) {
-            continue;
-        }
-        Lexer lexer(ustd::move(line));
-        Parser parser(lexer);
-        auto node = parser.parse();
-        if (auto value = node->evaluate(); auto *job = value->as_or_null<Job>()) {
-            job->spawn({});
-            job->await_completion();
+        log("# ");
+        while (true) {
+            KeyEvent event;
+            while (true) {
+                ssize rc = Syscall::invoke(Syscall::read, 0, &event, sizeof(KeyEvent));
+                if (rc < 0) {
+                    return 1;
+                }
+                if (rc > 0) {
+                    break;
+                }
+            }
+            if (auto line = editor.handle_key_event(event)) {
+                if (line->empty()) {
+                    break;
+                }
+                Lexer lexer(ustd::move(*line));
+                Parser parser(lexer);
+                auto node = parser.parse();
+                if (auto value = node->evaluate(); auto *job = value->as_or_null<Job>()) {
+                    job->spawn({});
+                    job->await_completion();
+                }
+                break;
+            }
         }
     }
 }
