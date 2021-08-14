@@ -27,7 +27,7 @@ public:
 
     explicit operator bool() const { return m_fd.has_value(); }
 
-    uint32 fd() { return *m_fd; }
+    uint32 fd() const { return *m_fd; }
 };
 
 } // namespace core
