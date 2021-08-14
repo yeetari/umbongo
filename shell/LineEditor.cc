@@ -17,6 +17,20 @@ void LineEditor::clear_line() {
     m_cursor_pos = 0;
 }
 
+void LineEditor::goto_start() {
+    for (uint32 i = 0; i < m_cursor_pos; i++) {
+        log("\x1b[D");
+    }
+    m_cursor_pos = 0;
+}
+
+void LineEditor::goto_end() {
+    for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
+        log("\x1b[C");
+    }
+    m_cursor_pos = m_buffer.size();
+}
+
 Optional<String> LineEditor::handle_key_event(KeyEvent event) {
     if (event.character() == '\b') {
         if (m_cursor_pos == 0) {
@@ -39,8 +53,16 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
         return ustd::move(line);
     }
     if (event.ctrl_pressed()) {
-        if (event.character() == 'u') {
+        switch (event.character()) {
+        case 'a':
+            goto_start();
+            break;
+        case 'e':
+            goto_end();
+            break;
+        case 'u':
             clear_line();
+            break;
         }
         return {};
     }
@@ -62,18 +84,27 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
                 log_put_char(ch);
             }
         }
+        return {};
     }
-    if (event.code() == 0x50) {
-        if (m_cursor_pos > 0) {
-            m_cursor_pos--;
-            log("\x1b[D");
-        }
-    }
-    if (event.code() == 0x4f) {
+    switch (event.code()) {
+    case 0x4a:
+        goto_start();
+        return {};
+    case 0x4d:
+        goto_end();
+        return {};
+    case 0x4f:
         if (m_cursor_pos < m_buffer.size()) {
             m_cursor_pos++;
             log("\x1b[C");
         }
+        return {};
+    case 0x50:
+        if (m_cursor_pos > 0) {
+            m_cursor_pos--;
+            log("\x1b[D");
+        }
+        return {};
     }
     if (event.character() == '\0') {
         return {};

@@ -13,6 +13,8 @@ class LineEditor {
     uint32 m_history_pos{0};
 
     void clear_line();
+    void goto_start();
+    void goto_end();
 
 public:
     Optional<String> handle_key_event(KeyEvent event);
