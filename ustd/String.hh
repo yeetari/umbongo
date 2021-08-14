@@ -26,6 +26,8 @@ public:
 
     char operator[](usize index) const;
 
+    const char *begin() const { return m_data; }
+    const char *end() const { return m_data + m_length; }
     StringView view() const { return {m_data, m_length}; }
 
     bool empty() const { return m_length == 0; }
