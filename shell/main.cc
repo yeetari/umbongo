@@ -32,7 +32,7 @@ String read_line() {
             bytes_read = static_cast<usize>(rc);
         }
         for (usize i = 0; i < bytes_read / sizeof(KeyEvent); i++) {
-            auto ch = static_cast<char>(buf[i].code());
+            auto ch = buf[i].character();
             if (ch == '\b') {
                 if (cursor_pos == 0) {
                     continue;

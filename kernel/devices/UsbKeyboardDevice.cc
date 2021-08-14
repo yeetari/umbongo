@@ -72,14 +72,12 @@ void UsbKeyboardDevice::poll() {
         if (key_already_pressed(key)) {
             continue;
         }
+        // TODO: Add an emplace function to RingBuffer.
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
-        const auto ch = static_cast<uint8>(table[key]);
-        if (ch != '\0') {
-            // TODO: Add an emplace function to RingBuffer.
-            const bool alt_pressed = m_modifiers[2] || m_modifiers[6];
-            const bool ctrl_pressed = m_modifiers[0] || m_modifiers[4];
-            m_ring_buffer.enqueue(KeyEvent(ch, alt_pressed, ctrl_pressed));
-        }
+        const char ch = key < table.size() ? table[key] : '\0';
+        const bool alt_pressed = m_modifiers[2] || m_modifiers[6];
+        const bool ctrl_pressed = m_modifiers[0] || m_modifiers[4];
+        m_ring_buffer.enqueue(KeyEvent(key, ch, alt_pressed, ctrl_pressed));
     }
     memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
 }
