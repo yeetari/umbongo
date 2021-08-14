@@ -85,10 +85,11 @@ if(QEMU_PROG)
         -debugcon stdio
         -device qemu-xhci
         -device usb-kbd
+        -device virtio-vga,xres=1920,yres=1080
+        -display sdl
         -drive file=fs.img,if=ide,format=raw
         -machine q35
-        -nodefaults
-        -vga std)
+        -nodefaults)
     add_custom_target(run
         COMMAND ${QEMU_PROG} ${QEMU_FLAGS} -enable-kvm
         DEPENDS image
