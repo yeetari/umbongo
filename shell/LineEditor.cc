@@ -78,6 +78,40 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
             clear_line();
             break;
         }
+        switch (event.code()) {
+        case 0x4f:
+            if (m_cursor_pos == m_buffer.size()) {
+                break;
+            }
+            m_cursor_pos++;
+            log("\x1b[C");
+            for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
+                m_cursor_pos++;
+                log("\x1b[C");
+                if (m_buffer[m_cursor_pos] == ' ') {
+                    break;
+                }
+            }
+            break;
+        case 0x50:
+            if (m_cursor_pos == 0) {
+                break;
+            }
+            m_cursor_pos--;
+            log("\x1b[D");
+            for (uint32 i = m_cursor_pos; i > 0; i--) {
+                m_cursor_pos--;
+                log("\x1b[D");
+                if (m_buffer[m_cursor_pos] == ' ') {
+                    break;
+                }
+            }
+            if (m_cursor_pos != 0) {
+                m_cursor_pos++;
+                log("\x1b[C");
+            }
+            break;
+        }
         return {};
     }
     if (event.code() == 0x51 || event.code() == 0x52) {
