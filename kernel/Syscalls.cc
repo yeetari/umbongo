@@ -3,6 +3,7 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
+#include <kernel/cpu/Processor.hh>
 #include <kernel/devices/DevFs.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
@@ -11,6 +12,7 @@
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
+#include <kernel/proc/Thread.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
@@ -56,11 +58,12 @@ SysResult Process::sys_create_pipe(uint32 *fds) {
 }
 
 SysResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
-    auto *process = Process::create_user();
-    process->m_fds.grow(m_fds.size());
+    auto *new_thread = Thread::create_user();
+    auto &new_process = new_thread->process();
+    new_process.m_fds.grow(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
         if (m_fds[i]) {
-            process->m_fds[i].emplace(*m_fds[i]);
+            new_process.m_fds[i].emplace(*m_fds[i]);
         }
     }
 
@@ -80,16 +83,16 @@ SysResult Process::sys_create_process(const char *path, const char **argv, FdPai
             break;
         }
         auto &fd_pair = copy_fds[i];
-        process->m_fds.grow(fd_pair.child + 1);
-        process->m_fds[fd_pair.child].emplace(*m_fds[fd_pair.parent]);
+        new_process.m_fds.grow(fd_pair.child + 1);
+        new_process.m_fds[fd_pair.child].emplace(*m_fds[fd_pair.parent]);
     }
 
     String copied_path(path);
-    if (auto rc = process->exec(copied_path.view(), args); rc.is_error()) {
+    if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
         return rc;
     }
-    Scheduler::insert_process(process);
-    return process->pid();
+    Scheduler::insert_thread(new_thread);
+    return new_process.pid();
 }
 
 SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
@@ -125,16 +128,15 @@ SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
 }
 
 SysResult Process::sys_is_alive(usize pid) {
-    Process *current = this;
-    Process *found = nullptr;
+    // If one thread is alive, then the whole process is alive.
+    Thread *current = Processor::current_thread();
     do {
-        if (current->m_pid == pid) {
-            found = current;
-            break;
+        if (current->process().m_pid == pid && current->m_state == ThreadState::Alive) {
+            return true;
         }
         current = current->m_next;
-    } while (current != this);
-    return found != nullptr && found->m_state == ProcessState::Alive;
+    } while (current != Processor::current_thread());
+    return false;
 }
 
 SysResult Process::sys_mkdir(const char *path) const {

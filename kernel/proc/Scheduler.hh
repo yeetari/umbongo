@@ -8,12 +8,12 @@ class HpetTable;
 
 } // namespace acpi
 
-class Process;
 struct RegisterState;
+class Thread;
 
 struct Scheduler {
     static void initialise(acpi::HpetTable *hpet_table);
-    static void insert_process(Process *process);
+    static void insert_thread(Thread *thread);
     static void start();
     static void switch_next(RegisterState *);
     static void timer_handler(RegisterState *);

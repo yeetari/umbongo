@@ -24,13 +24,14 @@
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/pci/Device.hh>
-#include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
+#include <kernel/proc/Thread.hh>
 #include <kernel/usb/UsbManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
@@ -148,9 +149,9 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
     MemoryManager::reclaim(boot_info);
 
-    auto *init_process = Process::create_user();
-    init_process->exec("/system-server");
-    Scheduler::insert_process(init_process);
+    auto *init_thread = Thread::create_user();
+    init_thread->exec("/system-server"sv);
+    Scheduler::insert_thread(init_thread);
     Scheduler::yield_and_kill();
 }
 
@@ -250,14 +251,13 @@ extern "C" void kmain(BootInfo *boot_info) {
     auto *hpet_table = xsdt->find<acpi::HpetTable>();
     ENSURE(hpet_table != nullptr);
 
-    // Start a new kernel process that will perform the rest of the initialisation. We do this so we can safely start
+    // Start a new kernel thread that will perform the rest of the initialisation. We do this so we can safely start
     // kernel threads, and so that the current stack we are using is no longer in use and we can reclaim the memory.
-    auto *kernel_init_process = Process::create_kernel();
-    kernel_init_process->set_entry_point(reinterpret_cast<uintptr>(&kernel_init));
-    kernel_init_process->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
-    kernel_init_process->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
+    auto *kernel_init_thread = Thread::create_kernel(&kernel_init);
+    kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
+    kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 
     Scheduler::initialise(hpet_table);
-    Scheduler::insert_process(kernel_init_process);
+    Scheduler::insert_thread(kernel_init_thread);
     Scheduler::start();
 }

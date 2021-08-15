@@ -2,55 +2,40 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
 #include <ustd/Optional.hh>        // IWYU pragma: keep
+#include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>
-#include <ustd/String.hh>
-#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
 struct Scheduler;
+class Thread;
 
-enum class ProcessState {
-    Alive,
-    Dead,
-};
-
-class Process {
+class Process : public Shareable<Process> {
     friend Scheduler;
+    friend Thread;
 
 private:
     const usize m_pid;
     const bool m_is_kernel;
     SharedPtr<VirtSpace> m_virt_space;
-
-    Process *m_prev{nullptr};
-    Process *m_next{nullptr};
-    ProcessState m_state{ProcessState::Alive};
-    RegisterState m_register_state{};
     Vector<Optional<FileHandle>> m_fds;
 
-    Process(usize pid, bool is_kernel, SharedPtr<VirtSpace> virt_space);
+    Process(bool is_kernel, SharedPtr<VirtSpace> virt_space);
 
     uint32 allocate_fd();
 
 public:
-    static Process *create_kernel();
-    static Process *create_user();
-
     Process(const Process &) = delete;
     Process(Process &&) = delete;
-    ~Process();
+    ~Process() = default;
 
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;
 
-    SysResult exec(StringView path, const Vector<String> &args = {});
-    void kill();
-    void set_entry_point(uintptr entry);
+    Thread *create_thread();
 
     SysResult sys_allocate_region(usize size, MemoryProt prot);
     SysResult sys_close(uint32 fd);
@@ -73,5 +58,4 @@ public:
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
-    RegisterState &register_state() { return m_register_state; }
 };

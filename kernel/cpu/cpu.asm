@@ -43,7 +43,6 @@ switch_now:
     mov rdi, [rdi + 80]
     iretq
 
-extern g_current_process
 extern syscall_handler
 global syscall_stub
 syscall_stub:
@@ -67,11 +66,8 @@ syscall_stub:
     push r14
     push r15
 
-    mov qword rax, [g_current_process]
-    mov qword [gs:24], rax
-
     mov rdi, rsp
-    mov rsi, [gs:0]
+    mov rsi, [gs:24]
     call syscall_handler
 
     ; Pop back GP registers.

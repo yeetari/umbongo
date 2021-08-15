@@ -8,20 +8,19 @@
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Hpet.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/proc/Thread.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
-Process *g_current_process = nullptr;
-
 namespace {
 
 constexpr uint16 k_scheduler_frequency = 250;
 constexpr uint8 k_timer_vector = 40;
 
-Process *s_base_process = nullptr;
+Thread *s_base_thread = nullptr;
 Hpet *s_hpet = nullptr;
 uint32 s_ticks = 0;
 
@@ -34,18 +33,22 @@ void dump_backtrace(RegisterState *regs) {
 }
 
 void handle_fault(RegisterState *regs) {
+    auto *thread = Processor::current_thread();
+    auto &process = thread->process();
     if ((regs->cs & 3u) == 0u) {
         logln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }
-    logln("[#{}]: Fault {} caused by instruction at {:h}!", g_current_process->pid(), regs->int_num, regs->rip);
+    logln("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
     dump_backtrace(regs);
-    g_current_process->kill();
+    thread->kill();
     Scheduler::switch_next(regs);
 }
 
 void handle_page_fault(RegisterState *regs) {
+    auto *thread = Processor::current_thread();
+    auto &process = thread->process();
     uint64 cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
@@ -53,9 +56,9 @@ void handle_page_fault(RegisterState *regs) {
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
     }
-    logln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", g_current_process->pid(), cr2, regs->rip);
+    logln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
     dump_backtrace(regs);
-    g_current_process->kill();
+    thread->kill();
     Scheduler::switch_next(regs);
 }
 
@@ -85,11 +88,12 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     s_ticks /= k_scheduler_frequency;
     s_ticks *= 10;
 
-    // Initialise idle process.
-    s_base_process = Process::create_kernel();
-    g_current_process = s_base_process;
-    g_current_process->m_prev = g_current_process;
-    g_current_process->m_next = g_current_process;
+    // Initialise idle thread and process. We pass null as the entry point as when the thread first gets interrupted,
+    // its state will be saved.
+    s_base_thread = Thread::create_kernel(nullptr);
+    s_base_thread->m_prev = s_base_thread;
+    s_base_thread->m_next = s_base_thread;
+    Processor::set_current_thread(s_base_thread);
 
     // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
     // depending on the process' priority.
@@ -102,43 +106,46 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
 }
 
-void Scheduler::insert_process(Process *process) {
-    auto *prev = s_base_process->m_prev;
-    process->m_prev = prev;
-    process->m_next = s_base_process;
-    s_base_process->m_prev = process;
-    prev->m_next = process;
+void Scheduler::insert_thread(Thread *thread) {
+    auto *prev = s_base_thread->m_prev;
+    thread->m_prev = prev;
+    thread->m_next = s_base_thread;
+    s_base_thread->m_prev = thread;
+    prev->m_next = thread;
 }
 
 void Scheduler::start() {
     asm volatile("sti");
     while (true) {
-        auto *process = s_base_process;
+        auto *thread = s_base_thread;
         do {
-            auto *next = process->m_next;
-            if (process->m_state == ProcessState::Dead) {
-                delete process;
+            auto *next = thread->m_next;
+            if (thread->m_state == ThreadState::Dead) {
+                delete thread;
             }
-            process = next;
-        } while (process != s_base_process);
+            thread = next;
+        } while (thread != s_base_thread);
         asm volatile("hlt");
     }
 }
 
 void Scheduler::switch_next(RegisterState *regs) {
+    auto *next_thread = Processor::current_thread();
     do {
-        g_current_process = g_current_process->m_next;
-        ASSERT_PEDANTIC(g_current_process != nullptr);
-    } while (g_current_process->m_state != ProcessState::Alive);
-    memcpy(regs, &g_current_process->m_register_state, sizeof(RegisterState));
-    if (MemoryManager::current_space() != g_current_process->m_virt_space.obj()) {
-        MemoryManager::switch_space(*g_current_process->m_virt_space);
+        next_thread = next_thread->m_next;
+        ASSERT_PEDANTIC(next_thread != nullptr);
+    } while (next_thread->m_state != ThreadState::Alive);
+    memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
+    auto &process = *next_thread->m_process;
+    if (MemoryManager::current_space() != process.m_virt_space.obj()) {
+        MemoryManager::switch_space(*process.m_virt_space);
     }
     Processor::apic()->set_timer_count(s_ticks);
+    Processor::set_current_thread(next_thread);
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
-    memcpy(&g_current_process->m_register_state, regs, sizeof(RegisterState));
+    memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
     switch_next(regs);
 }
 
@@ -156,6 +163,6 @@ void Scheduler::yield() {
 }
 
 void Scheduler::yield_and_kill() {
-    g_current_process->kill();
+    Processor::current_thread()->kill();
     yield();
 }

@@ -1,8 +1,8 @@
 #include <kernel/usb/HostController.hh>
 
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
+#include <kernel/proc/Thread.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Interrupter.hh>
@@ -38,7 +38,7 @@ constexpr uint16 k_op_reg_crcr = 0x18;
 constexpr uint16 k_op_reg_dcbapp = 0x30;
 constexpr uint16 k_op_reg_config = 0x38;
 
-void watch_thread(HostController *controller) {
+void watch_loop(HostController *controller) {
     while (true) {
         for (auto &port : controller->ports()) {
             if (!port.status_changed()) {
@@ -387,10 +387,9 @@ void HostController::send_command(TransferRequestBlock *command) {
 }
 
 void HostController::spawn_watch_thread() {
-    auto *watch_process = Process::create_kernel();
-    watch_process->set_entry_point(reinterpret_cast<uintptr>(&watch_thread));
-    watch_process->register_state().rdi = reinterpret_cast<uintptr>(this);
-    Scheduler::insert_process(watch_process);
+    auto *watch_thread = Thread::create_kernel(&watch_loop);
+    watch_thread->register_state().rdi = reinterpret_cast<uintptr>(this);
+    Scheduler::insert_thread(watch_thread);
 }
 
 } // namespace usb

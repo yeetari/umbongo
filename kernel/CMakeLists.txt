@@ -41,6 +41,7 @@ add_executable(kernel
     proc/Hpet.cc
     proc/Process.cc
     proc/Scheduler.cc
+    proc/Thread.cc
     usb/Device.cc
     usb/Endpoint.cc
     usb/HostController.cc

@@ -6,6 +6,7 @@
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/proc/Thread.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -147,7 +148,7 @@ struct [[gnu::packed]] LocalStorage {
     LocalStorage *self{this};
     void *kernel_stack{nullptr};
     void *user_stack{nullptr};
-    Process *current_process{nullptr};
+    Thread *current_thread{nullptr};
 };
 
 struct [[gnu::packed]] SyscallFrame {
@@ -201,6 +202,16 @@ void write_cr4(uint64 cr4) {
     asm volatile("mov %0, %%cr4" : : "r"(cr4));
 }
 
+uint64 read_gs(uint64 offset) {
+    uint64 value = 0;
+    asm volatile("mov %%gs:%a[off], %[val]" : [val] "=r"(value) : [off] "ir"(offset));
+    return value;
+}
+
+void write_gs(uint64 offset, uint64 value) {
+    asm volatile("mov %[val], %%gs:%a[off]" : : [off] "ir"(offset), [val] "r"(value));
+}
+
 uint64 read_msr(uint32 msr) {
     uint64 rax = 0;
     uint64 rdx = 0;
@@ -238,12 +249,13 @@ extern "C" void interrupt_handler(RegisterState *regs) {
     }
 }
 
-extern "C" void syscall_handler(SyscallFrame *frame, LocalStorage *storage) {
+extern "C" void syscall_handler(SyscallFrame *frame, Thread *thread) {
     // Syscall number passed in rax.
     if (frame->rax >= s_syscall_table.size()) {
         return;
     }
-    auto *process = storage->current_process;
+    ASSERT_PEDANTIC(thread != nullptr);
+    auto *process = &thread->process();
     ASSERT_PEDANTIC(process != nullptr);
     ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
     const auto result = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
@@ -342,6 +354,10 @@ void Processor::set_apic(LocalApic *apic) {
     s_apic = apic;
 }
 
+void Processor::set_current_thread(Thread *thread) {
+    write_gs(__builtin_offsetof(LocalStorage, current_thread), reinterpret_cast<uint64>(thread));
+}
+
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {
     ASSERT(vector < k_interrupt_count);
     ASSERT(handler != nullptr);
@@ -359,4 +375,8 @@ void Processor::write_cr3(void *pml4) {
 LocalApic *Processor::apic() {
     ASSERT_PEDANTIC(s_apic != nullptr);
     return s_apic;
+}
+
+Thread *Processor::current_thread() {
+    return reinterpret_cast<Thread *>(read_gs(__builtin_offsetof(LocalStorage, current_thread)));
 }

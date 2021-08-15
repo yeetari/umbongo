@@ -7,4 +7,5 @@ enum class SysError : ssize {
     NonExistent = -2,
     BrokenHandle = -3,
     Invalid = -4,
+    NoExec = -5,
 };
