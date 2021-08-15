@@ -36,6 +36,16 @@ void Terminal::backspace() {
     set_char(m_cursor_y, --m_cursor_x, '\b');
 }
 
+void Terminal::clear() {
+    for (auto &line : m_lines) {
+        // TODO: Use ustd::fill.
+        line.set_dirty(true);
+        memset(line.chars().data(), ' ', line.chars().size());
+    }
+    m_cursor_x = 0;
+    m_cursor_y = 0;
+}
+
 void Terminal::newline() {
     m_cursor_x = 0;
     m_cursor_y++;

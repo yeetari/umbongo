@@ -43,6 +43,9 @@ usize main(usize, const char **) {
                 case 'C':
                     terminal.move_right();
                     continue;
+                case 'J':
+                    terminal.clear();
+                    continue;
                 default:
                     ENSURE_NOT_REACHED();
                 }

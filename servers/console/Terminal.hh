@@ -33,6 +33,7 @@ public:
     explicit Terminal(const Framebuffer &fb);
 
     void backspace();
+    void clear();
     void newline();
     void move_left();
     void move_right();
