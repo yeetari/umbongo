@@ -11,6 +11,7 @@
 #include <ustd/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
@@ -34,9 +35,9 @@ void Job::spawn(const Vector<FdPair> &copy_fds) {
 }
 
 usize main(usize, const char **) {
-    LineEditor editor;
+    LineEditor editor("# "sv);
     while (true) {
-        log("# ");
+        editor.begin_line();
         while (true) {
             KeyEvent event;
             while (true) {

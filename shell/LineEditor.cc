@@ -9,6 +9,13 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+void LineEditor::clear() {
+    log("\x1b[J");
+    m_buffer.clear();
+    m_cursor_pos = 0;
+    begin_line();
+}
+
 void LineEditor::clear_line() {
     for (uint32 i = 0; i < m_cursor_pos; i++) {
         m_buffer.remove(m_cursor_pos - i - 1);
@@ -29,6 +36,10 @@ void LineEditor::goto_end() {
         log("\x1b[C");
     }
     m_cursor_pos = m_buffer.size();
+}
+
+void LineEditor::begin_line() {
+    log("{}", m_prompt);
 }
 
 Optional<String> LineEditor::handle_key_event(KeyEvent event) {
@@ -59,6 +70,9 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
             break;
         case 'e':
             goto_end();
+            break;
+        case 'l':
+            clear();
             break;
         case 'u':
             clear_line();
