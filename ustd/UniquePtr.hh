@@ -20,6 +20,8 @@ public:
     UniquePtr &operator=(const UniquePtr &) = delete;
     UniquePtr &operator=(UniquePtr &&other) noexcept;
 
+    void clear();
+
     explicit operator bool() const noexcept { return m_obj != nullptr; }
     bool has_value() const noexcept { return m_obj != nullptr; }
 
@@ -42,6 +44,12 @@ UniquePtr<T> &UniquePtr<T>::operator=(UniquePtr &&other) noexcept {
     swap(m_obj, ptr.m_obj);
     ASSERT(m_obj != nullptr);
     return *this;
+}
+
+template <typename T>
+void UniquePtr<T>::clear() {
+    delete m_obj;
+    m_obj = nullptr;
 }
 
 template <typename T, typename... Args>
