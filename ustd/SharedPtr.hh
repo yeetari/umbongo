@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ustd/Assert.hh>
 #include <ustd/Shareable.hh>
 #include <ustd/Utility.hh>
 

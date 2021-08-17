@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ustd/Assert.hh>
 #include <ustd/Utility.hh>
 
 namespace ustd {
