@@ -5,6 +5,7 @@
 #include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/devices/DevFs.hh>
+#include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Pipe.hh>
@@ -13,6 +14,7 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
+#include <kernel/proc/ThreadBlocker.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
@@ -48,17 +50,17 @@ SysResult Process::sys_close(uint32 fd) {
 SysResult Process::sys_create_pipe(uint32 *fds) {
     auto pipe = ustd::make_shared<Pipe>();
     uint32 read_fd = allocate_fd();
-    m_fds[read_fd].emplace(pipe);
+    m_fds[read_fd].emplace(pipe, AttachDirection::Read);
     fds[0] = read_fd;
 
     uint32 write_fd = allocate_fd();
-    m_fds[write_fd].emplace(pipe);
+    m_fds[write_fd].emplace(pipe, AttachDirection::Write);
     fds[1] = write_fd;
     return 0;
 }
 
 SysResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
-    auto *new_thread = Thread::create_user();
+    auto new_thread = Thread::create_user();
     auto &new_process = new_thread->process();
     new_process.m_fds.grow(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
@@ -91,7 +93,7 @@ SysResult Process::sys_create_process(const char *path, const char **argv, FdPai
     if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
         return rc;
     }
-    Scheduler::insert_thread(new_thread);
+    Scheduler::insert_thread(ustd::move(new_thread));
     return new_process.pid();
 }
 
@@ -125,18 +127,6 @@ SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
         return SysError::BadFd;
     }
     return m_fds[fd]->ioctl(request, arg);
-}
-
-SysResult Process::sys_is_alive(usize pid) {
-    // If one thread is alive, then the whole process is alive.
-    Thread *current = Processor::current_thread();
-    do {
-        if (current->process().m_pid == pid && current->m_state == ThreadState::Alive) {
-            return true;
-        }
-        current = current->m_next;
-    } while (current != Processor::current_thread());
-    return false;
 }
 
 SysResult Process::sys_mkdir(const char *path) const {
@@ -186,6 +176,10 @@ SysResult Process::sys_read(uint32 fd, void *data, usize size) {
         m_fds[fd].clear();
         return SysError::BrokenHandle;
     }
+    auto file = m_fds[fd]->file();
+    if (!file->can_read()) {
+        Processor::current_thread()->block<ReadBlocker>(file);
+    }
     return m_fds[fd]->read(data, size);
 }
 
@@ -211,6 +205,11 @@ SysResult Process::sys_size(uint32 fd) {
     return m_fds[fd]->size();
 }
 
+SysResult Process::sys_wait_pid(usize pid) {
+    Processor::current_thread()->block<WaitBlocker>(pid);
+    return 0;
+}
+
 SysResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -218,6 +217,10 @@ SysResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (!m_fds[fd]->valid()) {
         m_fds[fd].clear();
         return SysError::BrokenHandle;
+    }
+    auto file = m_fds[fd]->file();
+    if (!file->can_write()) {
+        Processor::current_thread()->block<WriteBlocker>(file);
     }
     return m_fds[fd]->write(data, size);
 }

@@ -13,7 +13,6 @@ namespace Syscall {
     S(exit)                                                                                                            \
     S(getpid)                                                                                                          \
     S(ioctl)                                                                                                           \
-    S(is_alive)                                                                                                        \
     S(mkdir)                                                                                                           \
     S(mmap)                                                                                                            \
     S(mount)                                                                                                           \
@@ -22,6 +21,7 @@ namespace Syscall {
     S(read)                                                                                                            \
     S(seek)                                                                                                            \
     S(size)                                                                                                            \
+    S(wait_pid)                                                                                                        \
     S(write)
 
 enum Number {

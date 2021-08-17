@@ -15,6 +15,8 @@ class Pipe final : public File {
     Buffer *m_read_buffer;
     Buffer *m_write_buffer;
     usize m_read_position{0};
+    uint32 m_reader_count{0};
+    uint32 m_writer_count{0};
 
 public:
     Pipe();
@@ -25,6 +27,10 @@ public:
     Pipe &operator=(const Pipe &) = delete;
     Pipe &operator=(Pipe &&) = delete;
 
+    void attach(AttachDirection) override;
+    void detach(AttachDirection) override;
+    bool can_read() override;
+    bool can_write() override;
     usize read(Span<void> data, usize offset) override;
     usize size() override;
     usize write(Span<const void> data, usize offset) override;

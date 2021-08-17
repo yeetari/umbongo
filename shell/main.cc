@@ -21,8 +21,7 @@ void Job::await_completion() const {
     if (m_pid == 0) {
         return;
     }
-    while (Syscall::invoke<bool>(Syscall::is_alive, m_pid)) {
-    }
+    Syscall::invoke(Syscall::wait_pid, m_pid);
 }
 
 void Job::spawn(const Vector<FdPair> &copy_fds) {

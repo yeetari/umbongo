@@ -61,6 +61,10 @@ bool UsbKeyboardDevice::key_already_pressed(uint8 key) const {
     return false;
 }
 
+bool UsbKeyboardDevice::can_read() {
+    return !m_ring_buffer.empty();
+}
+
 void UsbKeyboardDevice::poll() {
     for (uint8 i = 0; i < 8; i++) {
         bool pressed_now = (m_buffer[0] & (1u << i)) != 0;

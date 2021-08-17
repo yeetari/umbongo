@@ -48,6 +48,7 @@ global syscall_stub
 syscall_stub:
     mov [gs:16], rsp
     mov rsp, [gs:8]
+    push qword [gs:16]
 
     ; Push all GP registers.
     push rax
@@ -86,6 +87,5 @@ syscall_stub:
     pop rcx
     pop rbx
     pop rax
-
-    mov rsp, [gs:16]
+    pop rsp
     o64 sysret

@@ -12,12 +12,15 @@
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/proc/ThreadBlocker.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
+#include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
@@ -48,29 +51,33 @@ Optional<String> interpreter_for(File &file) {
 
 } // namespace
 
-Thread *Thread::create_kernel(uintptr entry_point) {
+UniquePtr<Thread> Thread::create_kernel(uintptr entry_point) {
     auto *process = new Process(true, SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
-    auto *thread = process->create_thread();
+    auto thread = process->create_thread();
     thread->m_register_state.rip = entry_point;
     return thread;
 }
 
-Thread *Thread::create_user() {
+UniquePtr<Thread> Thread::create_user() {
     auto *process = new Process(false, MemoryManager::kernel_space()->clone());
     return process->create_thread();
 }
 
 Thread::Thread(Process *process) : m_process(process) {
+    process->m_thread_count++;
+    m_kernel_stack = new uint8[8_KiB] + 8_KiB;
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
     if (process->m_is_kernel) {
-        // TODO: This leaks.
-        m_register_state.rsp = reinterpret_cast<uintptr>(new char[8_KiB] + 8_KiB);
+        // A kernel process doesn't use syscalls, so we can use m_kernel_stack.
+        m_register_state.rsp = reinterpret_cast<uintptr>(m_kernel_stack);
     }
 }
 
 Thread::~Thread() {
+    delete (m_kernel_stack - 8_KiB);
+    m_process->m_thread_count--;
     m_prev->m_next = m_next;
     m_next->m_prev = m_prev;
 }
@@ -88,6 +95,9 @@ SysResult Thread::exec(StringView path, const Vector<String> &args) {
     InterruptDisabler disabler;
     auto *original_space = MemoryManager::current_space();
     MemoryManager::switch_space(*m_process->m_virt_space);
+    ScopeGuard space_guard([original_space] {
+        MemoryManager::switch_space(*original_space);
+    });
 
     auto interpreter_path = interpreter_for(*file);
     if (!interpreter_path) {
@@ -163,7 +173,6 @@ SysResult Thread::exec(StringView path, const Vector<String> &args) {
 
     // Allocate some space for heap storage.
     m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
-    MemoryManager::switch_space(*original_space);
     return 0;
 }
 

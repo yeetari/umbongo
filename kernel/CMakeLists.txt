@@ -42,6 +42,7 @@ add_executable(kernel
     proc/Process.cc
     proc/Scheduler.cc
     proc/Thread.cc
+    proc/ThreadBlocker.cc
     usb/Device.cc
     usb/Endpoint.cc
     usb/HostController.cc

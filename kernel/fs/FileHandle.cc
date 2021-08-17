@@ -6,6 +6,16 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
+FileHandle::FileHandle(const SharedPtr<File> &file, AttachDirection direction) : m_file(file), m_direction(direction) {
+    file->attach(direction);
+}
+
+FileHandle::~FileHandle() {
+    if (m_file) {
+        m_file->detach(m_direction);
+    }
+}
+
 SysResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
     return m_file->ioctl(request, arg);
 }

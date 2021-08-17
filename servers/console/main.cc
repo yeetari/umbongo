@@ -16,7 +16,6 @@ usize main(usize, const char **) {
     while (true) {
         // NOLINTNEXTLINE
         Array<char, 8192> buf;
-        // TODO: This is non-blocking.
         auto nread = Syscall::invoke(Syscall::read, 0, buf.data(), buf.size());
         if (nread < 0) {
             ENSURE_NOT_REACHED();

@@ -16,6 +16,7 @@
 #include <ustd/Memory.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
@@ -59,7 +60,7 @@ void watch_loop(HostController *controller) {
                 controller->on_detach(port);
             }
         }
-        Scheduler::yield();
+        Scheduler::yield(true);
     }
 }
 
@@ -387,9 +388,9 @@ void HostController::send_command(TransferRequestBlock *command) {
 }
 
 void HostController::spawn_watch_thread() {
-    auto *watch_thread = Thread::create_kernel(&watch_loop);
+    auto watch_thread = Thread::create_kernel(&watch_loop);
     watch_thread->register_state().rdi = reinterpret_cast<uintptr>(this);
-    Scheduler::insert_thread(watch_thread);
+    Scheduler::insert_thread(ustd::move(watch_thread));
 }
 
 } // namespace usb

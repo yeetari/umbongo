@@ -8,6 +8,7 @@
 #include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
 struct Scheduler;
@@ -22,12 +23,15 @@ private:
     const bool m_is_kernel;
     SharedPtr<VirtSpace> m_virt_space;
     Vector<Optional<FileHandle>> m_fds;
+    usize m_thread_count{0};
 
     Process(bool is_kernel, SharedPtr<VirtSpace> virt_space);
 
     uint32 allocate_fd();
 
 public:
+    static SharedPtr<Process> from_pid(usize pid);
+
     Process(const Process &) = delete;
     Process(Process &&) = delete;
     ~Process() = default;
@@ -35,7 +39,7 @@ public:
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;
 
-    Thread *create_thread();
+    UniquePtr<Thread> create_thread();
 
     SysResult sys_allocate_region(usize size, MemoryProt prot);
     SysResult sys_close(uint32 fd);
@@ -45,7 +49,6 @@ public:
     SysResult sys_exit(usize code) const;
     SysResult sys_getpid() const;
     SysResult sys_ioctl(uint32 fd, IoctlRequest request, void *arg);
-    SysResult sys_is_alive(usize pid);
     SysResult sys_mkdir(const char *path) const;
     SysResult sys_mmap(uint32 fd) const;
     SysResult sys_mount(const char *target, const char *fs_type) const;
@@ -54,8 +57,10 @@ public:
     SysResult sys_read(uint32 fd, void *data, usize size);
     SysResult sys_seek(uint32 fd, usize offset, SeekMode mode);
     SysResult sys_size(uint32 fd);
+    SysResult sys_wait_pid(usize pid);
     SysResult sys_write(uint32 fd, void *data, usize size);
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
+    usize thread_count() const { return m_thread_count; }
 };

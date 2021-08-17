@@ -12,6 +12,8 @@ class InodeFile final : public File {
 public:
     explicit InodeFile(Inode *inode) : m_inode(inode) {}
 
+    bool can_read() override { return true; }
+    bool can_write() override { return true; }
     usize read(Span<void> data, usize offset) override;
     usize size() override;
     usize write(Span<const void> data, usize offset) override;

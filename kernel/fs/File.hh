@@ -8,6 +8,12 @@
 
 class VirtSpace;
 
+enum class AttachDirection {
+    Read,
+    Write,
+    ReadWrite,
+};
+
 class File : public Shareable<File> {
 public:
     File() = default;
@@ -19,6 +25,10 @@ public:
     File &operator=(File &&) = delete;
 
     // TODO: Const some of these?
+    virtual void attach(AttachDirection) {}
+    virtual void detach(AttachDirection) {}
+    virtual bool can_read() = 0;
+    virtual bool can_write() = 0;
     virtual SysResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
     virtual uintptr mmap(VirtSpace &) { return 0; }
     virtual usize read(Span<void> data, usize offset = 0) = 0;

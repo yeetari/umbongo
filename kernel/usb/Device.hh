@@ -50,6 +50,8 @@ public:
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
+    bool can_read() override;
+    bool can_write() override;
     virtual void poll() {}
 
     Endpoint *create_endpoint(uint8 address);

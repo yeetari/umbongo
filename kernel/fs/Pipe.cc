@@ -1,5 +1,7 @@
 #include <kernel/fs/Pipe.hh>
 
+#include <kernel/fs/File.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
@@ -20,6 +22,34 @@ Pipe::Pipe() : m_read_buffer(&m_buffer1), m_write_buffer(&m_buffer2) {
 
 Pipe::~Pipe() {
     delete[] m_data;
+}
+
+void Pipe::attach(AttachDirection direction) {
+    ASSERT(direction != AttachDirection::ReadWrite);
+    if (direction == AttachDirection::Read) {
+        m_reader_count++;
+    } else if (direction == AttachDirection::Write) {
+        m_writer_count++;
+    }
+}
+
+void Pipe::detach(AttachDirection direction) {
+    ASSERT(direction != AttachDirection::ReadWrite);
+    if (direction == AttachDirection::Read) {
+        ASSERT(m_reader_count > 0);
+        m_reader_count--;
+    } else if (direction == AttachDirection::Write) {
+        ASSERT(m_writer_count > 0);
+        m_writer_count--;
+    }
+}
+
+bool Pipe::can_read() {
+    return m_writer_count == 0 || m_read_position < m_read_buffer->size || m_write_buffer->size != 0;
+}
+
+bool Pipe::can_write() {
+    return k_buffer_size - m_write_buffer->size != 0;
 }
 
 usize Pipe::read(Span<void> data, usize) {

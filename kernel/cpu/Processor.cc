@@ -283,13 +283,11 @@ void Processor::initialise() {
         idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr)));
     }
 
-    // Allocate CPU local storage struct and allocate some kernel stack for syscalls/interrupt handling.
+    // Allocate CPU local storage struct and allocate a stack for interrupt handling. Also set IO permission bitmap base
+    // to `sizeof(Tss)`. This makes any ring 3 attempt to use IO ports fail with a #GP exception since the TSS limit is
+    // also its size.
     auto *storage = new LocalStorage;
-    storage->kernel_stack = new char[4_KiB] + 4_KiB;
-
-    // Set kernel stack for interrupt handling. Also set IO permission bitmap base to `sizeof(Tss)`. This makes any ring
-    // 3 attempt to use IO ports fail with a #GP exception since the TSS limit is also its size.
-    tss->rsp0 = storage->kernel_stack;
+    tss->rsp0 = new char[4_KiB] + 4_KiB;
     tss->iopb = sizeof(Tss);
 
     // Load our new GDT, IDT and TSS. Flushing the GDT involves performing an iret to change the current code selector.
@@ -356,6 +354,10 @@ void Processor::set_apic(LocalApic *apic) {
 
 void Processor::set_current_thread(Thread *thread) {
     write_gs(__builtin_offsetof(LocalStorage, current_thread), reinterpret_cast<uint64>(thread));
+}
+
+void Processor::set_kernel_stack(void *stack) {
+    write_gs(__builtin_offsetof(LocalStorage, kernel_stack), reinterpret_cast<uint64>(stack));
 }
 
 void Processor::wire_interrupt(uint64 vector, InterruptHandler handler) {

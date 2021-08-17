@@ -25,6 +25,8 @@ class UsbKeyboardDevice final : public usb::Device {
 public:
     explicit UsbKeyboardDevice(usb::Device &&device);
 
+    bool can_read() override;
+    bool can_write() override { return true; }
     void poll() override;
     usize read(Span<void> data, usize offset) override;
 

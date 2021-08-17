@@ -17,6 +17,8 @@ public:
     explicit FramebufferDevice(uintptr base, uint32 width, uint32 height, uint64 pitch)
         : m_base(base), m_width(width), m_height(height), m_pitch(pitch) {}
 
+    bool can_read() override { return true; }
+    bool can_write() override { return true; }
     SysResult ioctl(IoctlRequest request, void *arg) override;
     uintptr mmap(VirtSpace &virt_space) override;
 

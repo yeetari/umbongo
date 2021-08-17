@@ -6,6 +6,7 @@
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
@@ -29,6 +30,6 @@ uint32 Process::allocate_fd() {
     return m_fds.size() - 1;
 }
 
-Thread *Process::create_thread() {
-    return new Thread(this);
+UniquePtr<Thread> Process::create_thread() {
+    return ustd::make_unique<Thread>(this);
 }

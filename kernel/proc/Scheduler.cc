@@ -9,11 +9,13 @@
 #include <kernel/proc/Hpet.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Thread.hh>
+#include <kernel/proc/ThreadBlocker.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 
 namespace {
 
@@ -66,6 +68,17 @@ void handle_page_fault(RegisterState *regs) {
 
 extern "C" void switch_now(RegisterState *regs);
 
+SharedPtr<Process> Process::from_pid(usize pid) {
+    Thread *thread = s_base_thread;
+    do {
+        if (thread->process().pid() == pid) {
+            return thread->m_process;
+        }
+        thread = thread->m_next;
+    } while (thread != s_base_thread);
+    return {};
+}
+
 void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     // Retrieve HPET address from ACPI tables and make sure the values are sane.
     const auto &hpet_address = hpet_table->base_address();
@@ -90,7 +103,7 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
 
     // Initialise idle thread and process. We pass null as the entry point as when the thread first gets interrupted,
     // its state will be saved.
-    s_base_thread = Thread::create_kernel(nullptr);
+    s_base_thread = Thread::create_kernel(nullptr).disown();
     s_base_thread->m_prev = s_base_thread;
     s_base_thread->m_next = s_base_thread;
     Processor::set_current_thread(s_base_thread);
@@ -106,7 +119,8 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
 }
 
-void Scheduler::insert_thread(Thread *thread) {
+void Scheduler::insert_thread(UniquePtr<Thread> &&unique_thread) {
+    auto *thread = unique_thread.disown();
     auto *prev = s_base_thread->m_prev;
     thread->m_prev = prev;
     thread->m_next = s_base_thread;
@@ -126,6 +140,7 @@ void Scheduler::start() {
             thread = next;
         } while (thread != s_base_thread);
         asm volatile("hlt");
+        Scheduler::yield(true);
     }
 }
 
@@ -134,6 +149,13 @@ void Scheduler::switch_next(RegisterState *regs) {
     do {
         next_thread = next_thread->m_next;
         ASSERT_PEDANTIC(next_thread != nullptr);
+        if (next_thread->m_state == ThreadState::Blocked) {
+            ASSERT_PEDANTIC(next_thread->m_blocker);
+            if (next_thread->m_blocker->should_unblock()) {
+                next_thread->m_blocker.clear();
+                next_thread->m_state = ThreadState::Alive;
+            }
+        }
     } while (next_thread->m_state != ThreadState::Alive);
     memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     auto &process = *next_thread->m_process;
@@ -142,6 +164,7 @@ void Scheduler::switch_next(RegisterState *regs) {
     }
     Processor::apic()->set_timer_count(s_ticks);
     Processor::set_current_thread(next_thread);
+    Processor::set_kernel_stack(next_thread->m_kernel_stack);
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
@@ -156,7 +179,11 @@ void Scheduler::wait(usize millis) {
     s_hpet->spin(millis);
 }
 
-void Scheduler::yield() {
+void Scheduler::yield(bool save_state) {
+    if (save_state) {
+        asm volatile("int $40");
+        return;
+    }
     RegisterState regs{};
     switch_next(&regs);
     switch_now(&regs);
@@ -164,5 +191,5 @@ void Scheduler::yield() {
 
 void Scheduler::yield_and_kill() {
     Processor::current_thread()->kill();
-    yield();
+    yield(false);
 }
