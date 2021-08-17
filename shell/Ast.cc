@@ -1,9 +1,6 @@
 #include "Ast.hh"
 #include "Value.hh"
 
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
-#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
@@ -93,23 +90,7 @@ UniquePtr<Value> List::evaluate() const {
 }
 
 UniquePtr<Value> Pipe::evaluate() const {
-    Array<uint32, 2> pipe_fds{};
-    Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
-    if (auto lhs = m_lhs->evaluate(); auto *job = lhs->as_or_null<Job>()) {
-        Vector<FdPair> copy_fds;
-        copy_fds.push(FdPair{pipe_fds[1], 1});
-        job->spawn(copy_fds);
-        job->await_completion();
-    }
-    auto rhs = m_rhs->evaluate();
-    if (auto *job = rhs->as_or_null<Job>()) {
-        Vector<FdPair> copy_fds;
-        copy_fds.push(FdPair{pipe_fds[0], 0});
-        job->spawn(copy_fds);
-    }
-    Syscall::invoke(Syscall::close, pipe_fds[0]);
-    Syscall::invoke(Syscall::close, pipe_fds[1]);
-    return rhs;
+    return ustd::make_unique<PipeValue>(m_lhs->evaluate(), m_rhs->evaluate());
 }
 
 UniquePtr<Value> StringLiteral::evaluate() const {

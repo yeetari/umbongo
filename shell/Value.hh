@@ -9,6 +9,7 @@
 enum class ValueKind {
     Job,
     List,
+    Pipe,
     String,
 };
 
@@ -56,6 +57,19 @@ public:
     explicit ListValue(Vector<UniquePtr<Value>> &&values) : Value(k_kind), m_values(ustd::move(values)) {}
 
     const Vector<UniquePtr<Value>> &values() const { return m_values; }
+};
+
+class PipeValue : public Value {
+    const UniquePtr<Value> m_lhs;
+    const UniquePtr<Value> m_rhs;
+
+public:
+    static constexpr auto k_kind = ValueKind::Pipe;
+    PipeValue(UniquePtr<Value> &&lhs, UniquePtr<Value> &&rhs)
+        : Value(k_kind), m_lhs(ustd::move(lhs)), m_rhs(ustd::move(rhs)) {}
+
+    Value &lhs() const { return *m_lhs; }
+    Value &rhs() const { return *m_rhs; }
 };
 
 class StringValue : public Value {
