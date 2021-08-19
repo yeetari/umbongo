@@ -61,6 +61,7 @@ install(TARGETS kernel DESTINATION .)
 target_compile_options(kernel PRIVATE
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-strong>
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
+    -fno-pic
     -mno-red-zone
     # Allow non-trivial globals in the kernel.
     -Wno-exit-time-destructors
