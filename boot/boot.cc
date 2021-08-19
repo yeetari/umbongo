@@ -315,7 +315,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
         .map = map,
         // Recalculate map entry count here. We can't use efi_map_entry_count since the memory for the memory map needs
         // to be overallocated to store an entry for itself.
-        .map_entry_count = map_size / descriptor_size,
+        .map_entry_count = map_size / descriptor_size - 1,
         .ram_fs = ram_fs,
     };
 
