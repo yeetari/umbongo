@@ -26,7 +26,7 @@ struct MemoryManagerData {
 
 Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
     const usize page_count = round_up(size, k_frame_size) / k_frame_size;
-    for (usize i = 0; i < boot_info->map_entry_count; i++) {
+    for (usize i = boot_info->map_entry_count; i > 0; i--) {
         auto &entry = boot_info->map[i];
         if (entry.type != MemoryType::Reserved && entry.page_count >= page_count) {
             return entry.base;
@@ -110,6 +110,8 @@ void parse_memory_map(BootInfo *boot_info) {
 
 void MemoryManager::initialise(BootInfo *boot_info) {
     parse_memory_map(boot_info);
+    ENSURE(is_frame_free(0x8000));
+    set_frame(0x8000 / k_frame_size);
 
     // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
     // takes 4KiB of page structures to do.

@@ -69,6 +69,9 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // TODO: Disable interrupts for now, something weird is happening with interrupting kernel tasks.
     InterruptDisabler disabler;
 
+    auto *madt = xsdt->find<acpi::ApicTable>();
+    Processor::start_aps(madt);
+
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr);
     for (const auto *segment : *mcfg) {

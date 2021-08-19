@@ -2,15 +2,22 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/Syscall.hh>
+#include <kernel/acpi/ApicTable.hh>
+#include <kernel/acpi/InterruptController.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/PrivilegeLevel.hh>
 #include <kernel/cpu/RegisterState.hh>
+#include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Atomic.hh>
 #include <ustd/Log.hh>
+#include <ustd/Memory.hh>
+#include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
 namespace {
@@ -181,6 +188,7 @@ Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENU
 #pragma clang diagnostic pop
 
 LocalApic *s_apic = nullptr;
+Atomic<uint8> s_initialised_ap_count = 0;
 
 uint64 read_cr0() {
     uint64 cr0 = 0;
@@ -235,8 +243,18 @@ void write_msr(uint32 msr, uint64 value) {
 extern uint8 k_interrupt_stubs_start;
 extern uint8 k_interrupt_stubs_end;
 
+extern "C" void ap_bootstrap();
+extern "C" void ap_bootstrap_end();
+extern "C" uintptr *ap_prepare();
 extern "C" void flush_gdt(Gdt *gdt);
 extern "C" void syscall_stub();
+
+extern "C" void ap_entry() {
+    s_initialised_ap_count.fetch_add(1, MemoryOrder::AcqRel);
+    while (true) {
+        asm volatile("hlt");
+    }
+}
 
 extern "C" void interrupt_handler(RegisterState *regs) {
     ASSERT_PEDANTIC(regs->int_num < k_interrupt_count);
@@ -345,6 +363,51 @@ void Processor::initialise() {
     // TODO: Save SSE state on context switch. Also remove `-mno-sse` from applications, and maybe the kernel.
     write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
     write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
+}
+
+void Processor::start_aps(acpi::ApicTable *madt) {
+    const usize bootstrap_size =
+        reinterpret_cast<uintptr>(&ap_bootstrap_end) - reinterpret_cast<uintptr>(&ap_bootstrap);
+    ENSURE(bootstrap_size <= 4_KiB);
+    memcpy(reinterpret_cast<void *>(0x8000), reinterpret_cast<void *>(reinterpret_cast<uintptr>(&ap_bootstrap)),
+           bootstrap_size);
+    ScopeGuard free_bootstrap_guard([] {
+        MemoryManager::free_frame(0x8000);
+    });
+
+    uint8 ap_count = 0;
+    for (auto *controller : *madt) {
+        if (controller->type == 0) {
+            auto *local_apic = reinterpret_cast<acpi::LocalApicController *>(controller);
+            if ((local_apic->flags & 1u) == 0 && (local_apic->flags & 2u) == 0) {
+                logln(" cpu: CPU {} not available!", local_apic->apic_id);
+                continue;
+            }
+            ap_count++;
+        }
+    }
+    ENSURE(ap_count > 0);
+    ap_count--;
+
+    auto *stacks = ap_prepare();
+    for (uint8 i = 0; i < ap_count; i++) {
+        // TODO: Free these stacks later on somehow.
+        stacks[i] = MemoryManager::alloc_frame() + 4_KiB;
+    }
+
+    apic()->send_ipi(0, MessageType::Init, DestinationMode::Physical, Level::Assert, TriggerMode::Edge,
+                     DestinationShorthand::AllExcludingSelf);
+    Scheduler::wait(10);
+    for (uint8 i = 0; i < 2; i++) {
+        apic()->send_ipi(8, MessageType::Startup, DestinationMode::Physical, Level::Assert, TriggerMode::Edge,
+                         DestinationShorthand::AllExcludingSelf);
+        Scheduler::wait(1);
+    }
+
+    while (s_initialised_ap_count.load(MemoryOrder::Acquire) != ap_count) {
+        asm volatile("pause");
+    }
+    logln(" cpu: Started {} APs", ap_count);
 }
 
 void Processor::set_apic(LocalApic *apic) {

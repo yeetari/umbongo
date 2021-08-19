@@ -56,7 +56,8 @@ add_executable(kernel
     Syscalls.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
-    cpu/interrupts.asm)
+    cpu/interrupts.asm
+    cpu/smp.asm)
 install(TARGETS kernel DESTINATION .)
 target_compile_options(kernel PRIVATE
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-strong>

@@ -6,6 +6,8 @@ namespace {
 
 constexpr usize k_reg_eoi = 0xb0;
 constexpr usize k_reg_siv = 0xf0;
+constexpr usize k_reg_icr_low = 0x300;
+constexpr usize k_reg_icr_high = 0x310;
 
 constexpr usize k_reg_timer = 0x320;
 constexpr usize k_reg_timer_count = 0x380;
@@ -31,6 +33,24 @@ void LocalApic::enable() {
 
 void LocalApic::send_eoi() {
     write(k_reg_eoi, 0u);
+}
+
+void LocalApic::send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+                         DestinationShorthand shorthand, uint8 destination) {
+    write(k_reg_icr_high, static_cast<uint32>(destination) << 24u);
+    write(k_reg_icr_low, vector | (static_cast<uint32>(type) << 8u) | (static_cast<uint32>(mode) << 11u) |
+                             (static_cast<uint32>(level) << 14u) | (static_cast<uint32>(trigger_mode) << 15u) |
+                             (static_cast<uint32>(shorthand) << 18u));
+}
+
+void LocalApic::send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+                         DestinationShorthand shorthand) {
+    send_ipi(vector, type, mode, level, trigger_mode, shorthand, 0);
+}
+
+void LocalApic::send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+                         uint8 destination) {
+    send_ipi(vector, type, mode, level, trigger_mode, DestinationShorthand::Destination, destination);
 }
 
 void LocalApic::set_timer(TimerMode mode, uint8 vector) {
