@@ -1,5 +1,7 @@
 #include <kernel/proc/Scheduler.hh>
 
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/acpi/GenericAddress.hh>
 #include <kernel/acpi/HpetTable.hh>
 #include <kernel/cpu/LocalApic.hh>
@@ -11,11 +13,13 @@
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadBlocker.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Atomic.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 
 namespace {
 
@@ -24,6 +28,7 @@ constexpr uint8 k_timer_vector = 40;
 
 Thread *s_base_thread = nullptr;
 Hpet *s_hpet = nullptr;
+SpinLock s_scheduler_lock;
 uint32 s_ticks = 0;
 
 void dump_backtrace(RegisterState *regs) {
@@ -69,6 +74,7 @@ void handle_page_fault(RegisterState *regs) {
 extern "C" void switch_now(RegisterState *regs);
 
 SharedPtr<Process> Process::from_pid(usize pid) {
+    ScopedLock locker(s_scheduler_lock);
     Thread *thread = s_base_thread;
     do {
         if (thread->process().pid() == pid) {
@@ -108,10 +114,7 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
     s_base_thread->m_next = s_base_thread;
     Processor::set_current_thread(s_base_thread);
 
-    // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
-    // depending on the process' priority.
-    Processor::apic()->set_timer(LocalApic::TimerMode::Periodic, k_timer_vector);
-    Processor::apic()->set_timer_count(s_ticks);
+    // Wire various interrupts for fault handling and timing.
     Processor::wire_interrupt(0, &handle_fault);
     Processor::wire_interrupt(6, &handle_fault);
     Processor::wire_interrupt(13, &handle_fault);
@@ -120,6 +123,7 @@ void Scheduler::initialise(acpi::HpetTable *hpet_table) {
 }
 
 void Scheduler::insert_thread(UniquePtr<Thread> &&unique_thread) {
+    ScopedLock locker(s_scheduler_lock);
     auto *thread = unique_thread.disown();
     auto *prev = s_base_thread->m_prev;
     thread->m_prev = prev;
@@ -128,26 +132,46 @@ void Scheduler::insert_thread(UniquePtr<Thread> &&unique_thread) {
     prev->m_next = thread;
 }
 
+void Scheduler::setup() {
+    // Enable the local APIC and acknowledge any outstanding interrupts.
+    Processor::apic()->enable();
+    Processor::apic()->send_eoi();
+
+    // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
+    // depending on the process' priority.
+    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
+    Processor::apic()->set_timer_count(s_ticks);
+
+    // Each AP needs an idle thread created to ensure that there is always something to schedule.
+    // TODO: Better idle thread system. Currently, idle threads are scheduled normally, wasting time if there is actual
+    //       work to be done.
+    if (Processor::id() != 0) {
+        auto idle_thread = Thread::create_kernel(&start);
+        Processor::set_current_thread(idle_thread.obj());
+        insert_thread(ustd::move(idle_thread));
+    }
+}
+
 void Scheduler::start() {
     asm volatile("sti");
     while (true) {
-        auto *thread = s_base_thread;
-        do {
-            auto *next = thread->m_next;
-            if (thread->m_state == ThreadState::Dead) {
-                delete thread;
-            }
-            thread = next;
-        } while (thread != s_base_thread);
         asm volatile("hlt");
-        Scheduler::yield(true);
     }
 }
 
 void Scheduler::switch_next(RegisterState *regs) {
+    ScopedLock locker(s_scheduler_lock);
+    Processor::current_thread()->m_cpu.store(-1, MemoryOrder::Release);
+
     auto *next_thread = Processor::current_thread();
     do {
-        next_thread = next_thread->m_next;
+        if (next_thread->m_state == ThreadState::Dead) {
+            auto *to_delete = next_thread;
+            next_thread = next_thread->m_next;
+            delete to_delete;
+        } else {
+            next_thread = next_thread->m_next;
+        }
         ASSERT_PEDANTIC(next_thread != nullptr);
         if (next_thread->m_state == ThreadState::Blocked) {
             ASSERT_PEDANTIC(next_thread->m_blocker);
@@ -156,7 +180,9 @@ void Scheduler::switch_next(RegisterState *regs) {
                 next_thread->m_state = ThreadState::Alive;
             }
         }
-    } while (next_thread->m_state != ThreadState::Alive);
+    } while (next_thread->m_state != ThreadState::Alive || next_thread->m_cpu.load(MemoryOrder::Acquire) != -1);
+    next_thread->m_cpu.store(Processor::id(), MemoryOrder::Release);
+    locker.unlock();
     memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     auto &process = *next_thread->m_process;
     if (MemoryManager::current_space() != process.m_virt_space.obj()) {

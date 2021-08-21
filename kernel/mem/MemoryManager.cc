@@ -1,6 +1,8 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/SpinLock.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/Region.hh>
@@ -20,9 +22,9 @@ constexpr usize k_frame_size = 4_KiB;
 struct MemoryManagerData {
     usize *frame_bitset{nullptr};
     usize frame_count{0};
-    VirtSpace *current_space{nullptr};
     VirtSpace *kernel_space{nullptr};
 } s_data;
+SpinLock s_lock;
 
 Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
     const usize page_count = round_up(size, k_frame_size) / k_frame_size;
@@ -145,11 +147,12 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
 }
 
 void MemoryManager::switch_space(VirtSpace &virt_space) {
-    s_data.current_space = &virt_space;
+    Processor::set_current_space(&virt_space);
     Processor::write_cr3(virt_space.m_pml4.obj());
 }
 
 uintptr MemoryManager::alloc_frame() {
+    ScopedLock locker(s_lock);
     for (usize i = 0; i < s_data.frame_count; i++) {
         if (!is_frame_set(i)) {
             set_frame(i);
@@ -160,6 +163,7 @@ uintptr MemoryManager::alloc_frame() {
 }
 
 void MemoryManager::free_frame(uintptr frame) {
+    ScopedLock locker(s_lock);
     ASSERT(frame % k_frame_size == 0);
     const auto index = frame / k_frame_size;
     ASSERT(is_frame_set(index));
@@ -172,6 +176,7 @@ bool MemoryManager::is_frame_free(uintptr frame) {
 }
 
 void *MemoryManager::alloc_contiguous(usize size) {
+    ScopedLock locker(s_lock);
     const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < s_data.frame_count; i += frame_count) {
         bool found_space = true;
@@ -195,6 +200,7 @@ void *MemoryManager::alloc_contiguous(usize size) {
 }
 
 void MemoryManager::free_contiguous(void *ptr, usize size) {
+    ScopedLock locker(s_lock);
     const auto first_frame = reinterpret_cast<uintptr>(ptr);
     ASSERT(first_frame % k_frame_size == 0);
     const auto first_frame_index = first_frame / k_frame_size;
@@ -206,7 +212,7 @@ void MemoryManager::free_contiguous(void *ptr, usize size) {
 }
 
 VirtSpace *MemoryManager::current_space() {
-    return s_data.current_space;
+    return Processor::current_space();
 }
 
 VirtSpace *MemoryManager::kernel_space() {

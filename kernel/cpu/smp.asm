@@ -43,6 +43,8 @@ bits 64
     lock xadd [AP_ABS(.id)], eax
     xor rbp, rbp
     mov rsp, [AP_ABS(.stacks) + eax * 8]
+    mov edi, eax
+    inc edi ; BSP == 0
     call ap_entry
 
 .cr0: dq 0

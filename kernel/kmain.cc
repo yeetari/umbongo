@@ -37,8 +37,6 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
-bool g_console_enabled = true;
-
 namespace {
 
 InterruptPolarity interrupt_polarity(uint8 polarity) {
@@ -174,19 +172,6 @@ usize __stack_chk_guard = 0xdeadc0de;
     ENSURE_NOT_REACHED("Stack smashing detected!");
 }
 
-void dbg_put_char(char ch) {
-    if constexpr (k_kernel_qemu_debug) {
-        port_write(0xe9, ch);
-    }
-    if (g_console_enabled) {
-        Console::put_char(ch);
-    }
-}
-
-void log_put_char(char ch) {
-    dbg_put_char(ch);
-}
-
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
     logln("core: Using font {} {}", g_font.name(), g_font.style());
@@ -203,6 +188,7 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     MemoryManager::initialise(boot_info);
     Processor::initialise();
+    Processor::setup(0);
 
     // Invoke global constructors.
     logln("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
@@ -262,5 +248,6 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     Scheduler::initialise(hpet_table);
     Scheduler::insert_thread(ustd::move(kernel_init_thread));
+    Scheduler::setup();
     Scheduler::start();
 }

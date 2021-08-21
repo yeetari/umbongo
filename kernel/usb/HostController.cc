@@ -60,6 +60,7 @@ void watch_loop(HostController *controller) {
                 controller->on_detach(port);
             }
         }
+        asm volatile("hlt");
         Scheduler::yield(true);
     }
 }

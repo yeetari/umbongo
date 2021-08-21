@@ -13,6 +13,7 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <ustd/Atomic.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
@@ -64,8 +65,8 @@ UniquePtr<Thread> Thread::create_user() {
 }
 
 Thread::Thread(Process *process) : m_process(process) {
-    process->m_thread_count++;
-    m_kernel_stack = new uint8[8_KiB] + 8_KiB;
+    process->m_thread_count.fetch_add(1, MemoryOrder::AcqRel);
+    m_kernel_stack = new uint8[64_KiB] + 64_KiB;
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
@@ -76,8 +77,8 @@ Thread::Thread(Process *process) : m_process(process) {
 }
 
 Thread::~Thread() {
-    delete (m_kernel_stack - 8_KiB);
-    m_process->m_thread_count--;
+    delete (m_kernel_stack - 64_KiB);
+    m_process->m_thread_count.fetch_sub(1, MemoryOrder::AcqRel);
     m_prev->m_next = m_next;
     m_next->m_prev = m_prev;
 }

@@ -1,9 +1,11 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
+#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Atomic.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -30,6 +32,7 @@ private:
     RegisterState m_register_state{};
     ThreadState m_state{ThreadState::Alive};
     UniquePtr<ThreadBlocker> m_blocker;
+    Atomic<int16> m_cpu{-1};
     uint8 *m_kernel_stack{nullptr};
 
     Thread *m_prev{nullptr};
@@ -63,8 +66,11 @@ public:
 
 template <typename T, typename... Args>
 void Thread::block(Args &&...args) {
-    ASSERT(m_state != ThreadState::Blocked);
-    m_blocker = ustd::make_unique<T>(ustd::forward<Args>(args)...);
-    m_state = ThreadState::Blocked;
+    {
+        InterruptDisabler disabler;
+        ASSERT(m_state != ThreadState::Blocked);
+        m_blocker = ustd::make_unique<T>(ustd::forward<Args>(args)...);
+        m_state = ThreadState::Blocked;
+    }
     Scheduler::yield(true);
 }

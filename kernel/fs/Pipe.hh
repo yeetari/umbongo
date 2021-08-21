@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/fs/File.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
@@ -17,6 +18,7 @@ class Pipe final : public File {
     usize m_read_position{0};
     uint32 m_reader_count{0};
     uint32 m_writer_count{0};
+    SpinLock m_lock;
 
 public:
     Pipe();

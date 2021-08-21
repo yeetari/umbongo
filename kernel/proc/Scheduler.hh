@@ -15,6 +15,7 @@ class Thread;
 struct Scheduler {
     static void initialise(acpi::HpetTable *hpet_table);
     static void insert_thread(UniquePtr<Thread> &&thread);
+    static void setup();
     static void start();
     static void switch_next(RegisterState *);
     static void timer_handler(RegisterState *);

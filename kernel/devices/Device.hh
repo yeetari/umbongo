@@ -10,7 +10,7 @@ class Device : public File {
     bool m_connected{true};
 
 public:
-    static const Vector<Device *> &all_devices();
+    static Vector<Device *> all_devices();
 
     Device();
     Device(const Device &) = delete;

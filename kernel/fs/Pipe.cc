@@ -1,5 +1,6 @@
 #include <kernel/fs/Pipe.hh>
 
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/fs/File.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
@@ -45,14 +46,17 @@ void Pipe::detach(AttachDirection direction) {
 }
 
 bool Pipe::can_read() {
+    ScopedLock locker(m_lock);
     return m_writer_count == 0 || m_read_position < m_read_buffer->size || m_write_buffer->size != 0;
 }
 
 bool Pipe::can_write() {
+    ScopedLock locker(m_lock);
     return k_buffer_size - m_write_buffer->size != 0;
 }
 
 usize Pipe::read(Span<void> data, usize) {
+    ScopedLock locker(m_lock);
     if (m_read_position >= m_read_buffer->size && m_write_buffer->size != 0) {
         ustd::swap(m_read_buffer, m_write_buffer);
         m_read_position = 0;
@@ -72,6 +76,7 @@ usize Pipe::size() {
 }
 
 usize Pipe::write(Span<const void> data, usize) {
+    ScopedLock locker(m_lock);
     usize write_size = ustd::min(data.size(), k_buffer_size - m_write_buffer->size);
     memcpy(m_write_buffer->data + m_write_buffer->size, data.data(), write_size);
     m_write_buffer->size += write_size;

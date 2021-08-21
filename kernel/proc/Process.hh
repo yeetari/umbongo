@@ -1,10 +1,12 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
-#include <ustd/Optional.hh>        // IWYU pragma: keep
+#include <ustd/Atomic.hh>
+#include <ustd/Optional.hh> // IWYU pragma: keep
 #include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -23,7 +25,8 @@ private:
     const bool m_is_kernel;
     SharedPtr<VirtSpace> m_virt_space;
     Vector<Optional<FileHandle>> m_fds;
-    usize m_thread_count{0};
+    Atomic<usize> m_thread_count{0};
+    mutable SpinLock m_lock;
 
     Process(bool is_kernel, SharedPtr<VirtSpace> virt_space);
 
@@ -62,5 +65,5 @@ public:
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
-    usize thread_count() const { return m_thread_count; }
+    usize thread_count() const { return m_thread_count.load(MemoryOrder::Relaxed); }
 };

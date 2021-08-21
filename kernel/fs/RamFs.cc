@@ -12,6 +12,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
+// TODO: Needs proper locking.
+
 Inode *RamFsInode::create(StringView name, InodeType type) {
     return &m_children.emplace(type, name, this);
 }

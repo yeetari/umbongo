@@ -119,13 +119,13 @@ class [[gnu::packed]] InterruptDescriptor {
     uint32 m_reserved{0};
 
 public:
-    static constexpr InterruptDescriptor create_kernel(void (*handler)()) {
-        return {PrivilegeLevel::Kernel, DescriptorType::InterruptGate, reinterpret_cast<uintptr>(handler)};
+    static constexpr InterruptDescriptor create_kernel(void (*handler)(), uint8 ist) {
+        return {PrivilegeLevel::Kernel, DescriptorType::InterruptGate, reinterpret_cast<uintptr>(handler), ist};
     }
 
     constexpr InterruptDescriptor() = default;
-    constexpr InterruptDescriptor(PrivilegeLevel dpl, DescriptorType type, uint64 base)
-        : m_base_low(base & 0xfffful), m_selector(0x08), m_type(type), m_dpl(dpl), m_present(true),
+    constexpr InterruptDescriptor(PrivilegeLevel dpl, DescriptorType type, uint64 base, uint8 ist)
+        : m_base_low(base & 0xfffful), m_selector(0x08), m_ist(ist), m_type(type), m_dpl(dpl), m_present(true),
           m_base_mid((base >> 16ul) & 0xfffful), m_base_high((base >> 32ul) & 0xfffffffful) {}
 };
 
@@ -156,6 +156,8 @@ struct [[gnu::packed]] LocalStorage {
     void *kernel_stack{nullptr};
     void *user_stack{nullptr};
     Thread *current_thread{nullptr};
+    VirtSpace *current_space{nullptr};
+    uint8 id{0};
 };
 
 struct [[gnu::packed]] SyscallFrame {
@@ -249,11 +251,11 @@ extern "C" uintptr *ap_prepare();
 extern "C" void flush_gdt(Gdt *gdt);
 extern "C" void syscall_stub();
 
-extern "C" void ap_entry() {
+extern "C" void ap_entry(uint8 id) {
     s_initialised_ap_count.fetch_add(1, MemoryOrder::AcqRel);
-    while (true) {
-        asm volatile("hlt");
-    }
+    Processor::setup(id);
+    Scheduler::setup();
+    Scheduler::start();
 }
 
 extern "C" void interrupt_handler(RegisterState *regs) {
@@ -281,43 +283,22 @@ extern "C" void syscall_handler(SyscallFrame *frame, Thread *thread) {
 }
 
 void Processor::initialise() {
-    auto *gdt = new Gdt;
-    auto *idt = new Idt;
-    auto *tss = new Tss;
-
-    // Setup flat GDT.
-    gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
-    gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
-    gdt->set(3, GlobalDescriptor::create_user(DescriptorType::Data));
-    gdt->set(4, GlobalDescriptor::create_user(DescriptorType::Code));
-    gdt->set(5, GlobalDescriptor::create_tss(reinterpret_cast<uintptr>(tss), sizeof(Tss) - 1));
-    gdt->set(6, GlobalDescriptor::create_base_extended(reinterpret_cast<uintptr>(tss) >> 32u));
-
-    // Fill IDT with asm handler stubs. Also make sure that the interrupt stub section isn't empty, which could happen
-    // if the linker accidentally removes it.
+    // Create an fill an IDT with our asm handler stubs. Also make sure that the interrupt stub section isn't empty,
+    // which could happen if the linker accidentally removes it.
     ENSURE(&k_interrupt_stubs_start != &k_interrupt_stubs_end);
+    auto *idt = new Idt;
     for (auto *ptr = &k_interrupt_stubs_start; ptr < &k_interrupt_stubs_end; ptr += 12) {
         const uint64 vector = static_cast<uint64>(ptr - &k_interrupt_stubs_start) / 12u;
-        idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr)));
+        idt->set(vector, InterruptDescriptor::create_kernel(reinterpret_cast<void (*)()>(ptr), vector >= 32 ? 1 : 0));
     }
 
-    // Allocate CPU local storage struct and allocate a stack for interrupt handling. Also set IO permission bitmap base
-    // to `sizeof(Tss)`. This makes any ring 3 attempt to use IO ports fail with a #GP exception since the TSS limit is
-    // also its size.
-    auto *storage = new LocalStorage;
-    tss->rsp0 = new char[4_KiB] + 4_KiB;
-    tss->iopb = sizeof(Tss);
-
-    // Load our new GDT, IDT and TSS. Flushing the GDT involves performing an iret to change the current code selector.
-    // We also fill the interrupt handler table with trap handlers to ensure any unexpected interrupts are caught.
-    flush_gdt(gdt);
+    // Load our new IDT and fill the interrupt handler table with trap handlers to ensure any unexpected interrupts are
+    // caught.
     asm volatile("lidt %0" : : "m"(*idt));
-    asm volatile("ltr %%ax" : : "a"(0x28));
     ustd::fill(s_interrupt_table, &unhandled_interrupt);
 
     // Enable CR0.WP (Write Protect). This prevents the kernel from writing to read only pages.
     write_cr0(read_cr0() | (1u << 16u));
-    write_msr(k_msr_gs_base, reinterpret_cast<uintptr>(storage));
 
     // Enable some hardware protection features, if available.
     CpuId extended_features(0x7);
@@ -343,26 +324,55 @@ void Processor::initialise() {
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 11u) | (1u << 0u));
 
-    // Write selectors to STAR MSR. First write the sysret CS and SS (63:48), then write the syscall CS and SS (47:32).
-    // The bottom 32 bits for the target EIP are not used in long mode. 0x13 is used for the sysret CS/SS pair because
-    // CS is set to 0x13+16 (0x23), which is the user code segment and SS is set to 0x13+8 (0x1b) which is the user data
-    // segment. This is also the reason user code comes after user data in the GDT. 0x08 is used for the syscall CS/SS
-    // pair because CS is set to 0x08, which is the kernel code segment and SS is set to 0x08+8 (0x10), which is the
-    // kernel data segment.
+    // Enable SSE.
+    // TODO: Save SSE state on context switch. Also remove `-mno-sse` from applications, and maybe the kernel.
+    write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
+    write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
+}
+
+void Processor::setup(uint8 id) {
+    auto *gdt = new Gdt;
+    auto *tss = new Tss;
+
+    // Setup a flat GDT.
+    gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
+    gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
+    gdt->set(3, GlobalDescriptor::create_user(DescriptorType::Data));
+    gdt->set(4, GlobalDescriptor::create_user(DescriptorType::Code));
+    gdt->set(5, GlobalDescriptor::create_tss(reinterpret_cast<uintptr>(tss), sizeof(Tss) - 1));
+    gdt->set(6, GlobalDescriptor::create_base_extended(reinterpret_cast<uintptr>(tss) >> 32u));
+
+    // Setup the TSS by allocating a stack for interrupt handling and setting the IO permission bitmap base to
+    // `sizeof(Tss)`. This makes any ring 3 attempt to use IO ports fail with a #GP exception since the TSS limit is
+    // also its size.
+    tss->rsp0 = tss->ist1 = new char[8_KiB] + 8_KiB;
+    tss->ist1 = tss->rsp0;
+    tss->iopb = sizeof(Tss);
+
+    // Load our new GDT and TSS. Flushing the GDT involves performing an iret to change the current code selector.
+    flush_gdt(gdt);
+    asm volatile("ltr %%ax" : : "a"(0x28));
+
+    // Allocate and store our CPU local storage struct.
+    auto *storage = new LocalStorage;
+    storage->id = id;
+    write_msr(k_msr_gs_base, reinterpret_cast<uintptr>(storage));
+
+    // Write selectors to the STAR MSR. First write the sysret CS and SS (63:48), then write the syscall CS and SS
+    // (47:32). The bottom 32 bits for the target EIP are not used in long mode. 0x13 is used for the sysret CS/SS pair
+    // because CS is set to 0x13+16 (0x23), which is the user code segment and SS is set to 0x13+8 (0x1b) which is the
+    // user data segment. This is also the reason user code comes after user data in the GDT. 0x08 is used for the
+    // syscall CS/SS pair because CS is set to 0x08, which is the kernel code segment and SS is set to 0x08+8 (0x10),
+    // which is the kernel data segment.
     uint64 star = 0;
     star |= 0x13ul << 48u;
     star |= 0x08ul << 32u;
     write_msr(k_msr_star, star);
 
-    // Write syscall entry point to the LSTAR MSR. Also set the CPU to clear rflags when a syscall occurs. The original
-    // rflags will be preserved in r11 by the CPU.
+    // Write the syscall entry point to the LSTAR MSR. Also set the CPU to clear rflags when a syscall occurs. The
+    // interrupted rflags will be preserved in r11 by the CPU.
     write_msr(k_msr_lstar, reinterpret_cast<uintptr>(&syscall_stub));
     write_msr(k_msr_sfmask, ~0x2u);
-
-    // Enable SSE.
-    // TODO: Save SSE state on context switch. Also remove `-mno-sse` from applications, and maybe the kernel.
-    write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
-    write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
 }
 
 void Processor::start_aps(acpi::ApicTable *madt) {
@@ -415,6 +425,10 @@ void Processor::set_apic(LocalApic *apic) {
     s_apic = apic;
 }
 
+void Processor::set_current_space(VirtSpace *space) {
+    write_gs(__builtin_offsetof(LocalStorage, current_space), reinterpret_cast<uint64>(space));
+}
+
 void Processor::set_current_thread(Thread *thread) {
     write_gs(__builtin_offsetof(LocalStorage, current_thread), reinterpret_cast<uint64>(thread));
 }
@@ -442,6 +456,14 @@ LocalApic *Processor::apic() {
     return s_apic;
 }
 
+VirtSpace *Processor::current_space() {
+    return reinterpret_cast<VirtSpace *>(read_gs(__builtin_offsetof(LocalStorage, current_space)));
+}
+
 Thread *Processor::current_thread() {
     return reinterpret_cast<Thread *>(read_gs(__builtin_offsetof(LocalStorage, current_thread)));
+}
+
+uint8 Processor::id() {
+    return static_cast<uint8>(read_gs(__builtin_offsetof(LocalStorage, id)));
 }
