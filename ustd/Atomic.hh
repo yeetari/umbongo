@@ -29,6 +29,7 @@ public:
     Atomic &operator=(const Atomic &) = delete;
     Atomic &operator=(Atomic &&) = delete;
 
+    T exchange(T desired, MemoryOrder order) volatile;
     T load(MemoryOrder order) const volatile;
     void store(T value, MemoryOrder order) volatile;
 };
@@ -48,6 +49,9 @@ public:
     Atomic &operator=(Atomic &&) = delete;
 
     // TODO: Declare these out of line.
+    T exchange(T desired, MemoryOrder order) volatile {
+        return __atomic_exchange_n(&m_value, desired, static_cast<int>(order));
+    }
     T load(MemoryOrder order) const volatile { return __atomic_load_n(&m_value, static_cast<int>(order)); }
     void store(T value, MemoryOrder order) volatile { __atomic_store_n(&m_value, value, static_cast<int>(order)); }
 
@@ -58,6 +62,14 @@ public:
         return __atomic_fetch_sub(&m_value, value, static_cast<int>(order));
     }
 };
+
+template <typename T>
+T Atomic<T>::exchange(T desired, MemoryOrder order) volatile {
+    alignas(T) Array<uint8, sizeof(T)> buf;
+    auto *ret = reinterpret_cast<T *>(buf.data());
+    __atomic_exchange(&m_value, &desired, ret, static_cast<int>(order));
+    return *ret;
+}
 
 template <typename T>
 T Atomic<T>::load(MemoryOrder order) const volatile {
