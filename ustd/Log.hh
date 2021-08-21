@@ -8,6 +8,8 @@
 
 void dbg_put_char(char ch);
 void log_put_char(char ch);
+[[gnu::weak]] inline void log_lock() {}
+[[gnu::weak]] inline void log_unlock() {}
 
 namespace ustd {
 namespace detail {
@@ -109,8 +111,10 @@ void dbg(const char *fmt, const Args &...args) {
 
 template <typename... Args>
 void dbgln(const char *fmt, const Args &...args) {
+    log_lock();
     dbg(fmt, args...);
     dbg_put_char('\n');
+    log_unlock();
 }
 
 template <typename... Args>
@@ -121,8 +125,10 @@ void log(const char *fmt, const Args &...args) {
 
 template <typename... Args>
 void logln(const char *fmt, const Args &...args) {
+    log_lock();
     log(fmt, args...);
     log_put_char('\n');
+    log_unlock();
 }
 
 } // namespace ustd
