@@ -90,6 +90,7 @@ if(QEMU_PROG)
         -drive file=fs.img,if=ide,format=raw
         -machine q35
         -nodefaults
+        -no-reboot
         -smp 8)
     add_custom_target(run
         COMMAND ${QEMU_PROG} ${QEMU_FLAGS} -enable-kvm
