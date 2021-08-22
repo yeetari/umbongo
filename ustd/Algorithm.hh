@@ -3,33 +3,26 @@
 #include <ustd/Concepts.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Traits.hh>
+#include <ustd/Utility.hh>
 
 namespace ustd {
 
 // clang-format off
-template <typename Container>
-concept IsContainer = requires(const Container &container) {
+template <typename T>
+concept Container = requires(const T &container) {
     { container.data() } -> ConvertibleTo<const void *>;
-    { container.size() } -> SameAs<usize>;
+    { container.size() } -> Integral;
+    { container.size_bytes() } -> Integral;
 };
 // clang-format on
 
-// TODO: Find a way to use "template <Container<T> ContainerA>" syntax.
-#define CONTAINER_1                                                                                                    \
-    template <typename T, auto... Ts, template <typename, auto...> typename Container>                                 \
-    requires IsContainer<Container<T, Ts...>>
-#define CONTAINER_2                                                                                                    \
-    template <typename T, auto... Ts, template <typename, auto...> typename ContainerA, typename U, auto... Us,        \
-              template <typename, auto...> typename ContainerB>                                                        \
-    requires IsContainer<ContainerA<T, Ts...>> &&IsContainer<ContainerB<U, Us...>>
-
-CONTAINER_2
-constexpr bool equal(const ContainerA<T, Ts...> &a, const ContainerB<U, Us...> &b) {
+template <Container Container, typename T = RemoveRef<decltype(*declval<Container>().data())>>
+constexpr bool equal(const Container &a, const Container &b) {
     if (a.size() != b.size()) {
         return false;
     }
-    if constexpr (IsTriviallyCopyable<T> && IsTriviallyCopyable<U>) {
-        return memcmp(a.data(), b.data(), b.size()) == 0;
+    if constexpr (IsTriviallyCopyable<T>) {
+        return memcmp(a.data(), b.data(), b.size_bytes()) == 0;
     }
     for (usize i = 0; i < a.size(); i++) {
         if (a[i] != b[i]) {
@@ -39,8 +32,8 @@ constexpr bool equal(const ContainerA<T, Ts...> &a, const ContainerB<U, Us...> &
     return true;
 }
 
-CONTAINER_1
-constexpr void fill(Container<T, Ts...> &container, const T &value) {
+template <Container Container, typename T>
+constexpr void fill(Container &container, const T &value) {
     if constexpr (IsTriviallyCopyable<T>) {
         for (auto *elem = container.data(); elem < container.data() + container.size(); elem++) {
             *elem = value;
