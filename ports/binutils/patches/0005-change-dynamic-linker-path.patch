@@ -1,0 +1,25 @@
+From 6a64e64f6349575c358fe8688b41676659e3a21f Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Sun, 22 Aug 2021 15:37:41 +0100
+Subject: [PATCH] change dynamic linker path
+
+---
+ bfd/elfxx-x86.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bfd/elfxx-x86.c b/bfd/elfxx-x86.c
+index 088f6e5c536..17fb0dceff9 100644
+--- a/bfd/elfxx-x86.c
++++ b/bfd/elfxx-x86.c
+@@ -28,7 +28,7 @@
+    section.  */
+ 
+ #define ELF32_DYNAMIC_INTERPRETER "/usr/lib/libc.so.1"
+-#define ELF64_DYNAMIC_INTERPRETER "/lib/ld64.so.1"
++#define ELF64_DYNAMIC_INTERPRETER "/bin/dynamic-linker"
+ #define ELFX32_DYNAMIC_INTERPRETER "/lib/ldx32.so.1"
+ 
+ bool
+-- 
+2.32.0
+
