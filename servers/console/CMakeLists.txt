@@ -8,6 +8,6 @@ add_executable(console-server
     main.cc
     Terminal.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc)
-install(TARGETS console-server DESTINATION .)
+install(TARGETS console-server DESTINATION bin)
 target_gc_sections(console-server)
 target_link_libraries(console-server PRIVATE core)

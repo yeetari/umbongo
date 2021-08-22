@@ -151,7 +151,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     MemoryManager::reclaim(boot_info);
 
     auto init_thread = Thread::create_user();
-    init_thread->exec("/system-server"sv);
+    init_thread->exec("/bin/system-server"sv);
     Scheduler::insert_thread(ustd::move(init_thread));
     Scheduler::yield_and_kill();
 }

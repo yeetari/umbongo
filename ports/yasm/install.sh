@@ -26,9 +26,9 @@ done
 export AR=llvm-ar
 export CC="clang --sysroot=$SYSROOT -fpic -mno-sse"
 export CPPFLAGS="-I$SYSROOT/../../libs/posix"
-export LDFLAGS="-fuse-ld=lld -nostdlib -pie -lcore -lposix -lustd -Xlinker -dynamic-linker -Xlinker /dynamic-linker"
+export LDFLAGS="-fuse-ld=lld -nostdlib -pie -lcore -lposix -lustd -Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker"
 export RANLIB=llvm-ranlib
 export STRIP=llvm-strip
 ./configure --host=x86_64-umbongo --prefix=$SYSROOT
 make clean && make -j$(nproc)
-cp yasm $SYSROOT
+cp yasm $SYSROOT/bin

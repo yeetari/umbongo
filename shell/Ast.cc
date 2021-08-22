@@ -33,9 +33,13 @@ Vector<const char *> build_string_vector(const Value &value) {
 }
 
 String find_command(StringView name) {
-    String path(name.length() + 1);
-    memcpy(path.data() + 1, name.data(), name.length());
+    String path(name.length() + 5);
+    memcpy(path.data() + 5, name.data(), name.length());
     path.data()[0] = '/';
+    path.data()[1] = 'b';
+    path.data()[2] = 'i';
+    path.data()[3] = 'n';
+    path.data()[4] = '/';
     return path;
 }
 

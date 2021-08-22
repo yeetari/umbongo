@@ -26,10 +26,10 @@ done
 export AR=llvm-ar
 export CC="clang --sysroot=$SYSROOT -fpic -nostdlib"
 export CPPFLAGS="-I$SYSROOT/../../libs/posix"
-export LDFLAGS="-Xlinker -dynamic-linker -Xlinker /dynamic-linker -fuse-ld=lld -pie"
+export LDFLAGS="-Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker -fuse-ld=lld -pie"
 export LIBS="-lcore -lposix -lustd"
 export RANLIB=llvm-ranlib
 export STRIP=llvm-strip
 ./configure --host=x86_64-pc-umbongo --target=x86_64-pc-umbongo --prefix=$SYSROOT --disable-gdb --disable-nls --disable-werror
 make clean && make -j$(nproc)
-cp ld/ld-new $SYSROOT/ld
+cp ld/ld-new $SYSROOT/bin/ld

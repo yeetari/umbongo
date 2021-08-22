@@ -115,7 +115,7 @@ include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 add_subdirectory(boot)
 add_subdirectory(dynamic-linker)
 
-add_link_options(LINKER:-dynamic-linker,/dynamic-linker)
+add_link_options(LINKER:-dynamic-linker,/bin/dynamic-linker)
 add_subdirectory(coreutils)
 add_subdirectory(kernel)
 add_subdirectory(libs)

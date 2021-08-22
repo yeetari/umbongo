@@ -18,7 +18,7 @@ usize main(usize, const char **) {
         Syscall::invoke(Syscall::close, pipe_fds[0]);
     }
 
-    if (core::create_process("/console-server") < 0) {
+    if (core::create_process("/bin/console-server") < 0) {
         ENSURE_NOT_REACHED("Failed to start console server");
     }
 
@@ -36,7 +36,7 @@ usize main(usize, const char **) {
         Syscall::invoke(Syscall::close, kb_fd);
     }
 
-    if (core::create_process("/shell") < 0) {
+    if (core::create_process("/bin/shell") < 0) {
         ENSURE_NOT_REACHED("Failed to start shell");
     }
     return 0;
