@@ -3,6 +3,7 @@
 #include "Framebuffer.hh"
 
 #include <kernel/Font.hh>
+#include <ustd/Algorithm.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -38,9 +39,8 @@ void Terminal::backspace() {
 
 void Terminal::clear() {
     for (auto &line : m_lines) {
-        // TODO: Use ustd::fill.
         line.set_dirty(true);
-        memset(line.chars().data(), ' ', line.chars().size());
+        ustd::fill(line.chars(), ' ');
     }
     m_cursor_x = 0;
     m_cursor_y = 0;
