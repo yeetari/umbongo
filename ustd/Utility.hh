@@ -42,6 +42,9 @@ template <typename T>
 using RemoveQual = typename detail::RemoveQualImpl<T>::type;
 
 template <typename T>
+T declval();
+
+template <typename T>
 constexpr T &&forward(RemoveRef<T> &arg) noexcept {
     return static_cast<T &&>(arg);
 }
