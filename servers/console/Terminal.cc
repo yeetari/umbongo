@@ -19,10 +19,12 @@ void Terminal::set_char(uint32 row, uint32 col, char ch) {
     line.set_dirty(true);
     if (ch == '\b') {
         memcpy(&line.chars()[col], &line.chars()[col + 1], line.chars().size() - col - 1);
+        memcpy(&line.colours()[col], &line.colours()[col + 1], line.colours().size() - col - 1);
         return;
     }
     for (uint32 i = line.chars().size() - col - 1; i > 0; i--) {
         line.chars()[col + i] = line.chars()[col + i - 1];
+        line.colours()[col + i] = line.colours()[col + i - 1];
     }
     line.chars()[col] = ch;
 }
@@ -71,7 +73,8 @@ void Terminal::put_char(char ch) {
     if (m_cursor_x == m_column_count - 1) {
         newline();
     }
-    set_char(m_cursor_y, m_cursor_x++, ch);
+    set_char(m_cursor_y, m_cursor_x, ch);
+    m_lines[m_cursor_y].colours()[m_cursor_x++] = m_colour;
 }
 
 void Terminal::clear_cursor() {
@@ -108,17 +111,25 @@ void Terminal::render() {
             if (ch == '\0' || ch == ' ') {
                 continue;
             }
+            const auto colour = line.colours()[col];
             const auto *glyph = g_font.glyph(ch);
             for (uint32 y1 = 0; y1 < glyph->height; y1++) {
                 for (uint32 x1 = 0; x1 < glyph->width; x1++) {
-                    const uint32 colour = glyph->bitmap[y1 * glyph->width + x1];
+                    const uint32 intensity = glyph->bitmap[y1 * glyph->width + x1];
                     const auto x2 =
                         static_cast<uint32>(static_cast<int32>(x1 + (col * g_font.advance())) + glyph->left);
                     const auto y2 = static_cast<uint32>(
                         static_cast<int32>(y1 + (row * g_font.line_height()) + g_font.ascender()) - glyph->top);
-                    m_fb.set(x2, y2, colour | (colour << 8u) | (colour << 16u));
+                    const uint32 b = (((colour >> 0u) & 0xffu) * intensity) / 255;
+                    const uint32 g = (((colour >> 8u) & 0xffu) * intensity) / 255;
+                    const uint32 r = (((colour >> 16u) & 0xffu) * intensity) / 255;
+                    m_fb.set(x2, y2, b | (g << 8u) | (r << 16u));
                 }
             }
         }
     }
+}
+
+void Terminal::set_colour(uint32 r, uint32 g, uint32 b) {
+    m_colour = b | (g << 8u) | (r << 8u);
 }

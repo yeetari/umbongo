@@ -4,8 +4,10 @@
 #include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Log.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 usize main(usize, const char **) {
     Framebuffer framebuffer("/dev/fb"sv);
@@ -13,6 +15,8 @@ usize main(usize, const char **) {
     framebuffer.clear();
 
     bool in_escape = false;
+    uint32 escape_param = 0;
+    Vector<uint32> escape_params;
     while (true) {
         // NOLINTNEXTLINE
         Array<char, 8192> buf;
@@ -28,12 +32,25 @@ usize main(usize, const char **) {
             char ch = buf[i];
             if (ch == '\x1b') {
                 in_escape = true;
+                escape_params.clear();
                 continue;
             }
             if (in_escape && ch == '[') {
                 continue;
             }
             if (in_escape) {
+                if (ch - '0' < 10) {
+                    escape_param *= 10;
+                    escape_param += (static_cast<unsigned char>(ch) - '0');
+                    continue;
+                }
+                if (ch == ';') {
+                    escape_params.push(escape_param);
+                    escape_param = 0;
+                    continue;
+                }
+                escape_params.push(escape_param);
+                escape_param = 0;
                 in_escape = false;
                 switch (ch) {
                 case 'D':
@@ -45,8 +62,34 @@ usize main(usize, const char **) {
                 case 'J':
                     terminal.clear();
                     continue;
+                case 'm':
+                    if (escape_params.empty()) {
+                        escape_params.push(0);
+                    }
+                    switch (escape_params[0]) {
+                    case 38: // Set foreground colour
+                        if (escape_params.size() < 2) {
+                            dbgln("SGR has no colour type");
+                            break;
+                        }
+                        if (escape_params[1] != 2) {
+                            dbgln("Unknown colour type {}", escape_params[1]);
+                            break;
+                        }
+                        if (escape_params.size() != 5) {
+                            dbgln("Incorrect number of parameters for 24-bit colour set");
+                            break;
+                        }
+                        terminal.set_colour(escape_params[2], escape_params[3], escape_params[4]);
+                        break;
+                    default:
+                        dbgln("Unknown SGR code {}", escape_params[0]);
+                        break;
+                    }
+                    continue;
                 default:
-                    ENSURE_NOT_REACHED();
+                    dbg("Unknown CSI code {:c}", ch);
+                    continue;
                 }
             }
 
