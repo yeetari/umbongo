@@ -27,13 +27,13 @@ void execute(Value &value, Vector<FdPair> &rewirings) {
         switch (builtin->function()) {
         case BuiltinFunction::Cd:
             if (args.size() != 1 && args.size() != 2) {
-                logln("ush: cd: too many arguments");
+                printf("ush: cd: too many arguments\n");
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
             auto rc = Syscall::invoke(Syscall::chdir, dir);
             if (rc < 0) {
-                logln("ush: cd: {}: {}", dir, core::error_string(rc));
+                printf("ush: cd: {}: {}\n", dir, core::error_string(rc));
             }
             break;
         }
@@ -68,7 +68,7 @@ void Job::spawn(const Vector<FdPair> &copy_fds) {
     }
     ssize rc = core::create_process(m_command.data(), m_args, copy_fds);
     if (rc < 0) {
-        logln("ush: {}: command not found", m_command.view());
+        printf("ush: {}: command not found\n", m_command.view());
         return;
     }
     m_pid = static_cast<usize>(rc);

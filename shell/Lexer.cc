@@ -50,7 +50,7 @@ Token Lexer::next_token() {
         }
         return String(buf.data(), buf.size());
     }
-    logln("ush: unexpected {:c}", ch);
+    printf("ush: unexpected {:c}\n", ch);
     return TokenKind::Eof;
 }
 

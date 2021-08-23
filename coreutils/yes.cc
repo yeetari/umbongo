@@ -4,11 +4,11 @@
 usize main(usize argc, const char **argv) {
     while (true) {
         for (usize i = 1; i < argc; i++) {
-            log("{} ", argv[i]);
+            printf("{} ", argv[i]);
         }
         if (argc == 1) {
-            log("y");
+            put_char('y');
         }
-        log_put_char('\n');
+        put_char('\n');
     }
 }

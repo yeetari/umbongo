@@ -12,7 +12,7 @@
 #include <ustd/Vector.hh>
 
 void LineEditor::clear() {
-    log("\x1b[J");
+    printf("\x1b[J");
     m_buffer.clear();
     m_cursor_pos = 0;
     begin_line();
@@ -21,27 +21,27 @@ void LineEditor::clear() {
 void LineEditor::clear_line() {
     for (uint32 i = 0; i < m_cursor_pos; i++) {
         m_buffer.remove(m_cursor_pos - i - 1);
-        log_put_char('\b');
+        put_char('\b');
     }
     m_cursor_pos = 0;
 }
 
 void LineEditor::goto_start() {
     for (uint32 i = 0; i < m_cursor_pos; i++) {
-        log("\x1b[D");
+        printf("\x1b[D");
     }
     m_cursor_pos = 0;
 }
 
 void LineEditor::goto_end() {
     for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
-        log("\x1b[C");
+        printf("\x1b[C");
     }
     m_cursor_pos = m_buffer.size();
 }
 
 void LineEditor::begin_line() {
-    log("\x1b[38;2;179;179;255m");
+    printf("\x1b[38;2;179;179;255m");
     auto cwd_length = Syscall::invoke<usize>(Syscall::getcwd, nullptr);
     String cwd(cwd_length);
     Syscall::invoke(Syscall::getcwd, cwd.data());
@@ -49,12 +49,12 @@ void LineEditor::begin_line() {
     if (cwd.length() >= 5) {
         StringView start(cwd.data(), 5);
         if (start == "/home") {
-            log("~");
+            printf("~");
             cwd_view = StringView(cwd.data() + 5, cwd.length() - 5);
         }
     }
-    log("{} {}", cwd_view, m_prompt);
-    log("\x1b[38;2;255;255;255m");
+    printf("{} {}", cwd_view, m_prompt);
+    printf("\x1b[38;2;255;255;255m");
 }
 
 Optional<String> LineEditor::handle_key_event(KeyEvent event) {
@@ -63,12 +63,12 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
             return {};
         }
         m_buffer.remove(--m_cursor_pos);
-        log_put_char('\b');
+        put_char('\b');
         return {};
     }
     if (event.character() == '\n') {
         String line(m_buffer.data(), m_buffer.size());
-        log_put_char('\n');
+        put_char('\n');
         if (line.empty()) {
             return ustd::move(line);
         }
@@ -99,10 +99,10 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
                 break;
             }
             m_cursor_pos++;
-            log("\x1b[C");
+            printf("\x1b[C");
             for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
                 m_cursor_pos++;
-                log("\x1b[C");
+                printf("\x1b[C");
                 if (m_buffer[m_cursor_pos] == ' ') {
                     break;
                 }
@@ -113,17 +113,17 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
                 break;
             }
             m_cursor_pos--;
-            log("\x1b[D");
+            printf("\x1b[D");
             for (uint32 i = m_cursor_pos; i > 0; i--) {
                 m_cursor_pos--;
-                log("\x1b[D");
+                printf("\x1b[D");
                 if (m_buffer[m_cursor_pos] == ' ') {
                     break;
                 }
             }
             if (m_cursor_pos != 0) {
                 m_cursor_pos++;
-                log("\x1b[C");
+                printf("\x1b[C");
             }
             break;
         }
@@ -144,7 +144,7 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
             for (auto ch : m_history[m_history_pos]) {
                 m_buffer.push(ch);
                 m_cursor_pos++;
-                log_put_char(ch);
+                put_char(ch);
             }
         }
         return {};
@@ -159,13 +159,13 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
     case 0x4f:
         if (m_cursor_pos < m_buffer.size()) {
             m_cursor_pos++;
-            log("\x1b[C");
+            printf("\x1b[C");
         }
         return {};
     case 0x50:
         if (m_cursor_pos > 0) {
             m_cursor_pos--;
-            log("\x1b[D");
+            printf("\x1b[D");
         }
         return {};
     }
@@ -177,6 +177,6 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
         m_buffer[m_cursor_pos + i] = m_buffer[m_cursor_pos + i - 1];
     }
     m_buffer[m_cursor_pos++] = event.character();
-    log_put_char(event.character());
+    put_char(event.character());
     return {};
 }

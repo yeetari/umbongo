@@ -7,7 +7,7 @@
 #include <ustd/Types.hh>
 
 void dbg_put_char(char ch);
-void log_put_char(char ch);
+void put_char(char ch);
 [[gnu::weak]] inline void log_lock() {}
 [[gnu::weak]] inline void log_unlock() {}
 
@@ -118,16 +118,10 @@ void dbgln(const char *fmt, const Args &...args) {
 }
 
 template <typename... Args>
-void log(const char *fmt, const Args &...args) {
-    (detail::log_part(&log_put_char, fmt, args), ...);
-    detail::log_part(&log_put_char, fmt);
-}
-
-template <typename... Args>
-void logln(const char *fmt, const Args &...args) {
+void printf(const char *fmt, const Args &...args) {
     log_lock();
-    log(fmt, args...);
-    log_put_char('\n');
+    (detail::log_part(&put_char, fmt, args), ...);
+    detail::log_part(&put_char, fmt);
     log_unlock();
 }
 
@@ -135,5 +129,4 @@ void logln(const char *fmt, const Args &...args) {
 
 using ustd::dbg;
 using ustd::dbgln;
-using ustd::log;
-using ustd::logln;
+using ustd::printf;

@@ -105,7 +105,7 @@ void parse_memory_map(BootInfo *boot_info) {
         free_bytes += !is_frame_set(i) ? k_frame_size : 0;
         total_bytes += k_frame_size;
     }
-    logln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+    dbgln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
 }
 
 } // namespace
@@ -138,11 +138,11 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
         }
     }
     if (total_reclaimed >= 1_MiB) {
-        logln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
+        dbgln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
     } else if (total_reclaimed >= 1_KiB) {
-        logln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
+        dbgln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
     } else {
-        logln(" mem: Reclaimed {}B of memory", total_reclaimed);
+        dbgln(" mem: Reclaimed {}B of memory", total_reclaimed);
     }
 }
 

@@ -21,7 +21,7 @@ Optional<Token> Parser::consume(TokenKind kind) {
 Token Parser::expect(TokenKind kind) {
     Token next = m_lexer.next();
     if (next.kind() != kind) {
-        logln("ush: expected {} but got {}", Token::kind_string(kind), next.to_string());
+        printf("ush: expected {} but got {}\n", Token::kind_string(kind), next.to_string());
         return TokenKind::Eof;
     }
     return next;
@@ -51,7 +51,7 @@ UniquePtr<ast::Node> Parser::parse_pipe() {
 UniquePtr<ast::Node> Parser::parse() {
     auto node = parse_pipe();
     if (auto token = m_lexer.next(); token.kind() != TokenKind::Eof) {
-        logln("ush: unexpected {}", token.to_string());
+        printf("ush: unexpected {}\n", token.to_string());
     }
     return node;
 }

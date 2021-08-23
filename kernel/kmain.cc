@@ -73,7 +73,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr);
     for (const auto *segment : *mcfg) {
-        logln("acpi: Found PCI segment {} at {:h} (start_bus={}, end_bus={})", segment->num, segment->base,
+        dbgln("acpi: Found PCI segment {} at {:h} (start_bus={}, end_bus={})", segment->num, segment->base,
               segment->start_bus, segment->end_bus);
     }
 
@@ -112,10 +112,10 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     }
 
     // List all found PCI devices.
-    logln(" pci: Found {} devices total", pci_devices.size());
-    logln(" pci:  - SEGM   BUS  DEV  FUNC   VENDID DEVID   CLAS SUBC PRIF");
+    dbgln(" pci: Found {} devices total", pci_devices.size());
+    dbgln(" pci:  - SEGM   BUS  DEV  FUNC   VENDID DEVID   CLAS SUBC PRIF");
     for (auto &device : pci_devices) {
-        logln(" pci:  - {:h4}:{:h2}:{:h2}:{:h2} - {:h4}:{:h4} ({:h2}:{:h2}:{:h2})", device.bus->segment_num(),
+        dbgln(" pci:  - {:h4}:{:h2}:{:h2}:{:h2} - {:h4}:{:h4} ({:h2}:{:h2}:{:h2})", device.bus->segment_num(),
               device.bus->num(), device.device, device.function, device.vendor_id, device.device_id, device.clas,
               device.subc, device.prif);
     }
@@ -166,7 +166,7 @@ usize __stack_chk_guard = 0xdeadc0de;
 [[noreturn]] extern "C" void __stack_chk_fail() {
     auto *rbp = static_cast<uint64 *>(__builtin_frame_address(0));
     while (rbp != nullptr && rbp[1] != 0) {
-        logln("{:h}", rbp[1]);
+        dbgln("{:h}", rbp[1]);
         rbp = reinterpret_cast<uint64 *>(*rbp);
     }
     ENSURE_NOT_REACHED("Stack smashing detected!");
@@ -174,24 +174,24 @@ usize __stack_chk_guard = 0xdeadc0de;
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
-    logln("core: Using font {} {}", g_font.name(), g_font.style());
+    dbgln("core: Using font {} {}", g_font.name(), g_font.style());
     if constexpr (k_kernel_qemu_debug) {
         ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
     }
     if constexpr (k_kernel_stack_protector) {
-        logln("core: SSP initialised with guard value {:h}", __stack_chk_guard);
+        dbgln("core: SSP initialised with guard value {:h}", __stack_chk_guard);
     }
 
-    logln("core: boot_info = {}", boot_info);
-    logln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
-    logln("core: rsdp = {}", boot_info->rsdp);
+    dbgln("core: boot_info = {}", boot_info);
+    dbgln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
+    dbgln("core: rsdp = {}", boot_info->rsdp);
 
     MemoryManager::initialise(boot_info);
     Processor::initialise();
     Processor::setup(0);
 
     // Invoke global constructors.
-    logln("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
+    dbgln("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
     for (void (**ctor)() = &k_ctors_start; ctor < &k_ctors_end; ctor++) {
         (*ctor)();
     }
@@ -200,11 +200,11 @@ extern "C" void kmain(BootInfo *boot_info) {
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
 
     auto *xsdt = rsdp->xsdt();
-    logln("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
+    dbgln("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
     ENSURE(xsdt->valid());
 
     for (auto *entry : *xsdt) {
-        logln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
+        dbgln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
         ENSURE(entry->valid());
     }
@@ -232,7 +232,7 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     // Enable local APIC and acknowledge any outstanding interrupts.
     auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
-    logln("acpi: Local APIC = {}", apic);
+    dbgln("acpi: Local APIC = {}", apic);
     apic->enable();
     apic->send_eoi();
     Processor::set_apic(apic);

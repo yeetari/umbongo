@@ -20,10 +20,6 @@ void dbg_put_char(char ch) {
     }
 }
 
-void log_put_char(char ch) {
-    dbg_put_char(ch);
-}
-
 void log_lock() {
     s_lock.lock();
 }

@@ -236,7 +236,7 @@ void write_msr(uint32 msr, uint64 value) {
 }
 
 [[noreturn]] void unhandled_interrupt(RegisterState *regs) {
-    logln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
+    dbgln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 
@@ -305,13 +305,13 @@ void Processor::initialise() {
     if ((extended_features.ebx() & (1u << 7u)) != 0) {
         // Enable CR4.SMEP (Supervisor Memory Execute Protection). This prevents the kernel from executing user
         // accessible code.
-        logln(" cpu: Enabling SMEP");
+        dbgln(" cpu: Enabling SMEP");
         write_cr4(read_cr4() | (1u << 20u));
     }
     if ((extended_features.ecx() & (1u << 2u)) != 0) {
         // Enable CR4.UMIP (User-Mode Instruction Prevention). This prevents user code from executing instructions like
         // sgdt and sidt.
-        logln(" cpu: Enabling UMIP");
+        dbgln(" cpu: Enabling UMIP");
         write_cr4(read_cr4() | (1u << 11u));
     }
 
@@ -390,7 +390,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
         if (controller->type == 0) {
             auto *local_apic = reinterpret_cast<acpi::LocalApicController *>(controller);
             if ((local_apic->flags & 1u) == 0 && (local_apic->flags & 2u) == 0) {
-                logln(" cpu: CPU {} not available!", local_apic->apic_id);
+                dbgln(" cpu: CPU {} not available!", local_apic->apic_id);
                 continue;
             }
             ap_count++;
@@ -417,7 +417,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
     while (s_initialised_ap_count.load(MemoryOrder::Acquire) != ap_count) {
         asm volatile("pause");
     }
-    logln(" cpu: Started {} APs", ap_count);
+    dbgln(" cpu: Started {} APs", ap_count);
 }
 
 void Processor::set_apic(LocalApic *apic) {

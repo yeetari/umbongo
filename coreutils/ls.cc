@@ -19,7 +19,7 @@ usize main(usize argc, const char **argv) {
     const char *path = argc == 1 ? "." : argv[1];
     ssize rc = Syscall::invoke(Syscall::read_directory, path, nullptr);
     if (rc < 0) {
-        logln("ls: {}: {}", path, core::error_string(rc));
+        printf("ls: {}: {}\n", path, core::error_string(rc));
         return 1;
     }
     auto byte_count = static_cast<usize>(rc);
@@ -34,7 +34,7 @@ usize main(usize argc, const char **argv) {
     }
     ustd::sort(views, compare_name);
     for (const auto &view : views) {
-        logln("{}", view);
+        printf("{}\n", view);
     }
     return 0;
 }

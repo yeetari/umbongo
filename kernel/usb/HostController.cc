@@ -49,14 +49,14 @@ void watch_loop(HostController *controller) {
             if (port.connected()) {
                 if (!port.enabled()) {
                     if (!port.reset()) {
-                        logln(" usb: Failed to reset port {}!", port.number());
+                        dbgln(" usb: Failed to reset port {}!", port.number());
                     }
                     continue;
                 }
-                logln(" usb: Device attached to port {}", port.number());
+                dbgln(" usb: Device attached to port {}", port.number());
                 controller->on_attach(port);
             } else {
-                logln(" usb: Device removed from port {}", port.number());
+                dbgln(" usb: Device removed from port {}", port.number());
                 controller->on_detach(port);
             }
         }
@@ -102,7 +102,7 @@ void HostController::enable() {
     m_run_offset = read_cap<uint32>(k_cap_reg_run_offset) & ~0x1fu;
 
     const auto usb_spec = read_config<uint8>(k_config_reg_sbrn);
-    logln(" usb: Host Controller is compliant with USB specification {}.{}", usb_spec >> 4u, usb_spec & 0xfu);
+    dbgln(" usb: Host Controller is compliant with USB specification {}.{}", usb_spec >> 4u, usb_spec & 0xfu);
 
     // Ensure run/stop bit is clear and wait until halted bit set. We can only modify the config/control registers when
     // the controller is halted.
@@ -150,7 +150,7 @@ void HostController::enable() {
             // Supported Protocol - dword 0 contains the major/minor version.
             uint8 major = (ext_cap >> 24u) & 0xffu;
             uint8 minor = (ext_cap >> 16u) & 0xffu;
-            logln(" usb: Host Controller supports USB {}.{}", major, minor);
+            dbgln(" usb: Host Controller supports USB {}.{}", major, minor);
 
             // And dword 2 contains the compatible port offset and count.
             auto port_info = read_cap<uint32>((xecp + 2) * sizeof(uint32));
@@ -227,7 +227,7 @@ void HostController::enable() {
         }
         if (port.initialise(this) && port.connected()) {
             if (!port.reset()) {
-                logln(" usb: Failed to reset port {}!", port.number());
+                dbgln(" usb: Failed to reset port {}!", port.number());
             }
             continue;
         }
@@ -237,7 +237,7 @@ void HostController::enable() {
             ASSERT(paired != nullptr);
             if (paired->initialise(this) && paired->connected()) {
                 if (!paired->reset()) {
-                    logln(" usb: Failed to reset port {}!", port.number());
+                    dbgln(" usb: Failed to reset port {}!", port.number());
                 }
             }
         }
@@ -258,7 +258,7 @@ void HostController::handle_interrupt() {
     for (auto &event : m_event_ring->dequeue()) {
         const auto event_type = static_cast<uint8>(event.type);
         if (((event.status >> 24u) & 0xffu) != 1) {
-            logln(" usb: Received event {} with unsuccessful completion code {}!", event_type,
+            dbgln(" usb: Received event {} with unsuccessful completion code {}!", event_type,
                   (event.status >> 24u) & 0xffu);
         }
         switch (event.type) {
@@ -286,14 +286,14 @@ void HostController::handle_interrupt() {
         case TrbType::PortStatusChangeEvent: {
             auto &port = m_ports[((event.data >> 24u) & 0xffu) - 1];
             if (!port.initialised()) {
-                logln(" usb: Uninitialised port {} experienced status change event!", port.number());
+                dbgln(" usb: Uninitialised port {} experienced status change event!", port.number());
                 break;
             }
             port.set_status_changed();
             break;
         }
         default:
-            logln(" usb: Received unrecognised event {}!", event_type);
+            dbgln(" usb: Received unrecognised event {}!", event_type);
             break;
         }
     }
