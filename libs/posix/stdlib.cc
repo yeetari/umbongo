@@ -7,9 +7,50 @@
 #include <sys/cdefs.h>
 
 #include <kernel/Syscall.hh>
+#include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Utility.hh>
+
+namespace {
+
+struct QsortObject {
+    char *base;
+    size_t size;
+};
+
+class QsortContainer {
+    char *const m_base;
+    const size_t m_element_size;
+    const size_t m_size;
+
+public:
+    QsortContainer(void *base, size_t element_size, size_t size)
+        : m_base(reinterpret_cast<char *>(base)), m_element_size(element_size), m_size(size) {}
+
+    // TODO: Why does this have to return a const QsortObject? Compiler bug?
+    // NOLINTNEXTLINE
+    const QsortObject operator[](size_t index) const { return {m_base + index * m_element_size, m_element_size}; }
+    void *data() const { return m_base; }
+    size_t size() const { return m_size; }
+    size_t size_bytes() const { return m_size * m_element_size; }
+};
+
+} // namespace
+
+namespace ustd {
+
+template <>
+void swap(const QsortObject &lhs, const QsortObject &rhs) {
+    char *s1 = lhs.base;
+    char *s2 = rhs.base;
+    for (size_t n = lhs.size; n > 0; n--, s1++, s2++) {
+        swap(*s1, *s2);
+    }
+}
+
+} // namespace ustd
 
 __BEGIN_DECLS
 
@@ -146,36 +187,10 @@ char *mktemp(char *) {
 }
 
 void qsort(void *base, size_t count, size_t size, int (*compare)(const void *, const void *)) {
-    if (count == 0) {
-        return;
-    }
-    size_t gap = count;
-    bool swapped = false;
-    do {
-        gap = (gap * 10) / 13;
-        if (gap == 9 || gap == 10) {
-            gap = 11;
-        }
-        if (gap < 1) {
-            gap = 1;
-        }
-        swapped = false;
-        char *p1 = static_cast<char *>(base);
-        for (size_t i = 0; i < count - gap; i++, p1 += size) {
-            size_t j = i + gap;
-            char *p2 = static_cast<char *>(base) + j * size;
-            if (compare(p1, p2) > 0) {
-                char *s1 = p1;
-                char *s2 = p2;
-                for (size_t n = size; n > 0; n--, s1++, s2++) {
-                    char tmp = *s1;
-                    *s1 = *s2;
-                    *s2 = tmp;
-                }
-                swapped = true;
-            }
-        }
-    } while (gap > 1 || swapped);
+    QsortContainer container(base, size, count);
+    ustd::sort(container, [=](const QsortObject &lhs, const QsortObject &rhs) {
+        return compare(lhs.base, rhs.base) > 0;
+    });
 }
 
 __END_DECLS
