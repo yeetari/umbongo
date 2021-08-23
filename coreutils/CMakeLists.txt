@@ -6,4 +6,5 @@ function(umbongo_utility name)
 endfunction()
 
 umbongo_utility(cat)
+umbongo_utility(ls)
 umbongo_utility(yes)
