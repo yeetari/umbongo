@@ -84,7 +84,7 @@ Thread::~Thread() {
 }
 
 SysResult Thread::exec(StringView path, const Vector<String> &args) {
-    auto file = Vfs::open(path, OpenMode::None);
+    auto file = Vfs::open(path, OpenMode::None, m_process->m_cwd);
     if (!file) {
         return SysError::NonExistent;
     }
@@ -105,7 +105,8 @@ SysResult Thread::exec(StringView path, const Vector<String> &args) {
         // If there was an error trying to parse the interpreter location, not if the executable doesn't have one.
         return SysError::NoExec;
     }
-    auto executable = !interpreter_path->empty() ? Vfs::open(interpreter_path->view(), OpenMode::None) : file;
+    auto executable =
+        !interpreter_path->empty() ? Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd) : file;
     if (!executable) {
         return SysError::NonExistent;
     }

@@ -42,7 +42,7 @@ Mount *find_mount(Inode *host) {
     return nullptr;
 }
 
-Inode *resolve_path(StringView path, Inode **out_parent = nullptr, StringView *out_part = nullptr) {
+Inode *resolve_path(StringView path, Inode *base, Inode **out_parent = nullptr, StringView *out_part = nullptr) {
     usize path_position = 0;
     auto consume_part = [&]() {
         if (path_position >= path.length()) {
@@ -62,13 +62,9 @@ Inode *resolve_path(StringView path, Inode **out_parent = nullptr, StringView *o
         return StringView(path.begin() + part_start, path_position - part_start);
     };
 
-    Inode *current = nullptr;
+    Inode *current = path[0] == '/' ? s_data->root_inode : base;
     for (auto part = consume_part(); !part.empty(); part = consume_part()) {
         if (part[0] == '/') {
-            if (current == nullptr) {
-                // Absolute path.
-                current = s_data->root_inode;
-            }
             continue;
         }
         if (out_parent != nullptr) {
@@ -107,10 +103,10 @@ void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
     s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
 
-SharedPtr<File> Vfs::create(StringView path) {
+SharedPtr<File> Vfs::create(StringView path, Inode *base) {
     Inode *parent = nullptr;
     StringView name;
-    if (resolve_path(path, &parent, &name) != nullptr) {
+    if (resolve_path(path, base, &parent, &name) != nullptr) {
         ENSURE_NOT_REACHED("create on existing path");
     }
     ASSERT(parent != nullptr && !name.empty());
@@ -118,10 +114,10 @@ SharedPtr<File> Vfs::create(StringView path) {
     return inode->open();
 }
 
-void Vfs::mkdir(StringView path) {
+void Vfs::mkdir(StringView path, Inode *base) {
     Inode *parent = nullptr;
     StringView name;
-    if (resolve_path(path, &parent, &name) != nullptr) {
+    if (resolve_path(path, base, &parent, &name) != nullptr) {
         ENSURE_NOT_REACHED("mkdir on existing path");
     }
     ASSERT(parent != nullptr && !name.empty());
@@ -129,16 +125,16 @@ void Vfs::mkdir(StringView path) {
 }
 
 void Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
-    auto *host = resolve_path(path);
+    auto *host = resolve_path(path, nullptr);
     ENSURE(host != nullptr);
     s_data->mounts.emplace(host, ustd::move(fs));
 }
 
-SharedPtr<File> Vfs::open(StringView path, OpenMode mode) {
-    auto *inode = resolve_path(path);
+SharedPtr<File> Vfs::open(StringView path, OpenMode mode, Inode *base) {
+    auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         if ((mode & OpenMode::Create) == OpenMode::Create) {
-            return Vfs::create(path);
+            return Vfs::create(path, base);
         }
         return {};
     }
@@ -146,4 +142,13 @@ SharedPtr<File> Vfs::open(StringView path, OpenMode mode) {
         inode->truncate();
     }
     return inode->open();
+}
+
+Inode *Vfs::open_directory(StringView path, Inode *base) {
+    // TODO: Check is a directory.
+    return resolve_path(path, base);
+}
+
+Inode *Vfs::root_inode() {
+    return s_data->root_inode;
 }

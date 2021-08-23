@@ -67,6 +67,7 @@ SysResult Process::sys_create_process(const char *path, const char **argv, FdPai
     ScopedLock locker(m_lock);
     auto new_thread = Thread::create_user();
     auto &new_process = new_thread->process();
+    new_process.m_cwd = m_cwd;
     new_process.m_fds.grow(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
         if (m_fds[i]) {
@@ -138,7 +139,7 @@ SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
 
 SysResult Process::sys_mkdir(const char *path) const {
     ScopedLock locker(m_lock);
-    Vfs::mkdir(path);
+    Vfs::mkdir(path, m_cwd);
     return 0;
 }
 
@@ -165,7 +166,7 @@ SysResult Process::sys_mount(const char *target, const char *fs_type) const {
 SysResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
     // Open file first so we don't leak a file descriptor.
-    auto file = Vfs::open(path, mode);
+    auto file = Vfs::open(path, mode, m_cwd);
     if (!file) {
         return SysError::NonExistent;
     }

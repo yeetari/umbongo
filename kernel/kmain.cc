@@ -136,10 +136,10 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // Copy over files loaded by UEFI into the ramdisk.
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
         if (entry->is_directory) {
-            Vfs::mkdir(entry->name);
+            Vfs::mkdir(entry->name, nullptr);
             continue;
         }
-        auto file = Vfs::create(entry->name);
+        auto file = Vfs::create(entry->name, nullptr);
         file->write({entry->data, entry->data_size});
     }
 

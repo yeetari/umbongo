@@ -13,6 +13,7 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+class Inode;
 struct Scheduler;
 class Thread;
 
@@ -23,6 +24,7 @@ class Process : public Shareable<Process> {
 private:
     const usize m_pid;
     const bool m_is_kernel;
+    Inode *m_cwd;
     SharedPtr<VirtSpace> m_virt_space;
     Vector<Optional<FileHandle>> m_fds;
     Atomic<usize> m_thread_count{0};
