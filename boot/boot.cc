@@ -5,6 +5,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -59,10 +60,10 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
 
     const auto *name = static_cast<const wchar_t *>(info->name);
     const usize name_length = wstrlen(name) + 1;
-    if (strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"kernel")) == 0 ||
-        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"NvVars")) == 0 ||
-        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L".")) == 0 ||
-        strcmp(reinterpret_cast<const char *>(name), reinterpret_cast<const char *>(L"..")) == 0) {
+    StringView name_view(reinterpret_cast<const char *>(name));
+    if (name_view == reinterpret_cast<const char *>(L"kernel") ||
+        name_view == reinterpret_cast<const char *>(L"NvVars") || name_view == reinterpret_cast<const char *>(L".") ||
+        name_view == reinterpret_cast<const char *>(L"..")) {
         EFI_CHECK(s_st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
         return true;
     }
