@@ -203,7 +203,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
 
 int scanf_impl(const char *str, [[maybe_unused]] const char *fmt, va_list ap) {
     // TODO: Implement properly.
-    ASSERT(strcmp(fmt, "%lu") == 0);
+    ASSERT(StringView(fmt) == "%lu");
     *va_arg(ap, size_t *) = static_cast<size_t>(atoi(str));
     return 1;
 }

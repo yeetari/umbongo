@@ -44,6 +44,15 @@ char *strncat(char *dst, const char *src, size_t n) {
     return ret;
 }
 
+int strcmp(const char *s1, const char *s2) {
+    while (*s1 == *s2++) {
+        if (*s1++ == '\0') {
+            return 0;
+        }
+    }
+    return *reinterpret_cast<const uint8_t *>(s1) - *reinterpret_cast<const uint8_t *>(--s2);
+}
+
 int strncmp(const char *s1, const char *s2, size_t n) {
     if (n == 0) {
         return 0;
