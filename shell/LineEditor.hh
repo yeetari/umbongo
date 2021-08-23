@@ -20,7 +20,7 @@ class LineEditor {
     void goto_end();
 
 public:
-    LineEditor(StringView prompt) : m_prompt(prompt) {}
+    explicit LineEditor(StringView prompt) : m_prompt(prompt) {}
 
     void begin_line();
     Optional<String> handle_key_event(KeyEvent event);

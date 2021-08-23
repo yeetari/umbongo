@@ -1,10 +1,12 @@
 #include "LineEditor.hh"
 
 #include <kernel/KeyEvent.hh>
+#include <kernel/Syscall.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
@@ -39,7 +41,20 @@ void LineEditor::goto_end() {
 }
 
 void LineEditor::begin_line() {
-    log("{}", m_prompt);
+    log("\x1b[38;2;179;179;255m");
+    auto cwd_length = Syscall::invoke<usize>(Syscall::getcwd, nullptr);
+    String cwd(cwd_length);
+    Syscall::invoke(Syscall::getcwd, cwd.data());
+    StringView cwd_view = cwd.view();
+    if (cwd.length() >= 5) {
+        StringView start(cwd.data(), 5);
+        if (start == "/home") {
+            log("~");
+            cwd_view = StringView(cwd.data() + 5, cwd.length() - 5);
+        }
+    }
+    log("{} {}", cwd_view, m_prompt);
+    log("\x1b[38;2;255;255;255m");
 }
 
 Optional<String> LineEditor::handle_key_event(KeyEvent event) {

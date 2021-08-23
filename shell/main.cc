@@ -4,6 +4,7 @@
 #include "Parser.hh"
 #include "Value.hh"
 
+#include <core/Error.hh>
 #include <core/Process.hh>
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
@@ -21,7 +22,22 @@
 namespace {
 
 void execute(Value &value, Vector<FdPair> &rewirings) {
-    if (auto *job = value.as_or_null<Job>()) {
+    if (auto *builtin = value.as_or_null<Builtin>()) {
+        const auto &args = builtin->args();
+        switch (builtin->function()) {
+        case BuiltinFunction::Cd:
+            if (args.size() != 1 && args.size() != 2) {
+                logln("ush: cd: too many arguments");
+                break;
+            }
+            const char *dir = args.size() == 2 ? args[1] : "/home";
+            auto rc = Syscall::invoke(Syscall::chdir, dir);
+            if (rc < 0) {
+                logln("ush: cd: {}: {}", dir, core::error_string(rc));
+            }
+            break;
+        }
+    } else if (auto *job = value.as_or_null<Job>()) {
         job->spawn(rewirings);
         job->await_completion();
     } else if (auto *pipe = value.as_or_null<PipeValue>()) {

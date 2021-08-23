@@ -7,6 +7,7 @@
 #include <ustd/Vector.hh>
 
 enum class ValueKind {
+    Builtin,
     Job,
     List,
     Pipe,
@@ -33,6 +34,23 @@ public:
     const T *as_or_null() const;
     template <typename T>
     bool is() const;
+};
+
+enum class BuiltinFunction {
+    Cd,
+};
+
+class Builtin : public Value {
+    const BuiltinFunction m_function;
+    const Vector<const char *> m_args;
+
+public:
+    static constexpr auto k_kind = ValueKind::Builtin;
+    Builtin(BuiltinFunction function, Vector<const char *> &&args)
+        : Value(k_kind), m_function(function), m_args(ustd::move(args)) {}
+
+    BuiltinFunction function() const { return m_function; }
+    const Vector<const char *> &args() const { return m_args; }
 };
 
 class Job : public Value {

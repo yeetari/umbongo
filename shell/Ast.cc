@@ -80,8 +80,11 @@ void StringLiteral::dump(usize indent) const {
 
 UniquePtr<Value> Command::evaluate() const {
     auto args = build_string_vector(*m_node->evaluate());
-    auto command = find_command(args[0]);
-    return ustd::make_unique<Job>(ustd::move(command), ustd::move(args));
+    StringView command(args[0]);
+    if (command == "cd") {
+        return ustd::make_unique<Builtin>(BuiltinFunction::Cd, ustd::move(args));
+    }
+    return ustd::make_unique<Job>(find_command(command), ustd::move(args));
 }
 
 UniquePtr<Value> List::evaluate() const {
