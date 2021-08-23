@@ -47,11 +47,13 @@ public:
     UniquePtr<Thread> create_thread();
 
     SysResult sys_allocate_region(usize size, MemoryProt prot);
+    SysResult sys_chdir(const char *path);
     SysResult sys_close(uint32 fd);
     SysResult sys_create_pipe(uint32 *fds);
     SysResult sys_create_process(const char *path, const char **argv, FdPair *copy_fds);
     SysResult sys_dup_fd(uint32 src, uint32 dst);
     SysResult sys_exit(usize code) const;
+    SysResult sys_getcwd(char *path) const;
     SysResult sys_getpid() const;
     SysResult sys_ioctl(uint32 fd, IoctlRequest request, void *arg);
     SysResult sys_mkdir(const char *path) const;
@@ -60,6 +62,7 @@ public:
     SysResult sys_open(const char *path, OpenMode mode);
     SysResult sys_putchar(char ch) const;
     SysResult sys_read(uint32 fd, void *data, usize size);
+    SysResult sys_read_directory(const char *path, uint8 *data);
     SysResult sys_seek(uint32 fd, usize offset, SeekMode mode);
     SysResult sys_size(uint32 fd);
     SysResult sys_wait_pid(usize pid);

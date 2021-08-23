@@ -6,11 +6,13 @@ namespace Syscall {
 
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
     S(allocate_region)                                                                                                 \
+    S(chdir)                                                                                                           \
     S(close)                                                                                                           \
     S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
+    S(getcwd)                                                                                                          \
     S(getpid)                                                                                                          \
     S(ioctl)                                                                                                           \
     S(mkdir)                                                                                                           \
@@ -19,6 +21,7 @@ namespace Syscall {
     S(open)                                                                                                            \
     S(putchar)                                                                                                         \
     S(read)                                                                                                            \
+    S(read_directory)                                                                                                  \
     S(seek)                                                                                                            \
     S(size)                                                                                                            \
     S(wait_pid)                                                                                                        \

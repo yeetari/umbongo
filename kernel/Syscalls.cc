@@ -9,6 +9,7 @@
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
+#include <kernel/fs/Inode.hh>
 #include <kernel/fs/Pipe.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/mem/Region.hh>
@@ -39,6 +40,16 @@ SysResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     }
     auto &region = m_virt_space->allocate_region(size, access);
     return region.base();
+}
+
+SysResult Process::sys_chdir(const char *path) {
+    ScopedLock locker(m_lock);
+    auto *directory = Vfs::open_directory(path, m_cwd);
+    if (directory == nullptr) {
+        return SysError::NonExistent;
+    }
+    m_cwd = directory;
+    return 0;
 }
 
 SysResult Process::sys_close(uint32 fd) {
@@ -125,6 +136,30 @@ SysResult Process::sys_exit(usize code) const {
     return 0;
 }
 
+SysResult Process::sys_getcwd(char *path) const {
+    ScopedLock locker(m_lock);
+    Vector<Inode *> inodes;
+    for (auto *inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
+        inodes.push(inode);
+    }
+    // TODO: Would be nice to have some kind of ustd::reverse_iterator(inodes) function.
+    Vector<char> path_characters;
+    for (uint32 i = inodes.size(); i-- != 0;) {
+        path_characters.push('/');
+        for (auto ch : inodes[i]->name()) {
+            path_characters.push(ch);
+        }
+    }
+    if (path_characters.empty()) {
+        path_characters.push('/');
+    }
+    if (path == nullptr) {
+        return path_characters.size();
+    }
+    memcpy(path, path_characters.data(), path_characters.size());
+    return 0;
+}
+
 SysResult Process::sys_getpid() const {
     return m_pid;
 }
@@ -194,6 +229,30 @@ SysResult Process::sys_read(uint32 fd, void *data, usize size) {
         Processor::current_thread()->block<ReadBlocker>(file);
     }
     return m_fds[fd]->read(data, size);
+}
+
+SysResult Process::sys_read_directory(const char *path, uint8 *data) {
+    ScopedLock locker(m_lock);
+    auto *directory = Vfs::open_directory(path, m_cwd);
+    if (directory == nullptr) {
+        return SysError::NonExistent;
+    }
+    if (data == nullptr) {
+        usize byte_count = 0;
+        for (usize i = 0; i < directory->size(); i++) {
+            auto *child = directory->child(i);
+            byte_count += child->name().length() + 1;
+        }
+        return byte_count;
+    }
+    usize byte_offset = 0;
+    for (usize i = 0; i < directory->size(); i++) {
+        auto *child = directory->child(i);
+        memcpy(data + byte_offset, child->name().data(), child->name().length());
+        data[byte_offset + child->name().length()] = '\0';
+        byte_offset += child->name().length() + 1;
+    }
+    return 0;
 }
 
 SysResult Process::sys_seek(uint32 fd, usize offset, SeekMode mode) {
