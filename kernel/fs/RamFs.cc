@@ -5,6 +5,7 @@
 #include <kernel/fs/InodeFile.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
@@ -13,6 +14,11 @@
 #include <ustd/Vector.hh>
 
 // TODO: Needs proper locking.
+
+Inode *RamFsInode::child(usize index) {
+    ASSERT(index < Limits<usize>::max());
+    return &m_children[static_cast<uint32>(index)];
+}
 
 Inode *RamFsInode::create(StringView name, InodeType type) {
     return &m_children.emplace(type, name, this);
@@ -55,7 +61,7 @@ void RamFsInode::remove(StringView) {
 }
 
 usize RamFsInode::size() {
-    return m_data.size();
+    return !m_children.empty() ? m_children.size() : m_data.size();
 }
 
 void RamFsInode::truncate() {

@@ -4,9 +4,9 @@
 #include <kernel/fs/File.hh>
 #include <kernel/fs/Inode.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
-#include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -55,6 +55,10 @@ void DevFs::detach_device(Device *device) {
     m_root_inode.remove(device->name());
 }
 
+Inode *DevFsInode::child(usize) {
+    ENSURE_NOT_REACHED();
+}
+
 Inode *DevFsInode::create(StringView, InodeType) {
     ENSURE_NOT_REACHED();
 }
@@ -83,8 +87,13 @@ usize DevFsInode::write(Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
+Inode *DevFsRootInode::child(usize index) {
+    ASSERT(index < Limits<usize>::max());
+    return &m_children[static_cast<uint32>(index)];
+}
+
 void DevFsRootInode::create(StringView name, Device *device) {
-    m_children.emplace(name, device);
+    m_children.emplace(name, this, device);
 }
 
 Inode *DevFsRootInode::create(StringView, InodeType) {
@@ -96,7 +105,7 @@ Inode *DevFsRootInode::lookup(StringView name) {
         return this;
     }
     for (auto &child : m_children) {
-        if (name == child.name().view()) {
+        if (name == child.name()) {
             return &child;
         }
     }
@@ -113,7 +122,7 @@ usize DevFsRootInode::read(Span<void>, usize) {
 
 void DevFsRootInode::remove(StringView name) {
     for (uint32 i = 0; i < m_children.size(); i++) {
-        if (name == m_children[i].name().view()) {
+        if (name == m_children[i].name()) {
             m_children.remove(i);
             return;
         }
@@ -121,9 +130,13 @@ void DevFsRootInode::remove(StringView name) {
 }
 
 usize DevFsRootInode::size() {
-    return 0;
+    return m_children.size();
 }
 
 usize DevFsRootInode::write(Span<const void>, usize) {
+    ENSURE_NOT_REACHED();
+}
+
+StringView DevFsRootInode::name() const {
     ENSURE_NOT_REACHED();
 }

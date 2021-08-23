@@ -24,6 +24,7 @@ public:
     Inode &operator=(const Inode &) = delete;
     Inode &operator=(Inode &&) noexcept = default;
 
+    virtual Inode *child(usize index) = 0;
     virtual Inode *create(StringView name, InodeType type) = 0;
     virtual Inode *lookup(StringView name) = 0;
     virtual SharedPtr<File> open() = 0;
@@ -32,4 +33,7 @@ public:
     virtual usize size() = 0;
     virtual void truncate() = 0;
     virtual usize write(Span<const void> data, usize offset) = 0;
+
+    virtual StringView name() const = 0;
+    virtual Inode *parent() const = 0;
 };

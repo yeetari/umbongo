@@ -20,6 +20,7 @@ class RamFsInode final : public Inode {
 public:
     RamFsInode(InodeType type, StringView name, RamFsInode *parent) : Inode(type), m_name(name), m_parent(parent) {}
 
+    Inode *child(usize index) override;
     Inode *create(StringView name, InodeType type) override;
     Inode *lookup(StringView name) override;
     SharedPtr<File> open() override;
@@ -28,6 +29,9 @@ public:
     usize size() override;
     void truncate() override;
     usize write(Span<const void> data, usize offset) override;
+
+    StringView name() const override { return m_name.view(); }
+    Inode *parent() const override { return m_parent; }
 };
 
 class RamFs final : public FileSystem {
