@@ -131,5 +131,5 @@ void Terminal::render() {
 }
 
 void Terminal::set_colour(uint32 r, uint32 g, uint32 b) {
-    m_colour = b | (g << 8u) | (r << 8u);
+    m_colour = b | (g << 8u) | (r << 16u);
 }
