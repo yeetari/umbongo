@@ -7,4 +7,5 @@ endfunction()
 
 umbongo_utility(cat)
 umbongo_utility(ls)
+umbongo_utility(te)
 umbongo_utility(yes)
