@@ -64,6 +64,13 @@ usize main(usize, const char **) {
                 case 'C':
                     terminal->move_right();
                     continue;
+                case 'H':
+                    if (escape_params.size() != 2) {
+                        dbgln("CUP doesn't have row and column");
+                        break;
+                    }
+                    terminal->set_cursor(escape_params[1], escape_params[0]);
+                    continue;
                 case 'J':
                     terminal->clear();
                     continue;
