@@ -14,6 +14,7 @@ add_library(posix
     time.cc
     unistd.cc
     utime.cc)
+install(DIRECTORY . DESTINATION include FILES_MATCHING PATTERN *.h)
 install(TARGETS posix DESTINATION lib)
 target_compile_options(posix PRIVATE -Wno-reserved-id-macro)
 target_gc_sections(posix)
