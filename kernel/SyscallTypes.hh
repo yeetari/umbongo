@@ -12,9 +12,15 @@ struct FramebufferInfo {
     uint32 height;
 };
 
+struct TerminalSize {
+    uint32 column_count;
+    uint32 row_count;
+};
+
 enum class IoctlRequest : usize {
     FramebufferClear,
     FramebufferGetInfo,
+    TerminalGetSize,
 };
 
 enum class MemoryProt : usize {
