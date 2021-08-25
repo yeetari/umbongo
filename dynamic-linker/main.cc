@@ -5,6 +5,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Numeric.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
@@ -17,19 +18,21 @@ usize main(usize argc, const char **argv) {
     elf::Header header{};
     file.read({&header, sizeof(elf::Header)});
 
-    usize region_size = 0;
+    uintptr region_base = Limits<uintptr>::max();
+    uintptr region_end = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i);
         if (phdr.type == elf::SegmentType::Load) {
             ASSERT(phdr.filesz <= phdr.memsz);
-            region_size += round_up(phdr.memsz + (phdr.vaddr & 0xfffu), phdr.align);
+            region_base = ustd::min(region_base, phdr.vaddr);
+            region_end = ustd::max(region_end, phdr.vaddr + phdr.memsz);
         }
     }
 
     // TODO: Don't always allocate writable + executable.
-    auto base_offset =
-        Syscall::invoke<uintptr>(Syscall::allocate_region, region_size, MemoryProt::Write | MemoryProt::Exec);
+    auto base_offset = Syscall::invoke<uintptr>(Syscall::allocate_region, region_end - region_base,
+                                                MemoryProt::Write | MemoryProt::Exec);
     usize dynamic_entry_count = 0;
     usize dynamic_table_offset = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {
