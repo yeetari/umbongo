@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include <errno.h>
+#include <bits/error.hh>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -8,7 +8,6 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-#include <kernel/SysError.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
@@ -229,21 +228,6 @@ OpenMode parse_mode(const char *mode) {
     return ret;
 }
 
-int to_errno(ssize_t error) {
-    switch (static_cast<SysError>(error)) {
-    case SysError::BadFd:
-        return EBADF;
-    case SysError::NonExistent:
-        return ENOENT;
-    case SysError::BrokenHandle:
-        return EIO;
-    case SysError::Invalid:
-        return EINVAL;
-    default:
-        ENSURE_NOT_REACHED();
-    }
-}
-
 SeekMode seek_mode(int whence) {
     switch (whence) {
     case SEEK_SET:
@@ -270,7 +254,7 @@ bool FILE::gets(uint8_t *data, int size) {
             if (bytes_read == 0) {
                 m_eof = true;
             } else {
-                m_error = to_errno(bytes_read);
+                m_error = posix::to_errno(bytes_read);
             }
             return total_read > 0;
         }
@@ -291,7 +275,7 @@ size_t FILE::read(void *data, size_t size) {
             if (bytes_read == 0) {
                 m_eof = true;
             } else {
-                m_error = to_errno(bytes_read);
+                m_error = posix::to_errno(bytes_read);
             }
             return total_read;
         }
@@ -320,7 +304,7 @@ size_t FILE::write(const void *data, size_t size) {
     while (size > 0) {
         auto bytes_written = Syscall::invoke(Syscall::write, m_fd, data, size);
         if (bytes_written < 0) {
-            m_error = to_errno(bytes_written);
+            m_error = posix::to_errno(bytes_written);
             return total_written;
         }
         total_written += static_cast<size_t>(bytes_written);
