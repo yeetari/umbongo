@@ -133,3 +133,9 @@ void Terminal::render() {
 void Terminal::set_colour(uint32 r, uint32 g, uint32 b) {
     m_colour = b | (g << 8u) | (r << 16u);
 }
+
+void Terminal::set_dirty() {
+    for (auto &line : m_lines) {
+        line.set_dirty(true);
+    }
+}

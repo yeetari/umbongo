@@ -11,7 +11,9 @@
 
 usize main(usize, const char **) {
     Framebuffer framebuffer("/dev/fb"sv);
-    Terminal terminal(framebuffer);
+    Terminal default_terminal(framebuffer);
+    Terminal alternate_terminal(framebuffer);
+    Terminal *terminal = &default_terminal;
     framebuffer.clear();
 
     bool in_escape = false;
@@ -27,7 +29,7 @@ usize main(usize, const char **) {
             continue;
         }
 
-        terminal.clear_cursor();
+        terminal->clear_cursor();
         for (usize i = 0; i < static_cast<usize>(nread); i++) {
             char ch = buf[i];
             if (ch == '\x1b') {
@@ -36,6 +38,9 @@ usize main(usize, const char **) {
                 continue;
             }
             if (in_escape && ch == '[') {
+                continue;
+            }
+            if (in_escape && ch == '?') {
                 continue;
             }
             if (in_escape) {
@@ -54,13 +59,37 @@ usize main(usize, const char **) {
                 in_escape = false;
                 switch (ch) {
                 case 'D':
-                    terminal.move_left();
+                    terminal->move_left();
                     continue;
                 case 'C':
-                    terminal.move_right();
+                    terminal->move_right();
                     continue;
                 case 'J':
-                    terminal.clear();
+                    terminal->clear();
+                    continue;
+                case 'h':
+                    if (escape_params.size() != 1) {
+                        dbgln("Private mode enable doesn't have code");
+                        break;
+                    }
+                    if (escape_params[0] != 1049) {
+                        dbgln("Unknown private code {}", escape_params[0]);
+                        break;
+                    }
+                    terminal = &alternate_terminal;
+                    terminal->clear();
+                    continue;
+                case 'l':
+                    if (escape_params.size() != 1) {
+                        dbgln("Private mode disable doesn't have code");
+                        break;
+                    }
+                    if (escape_params[0] != 1049) {
+                        dbgln("Unknown private code {}", escape_params[0]);
+                        break;
+                    }
+                    terminal = &default_terminal;
+                    terminal->set_dirty();
                     continue;
                 case 'm':
                     if (escape_params.empty()) {
@@ -80,7 +109,7 @@ usize main(usize, const char **) {
                             dbgln("Incorrect number of parameters for 24-bit colour set");
                             break;
                         }
-                        terminal.set_colour(escape_params[2], escape_params[3], escape_params[4]);
+                        terminal->set_colour(escape_params[2], escape_params[3], escape_params[4]);
                         break;
                     default:
                         dbgln("Unknown SGR code {}", escape_params[0]);
@@ -95,16 +124,16 @@ usize main(usize, const char **) {
 
             switch (ch) {
             case '\b':
-                terminal.backspace();
+                terminal->backspace();
                 break;
             case '\n':
-                terminal.newline();
+                terminal->newline();
                 break;
             default:
-                terminal.put_char(ch);
+                terminal->put_char(ch);
                 break;
             }
         }
-        terminal.render();
+        terminal->render();
     }
 }

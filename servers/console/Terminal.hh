@@ -45,4 +45,5 @@ public:
     void clear_cursor();
     void render();
     void set_colour(uint32 r, uint32 g, uint32 b);
+    void set_dirty();
 };
