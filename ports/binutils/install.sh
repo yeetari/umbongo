@@ -25,7 +25,6 @@ done
 
 export AR=llvm-ar
 export CC="clang --sysroot=$SYSROOT -fpic -nostdlib"
-export CPPFLAGS="-I$SYSROOT/../../libs/posix"
 export LDFLAGS="-Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker -fuse-ld=lld -pie"
 export LIBS="-lcore -lposix -lustd"
 export RANLIB=llvm-ranlib
