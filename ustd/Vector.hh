@@ -39,6 +39,8 @@ public:
 
     template <typename... Args>
     T &emplace(Args &&...args);
+    template <typename... Args>
+    T &emplace_at(SizeType index, Args &&...args);
     void push(const T &elem);
     void push(T &&elem);
     Conditional<IsTriviallyCopyable<T>, T, void> pop();
@@ -164,6 +166,28 @@ T &Vector<T, SizeType>::emplace(Args &&...args) {
     ensure_capacity(m_size + 1);
     new (end()) T(forward<Args>(args)...);
     return (*this)[m_size++];
+}
+
+template <typename T, typename SizeType>
+template <typename... Args>
+T &Vector<T, SizeType>::emplace_at(SizeType index, Args &&...args) {
+    if (index == m_size) {
+        return emplace(forward<Args>(args)...);
+    }
+    ASSERT(index < m_size);
+    ensure_capacity(m_size + 1);
+    auto *elem = &m_data[index];
+    new (end()) T(move(end()[-1]));
+
+    // TODO: Create a generic ustd::move_backward algorithm function also with IsTriviallyCopyable specialisation.
+    auto *src = end() - 1;
+    auto *dst = end();
+    while (src != elem) {
+        *--dst = ustd::move(*--src);
+    }
+
+    m_size++;
+    return *new (elem) T(forward<Args>(args)...);
 }
 
 template <typename T, typename SizeType>
