@@ -15,9 +15,10 @@ add_library(posix
     time.cc
     unistd.cc
     utime.cc)
+add_library(posix_asm OBJECT setjmp.asm)
 install(DIRECTORY . DESTINATION include FILES_MATCHING PATTERN *.h)
 install(TARGETS posix DESTINATION lib)
 target_compile_options(posix PRIVATE -Wno-reserved-id-macro)
 target_gc_sections(posix)
 target_include_directories(posix PUBLIC .)
-target_link_libraries(posix PRIVATE ustd)
+target_link_libraries(posix PRIVATE posix_asm ustd)

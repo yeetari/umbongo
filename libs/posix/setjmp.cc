@@ -6,11 +6,11 @@
 
 __BEGIN_DECLS
 
-int setjmp(jmp_buf) {
+int sigsetjmp(sigjmp_buf, int) {
     ENSURE_NOT_REACHED();
 }
 
-void longjmp(jmp_buf, int) {
+void siglongjmp(sigjmp_buf, int) {
     ENSURE_NOT_REACHED();
 }
 
