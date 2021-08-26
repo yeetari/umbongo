@@ -1,9 +1,13 @@
 #include <unistd.h>
 
+#include <bits/error.hh>
+#include <errno.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+#include <kernel/Syscall.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Log.hh>
 
 __BEGIN_DECLS
 
@@ -11,8 +15,13 @@ int access(const char *, int) {
     ENSURE_NOT_REACHED();
 }
 
-int close(int) {
-    ENSURE_NOT_REACHED();
+int close(int fd) {
+    auto rc = Syscall::invoke(Syscall::close, fd);
+    if (rc < 0) {
+        errno = posix::to_errno(rc);
+        return -1;
+    }
+    return 0;
 }
 
 void _exit(int) {
@@ -23,8 +32,9 @@ pid_t getpid(void) {
     ENSURE_NOT_REACHED();
 }
 
-int unlink(const char *) {
-    ENSURE_NOT_REACHED();
+int unlink(const char *path) {
+    dbgln("unlink({})", path);
+    return 0;
 }
 
 int dup(int) {
@@ -75,8 +85,13 @@ off_t lseek(int, off_t, int) {
     ENSURE_NOT_REACHED();
 }
 
-ssize_t read(int, void *, size_t) {
-    ENSURE_NOT_REACHED();
+ssize_t read(int fd, void *data, size_t size) {
+    auto rc = Syscall::invoke(Syscall::read, fd, data, size);
+    if (rc < 0) {
+        errno = posix::to_errno(rc);
+        return -1;
+    }
+    return rc;
 }
 
 ssize_t write(int, const void *, size_t) {
