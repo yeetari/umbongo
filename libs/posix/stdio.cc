@@ -202,8 +202,19 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
 
 int scanf_impl(const char *str, [[maybe_unused]] const char *fmt, va_list ap) {
     // TODO: Implement properly.
-    ASSERT(StringView(fmt) == "%lu");
-    *va_arg(ap, size_t *) = static_cast<size_t>(atoi(str));
+    StringView format(fmt);
+    ASSERT(format == "%lu" || format == "%d.%d.%d");
+    if (format == "%lu") {
+        *va_arg(ap, size_t *) = static_cast<size_t>(atoi(str));
+    } else if (format == "%d.%d.%d") {
+        *va_arg(ap, int *) = atoi(str);
+        while (*str++ != '.') {
+        }
+        *va_arg(ap, int *) = atoi(str);
+        while (*str++ != '.') {
+        }
+        *va_arg(ap, int *) = atoi(str);
+    }
     return 1;
 }
 
