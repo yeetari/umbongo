@@ -449,8 +449,9 @@ int putchar(int c) {
     return putc(c, stdout);
 }
 
-FILE *fdopen(int, const char *) {
-    ENSURE_NOT_REACHED();
+FILE *fdopen(int fd, const char *) {
+    ASSERT(fd >= 0);
+    return new FILE(static_cast<uint32_t>(fd));
 }
 
 int printf(const char *fmt, ...) {
