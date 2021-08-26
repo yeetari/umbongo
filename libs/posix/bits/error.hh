@@ -20,6 +20,10 @@ inline int to_errno(ssize_t error) {
         return EINVAL;
     case SysError::NoExec:
         return ENOEXEC;
+    case SysError::NotDirectory:
+        return ENOTDIR;
+    case SysError::AlreadyExists:
+        return EEXIST;
     default:
         ENSURE_NOT_REACHED();
     }

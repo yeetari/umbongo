@@ -21,6 +21,7 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -44,11 +45,11 @@ SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
 
 SyscallResult Process::sys_chdir(const char *path) {
     ScopedLock locker(m_lock);
-    auto *directory = Vfs::open_directory(path, m_cwd);
-    if (directory == nullptr) {
-        return SysError::NonExistent;
+    auto directory = Vfs::open_directory(path, m_cwd);
+    if (directory.is_error()) {
+        return directory.error();
     }
-    m_cwd = directory;
+    m_cwd = *directory;
     return 0;
 }
 
@@ -107,8 +108,8 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     }
 
     String copied_path(path);
-    if (auto rc = new_thread->exec(copied_path.view(), args); rc.value() != 0) {
-        return rc;
+    if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
+        return rc.error();
     }
     Scheduler::insert_thread(ustd::move(new_thread));
     return new_process.pid();
@@ -174,8 +175,7 @@ SyscallResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
 
 SyscallResult Process::sys_mkdir(const char *path) const {
     ScopedLock locker(m_lock);
-    Vfs::mkdir(path, m_cwd);
-    return 0;
+    return Vfs::mkdir(path, m_cwd);
 }
 
 SyscallResult Process::sys_mmap(uint32 fd) const {
@@ -188,25 +188,22 @@ SyscallResult Process::sys_mmap(uint32 fd) const {
 
 SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
     ScopedLock locker(m_lock);
-    UniquePtr<FileSystem> fs;
-    if (StringView(fs_type) == "dev") {
-        fs = ustd::make_unique<DevFs>();
-    } else {
-        ENSURE_NOT_REACHED();
+    if (StringView(fs_type) != "dev") {
+        return SysError::Invalid;
     }
-    Vfs::mount(target, ustd::move(fs));
-    return 0;
+    auto fs = ustd::make_unique<DevFs>();
+    return Vfs::mount(target, ustd::move(fs));
 }
 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
     // Open file first so we don't leak a file descriptor.
     auto file = Vfs::open(path, mode, m_cwd);
-    if (!file) {
-        return SysError::NonExistent;
+    if (file.is_error()) {
+        return file.error();
     }
     uint32 fd = allocate_fd();
-    m_fds[fd].emplace(ustd::move(file));
+    m_fds[fd].emplace(ustd::move(*file));
     return fd;
 }
 
@@ -233,9 +230,9 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
 
 SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     ScopedLock locker(m_lock);
-    auto *directory = Vfs::open_directory(path, m_cwd);
-    if (directory == nullptr) {
-        return SysError::NonExistent;
+    auto directory = Vfs::open_directory(path, m_cwd);
+    if (directory.is_error()) {
+        return directory.error();
     }
     if (data == nullptr) {
         usize byte_count = 0;

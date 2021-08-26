@@ -3,6 +3,7 @@
 #include <kernel/Console.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/HpetTable.hh>
 #include <kernel/acpi/InterruptController.hh>
@@ -139,7 +140,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
             Vfs::mkdir(entry->name, nullptr);
             continue;
         }
-        auto file = Vfs::create(entry->name, nullptr);
+        auto file = *Vfs::create(entry->name, nullptr);
         file->write({entry->data, entry->data_size});
     }
 

@@ -16,6 +16,7 @@
 #include <ustd/Atomic.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
@@ -83,10 +84,10 @@ Thread::~Thread() {
     m_next->m_prev = m_prev;
 }
 
-SyscallResult Thread::exec(StringView path, const Vector<String> &args) {
+SysResult<> Thread::exec(StringView path, const Vector<String> &args) {
     auto file = Vfs::open(path, OpenMode::None, m_process->m_cwd);
-    if (!file) {
-        return SysError::NonExistent;
+    if (file.is_error()) {
+        return file.error();
     }
     auto &stack_region =
         m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
@@ -100,15 +101,18 @@ SyscallResult Thread::exec(StringView path, const Vector<String> &args) {
         MemoryManager::switch_space(*original_space);
     });
 
-    auto interpreter_path = interpreter_for(*file);
+    auto interpreter_path = interpreter_for(**file);
     if (!interpreter_path) {
         // If there was an error trying to parse the interpreter location, not if the executable doesn't have one.
         return SysError::NoExec;
     }
-    auto executable =
-        !interpreter_path->empty() ? Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd) : file;
-    if (!executable) {
-        return SysError::NonExistent;
+    auto executable = *file;
+    if (!interpreter_path->empty()) {
+        auto interpreter = Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd);
+        if (interpreter.is_error()) {
+            return interpreter.error();
+        }
+        executable = ustd::move(*interpreter);
     }
 
     elf::Header header{};
@@ -175,7 +179,7 @@ SyscallResult Thread::exec(StringView path, const Vector<String> &args) {
 
     // Allocate some space for heap storage.
     m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
-    return 0;
+    return SysSuccess{};
 }
 
 void Thread::kill() {

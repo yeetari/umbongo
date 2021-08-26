@@ -15,6 +15,9 @@ Array k_error_list{
     "no such file or directory",
     "broken handle",
     "invalid",
+    "exec format error",
+    "not a directory",
+    "already exists",
 };
 // clang-format on
 

@@ -1,11 +1,14 @@
 #include <kernel/fs/Vfs.hh>
 
+#include <kernel/SysError.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/fs/File.hh>
+#include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <ustd/Assert.hh>
-#include <ustd/SharedPtr.hh>
+#include <ustd/Memory.hh>
+#include <ustd/SharedPtr.hh> // IWYU pragma: keep
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -103,40 +106,54 @@ void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
     s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
 
-SharedPtr<File> Vfs::create(StringView path, Inode *base) {
+SysResult<SharedPtr<File>> Vfs::create(StringView path, Inode *base) {
     Inode *parent = nullptr;
     StringView name;
     if (resolve_path(path, base, &parent, &name) != nullptr) {
-        ENSURE_NOT_REACHED("create on existing path");
+        return SysError::AlreadyExists;
     }
-    ASSERT(parent != nullptr && !name.empty());
+    if (parent == nullptr) {
+        return SysError::NonExistent;
+    }
+    if (name.empty()) {
+        return SysError::Invalid;
+    }
     auto *inode = parent->create(name, InodeType::RegularFile);
     return inode->open();
 }
 
-void Vfs::mkdir(StringView path, Inode *base) {
+SysResult<> Vfs::mkdir(StringView path, Inode *base) {
     Inode *parent = nullptr;
     StringView name;
     if (resolve_path(path, base, &parent, &name) != nullptr) {
-        ENSURE_NOT_REACHED("mkdir on existing path");
+        return SysError::AlreadyExists;
     }
-    ASSERT(parent != nullptr && !name.empty());
+    if (parent == nullptr) {
+        return SysError::NonExistent;
+    }
+    if (name.empty()) {
+        return SysError::Invalid;
+    }
     parent->create(name, InodeType::Directory);
+    return SysSuccess{};
 }
 
-void Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
+SysResult<> Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
     auto *host = resolve_path(path, nullptr);
-    ENSURE(host != nullptr);
+    if (host == nullptr) {
+        return SysError::NonExistent;
+    }
     s_data->mounts.emplace(host, ustd::move(fs));
+    return SysSuccess{};
 }
 
-SharedPtr<File> Vfs::open(StringView path, OpenMode mode, Inode *base) {
+SysResult<SharedPtr<File>> Vfs::open(StringView path, OpenMode mode, Inode *base) {
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         if ((mode & OpenMode::Create) == OpenMode::Create) {
             return Vfs::create(path, base);
         }
-        return {};
+        return SysError::NonExistent;
     }
     if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
         inode->truncate();
@@ -144,9 +161,15 @@ SharedPtr<File> Vfs::open(StringView path, OpenMode mode, Inode *base) {
     return inode->open();
 }
 
-Inode *Vfs::open_directory(StringView path, Inode *base) {
-    // TODO: Check is a directory.
-    return resolve_path(path, base);
+SysResult<Inode *> Vfs::open_directory(StringView path, Inode *base) {
+    auto *inode = resolve_path(path, base);
+    if (inode == nullptr) {
+        return SysError::NonExistent;
+    }
+    if (inode->type() != InodeType::Directory) {
+        return SysError::NotDirectory;
+    }
+    return inode;
 }
 
 Inode *Vfs::root_inode() {

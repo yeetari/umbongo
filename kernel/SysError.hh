@@ -8,4 +8,6 @@ enum class SysError : ssize {
     BrokenHandle = -3,
     Invalid = -4,
     NoExec = -5,
+    NotDirectory = -6,
+    AlreadyExists = -7,
 };

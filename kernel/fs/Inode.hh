@@ -36,4 +36,5 @@ public:
 
     virtual StringView name() const = 0;
     virtual Inode *parent() const = 0;
+    InodeType type() const { return m_type; }
 };
