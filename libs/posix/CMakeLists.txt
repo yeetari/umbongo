@@ -6,6 +6,7 @@ add_library(posix
     fcntl.cc
     init.cc
     locale.cc
+    math.cc
     setjmp.cc
     signal.cc
     stdio.cc
