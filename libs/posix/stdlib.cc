@@ -118,6 +118,22 @@ double atof(const char *) {
     ENSURE_NOT_REACHED();
 }
 
+double strtod(const char *, char **) {
+    ENSURE_NOT_REACHED();
+}
+
+float strtof(const char *, char **) {
+    ENSURE_NOT_REACHED();
+}
+
+long strtol(const char *, char **, int) {
+    ENSURE_NOT_REACHED();
+}
+
+long double strtold(const char *, char **) {
+    ENSURE_NOT_REACHED();
+}
+
 unsigned long strtoul(const char *str, char **end, int base) {
     if (end != nullptr) {
         *end = const_cast<char *>(str);

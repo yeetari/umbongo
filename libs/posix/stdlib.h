@@ -20,6 +20,10 @@ void free(void *);
 int atoi(const char *);
 long atol(const char *);
 double atof(const char *);
+double strtod(const char *, char **);
+float strtof(const char *, char **);
+long strtol(const char *, char **, int);
+long double strtold(const char *, char **);
 unsigned long strtoul(const char *, char **, int);
 unsigned long long strtoull(const char *, char **, int);
 
