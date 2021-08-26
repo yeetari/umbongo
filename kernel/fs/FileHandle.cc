@@ -16,7 +16,7 @@ FileHandle::~FileHandle() {
     }
 }
 
-SysResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
+SyscallResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
     return m_file->ioctl(request, arg);
 }
 

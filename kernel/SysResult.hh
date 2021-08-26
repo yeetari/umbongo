@@ -3,29 +3,28 @@
 #include <kernel/SysError.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Concepts.hh>
+#include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
-class SysResult {
-    union {
-        SysError m_error;
-        usize m_value;
-    };
-    const bool m_is_error;
+struct SysSuccess {};
+
+template <typename T = SysSuccess>
+using SysResult = Result<T, SysError>;
+
+class SyscallResult {
+    usize m_value;
 
 public:
-    SysResult(SysError error) : m_error(error), m_is_error(true) {} // NOLINT
+    SyscallResult(SysError error) : m_value(static_cast<usize>(error)) {}
     template <ConvertibleTo<usize> T>
-    SysResult(T value) : m_value(static_cast<usize>(value)), m_is_error(false) {} // NOLINT
+    SyscallResult(T value) : m_value(static_cast<usize>(value)) {}
     template <typename T>
-    SysResult(T value) : m_value(reinterpret_cast<usize>(value)), m_is_error(false) {} // NOLINT
+    SyscallResult(T *value) : m_value(reinterpret_cast<usize>(value)) {}
+    SyscallResult(SysResult<SysSuccess> result) : m_value(0) {
+        if (result.is_error()) {
+            m_value = static_cast<usize>(result.error());
+        }
+    }
 
-    bool is_error() const { return m_is_error; }
-    SysError error() const {
-        ASSERT(m_is_error);
-        return m_error;
-    }
-    usize value() const {
-        ASSERT(!m_is_error);
-        return m_value;
-    }
+    usize value() const { return m_value; }
 };

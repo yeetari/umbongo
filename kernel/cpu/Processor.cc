@@ -183,7 +183,7 @@ struct [[gnu::packed]] SyscallFrame {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
-using SyscallHandler = SysResult (Process::*)(uint64, uint64, uint64);
+using SyscallHandler = SyscallResult (Process::*)(uint64, uint64, uint64);
 #define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
 Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
@@ -279,7 +279,7 @@ extern "C" void syscall_handler(SyscallFrame *frame, Thread *thread) {
     ASSERT_PEDANTIC(process != nullptr);
     ASSERT_PEDANTIC(s_syscall_table[frame->rax] != nullptr);
     const auto result = (process->*s_syscall_table[frame->rax])(frame->rdi, frame->rsi, frame->rdx);
-    frame->rax = result.is_error() ? static_cast<uint64>(result.error()) : result.value();
+    frame->rax = result.value();
 }
 
 void Processor::initialise() {

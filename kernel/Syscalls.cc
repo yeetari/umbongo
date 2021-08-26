@@ -29,7 +29,7 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
-SysResult Process::sys_allocate_region(usize size, MemoryProt prot) {
+SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     ScopedLock locker(m_lock);
     auto access = RegionAccess::UserAccessible;
     if ((prot & MemoryProt::Write) == MemoryProt::Write) {
@@ -42,7 +42,7 @@ SysResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     return region.base();
 }
 
-SysResult Process::sys_chdir(const char *path) {
+SyscallResult Process::sys_chdir(const char *path) {
     ScopedLock locker(m_lock);
     auto *directory = Vfs::open_directory(path, m_cwd);
     if (directory == nullptr) {
@@ -52,7 +52,7 @@ SysResult Process::sys_chdir(const char *path) {
     return 0;
 }
 
-SysResult Process::sys_close(uint32 fd) {
+SyscallResult Process::sys_close(uint32 fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -61,7 +61,7 @@ SysResult Process::sys_close(uint32 fd) {
     return 0;
 }
 
-SysResult Process::sys_create_pipe(uint32 *fds) {
+SyscallResult Process::sys_create_pipe(uint32 *fds) {
     ScopedLock locker(m_lock);
     auto pipe = ustd::make_shared<Pipe>();
     uint32 read_fd = allocate_fd();
@@ -74,7 +74,7 @@ SysResult Process::sys_create_pipe(uint32 *fds) {
     return 0;
 }
 
-SysResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
+SyscallResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
     ScopedLock locker(m_lock);
     auto new_thread = Thread::create_user();
     auto &new_process = new_thread->process();
@@ -107,14 +107,14 @@ SysResult Process::sys_create_process(const char *path, const char **argv, FdPai
     }
 
     String copied_path(path);
-    if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
+    if (auto rc = new_thread->exec(copied_path.view(), args); rc.value() != 0) {
         return rc;
     }
     Scheduler::insert_thread(ustd::move(new_thread));
     return new_process.pid();
 }
 
-SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
+SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
     // TODO: Which check should happen first?
     ScopedLock locker(m_lock);
     if (src >= m_fds.size() || !m_fds[src]) {
@@ -128,7 +128,7 @@ SysResult Process::sys_dup_fd(uint32 src, uint32 dst) {
     return 0;
 }
 
-SysResult Process::sys_exit(usize code) const {
+SyscallResult Process::sys_exit(usize code) const {
     if (code != 0) {
         dbgln("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
     }
@@ -136,7 +136,7 @@ SysResult Process::sys_exit(usize code) const {
     return 0;
 }
 
-SysResult Process::sys_getcwd(char *path) const {
+SyscallResult Process::sys_getcwd(char *path) const {
     ScopedLock locker(m_lock);
     Vector<Inode *> inodes;
     for (auto *inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
@@ -160,11 +160,11 @@ SysResult Process::sys_getcwd(char *path) const {
     return 0;
 }
 
-SysResult Process::sys_getpid() const {
+SyscallResult Process::sys_getpid() const {
     return m_pid;
 }
 
-SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
+SyscallResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -172,13 +172,13 @@ SysResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {
     return m_fds[fd]->ioctl(request, arg);
 }
 
-SysResult Process::sys_mkdir(const char *path) const {
+SyscallResult Process::sys_mkdir(const char *path) const {
     ScopedLock locker(m_lock);
     Vfs::mkdir(path, m_cwd);
     return 0;
 }
 
-SysResult Process::sys_mmap(uint32 fd) const {
+SyscallResult Process::sys_mmap(uint32 fd) const {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -186,7 +186,7 @@ SysResult Process::sys_mmap(uint32 fd) const {
     return m_fds[fd]->mmap(*m_virt_space);
 }
 
-SysResult Process::sys_mount(const char *target, const char *fs_type) const {
+SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
     ScopedLock locker(m_lock);
     UniquePtr<FileSystem> fs;
     if (StringView(fs_type) == "dev") {
@@ -198,7 +198,7 @@ SysResult Process::sys_mount(const char *target, const char *fs_type) const {
     return 0;
 }
 
-SysResult Process::sys_open(const char *path, OpenMode mode) {
+SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
     // Open file first so we don't leak a file descriptor.
     auto file = Vfs::open(path, mode, m_cwd);
@@ -210,12 +210,12 @@ SysResult Process::sys_open(const char *path, OpenMode mode) {
     return fd;
 }
 
-SysResult Process::sys_putchar(char ch) const {
+SyscallResult Process::sys_putchar(char ch) const {
     dbg_put_char(ch);
     return 0;
 }
 
-SysResult Process::sys_read(uint32 fd, void *data, usize size) {
+SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -231,7 +231,7 @@ SysResult Process::sys_read(uint32 fd, void *data, usize size) {
     return m_fds[fd]->read(data, size);
 }
 
-SysResult Process::sys_read_directory(const char *path, uint8 *data) {
+SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     ScopedLock locker(m_lock);
     auto *directory = Vfs::open_directory(path, m_cwd);
     if (directory == nullptr) {
@@ -255,7 +255,7 @@ SysResult Process::sys_read_directory(const char *path, uint8 *data) {
     return 0;
 }
 
-SysResult Process::sys_seek(uint32 fd, usize offset, SeekMode mode) {
+SyscallResult Process::sys_seek(uint32 fd, usize offset, SeekMode mode) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -267,7 +267,7 @@ SysResult Process::sys_seek(uint32 fd, usize offset, SeekMode mode) {
     return m_fds[fd]->seek(offset, mode);
 }
 
-SysResult Process::sys_size(uint32 fd) {
+SyscallResult Process::sys_size(uint32 fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
@@ -279,12 +279,12 @@ SysResult Process::sys_size(uint32 fd) {
     return m_fds[fd]->size();
 }
 
-SysResult Process::sys_wait_pid(usize pid) {
+SyscallResult Process::sys_wait_pid(usize pid) {
     Processor::current_thread()->block<WaitBlocker>(pid);
     return 0;
 }
 
-SysResult Process::sys_write(uint32 fd, void *data, usize size) {
+SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;

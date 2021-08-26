@@ -22,7 +22,7 @@ public:
     FileHandle &operator=(const FileHandle &) = delete;
     FileHandle &operator=(FileHandle &&) = delete;
 
-    SysResult ioctl(IoctlRequest request, void *arg) const;
+    SyscallResult ioctl(IoctlRequest request, void *arg) const;
     uintptr mmap(VirtSpace &virt_space) const;
     usize read(void *data, usize size);
     usize seek(usize offset, SeekMode mode);

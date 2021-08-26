@@ -83,7 +83,7 @@ Thread::~Thread() {
     m_next->m_prev = m_prev;
 }
 
-SysResult Thread::exec(StringView path, const Vector<String> &args) {
+SyscallResult Thread::exec(StringView path, const Vector<String> &args) {
     auto file = Vfs::open(path, OpenMode::None, m_process->m_cwd);
     if (!file) {
         return SysError::NonExistent;

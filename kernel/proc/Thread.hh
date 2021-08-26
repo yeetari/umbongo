@@ -56,7 +56,7 @@ public:
 
     template <typename T, typename... Args>
     void block(Args &&...args);
-    SysResult exec(StringView path, const Vector<String> &args = {});
+    SyscallResult exec(StringView path, const Vector<String> &args = {});
     void kill();
 
     Process &process() const { return *m_process; }

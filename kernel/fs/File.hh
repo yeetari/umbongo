@@ -29,7 +29,7 @@ public:
     virtual void detach(AttachDirection) {}
     virtual bool can_read() = 0;
     virtual bool can_write() = 0;
-    virtual SysResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
+    virtual SyscallResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
     virtual uintptr mmap(VirtSpace &) { return 0; }
     virtual usize read(Span<void> data, usize offset = 0) = 0;
     virtual usize size() = 0;

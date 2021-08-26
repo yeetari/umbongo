@@ -12,7 +12,7 @@
 
 extern bool g_console_enabled;
 
-SysResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
+SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
     switch (request) {
     case IoctlRequest::FramebufferClear:
         g_console_enabled = false;

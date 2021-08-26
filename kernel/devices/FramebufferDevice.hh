@@ -19,7 +19,7 @@ public:
 
     bool can_read() override { return true; }
     bool can_write() override { return true; }
-    SysResult ioctl(IoctlRequest request, void *arg) override;
+    SyscallResult ioctl(IoctlRequest request, void *arg) override;
     uintptr mmap(VirtSpace &virt_space) override;
 
     const char *name() const override { return "fb"; }
