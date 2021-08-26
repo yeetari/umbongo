@@ -1,0 +1,50 @@
+From d460748e6196df2f61c751d1d9cc7b8ecb1c64c8 Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Wed, 25 Aug 2021 21:06:14 +0100
+Subject: [PATCH 1/2] add umbongo target
+
+---
+ Makefile  | 3 +++
+ configure | 5 ++++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index fca50dd..54cd5e7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -31,6 +31,9 @@ ifdef CONFIG_WIN32
+   LIBTCCDEF = libtcc.def
+  endif
+  NATIVE_TARGET = $(ARCH)-win$(if $(findstring arm,$(ARCH)),ce,32)
++else ifdef CONFIG_umbongo
++  CFG = -unx
++  NATIVE_TARGET = $(ARCH)
+ else
+  CFG = -unx
+  LIBS=-lm -lpthread
+diff --git a/configure b/configure
+index 2a00398..84012dc 100755
+--- a/configure
++++ b/configure
+@@ -53,7 +53,7 @@ cpuver=
+ 
+ # OS specific
+ cpu_sys=`uname -m`
+-targetos=`uname`
++targetos=umbongo
+ 
+ case $targetos in
+   Darwin)
+@@ -71,6 +71,9 @@ case $targetos in
+   DragonFly|OpenBSD|FreeBSD|NetBSD)
+     confvars="$confvars BSD ldl=no"
+     ;;
++  umbongo)
++    confvars="$confvars umbongo ldl=no"
++    ;;
+   *)
+     ;;
+ esac
+-- 
+2.33.0
+

@@ -1,0 +1,24 @@
+From 41d05d43562e5c64b0c7751b93adc0ae820887cf Mon Sep 17 00:00:00 2001
+From: Owen Smith <yeeetari@gmail.com>
+Date: Wed, 25 Aug 2021 21:06:23 +0100
+Subject: [PATCH 2/2] disable -run
+
+---
+ tcc.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tcc.h b/tcc.h
+index ef69ef5..cbf49f3 100644
+--- a/tcc.h
++++ b/tcc.h
+@@ -202,6 +202,7 @@ extern long double strtold (const char *__nptr, char **__endptr);
+ #  define TCC_IS_NATIVE
+ # endif
+ #endif
++#undef TCC_IS_NATIVE
+ 
+ #if !defined TCC_IS_NATIVE \
+     || (defined CONFIG_TCC_BACKTRACE && CONFIG_TCC_BACKTRACE==0)
+-- 
+2.33.0
+
