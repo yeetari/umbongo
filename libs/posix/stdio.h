@@ -51,10 +51,12 @@ FILE *fdopen(int, const char *);
 __attribute__((format(printf, 1, 2))) int printf(const char *, ...);
 __attribute__((format(printf, 2, 3))) int fprintf(FILE *, const char *, ...);
 __attribute__((format(printf, 2, 3))) int sprintf(char *, const char *, ...);
+__attribute__((format(printf, 3, 4))) int snprintf(char *, size_t, const char *, ...);
 
 __attribute__((format(printf, 1, 0))) int vprintf(const char *, va_list);
 __attribute__((format(printf, 2, 0))) int vfprintf(FILE *, const char *, va_list);
 __attribute__((format(printf, 2, 0))) int vsprintf(char *, const char *, va_list);
+__attribute__((format(printf, 3, 0))) int vsnprintf(char *, size_t, const char *, va_list);
 
 __attribute__((format(scanf, 1, 2))) int scanf(const char *, ...);
 __attribute__((format(scanf, 2, 3))) int fscanf(FILE *, const char *, ...);

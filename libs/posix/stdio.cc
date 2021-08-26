@@ -15,6 +15,7 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 
@@ -49,15 +50,18 @@ namespace {
 // NOLINTNEXTLINE
 alignas(FILE) uint8_t s_default_streams[3][sizeof(FILE)];
 
-int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
+int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<size_t> max_len = {}) {
+    size_t len = 0;
     auto put_char = [&](char ch) {
+        if (max_len && len >= *max_len) {
+            return;
+        }
         if (str != nullptr) {
             *str++ = ch;
         } else {
             fputc(ch, stream);
         }
     };
-    size_t len = 0;
     for (const char *p = fmt; *p != '\0'; p++) {
         if (*p != '%' || *(p + 1) == '\0') {
             put_char(*p);
@@ -194,7 +198,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream) {
         }
     }
 
-    if (str != nullptr) {
+    if (str != nullptr && !max_len) {
         *str = '\0';
     }
     return static_cast<int>(len);
@@ -473,6 +477,14 @@ int sprintf(char *str, const char *fmt, ...) {
     return ret;
 }
 
+int snprintf(char *str, size_t size, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(str, size, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
 int vprintf(const char *fmt, va_list ap) {
     return vfprintf(stdout, fmt, ap);
 }
@@ -483,6 +495,17 @@ int vfprintf(FILE *stream, const char *fmt, va_list ap) {
 
 int vsprintf(char *str, const char *fmt, va_list ap) {
     return printf_impl(str, fmt, ap, nullptr);
+}
+
+int vsnprintf(char *str, size_t size, const char *fmt, va_list ap) {
+    size_t max_len = size != 0 ? size - 1 : 0;
+    int ret = printf_impl(str, fmt, ap, nullptr, max_len);
+    if (static_cast<size_t>(ret) < max_len) {
+        str[ret] = '\0';
+    } else if (size > 0) {
+        str[size - 1] = '\0';
+    }
+    return ret;
 }
 
 int scanf(const char *fmt, ...) {
