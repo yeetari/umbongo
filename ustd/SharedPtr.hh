@@ -26,7 +26,7 @@ public:
     ~SharedPtr();
 
     SharedPtr &operator=(const SharedPtr &) = delete;
-    SharedPtr &operator=(SharedPtr &&) = delete;
+    SharedPtr &operator=(SharedPtr &&) noexcept;
 
     explicit operator bool() const noexcept { return m_obj != nullptr; }
     bool has_value() const noexcept { return m_obj != nullptr; }
@@ -46,7 +46,7 @@ public:
 
 template <typename T>
 SharedPtr<T>::SharedPtr(T *obj) : m_obj(obj) {
-    if (obj) {
+    if (obj != nullptr) {
         obj->add_ref();
     }
 }
@@ -56,6 +56,14 @@ SharedPtr<T>::~SharedPtr() {
     if (m_obj != nullptr) {
         m_obj->sub_ref();
     }
+}
+
+template <typename T>
+SharedPtr<T> &SharedPtr<T>::operator=(SharedPtr &&other) noexcept {
+    SharedPtr ptr(move(other));
+    swap(m_obj, ptr.m_obj);
+    ASSERT(m_obj != nullptr);
+    return *this;
 }
 
 template <typename T, typename... Args>

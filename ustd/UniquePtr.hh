@@ -19,7 +19,7 @@ public:
     ~UniquePtr() { delete m_obj; }
 
     UniquePtr &operator=(const UniquePtr &) = delete;
-    UniquePtr &operator=(UniquePtr &&other) noexcept;
+    UniquePtr &operator=(UniquePtr &&) noexcept;
 
     void clear();
 
