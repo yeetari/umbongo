@@ -15,6 +15,10 @@ time_t time(time_t *) {
     ENSURE_NOT_REACHED("TODO");
 }
 
+int gettimeofday(struct timeval *, void *) {
+    ENSURE_NOT_REACHED();
+}
+
 struct tm *gmtime(const time_t *) {
     ENSURE_NOT_REACHED();
 }
