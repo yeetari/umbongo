@@ -102,6 +102,7 @@ void Vfs::initialise() {
 
 void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
     ASSERT(s_data->root_inode == nullptr);
+    fs->mount(fs->root_inode(), nullptr);
     s_data->root_inode = fs->root_inode();
     s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
@@ -139,10 +140,12 @@ SysResult<> Vfs::mkdir(StringView path, Inode *base) {
 }
 
 SysResult<> Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
-    auto *host = resolve_path(path, nullptr);
+    Inode *parent = nullptr;
+    auto *host = resolve_path(path, nullptr, &parent);
     if (host == nullptr) {
         return SysError::NonExistent;
     }
+    fs->mount(parent, host);
     s_data->mounts.emplace(host, ustd::move(fs));
     return SysSuccess{};
 }

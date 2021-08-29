@@ -12,5 +12,6 @@ public:
     FileSystem &operator=(const FileSystem &) = delete;
     FileSystem &operator=(FileSystem &&) = delete;
 
+    virtual void mount(Inode *parent, Inode *host) = 0;
     virtual Inode *root_inode() = 0;
 };

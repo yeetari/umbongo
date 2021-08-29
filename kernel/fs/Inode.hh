@@ -13,10 +13,11 @@ enum class InodeType {
 };
 
 class Inode {
+    Inode *m_parent;
     InodeType m_type;
 
 public:
-    explicit Inode(InodeType type) : m_type(type) {}
+    Inode(InodeType type, Inode *parent) : m_parent(parent), m_type(type) {}
     Inode(const Inode &) = delete;
     Inode(Inode &&) noexcept = default;
     virtual ~Inode() = default;
@@ -35,6 +36,6 @@ public:
     virtual usize write(Span<const void> data, usize offset) = 0;
 
     virtual StringView name() const = 0;
-    virtual Inode *parent() const = 0;
+    Inode *parent() const { return m_parent; }
     InodeType type() const { return m_type; }
 };

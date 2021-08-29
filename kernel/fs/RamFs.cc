@@ -6,22 +6,29 @@
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
+#include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
 // TODO: Needs proper locking.
 
+void RamFs::mount(Inode *parent, Inode *) {
+    ASSERT(!m_root_inode);
+    m_root_inode.emplace(InodeType::Directory, parent, "/"sv);
+}
+
 Inode *RamFsInode::child(usize index) {
     ASSERT(index < Limits<usize>::max());
-    return &m_children[static_cast<uint32>(index)];
+    return m_children[static_cast<uint32>(index)].obj();
 }
 
 Inode *RamFsInode::create(StringView name, InodeType type) {
-    return &m_children.emplace(type, name, this);
+    return m_children.emplace(new RamFsInode(type, this, name)).obj();
 }
 
 Inode *RamFsInode::lookup(StringView name) {
@@ -29,11 +36,11 @@ Inode *RamFsInode::lookup(StringView name) {
         return this;
     }
     if (name == "..") {
-        return m_parent;
+        return parent();
     }
     for (auto &child : m_children) {
-        if (name == child.m_name.view()) {
-            return &child;
+        if (name == child->m_name.view()) {
+            return child.obj();
         }
     }
     return nullptr;
