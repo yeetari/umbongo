@@ -23,7 +23,7 @@ void RamFs::mount(Inode *parent, Inode *) {
 }
 
 Inode *RamFsInode::child(usize index) {
-    ASSERT(index < Limits<usize>::max());
+    ASSERT(index < Limits<uint32>::max());
     return m_children[static_cast<uint32>(index)].obj();
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/devices/Device.hh>
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
@@ -39,6 +40,7 @@ public:
 class DevFsRootInode final : public Inode {
     String m_name;
     Vector<UniquePtr<DevFsInode>> m_children;
+    mutable SpinLock m_lock;
 
 public:
     DevFsRootInode(Inode *parent, StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}

@@ -1,5 +1,7 @@
 #include <kernel/devices/DevFs.hh>
 
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/SpinLock.hh>
 #include <kernel/devices/Device.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/Inode.hh>
@@ -14,27 +16,29 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
-// TODO: Needs proper locking.
-
 namespace {
 
 Vector<DevFs *> s_all;
+SpinLock s_all_lock;
 
 } // namespace
 
 void DevFs::notify_attach(Device *device) {
+    ScopedLock locker(s_all_lock);
     for (auto *dev_fs : s_all) {
         dev_fs->attach_device(device);
     }
 }
 
 void DevFs::notify_detach(Device *device) {
+    ScopedLock locker(s_all_lock);
     for (auto *dev_fs : s_all) {
         dev_fs->detach_device(device);
     }
 }
 
 DevFs::~DevFs() {
+    ScopedLock locker(s_all_lock);
     for (uint32 i = 0; i < s_all.size(); i++) {
         if (s_all[i] == this) {
             s_all.remove(i);
@@ -54,7 +58,10 @@ void DevFs::detach_device(Device *device) {
 void DevFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);
     m_root_inode.emplace(parent, host->name());
-    s_all.push(this);
+    {
+        ScopedLock locker(s_all_lock);
+        s_all.push(this);
+    }
     for (auto *device : Device::all_devices()) {
         attach_device(device);
     }
@@ -93,11 +100,13 @@ usize DevFsInode::write(Span<const void>, usize) {
 }
 
 Inode *DevFsRootInode::child(usize index) {
-    ASSERT(index < Limits<usize>::max());
+    ASSERT(index < Limits<uint32>::max());
+    ScopedLock locker(m_lock);
     return m_children[static_cast<uint32>(index)].obj();
 }
 
 void DevFsRootInode::create(StringView name, Device *device) {
+    ScopedLock locker(m_lock);
     m_children.emplace(new DevFsInode(name, this, device));
 }
 
@@ -112,6 +121,7 @@ Inode *DevFsRootInode::lookup(StringView name) {
     if (name == "..") {
         return parent();
     }
+    ScopedLock locker(m_lock);
     for (auto &child : m_children) {
         if (name == child->name()) {
             return child.obj();
@@ -129,6 +139,7 @@ usize DevFsRootInode::read(Span<void>, usize) {
 }
 
 void DevFsRootInode::remove(StringView name) {
+    ScopedLock locker(m_lock);
     for (uint32 i = 0; i < m_children.size(); i++) {
         if (name == m_children[i]->name()) {
             m_children.remove(i);
@@ -138,6 +149,7 @@ void DevFsRootInode::remove(StringView name) {
 }
 
 usize DevFsRootInode::size() {
+    ScopedLock locker(m_lock);
     return m_children.size();
 }
 
