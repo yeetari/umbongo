@@ -51,6 +51,7 @@ public:
         ASSERT(m_present);
         return reinterpret_cast<const T *>(m_data.data());
     }
+    constexpr T *obj() { return reinterpret_cast<T *>(m_data.data()); }
 };
 
 template <typename T>
