@@ -25,7 +25,7 @@ class ReadBlocker : public ThreadBlocker {
     SharedPtr<File> m_file;
 
 public:
-    ReadBlocker(SharedPtr<File> file) : m_file(ustd::move(file)) {}
+    explicit ReadBlocker(SharedPtr<File> file) : m_file(ustd::move(file)) {}
 
     bool should_unblock() override;
 };
@@ -43,7 +43,7 @@ class WriteBlocker : public ThreadBlocker {
     SharedPtr<File> m_file;
 
 public:
-    WriteBlocker(SharedPtr<File> file) : m_file(ustd::move(file)) {}
+    explicit WriteBlocker(SharedPtr<File> file) : m_file(ustd::move(file)) {}
 
     bool should_unblock() override;
 };
