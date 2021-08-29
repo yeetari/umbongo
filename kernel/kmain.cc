@@ -11,7 +11,6 @@
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/acpi/Table.hh>
-#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
@@ -65,9 +64,6 @@ InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
 }
 
 void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
-    // TODO: Disable interrupts for now, something weird is happening with interrupting kernel tasks.
-    InterruptDisabler disabler;
-
     auto *madt = xsdt->find<acpi::ApicTable>();
     Processor::start_aps(madt);
 
