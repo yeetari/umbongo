@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
 #include <ustd/Array.hh>
@@ -20,6 +21,7 @@ private:
     // TODO: Use a better data structure for regions.
     UniquePtr<Pml4> m_pml4;
     Vector<UniquePtr<Region>> m_regions;
+    mutable SpinLock m_lock;
 
     VirtSpace();
     explicit VirtSpace(const Vector<UniquePtr<Region>> &regions);

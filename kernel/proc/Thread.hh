@@ -1,7 +1,6 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <ustd/Assert.hh>
@@ -66,11 +65,8 @@ public:
 
 template <typename T, typename... Args>
 void Thread::block(Args &&...args) {
-    {
-        InterruptDisabler disabler;
-        ASSERT(m_state != ThreadState::Blocked);
-        m_blocker = ustd::make_unique<T>(ustd::forward<Args>(args)...);
-        m_state = ThreadState::Blocked;
-    }
+    ASSERT(m_state != ThreadState::Blocked);
+    m_blocker = ustd::make_unique<T>(ustd::forward<Args>(args)...);
+    m_state = ThreadState::Blocked;
     Scheduler::yield(true);
 }

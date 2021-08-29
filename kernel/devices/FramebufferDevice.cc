@@ -4,7 +4,6 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Memory.hh>
@@ -41,8 +40,6 @@ SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
 }
 
 uintptr FramebufferDevice::mmap(VirtSpace &virt_space) {
-    // TODO: InterruptDisabler shouldn't be needed.
-    InterruptDisabler disabler;
     const usize size = m_pitch * m_height;
     auto &region = virt_space.allocate_region(size, RegionAccess::Writable | RegionAccess::UserAccessible, m_base);
     return region.base();

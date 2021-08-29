@@ -1,5 +1,6 @@
 #include <kernel/mem/Region.hh>
 
+#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/PhysicalPage.hh>
@@ -68,6 +69,7 @@ void Region::map(VirtSpace *virt_space) const {
         }
     }
 
+    InterruptDisabler disabler;
     if (MemoryManager::current_space() == virt_space) {
         for (uintptr virt = m_base; virt < m_base + m_size; virt += 4_KiB) {
             asm volatile("invlpg (%0)" : : "r"(virt) : "memory");

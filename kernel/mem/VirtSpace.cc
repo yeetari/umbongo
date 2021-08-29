@@ -1,5 +1,6 @@
 #include <kernel/mem/VirtSpace.hh>
 
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
 #include <ustd/Assert.hh>
@@ -49,6 +50,7 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
 
 Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uintptr> phys_base) {
     // Find first fit region to split.
+    ScopedLock locker(m_lock);
     size = round_up(size, 4_KiB);
     for (auto &region : m_regions) {
         if (!region->free()) {
@@ -68,6 +70,7 @@ Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uin
 }
 
 Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, Optional<uintptr> phys_base) {
+    ScopedLock locker(m_lock);
     size = round_up(size, 4_KiB);
     for (auto &region : m_regions) {
         if (!region->free()) {
@@ -89,5 +92,6 @@ Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, 
 }
 
 SharedPtr<VirtSpace> VirtSpace::clone() const {
+    ScopedLock locker(m_lock);
     return SharedPtr<VirtSpace>(new VirtSpace(m_regions));
 }
