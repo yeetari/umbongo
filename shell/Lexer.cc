@@ -31,11 +31,11 @@ bool is_identifier_character(char ch) {
 } // namespace
 
 Token Lexer::next_token() {
+    while (m_source_position != m_source.length() && is_space(m_source[m_source_position])) {
+        m_source_position++;
+    }
     if (m_source_position == m_source.length()) {
         return TokenKind::Eof;
-    }
-    while (is_space(m_source[m_source_position])) {
-        m_source_position++;
     }
 
     char ch = m_source[m_source_position++];
