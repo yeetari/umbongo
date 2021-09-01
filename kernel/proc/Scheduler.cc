@@ -43,6 +43,7 @@ void handle_fault(RegisterState *regs) {
     auto *thread = Processor::current_thread();
     auto &process = thread->process();
     if ((regs->cs & 3u) == 0u) {
+        log_unlock();
         dbgln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Fault in ring 0!");
@@ -59,6 +60,7 @@ void handle_page_fault(RegisterState *regs) {
     uint64 cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
+        log_unlock();
         dbgln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
