@@ -27,11 +27,12 @@ add_executable(kernel
     devices/UsbKeyboardDevice.cc
     fs/FileHandle.cc
     fs/InodeFile.cc
-    fs/Pipe.cc
     fs/RamFs.cc
     fs/Vfs.cc
     intr/InterruptManager.cc
     intr/IoApic.cc
+    ipc/DoubleBuffer.cc
+    ipc/Pipe.cc
     mem/Heap.cc
     mem/MemoryManager.cc
     mem/PhysicalPage.cc

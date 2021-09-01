@@ -10,8 +10,8 @@
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/Pipe.hh>
 #include <kernel/fs/Vfs.hh>
+#include <kernel/ipc/Pipe.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
