@@ -117,6 +117,7 @@ void MemoryManager::initialise(BootInfo *boot_info) {
 
     // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
     // takes 4KiB of page structures to do.
+    // TODO: Mark as global pages.
     s_data.kernel_space = new VirtSpace;
     s_data.kernel_space->create_region(0, 512_GiB, RegionAccess::Writable | RegionAccess::Executable, 0);
 
