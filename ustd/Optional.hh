@@ -21,6 +21,7 @@ public:
     constexpr Optional(Optional &&other) noexcept requires(IsMoveConstructible<T>) : m_present(other.m_present) {
         if (other) {
             new (m_data.data()) T(move(*other));
+            other.clear();
         }
     }
     constexpr ~Optional() { clear(); }
