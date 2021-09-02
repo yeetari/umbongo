@@ -59,7 +59,6 @@ Checks: >
   cppcoreguidelines-special-member-functions,
   google-build-explicit-make-pair,
   google-build-namespaces,
-  google-build-using-namespace,
   google-readability-casting,
   google-runtime-int,
   google-runtime-operator,
