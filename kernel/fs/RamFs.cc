@@ -3,6 +3,7 @@
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
+#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
@@ -46,7 +47,7 @@ Inode *RamFsInode::lookup(StringView name) {
     return nullptr;
 }
 
-SharedPtr<File> RamFsInode::open() {
+SharedPtr<File> RamFsInode::open_impl() {
     return ustd::make_shared<InodeFile>(this);
 }
 

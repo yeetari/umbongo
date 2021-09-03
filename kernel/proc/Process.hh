@@ -46,11 +46,14 @@ public:
 
     UniquePtr<Thread> create_thread();
 
+    SyscallResult sys_accept(uint32 fd);
     SyscallResult sys_allocate_region(usize size, MemoryProt prot);
     SyscallResult sys_chdir(const char *path);
     SyscallResult sys_close(uint32 fd);
+    SyscallResult sys_connect(const char *path);
     SyscallResult sys_create_pipe(uint32 *fds);
     SyscallResult sys_create_process(const char *path, const char **argv, FdPair *copy_fds);
+    SyscallResult sys_create_server_socket(const char *path, uint32 backlog_limit);
     SyscallResult sys_dup_fd(uint32 src, uint32 dst);
     SyscallResult sys_exit(usize code) const;
     SyscallResult sys_getcwd(char *path) const;

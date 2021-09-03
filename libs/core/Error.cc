@@ -18,6 +18,7 @@ Array k_error_list{
     "exec format error",
     "not a directory",
     "already exists",
+    "resource busy",
 };
 // clang-format on
 
@@ -26,7 +27,7 @@ Array k_error_list{
 StringView error_string(ssize rc) {
     rc = -rc;
     if (rc < 0 || static_cast<usize>(rc) >= k_error_list.size()) {
-        return "Unknown error"sv;
+        return "unknown error"sv;
     }
     return k_error_list[static_cast<usize>(rc)];
 }

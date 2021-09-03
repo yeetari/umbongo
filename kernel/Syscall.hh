@@ -5,11 +5,14 @@
 namespace Syscall {
 
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
+    S(accept)                                                                                                          \
     S(allocate_region)                                                                                                 \
     S(chdir)                                                                                                           \
     S(close)                                                                                                           \
+    S(connect)                                                                                                         \
     S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
+    S(create_server_socket)                                                                                            \
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
     S(getcwd)                                                                                                          \

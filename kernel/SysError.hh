@@ -10,4 +10,5 @@ enum class SysError : ssize {
     NoExec = -5,
     NotDirectory = -6,
     AlreadyExists = -7,
+    Busy = -8,
 };

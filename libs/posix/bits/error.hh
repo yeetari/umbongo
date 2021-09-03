@@ -24,6 +24,8 @@ inline int to_errno(ssize_t error) {
         return ENOTDIR;
     case SysError::AlreadyExists:
         return EEXIST;
+    case SysError::Busy:
+        return EBUSY;
     default:
         ENSURE_NOT_REACHED();
     }

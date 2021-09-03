@@ -10,9 +10,14 @@
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeFile.hh>
+#include <kernel/fs/InodeType.hh>
 #include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
+#include <kernel/ipc/DoubleBuffer.hh>
 #include <kernel/ipc/Pipe.hh>
+#include <kernel/ipc/ServerSocket.hh>
+#include <kernel/ipc/Socket.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
@@ -30,6 +35,25 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
+
+SyscallResult Process::sys_accept(uint32 fd) {
+    ScopedLock locker(m_lock);
+    if (fd >= m_fds.size() || !m_fds[fd]) {
+        return SysError::BadFd;
+    }
+    auto &file = m_fds[fd]->file();
+    if (!file.is_server_socket()) {
+        return SysError::Invalid;
+    }
+    auto &server = static_cast<ServerSocket &>(file);
+    if (!server.can_accept()) {
+        Processor::current_thread()->block<AcceptBlocker>(SharedPtr<ServerSocket>(&server));
+    }
+    auto accepted = server.accept();
+    uint32 accepted_fd = allocate_fd();
+    m_fds[accepted_fd].emplace(ustd::move(accepted));
+    return accepted_fd;
+}
 
 SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     ScopedLock locker(m_lock);
@@ -61,6 +85,27 @@ SyscallResult Process::sys_close(uint32 fd) {
     }
     m_fds[fd].clear();
     return 0;
+}
+
+SyscallResult Process::sys_connect(const char *path) {
+    auto file_or_error = Vfs::open(path, OpenMode::None, m_cwd);
+    if (file_or_error.is_error()) {
+        return file_or_error.error();
+    }
+    auto &file = *file_or_error;
+    if (!file->is_server_socket()) {
+        return SysError::Invalid;
+    }
+    auto client = ustd::make_shared<Socket>(new DoubleBuffer(64_KiB), new DoubleBuffer(64_KiB));
+    auto &server = static_cast<ServerSocket &>(*file);
+    if (auto rc = server.queue_connection_from(client); rc.is_error()) {
+        return rc.error();
+    }
+    Processor::current_thread()->block<ConnectBlocker>(client);
+    ScopedLock locker(m_lock);
+    uint32 client_fd = allocate_fd();
+    m_fds[client_fd].emplace(client);
+    return client_fd;
 }
 
 SyscallResult Process::sys_create_pipe(uint32 *fds) {
@@ -114,6 +159,21 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     }
     Scheduler::insert_thread(ustd::move(new_thread));
     return new_process.pid();
+}
+
+// TODO: A bind syscall - create_pipe and create_server_socket both return anonymous files, that can be bound to inodes.
+SyscallResult Process::sys_create_server_socket(const char *path, uint32 backlog_limit) {
+    // TODO: Upper limit for backlog_limit.
+    auto inode = Vfs::create(path, m_cwd, InodeType::IpcFile);
+    if (inode.is_error()) {
+        return inode.error();
+    }
+    ScopedLock locker(m_lock);
+    auto server = ustd::make_shared<ServerSocket>(backlog_limit);
+    uint32 fd = allocate_fd();
+    m_fds[fd].emplace(server);
+    inode->bind_ipc_file(server);
+    return fd;
 }
 
 SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
@@ -250,7 +310,11 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
     if (!file.can_read()) {
         Processor::current_thread()->block<ReadBlocker>(file);
     }
-    return handle->read(data, size);
+    auto bytes_read = handle->read(data, size);
+    if (bytes_read.is_error()) {
+        return bytes_read.error();
+    }
+    return *bytes_read;
 }
 
 SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
@@ -298,7 +362,11 @@ SyscallResult Process::sys_size(uint32 fd) {
         m_fds[fd].clear();
         return SysError::BrokenHandle;
     }
-    return m_fds[fd]->size();
+    auto &file = m_fds[fd]->file();
+    if (!file.is_inode_file()) {
+        return SysError::Invalid;
+    }
+    return static_cast<InodeFile &>(file).inode()->size();
 }
 
 SyscallResult Process::sys_wait_pid(usize pid) {
@@ -320,5 +388,9 @@ SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (!file.can_write()) {
         Processor::current_thread()->block<WriteBlocker>(file);
     }
-    return handle->write(data, size);
+    auto bytes_written = handle->write(data, size);
+    if (bytes_written.is_error()) {
+        return bytes_written.error();
+    }
+    return *bytes_written;
 }

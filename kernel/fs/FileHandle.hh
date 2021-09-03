@@ -24,10 +24,9 @@ public:
 
     SyscallResult ioctl(IoctlRequest request, void *arg) const;
     uintptr mmap(VirtSpace &virt_space) const;
-    usize read(void *data, usize size);
+    SysResult<usize> read(void *data, usize size);
     usize seek(usize offset, SeekMode mode);
-    usize size() const;
-    usize write(void *data, usize size);
+    SysResult<usize> write(void *data, usize size);
     bool valid() const;
 
     File &file() const { return *m_file; }

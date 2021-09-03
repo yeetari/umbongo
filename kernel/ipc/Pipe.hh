@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/SpinLock.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/ipc/DoubleBuffer.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -25,7 +26,6 @@ public:
     void detach(AttachDirection) override;
     bool can_read() override;
     bool can_write() override;
-    usize read(Span<void> data, usize offset) override;
-    usize size() override;
-    usize write(Span<const void> data, usize offset) override;
+    SysResult<usize> read(Span<void> data, usize offset) override;
+    SysResult<usize> write(Span<const void> data, usize offset) override;
 };

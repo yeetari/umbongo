@@ -1,9 +1,11 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
+#include <ustd/Shareable.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
-class DoubleBuffer {
+class DoubleBuffer : public Shareable<DoubleBuffer> {
     struct Buffer {
         uint8 *data{nullptr};
         usize size{0};
@@ -15,6 +17,7 @@ class DoubleBuffer {
     Buffer *m_read_buffer;
     Buffer *m_write_buffer;
     usize m_read_position{0};
+    mutable SpinLock m_lock;
 
 public:
     explicit DoubleBuffer(usize size);

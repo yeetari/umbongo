@@ -5,10 +5,10 @@
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeType.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
-#include <ustd/Span.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -26,7 +26,7 @@ public:
     Inode *child(usize index) override;
     Inode *create(StringView name, InodeType type) override;
     Inode *lookup(StringView name) override;
-    SharedPtr<File> open() override;
+    SharedPtr<File> open_impl() override;
     usize read(Span<void> data, usize offset) override;
     void remove(StringView name) override;
     usize size() override;
@@ -49,12 +49,13 @@ public:
     void create(StringView name, Device *device);
     Inode *create(StringView name, InodeType type) override;
     Inode *lookup(StringView name) override;
-    SharedPtr<File> open() override;
+    SharedPtr<File> open_impl() override;
     usize read(Span<void> data, usize offset) override;
     void remove(StringView name) override;
     usize size() override;
     void truncate() override {}
     usize write(Span<const void> data, usize offset) override;
+
     StringView name() const override { return m_name.view(); }
 };
 

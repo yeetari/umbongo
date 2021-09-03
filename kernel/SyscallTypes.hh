@@ -15,6 +15,7 @@ struct FramebufferInfo {
 enum class PollEvents : uint16 {
     Read = 1u << 0u,
     Write = 1u << 1u,
+    Accept = Read,
 };
 
 struct PollFd {

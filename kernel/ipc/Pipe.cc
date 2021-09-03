@@ -1,6 +1,7 @@
 #include <kernel/ipc/Pipe.hh>
 
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/ipc/DoubleBuffer.hh>
 #include <ustd/Assert.hh>
@@ -17,6 +18,7 @@ Pipe::Pipe() : m_buffer(k_buffer_size) {}
 
 void Pipe::attach(AttachDirection direction) {
     ASSERT(direction != AttachDirection::ReadWrite);
+    ScopedLock locker(m_lock);
     if (direction == AttachDirection::Read) {
         m_reader_count++;
     } else if (direction == AttachDirection::Write) {
@@ -26,6 +28,7 @@ void Pipe::attach(AttachDirection direction) {
 
 void Pipe::detach(AttachDirection direction) {
     ASSERT(direction != AttachDirection::ReadWrite);
+    ScopedLock locker(m_lock);
     if (direction == AttachDirection::Read) {
         ASSERT(m_reader_count > 0);
         m_reader_count--;
@@ -37,24 +40,17 @@ void Pipe::detach(AttachDirection direction) {
 
 bool Pipe::can_read() {
     ScopedLock locker(m_lock);
-    return !m_buffer.empty();
+    return m_writer_count == 0 || !m_buffer.empty();
 }
 
 bool Pipe::can_write() {
-    ScopedLock locker(m_lock);
     return !m_buffer.full();
 }
 
-usize Pipe::read(Span<void> data, usize) {
-    ScopedLock locker(m_lock);
+SysResult<usize> Pipe::read(Span<void> data, usize) {
     return m_buffer.read(data);
 }
 
-usize Pipe::size() {
-    return k_buffer_size;
-}
-
-usize Pipe::write(Span<const void> data, usize) {
-    ScopedLock locker(m_lock);
+SysResult<usize> Pipe::write(Span<const void> data, usize) {
     return m_buffer.write(data);
 }

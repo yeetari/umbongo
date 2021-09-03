@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Span.hh>
@@ -20,9 +21,8 @@ public:
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
-    usize read(Span<void>, usize) override { return 0; }
-    usize size() override { return 0; }
-    usize write(Span<const void>, usize) override { return 0; }
+    SysResult<usize> read(Span<void>, usize) override { return 0u; }
+    SysResult<usize> write(Span<const void>, usize) override { return 0u; }
 
     void disconnect();
     bool valid() override { return m_connected; }

@@ -4,10 +4,20 @@
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
+#include <kernel/ipc/ServerSocket.hh>
+#include <kernel/ipc/Socket.hh>
 #include <kernel/proc/Process.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
+
+bool AcceptBlocker::should_unblock() {
+    return m_server->can_accept();
+}
+
+bool ConnectBlocker::should_unblock() {
+    return m_socket->connected();
+}
 
 bool PollBlocker::should_unblock() {
     ScopedLock locker(m_lock);

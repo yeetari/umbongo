@@ -1,5 +1,6 @@
 #include <kernel/ipc/DoubleBuffer.hh>
 
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
@@ -17,14 +18,17 @@ DoubleBuffer::~DoubleBuffer() {
 }
 
 bool DoubleBuffer::empty() const {
+    ScopedLock locker(m_lock);
     return m_read_position >= m_read_buffer->size && m_write_buffer->size == 0;
 }
 
 bool DoubleBuffer::full() const {
+    ScopedLock locker(m_lock);
     return m_size - m_write_buffer->size == 0;
 }
 
 usize DoubleBuffer::read(Span<void> data) {
+    ScopedLock locker(m_lock);
     if (m_read_position >= m_read_buffer->size && m_write_buffer->size != 0) {
         ustd::swap(m_read_buffer, m_write_buffer);
         m_read_position = 0;
@@ -40,6 +44,7 @@ usize DoubleBuffer::read(Span<void> data) {
 }
 
 usize DoubleBuffer::write(Span<const void> data) {
+    ScopedLock locker(m_lock);
     usize write_size = ustd::min(data.size(), m_size - m_write_buffer->size);
     memcpy(m_write_buffer->data + m_write_buffer->size, data.data(), write_size);
     m_write_buffer->size += write_size;

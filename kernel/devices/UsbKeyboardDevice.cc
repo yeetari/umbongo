@@ -1,6 +1,7 @@
 #include <kernel/devices/UsbKeyboardDevice.hh>
 
 #include <kernel/KeyEvent.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Endpoint.hh>
@@ -86,7 +87,7 @@ void UsbKeyboardDevice::poll() {
     memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
 }
 
-usize UsbKeyboardDevice::read(Span<void> data, usize) {
+SysResult<usize> UsbKeyboardDevice::read(Span<void> data, usize) {
     usize nread = 0;
     for (usize i = 0; i < data.size(); i += sizeof(KeyEvent), nread += sizeof(KeyEvent)) {
         if (m_ring_buffer.empty()) {

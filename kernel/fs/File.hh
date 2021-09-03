@@ -24,6 +24,10 @@ public:
     File &operator=(const File &) = delete;
     File &operator=(File &&) = delete;
 
+    virtual bool is_inode_file() const { return false; }
+    virtual bool is_server_socket() const { return false; }
+    virtual bool is_socket() const { return false; }
+
     // TODO: Const some of these?
     virtual void attach(AttachDirection) {}
     virtual void detach(AttachDirection) {}
@@ -31,8 +35,7 @@ public:
     virtual bool can_write() = 0;
     virtual SyscallResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
     virtual uintptr mmap(VirtSpace &) { return 0; }
-    virtual usize read(Span<void> data, usize offset = 0) = 0;
-    virtual usize size() = 0;
-    virtual usize write(Span<const void> data, usize offset = 0) = 0;
+    virtual SysResult<usize> read(Span<void> data, usize offset = 0) = 0;
+    virtual SysResult<usize> write(Span<const void> data, usize offset = 0) = 0;
     virtual bool valid() { return true; }
 };

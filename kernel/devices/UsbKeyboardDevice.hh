@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/KeyEvent.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/usb/Device.hh>
 #include <ustd/Array.hh>
 #include <ustd/RingBuffer.hh>
@@ -28,7 +29,7 @@ public:
     bool can_read() override;
     bool can_write() override { return true; }
     void poll() override;
-    usize read(Span<void> data, usize offset) override;
+    SysResult<usize> read(Span<void> data, usize offset) override;
 
     const char *name() const override { return "kb"; }
 };

@@ -26,6 +26,7 @@ add_executable(kernel
     devices/FramebufferDevice.cc
     devices/UsbKeyboardDevice.cc
     fs/FileHandle.cc
+    fs/Inode.cc
     fs/InodeFile.cc
     fs/RamFs.cc
     fs/Vfs.cc
@@ -33,6 +34,8 @@ add_executable(kernel
     intr/IoApic.cc
     ipc/DoubleBuffer.cc
     ipc/Pipe.cc
+    ipc/ServerSocket.cc
+    ipc/Socket.cc
     mem/Heap.cc
     mem/MemoryManager.cc
     mem/PhysicalPage.cc

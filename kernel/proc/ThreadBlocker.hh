@@ -1,6 +1,8 @@
 #pragma once
 
 #include <kernel/fs/File.hh>
+#include <kernel/ipc/ServerSocket.hh>
+#include <kernel/ipc/Socket.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -22,6 +24,24 @@ public:
     ThreadBlocker &operator=(ThreadBlocker &&) = delete;
 
     virtual bool should_unblock() = 0;
+};
+
+class AcceptBlocker : public ThreadBlocker {
+    SharedPtr<ServerSocket> m_server;
+
+public:
+    explicit AcceptBlocker(SharedPtr<ServerSocket> server) : m_server(ustd::move(server)) {}
+
+    bool should_unblock() override;
+};
+
+class ConnectBlocker : public ThreadBlocker {
+    SharedPtr<Socket> m_socket;
+
+public:
+    explicit ConnectBlocker(SharedPtr<Socket> socket) : m_socket(ustd::move(socket)) {}
+
+    bool should_unblock() override;
 };
 
 class PollBlocker : public ThreadBlocker {

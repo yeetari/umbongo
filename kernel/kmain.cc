@@ -15,8 +15,9 @@
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/devices/FramebufferDevice.hh>
-#include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
+#include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeType.hh>
 #include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/intr/InterruptManager.hh>
@@ -30,7 +31,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/SharedPtr.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -136,8 +136,8 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
             Vfs::mkdir(entry->name, nullptr);
             continue;
         }
-        auto file = *Vfs::create(entry->name, nullptr);
-        file->write({entry->data, entry->data_size});
+        auto *inode = *Vfs::create(entry->name, nullptr, InodeType::RegularFile);
+        inode->write({entry->data, entry->data_size}, 0);
     }
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,

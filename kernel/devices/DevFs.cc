@@ -5,6 +5,7 @@
 #include <kernel/devices/Device.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
@@ -79,12 +80,12 @@ Inode *DevFsInode::lookup(StringView) {
     ENSURE_NOT_REACHED();
 }
 
-SharedPtr<File> DevFsInode::open() {
+SharedPtr<File> DevFsInode::open_impl() {
     return m_device;
 }
 
-usize DevFsInode::read(Span<void> data, usize offset) {
-    return m_device->read(data, offset);
+usize DevFsInode::read(Span<void>, usize) {
+    ENSURE_NOT_REACHED();
 }
 
 void DevFsInode::remove(StringView) {
@@ -130,7 +131,7 @@ Inode *DevFsRootInode::lookup(StringView name) {
     return nullptr;
 }
 
-SharedPtr<File> DevFsRootInode::open() {
+SharedPtr<File> DevFsRootInode::open_impl() {
     ENSURE_NOT_REACHED();
 }
 

@@ -6,8 +6,9 @@
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
+#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh> // IWYU pragma: keep
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
@@ -107,7 +108,7 @@ void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
     s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
 
-SysResult<SharedPtr<File>> Vfs::create(StringView path, Inode *base) {
+SysResult<Inode *> Vfs::create(StringView path, Inode *base, InodeType type) {
     Inode *parent = nullptr;
     StringView name;
     if (resolve_path(path, base, &parent, &name) != nullptr) {
@@ -119,23 +120,14 @@ SysResult<SharedPtr<File>> Vfs::create(StringView path, Inode *base) {
     if (name.empty()) {
         return SysError::Invalid;
     }
-    auto *inode = parent->create(name, InodeType::RegularFile);
-    return inode->open();
+    return parent->create(name, type);
 }
 
 SysResult<> Vfs::mkdir(StringView path, Inode *base) {
-    Inode *parent = nullptr;
-    StringView name;
-    if (resolve_path(path, base, &parent, &name) != nullptr) {
-        return SysError::AlreadyExists;
+    auto inode = create(path, base, InodeType::Directory);
+    if (inode.is_error()) {
+        return inode.error();
     }
-    if (parent == nullptr) {
-        return SysError::NonExistent;
-    }
-    if (name.empty()) {
-        return SysError::Invalid;
-    }
-    parent->create(name, InodeType::Directory);
     return SysSuccess{};
 }
 
@@ -154,7 +146,11 @@ SysResult<SharedPtr<File>> Vfs::open(StringView path, OpenMode mode, Inode *base
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         if ((mode & OpenMode::Create) == OpenMode::Create) {
-            return Vfs::create(path, base);
+            auto created_inode = Vfs::create(path, base, InodeType::RegularFile);
+            if (created_inode.is_error()) {
+                return created_inode.error();
+            }
+            return created_inode->open();
         }
         return SysError::NonExistent;
     }
