@@ -1,5 +1,5 @@
+#include <console/Console.hh>
 #include <core/Error.hh>
-#include <core/File.hh>
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
@@ -9,7 +9,6 @@
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
-#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
@@ -261,10 +260,7 @@ usize main(usize argc, const char **argv) {
         printf("Usage: {} <file>\n", argv[0]);
         return 0;
     }
-    // TODO: The screen column and row count should be gotten from console server somehow.
-    core::File framebuffer("/dev/fb");
-    TerminalSize terminal_size{};
-    Syscall::invoke(Syscall::ioctl, framebuffer.fd(), IoctlRequest::TerminalGetSize, &terminal_size);
+    auto terminal_size = console::terminal_size();
     Editor editor(terminal_size.column_count, terminal_size.row_count);
     if (!editor.load(argv[1])) {
         return 1;
