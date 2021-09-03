@@ -3,7 +3,9 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Concepts.hh>
+#include <ustd/Memory.hh>
 #include <ustd/Traits.hh>
+#include <ustd/Utility.hh>
 
 namespace ustd {
 
@@ -27,6 +29,11 @@ public:
 
     Result &operator=(const Result &) = delete;
     Result &operator=(Result &&) = delete;
+
+    bool operator==(E error) const { return m_is_error && m_error == error; }
+    bool operator==(const T &value) const {
+        return !m_is_error && *reinterpret_cast<const T *>(m_value.data()) == value;
+    }
 
     bool is_error() const { return m_is_error; }
     E error() const {
