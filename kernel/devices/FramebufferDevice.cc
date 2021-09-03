@@ -1,6 +1,5 @@
 #include <kernel/devices/FramebufferDevice.hh>
 
-#include <kernel/Font.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
@@ -23,15 +22,6 @@ SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
             .height = m_height,
         };
         memcpy(arg, &info, sizeof(FramebufferInfo));
-        return 0;
-    }
-    case IoctlRequest::TerminalGetSize: {
-        // TODO: Console server should manage this.
-        TerminalSize size{
-            .column_count = m_width / g_font.advance(),
-            .row_count = m_height / g_font.line_height(),
-        };
-        memcpy(arg, &size, sizeof(TerminalSize));
         return 0;
     }
     default:
