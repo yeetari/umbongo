@@ -32,6 +32,8 @@ public:
     Shareable &operator=(Shareable &&) = delete;
 
     void leak_ref() { const_cast<Shareable *>(this)->add_ref(); }
+
+    RefCountType ref_count() const { return m_ref_count.load(MemoryOrder::Relaxed); }
 };
 
 } // namespace ustd
