@@ -19,6 +19,7 @@ namespace Syscall {
     S(mmap)                                                                                                            \
     S(mount)                                                                                                           \
     S(open)                                                                                                            \
+    S(poll)                                                                                                            \
     S(putchar)                                                                                                         \
     S(read)                                                                                                            \
     S(read_directory)                                                                                                  \

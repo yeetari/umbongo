@@ -212,6 +212,25 @@ SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     return fd;
 }
 
+SyscallResult Process::sys_poll(PollFd *fds, usize count) {
+    LargeVector<PollFd> poll_fds(count);
+    memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
+    Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this);
+    for (auto &poll_fd : poll_fds) {
+        // TODO: Bounds checking.
+        auto &file = m_fds[poll_fd.fd]->file();
+        poll_fd.revents = static_cast<PollEvents>(0);
+        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && file.can_read()) {
+            poll_fd.revents |= PollEvents::Read;
+        }
+        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && file.can_write()) {
+            poll_fd.revents |= PollEvents::Write;
+        }
+    }
+    memcpy(fds, poll_fds.data(), count * sizeof(PollFd));
+    return 0;
+}
+
 SyscallResult Process::sys_putchar(char ch) const {
     dbg_put_char(ch);
     return 0;
@@ -222,15 +241,16 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
     }
-    if (!m_fds[fd]->valid()) {
-        m_fds[fd].clear();
+    auto &handle = m_fds[fd];
+    if (!handle->valid()) {
+        handle.clear();
         return SysError::BrokenHandle;
     }
-    auto file = m_fds[fd]->file();
-    if (!file->can_read()) {
+    auto &file = handle->file();
+    if (!file.can_read()) {
         Processor::current_thread()->block<ReadBlocker>(file);
     }
-    return m_fds[fd]->read(data, size);
+    return handle->read(data, size);
 }
 
 SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
@@ -291,13 +311,14 @@ SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return SysError::BadFd;
     }
-    if (!m_fds[fd]->valid()) {
-        m_fds[fd].clear();
+    auto &handle = m_fds[fd];
+    if (!handle->valid()) {
+        handle.clear();
         return SysError::BrokenHandle;
     }
-    auto file = m_fds[fd]->file();
-    if (!file->can_write()) {
+    auto &file = handle->file();
+    if (!file.can_write()) {
         Processor::current_thread()->block<WriteBlocker>(file);
     }
-    return m_fds[fd]->write(data, size);
+    return handle->write(data, size);
 }

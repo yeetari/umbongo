@@ -60,6 +60,7 @@ public:
     SyscallResult sys_mmap(uint32 fd) const;
     SyscallResult sys_mount(const char *target, const char *fs_type) const;
     SyscallResult sys_open(const char *path, OpenMode mode);
+    SyscallResult sys_poll(PollFd *fds, usize count);
     SyscallResult sys_putchar(char ch) const;
     SyscallResult sys_read(uint32 fd, void *data, usize size);
     SyscallResult sys_read_directory(const char *path, uint8 *data);
@@ -70,5 +71,6 @@ public:
 
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
+    FileHandle &file_handle(uint32 fd) { return *m_fds[fd]; }
     usize thread_count() const { return m_thread_count.load(MemoryOrder::Relaxed); }
 };

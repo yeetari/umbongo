@@ -12,6 +12,17 @@ struct FramebufferInfo {
     uint32 height;
 };
 
+enum class PollEvents : uint16 {
+    Read = 1u << 0u,
+    Write = 1u << 1u,
+};
+
+struct PollFd {
+    uint32 fd;
+    PollEvents events;
+    PollEvents revents;
+};
+
 struct TerminalSize {
     uint32 column_count;
     uint32 row_count;
@@ -38,6 +49,18 @@ enum class SeekMode {
     Add,
     Set,
 };
+
+inline constexpr PollEvents operator&(PollEvents a, PollEvents b) {
+    return static_cast<PollEvents>(static_cast<usize>(a) & static_cast<usize>(b));
+}
+
+inline constexpr PollEvents operator|(PollEvents a, PollEvents b) {
+    return static_cast<PollEvents>(static_cast<usize>(a) | static_cast<usize>(b));
+}
+
+inline constexpr PollEvents operator|=(PollEvents &a, PollEvents b) {
+    return a = (a | b);
+}
 
 inline constexpr MemoryProt operator&(MemoryProt a, MemoryProt b) {
     return static_cast<MemoryProt>(static_cast<usize>(a) & static_cast<usize>(b));

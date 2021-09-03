@@ -30,5 +30,5 @@ public:
     usize write(void *data, usize size);
     bool valid() const;
 
-    SharedPtr<File> file() { return m_file; }
+    File &file() const { return *m_file; }
 };
