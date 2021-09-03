@@ -4,10 +4,11 @@ add_custom_command(OUTPUT Font.cc
     DEPENDS font-generator)
 
 add_executable(console-server
+    EscapeParser.cc
     Framebuffer.cc
     main.cc
     Terminal.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc)
 install(TARGETS console-server DESTINATION bin)
 target_gc_sections(console-server)
-target_link_libraries(console-server PRIVATE core)
+target_link_libraries(console-server PRIVATE core ipc)

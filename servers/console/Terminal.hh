@@ -47,4 +47,7 @@ public:
     void set_colour(uint32 r, uint32 g, uint32 b);
     void set_cursor(uint32 x, uint32 y);
     void set_dirty();
+
+    uint32 column_count() const { return m_column_count; }
+    uint32 row_count() const { return m_row_count; }
 };
