@@ -10,6 +10,7 @@
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
+#include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/ipc/Pipe.hh>
 #include <kernel/mem/Region.hh>
@@ -188,10 +189,14 @@ SyscallResult Process::sys_mmap(uint32 fd) const {
 
 SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
     ScopedLock locker(m_lock);
-    if (StringView(fs_type) != "dev") {
+    UniquePtr<FileSystem> fs;
+    if (StringView(fs_type) == "dev") {
+        fs = ustd::make_unique<DevFs>();
+    } else if (StringView(fs_type) == "ram") {
+        fs = ustd::make_unique<RamFs>();
+    } else {
         return SysError::Invalid;
     }
-    auto fs = ustd::make_unique<DevFs>();
     return Vfs::mount(target, ustd::move(fs));
 }
 

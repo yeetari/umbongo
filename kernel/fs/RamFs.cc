@@ -17,9 +17,9 @@
 
 // TODO: Needs proper locking.
 
-void RamFs::mount(Inode *parent, Inode *) {
+void RamFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);
-    m_root_inode.emplace(InodeType::Directory, parent, "/"sv);
+    m_root_inode.emplace(InodeType::Directory, parent, host != nullptr ? host->name() : "/"sv);
 }
 
 Inode *RamFsInode::child(usize index) {
