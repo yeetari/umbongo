@@ -10,6 +10,10 @@ usize main(usize, const char **) {
     Syscall::invoke(Syscall::mkdir, "/dev");
     Syscall::invoke(Syscall::mount, "/dev", "dev");
 
+    // Mount runfs.
+    Syscall::invoke(Syscall::mkdir, "/run");
+    Syscall::invoke(Syscall::mount, "/run", "ram");
+
     Array<uint32, 2> pipe_fds{};
     Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
 
