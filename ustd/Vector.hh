@@ -45,6 +45,7 @@ public:
     void push(T &&elem);
     Conditional<IsTriviallyCopyable<T>, T, void> pop();
     void remove(SizeType index);
+    T take(SizeType index);
 
     Span<T> span() { return {m_data, m_size}; }
     Span<const T> span() const { return {m_data, m_size}; }
@@ -236,6 +237,14 @@ void Vector<T, SizeType>::remove(SizeType index) {
         new (begin() + i) T(move(begin()[i + 1]));
         begin()[i + 1].~T();
     }
+}
+
+template <typename T, typename SizeType>
+T Vector<T, SizeType>::take(SizeType index) {
+    ASSERT(index < m_size);
+    auto elem = move(begin()[index]);
+    remove(index);
+    return elem;
 }
 
 template <typename T, typename SizeType>
