@@ -14,5 +14,5 @@ SharedPtr<PhysicalPage> PhysicalPage::create(uintptr phys, PhysicalPageSize size
 }
 
 PhysicalPage::~PhysicalPage() {
-    MemoryManager::free_frame(m_phys);
+    MemoryManager::free_frame(phys());
 }
