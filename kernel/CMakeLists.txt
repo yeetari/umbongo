@@ -3,6 +3,7 @@ set(KERNEL_FONT "${CMAKE_SOURCE_DIR}/FantasqueSansMono.ttf" CACHE STRING "Font t
 set(KERNEL_FONT_SIZE "24" CACHE STRING "Font size to use in the kernel")
 set(KERNEL_QEMU_DEBUG OFF CACHE BOOL "Enable debug logging to port E9 in the kernel")
 set(KERNEL_STACK_PROTECTOR OFF CACHE BOOL "Enable stack smashing protector in the kernel")
+set(KERNEL_UBSAN OFF CACHE BOOL "Enable UBSan in the kernel")
 
 # Generate kernel config header.
 configure_file(Config.hh.in Config.hh)
@@ -58,13 +59,15 @@ add_executable(kernel
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
     Log.cc
-    Syscalls.cc)
+    Syscalls.cc
+    UbSan.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm
     cpu/interrupts.asm
     cpu/smp.asm)
 install(TARGETS kernel DESTINATION .)
 target_compile_options(kernel PRIVATE
+    $<$<BOOL:${KERNEL_UBSAN}>:-fsanitize=undefined -fno-sanitize=function>
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-fstack-protector-strong>
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
     -fno-pic

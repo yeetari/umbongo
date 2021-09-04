@@ -28,6 +28,7 @@ jobs:
             -DBUILD_WARNINGS=ON \
             -DENABLE_ASSERTIONS=ON \
             -DLINK_TIME_OPT=ON \
+            -DKERNEL_UBSAN=ON \
             -GNinja
       - name: Build
         run: |
