@@ -154,7 +154,6 @@ void MemoryManager::switch_space(VirtSpace &virt_space) {
 
 uintptr MemoryManager::alloc_frame() {
     ScopedLock locker(s_lock);
-    InterruptDisabler disabler;
     for (usize i = 0; i < s_data.frame_count; i++) {
         if (!is_frame_set(i)) {
             set_frame(i);
@@ -166,7 +165,6 @@ uintptr MemoryManager::alloc_frame() {
 
 void MemoryManager::free_frame(uintptr frame) {
     ScopedLock locker(s_lock);
-    InterruptDisabler disabler;
     ASSERT(frame % k_frame_size == 0);
     const auto index = frame / k_frame_size;
     ASSERT(is_frame_set(index));
@@ -180,7 +178,6 @@ bool MemoryManager::is_frame_free(uintptr frame) {
 
 void *MemoryManager::alloc_contiguous(usize size) {
     ScopedLock locker(s_lock);
-    InterruptDisabler disabler;
     const usize frame_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < s_data.frame_count; i += frame_count) {
         bool found_space = true;
@@ -205,7 +202,6 @@ void *MemoryManager::alloc_contiguous(usize size) {
 
 void MemoryManager::free_contiguous(void *ptr, usize size) {
     ScopedLock locker(s_lock);
-    InterruptDisabler disabler;
     const auto first_frame = reinterpret_cast<uintptr>(ptr);
     ASSERT(first_frame % k_frame_size == 0);
     const auto first_frame_index = first_frame / k_frame_size;
