@@ -34,7 +34,7 @@ public:
 struct VfsData {
     Inode *root_inode{nullptr};
     Vector<Mount> mounts;
-} *s_data;
+} *s_data = nullptr;
 // clang-format on
 
 Mount *find_mount(Inode *host) {
@@ -98,6 +98,7 @@ Inode *resolve_path(StringView path, Inode *base, Inode **out_parent = nullptr, 
 } // namespace
 
 void Vfs::initialise() {
+    ASSERT(s_data == nullptr);
     s_data = new VfsData;
 }
 
@@ -172,5 +173,8 @@ SysResult<Inode *> Vfs::open_directory(StringView path, Inode *base) {
 }
 
 Inode *Vfs::root_inode() {
+    if (s_data == nullptr) {
+        return nullptr;
+    }
     return s_data->root_inode;
 }
