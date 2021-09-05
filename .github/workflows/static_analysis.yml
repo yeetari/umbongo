@@ -4,7 +4,7 @@ jobs:
   clang-tidy:
     name: Clang Tidy
     runs-on: ubuntu-latest
-    container: ubuntu:devel
+    container: ubuntu:21.04
     steps:
       - name: Install tools
         run: |
@@ -37,7 +37,7 @@ jobs:
   cppcheck:
     name: Cppcheck
     runs-on: ubuntu-latest
-    container: ubuntu:devel
+    container: ubuntu:21.04
     steps:
       - name: Install tools
         run: |

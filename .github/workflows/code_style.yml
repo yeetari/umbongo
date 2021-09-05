@@ -22,7 +22,7 @@ jobs:
   include-what-you-use:
     name: Include What You Use
     runs-on: ubuntu-latest
-    container: ubuntu:devel
+    container: ubuntu:21.04
     steps:
       - name: Install tools
         run: |
