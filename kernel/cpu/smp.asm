@@ -68,6 +68,7 @@ align 4
 .idt64.ptr:
     dw 0
     dq 0
+align 8
 .stacks:
 ap_bootstrap_end:
 
