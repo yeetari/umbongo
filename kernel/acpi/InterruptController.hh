@@ -9,20 +9,20 @@ struct InterruptController {
     uint8 length;
 };
 
-struct LocalApicController : public InterruptController {
+struct [[gnu::packed]] LocalApicController : public InterruptController {
     uint8 acpi_id;
     uint8 apic_id;
     uint32 flags;
 };
 
-struct IoApicController : public InterruptController {
+struct [[gnu::packed]] IoApicController : public InterruptController {
     uint8 id;
     uint8 : 8;
     uint32 address;
     uint32 gsi_base;
 };
 
-struct InterruptSourceOverride : public InterruptController {
+struct [[gnu::packed]] InterruptSourceOverride : public InterruptController {
     uint8 bus;
     uint8 isa;
     uint32 gsi;

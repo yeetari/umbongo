@@ -2,7 +2,6 @@
 
 #include <kernel/acpi/Table.hh>
 #include <ustd/Algorithm.hh>
-#include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
 namespace acpi {
@@ -11,7 +10,12 @@ class RootTableIterator;
 
 // Extended System Description Table (ACPI specification 6.4 section 5.2.8)
 class [[gnu::packed]] RootTable : public Table {
-    Array<Table *, 0> m_entries;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-extensions"
+#pragma clang diagnostic ignored "-Wgnu-empty-struct"
+    // NOLINTNEXTLINE
+    Table *m_entries[];
+#pragma clang diagnostic pop
 
 public:
     RootTableIterator begin() const;
