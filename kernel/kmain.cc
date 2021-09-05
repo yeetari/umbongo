@@ -69,10 +69,6 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr);
-    for (const auto *segment : *mcfg) {
-        dbgln("acpi: Found PCI segment {} at {:h} (start_bus={}, end_bus={})", segment->num, segment->base,
-              segment->start_bus, segment->end_bus);
-    }
 
     struct PciDevice {
         pci::Bus *bus;
