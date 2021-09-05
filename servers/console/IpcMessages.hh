@@ -29,7 +29,8 @@ public:
 
     static GetTerminalSizeRespone decode(Span<const uint8> buffer) {
         ipc::MessageDecoder decoder(buffer);
-        ASSERT(decoder.decode<MessageKind>() == MessageKind::GetTerminalSizeResponse);
+        [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
+        ASSERT(kind == MessageKind::GetTerminalSizeResponse);
         return {decoder.decode<uint32>(), decoder.decode<uint32>()};
     }
 
