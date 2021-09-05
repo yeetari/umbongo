@@ -2,6 +2,7 @@
 
 #include <kernel/KeyEvent.hh>
 #include <kernel/SysResult.hh>
+#include <kernel/devices/Device.hh>
 #include <kernel/usb/Device.hh>
 #include <ustd/Array.hh>
 #include <ustd/RingBuffer.hh>
@@ -14,7 +15,7 @@ class Endpoint;
 
 } // namespace usb
 
-class UsbKeyboardDevice final : public usb::Device {
+class UsbKeyboardDevice final : public Device, public usb::Device {
     Array<uint8, 8> m_buffer{};
     Array<uint8, 8> m_compare_buffer{};
     Array<bool, 8> m_modifiers{};
@@ -28,6 +29,7 @@ public:
 
     bool can_read() override;
     bool can_write() override { return true; }
+    void disconnect() override;
     void poll() override;
     SysResult<usize> read(Span<void> data, usize offset) override;
 

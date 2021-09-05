@@ -58,14 +58,6 @@ void Device::ring_doorbell(uint8 endpoint) {
     m_controller->ring_doorbell(m_slot, endpoint + 1);
 }
 
-bool Device::can_read() {
-    ENSURE_NOT_REACHED();
-}
-
-bool Device::can_write() {
-    ENSURE_NOT_REACHED();
-}
-
 Endpoint *Device::create_endpoint(uint8 address) {
     const bool output = (address & (1u << 7u)) == 0;
     uint8 index = address * 2 - static_cast<uint8>(output);

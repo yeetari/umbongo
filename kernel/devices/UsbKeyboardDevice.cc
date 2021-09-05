@@ -2,6 +2,7 @@
 
 #include <kernel/KeyEvent.hh>
 #include <kernel/SysResult.hh>
+#include <kernel/devices/Device.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Device.hh>
 #include <kernel/usb/Endpoint.hh>
@@ -64,6 +65,10 @@ bool UsbKeyboardDevice::key_already_pressed(uint8 key) const {
 
 bool UsbKeyboardDevice::can_read() {
     return !m_ring_buffer.empty();
+}
+
+void UsbKeyboardDevice::disconnect() {
+    ::Device::disconnect();
 }
 
 void UsbKeyboardDevice::poll() {

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <kernel/devices/Device.hh>
 #include <kernel/usb/Descriptors.hh>
 #include <kernel/usb/Endpoint.hh> // IWYU pragma: keep
 #include <kernel/usb/SlotState.hh>
@@ -18,7 +17,7 @@ struct SlotContext;
 class HostController;
 class Port;
 
-class Device : public ::Device {
+class Device {
     friend Endpoint;
 
 private:
@@ -45,13 +44,12 @@ public:
           m_configuration_length(other.m_configuration_length),
           m_control_endpoint(ustd::exchange(other.m_control_endpoint, nullptr)),
           m_endpoints(ustd::move(other.m_endpoints)) {}
-    ~Device() override;
+    virtual ~Device();
 
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
-    bool can_read() override;
-    bool can_write() override;
+    virtual void disconnect() {}
     virtual void poll() {}
 
     Endpoint *create_endpoint(uint8 address);

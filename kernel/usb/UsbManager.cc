@@ -69,8 +69,9 @@ Device *UsbManager::register_device(Device &&device, const DeviceDescriptor *des
             dbgln(" usb: Found HID device {:h2}:{:h2}", interface->isubclass, interface->iprotocol);
             if (interface->isubclass == 1 && interface->iprotocol == 1) {
                 dbgln(" usb: Found HID keyboard");
-                ret = new UsbKeyboardDevice(ustd::move(device));
-                DevFs::notify_attach(ret);
+                auto *kb_device = new UsbKeyboardDevice(ustd::move(device));
+                ret = kb_device;
+                DevFs::notify_attach(kb_device);
             }
         }
     });
