@@ -5,6 +5,7 @@
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Processor.hh>
+#include <kernel/mem/Heap.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
@@ -114,6 +115,7 @@ void MemoryManager::initialise(BootInfo *boot_info) {
     parse_memory_map(boot_info);
     ENSURE(is_frame_free(0x8000));
     set_frame(0x8000 / k_frame_size);
+    Heap::initialise();
 
     // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
     // takes 4KiB of page structures to do.
