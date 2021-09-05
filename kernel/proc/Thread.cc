@@ -13,6 +13,7 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
@@ -80,8 +81,11 @@ Thread::Thread(Process *process) : m_process(process) {
 Thread::~Thread() {
     delete (m_kernel_stack - 64_KiB);
     m_process->m_thread_count.fetch_sub(1, MemoryOrder::AcqRel);
-    m_prev->m_next = m_next;
-    m_next->m_prev = m_prev;
+    if (m_prev != nullptr) {
+        ASSERT(m_next != nullptr);
+        m_prev->m_next = m_next;
+        m_next->m_prev = m_prev;
+    }
 }
 
 SysResult<> Thread::exec(StringView path, const Vector<String> &args) {
