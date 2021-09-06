@@ -12,3 +12,7 @@ enum class SysError : ssize {
     AlreadyExists = -7,
     Busy = -8,
 };
+
+constexpr bool operator==(ssize rc, SysError error) {
+    return rc == static_cast<ssize>(error);
+}
