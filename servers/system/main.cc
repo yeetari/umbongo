@@ -1,47 +1,39 @@
+#include <core/Error.hh>
+#include <core/File.hh>
+#include <core/FileSystem.hh>
+#include <core/Pipe.hh>
 #include <core/Process.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
-#include <ustd/Array.hh>
-#include <ustd/Assert.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 usize main(usize, const char **) {
-    // Mount devfs.
-    Syscall::invoke(Syscall::mkdir, "/dev");
-    Syscall::invoke(Syscall::mount, "/dev", "dev");
-
-    // Mount runfs.
-    Syscall::invoke(Syscall::mkdir, "/run");
-    Syscall::invoke(Syscall::mount, "/run", "ram");
-
-    Array<uint32, 2> pipe_fds{};
-    Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
-
-    Syscall::invoke(Syscall::dup_fd, pipe_fds[0], 0);
-    if (pipe_fds[0] != 0) {
-        Syscall::invoke(Syscall::close, pipe_fds[0]);
+    if (auto rc = core::mount("/dev", "dev"); rc < 0) {
+        core::abort_error("Failed to mount /dev", rc);
+    }
+    if (auto rc = core::mount("/run", "ram"); rc < 0) {
+        core::abort_error("Failed to mount /run", rc);
     }
 
-    if (core::create_process("/bin/console-server") < 0) {
-        ENSURE_NOT_REACHED("Failed to start console server");
+    auto pipe = ustd::move(*core::create_pipe());
+    if (auto rc = pipe.rebind_read(0); rc < 0) {
+        core::abort_error("Failed to bind stdin pipe end", rc);
+    }
+    if (auto rc = core::create_process("/bin/console-server"); rc < 0) {
+        core::abort_error("Failed to start /bin/console-server", rc);
+    }
+    if (auto rc = pipe.rebind_write(1); rc < 0) {
+        core::abort_error("Failed to bind stdout pipe end", rc);
     }
 
-    Syscall::invoke(Syscall::dup_fd, pipe_fds[1], 1);
-    if (pipe_fds[1] != 1) {
-        Syscall::invoke(Syscall::close, pipe_fds[1]);
+    core::File keyboard;
+    while (!keyboard.open("/dev/kb")) {
     }
-
-    ssize kb_fd = -1;
-    while (kb_fd < 0) {
-        kb_fd = Syscall::invoke(Syscall::open, "/dev/kb", OpenMode::None);
+    if (auto rc = keyboard.rebind(0); rc < 0) {
+        core::abort_error("Failed to bind keyboard to stdin", rc);
     }
-    Syscall::invoke(Syscall::dup_fd, kb_fd, 0);
-    if (kb_fd != 0) {
-        Syscall::invoke(Syscall::close, kb_fd);
-    }
-
-    if (core::create_process("/bin/shell") < 0) {
-        ENSURE_NOT_REACHED("Failed to start shell");
+    if (auto rc = core::create_process("/bin/shell"); rc < 0) {
+        core::abort_error("Failed to start /bin/shell", rc);
     }
     return 0;
 }
