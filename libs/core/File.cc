@@ -54,4 +54,15 @@ ssize File::read(Span<void> data, usize offset) {
     return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());
 }
 
+ssize File::rebind(uint32 fd) {
+    if (auto rc = Syscall::invoke(Syscall::dup_fd, *m_fd, fd); rc < 0) {
+        return rc;
+    }
+    if (*m_fd != fd) {
+        Syscall::invoke(Syscall::close, *m_fd);
+        m_fd.emplace(fd);
+    }
+    return 0;
+}
+
 } // namespace core

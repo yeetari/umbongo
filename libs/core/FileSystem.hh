@@ -5,7 +5,6 @@
 
 namespace core {
 
-[[noreturn]] void abort_error(StringView msg, ssize rc);
-StringView error_string(ssize rc);
+ssize mount(StringView target, StringView fs_type);
 
 } // namespace core

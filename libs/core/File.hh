@@ -17,7 +17,7 @@ public:
     explicit File(Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
     explicit File(StringView path);
     File(const File &) = delete;
-    File(File &&) = delete;
+    File(File &&other) noexcept : m_fd(ustd::move(other.m_fd)) {}
     ~File() override;
 
     File &operator=(const File &) = delete;
@@ -27,6 +27,7 @@ public:
     bool open(StringView path);
     ssize read(Span<void> data);
     ssize read(Span<void> data, usize offset);
+    ssize rebind(uint32 fd);
 
     explicit operator bool() const { return m_fd.has_value(); }
 

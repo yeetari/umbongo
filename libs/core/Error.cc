@@ -1,6 +1,9 @@
 #include <core/Error.hh>
 
+#include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
+#include <ustd/Assert.hh>
+#include <ustd/Log.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
@@ -23,6 +26,12 @@ Array k_error_list{
 // clang-format on
 
 } // namespace
+
+[[noreturn]] void abort_error(StringView msg, ssize rc) {
+    dbgln("{}: {}", msg, error_string(rc));
+    Syscall::invoke(Syscall::exit, 1);
+    ENSURE_NOT_REACHED();
+}
 
 StringView error_string(ssize rc) {
     rc = -rc;
