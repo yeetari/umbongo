@@ -5,7 +5,6 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>

@@ -7,7 +7,6 @@
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>

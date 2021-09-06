@@ -4,7 +4,6 @@
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>

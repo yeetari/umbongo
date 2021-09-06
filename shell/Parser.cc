@@ -5,7 +5,6 @@
 #include "Token.hh"
 
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>

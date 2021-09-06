@@ -2,7 +2,6 @@
 
 #include <core/Watchable.hh>
 #include <ustd/Array.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>

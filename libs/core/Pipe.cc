@@ -3,7 +3,6 @@
 #include <core/File.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Types.hh>
 

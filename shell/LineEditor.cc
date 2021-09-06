@@ -3,7 +3,6 @@
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
