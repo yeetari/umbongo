@@ -223,11 +223,8 @@ extern "C" void kmain(BootInfo *boot_info) {
         }
     }
 
-    // Enable local APIC and acknowledge any outstanding interrupts.
     auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
     dbgln("acpi: Local APIC = {}", apic);
-    apic->enable();
-    apic->send_eoi();
     Processor::set_apic(apic);
 
     auto *hpet_table = xsdt->find<acpi::HpetTable>();
