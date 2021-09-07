@@ -218,6 +218,7 @@ void Scheduler::yield(bool save_state) {
 }
 
 void Scheduler::yield_and_kill() {
+    asm volatile("cli");
     Processor::current_thread()->kill();
     yield(false);
 }
