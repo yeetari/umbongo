@@ -1,6 +1,7 @@
 #include <core/EventLoop.hh>
 
 #include <core/Error.hh>
+#include <core/Timer.hh>
 #include <core/Watchable.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
@@ -12,6 +13,15 @@
 
 namespace core {
 
+uint32 EventLoop::index_of(Timer *timer) {
+    for (uint32 i = 0; i < m_timers.size(); i++) {
+        if (m_timers[i] == timer) {
+            return i;
+        }
+    }
+    ENSURE_NOT_REACHED();
+}
+
 uint32 EventLoop::index_of(Watchable *watchable) {
     for (uint32 i = 0; i < m_watchables.size(); i++) {
         if (m_watchables[i] == watchable) {
@@ -19,6 +29,25 @@ uint32 EventLoop::index_of(Watchable *watchable) {
         }
     }
     ENSURE_NOT_REACHED();
+}
+
+ssize EventLoop::next_timer_deadline() {
+    ssize deadline = -1;
+    for (auto *timer : m_timers) {
+        const auto period = static_cast<ssize>(timer->period());
+        if (deadline == -1 || period < deadline) {
+            deadline = period;
+        }
+    }
+    return deadline;
+}
+
+void EventLoop::register_timer(Timer &timer) {
+    m_timers.push(&timer);
+}
+
+void EventLoop::unregister_timer(Timer &timer) {
+    m_timers.remove(index_of(&timer));
 }
 
 void EventLoop::watch(Watchable &watchable, PollEvents events) {
@@ -37,9 +66,20 @@ void EventLoop::unwatch(Watchable &watchable) {
 
 usize EventLoop::run() {
     while (true) {
-        if (auto rc = Syscall::invoke(Syscall::poll, m_poll_fds.data(), m_poll_fds.size()); rc < 0) {
+        const auto timeout = next_timer_deadline();
+        if (auto rc = Syscall::invoke(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc < 0) {
             dbgln("poll: {}", core::error_string(rc));
             return 1;
+        }
+        auto now = Syscall::invoke<usize>(Syscall::gettime);
+        for (auto *timer : m_timers) {
+            if (!timer->has_expired(now)) {
+                continue;
+            }
+            if (timer->m_on_fire) {
+                timer->m_on_fire();
+            }
+            timer->reload(now);
         }
         for (uint32 i = m_poll_fds.size(); i > 0; i--) {
             auto &poll_fd = m_poll_fds[i - 1];
