@@ -23,6 +23,7 @@
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
@@ -224,6 +225,10 @@ SyscallResult Process::sys_getcwd(char *path) const {
 
 SyscallResult Process::sys_getpid() const {
     return m_pid;
+}
+
+SyscallResult Process::sys_gettime() const {
+    return TimeManager::ns_since_boot();
 }
 
 SyscallResult Process::sys_ioctl(uint32 fd, IoctlRequest request, void *arg) {

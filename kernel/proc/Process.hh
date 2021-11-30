@@ -58,6 +58,7 @@ public:
     SyscallResult sys_exit(usize code) const;
     SyscallResult sys_getcwd(char *path) const;
     SyscallResult sys_getpid() const;
+    SyscallResult sys_gettime() const;
     SyscallResult sys_ioctl(uint32 fd, IoctlRequest request, void *arg);
     SyscallResult sys_mkdir(const char *path) const;
     SyscallResult sys_mmap(uint32 fd) const;

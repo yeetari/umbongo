@@ -17,6 +17,7 @@ namespace Syscall {
     S(exit)                                                                                                            \
     S(getcwd)                                                                                                          \
     S(getpid)                                                                                                          \
+    S(gettime)                                                                                                         \
     S(ioctl)                                                                                                           \
     S(mkdir)                                                                                                           \
     S(mmap)                                                                                                            \
