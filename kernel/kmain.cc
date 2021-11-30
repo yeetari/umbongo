@@ -26,6 +26,7 @@
 #include <kernel/pci/Device.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
+#include <kernel/time/TimeManager.hh>
 #include <kernel/usb/UsbManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -230,6 +231,7 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     auto *hpet_table = xsdt->find<acpi::HpetTable>();
     ENSURE(hpet_table != nullptr);
+    TimeManager::initialise(hpet_table);
 
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so we can safely start
     // kernel threads, and so that the current stack we are using is no longer in use and we can reclaim the memory.
@@ -237,7 +239,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
     kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 
-    Scheduler::initialise(hpet_table);
+    Scheduler::initialise();
     Scheduler::insert_thread(ustd::move(kernel_init_thread));
     Scheduler::setup();
     Scheduler::start();

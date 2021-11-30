@@ -3,17 +3,11 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
-namespace acpi {
-
-class HpetTable;
-
-} // namespace acpi
-
 struct RegisterState;
 class Thread;
 
 struct Scheduler {
-    static void initialise(acpi::HpetTable *hpet_table);
+    static void initialise();
     static void insert_thread(UniquePtr<Thread> &&thread);
     static void setup();
     static void start();

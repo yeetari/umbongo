@@ -43,11 +43,12 @@ add_executable(kernel
     mem/Region.cc
     mem/VirtSpace.cc
     pci/Device.cc
-    proc/Hpet.cc
     proc/Process.cc
     proc/Scheduler.cc
     proc/Thread.cc
     proc/ThreadBlocker.cc
+    time/Hpet.cc
+    time/TimeManager.cc
     usb/Device.cc
     usb/Endpoint.cc
     usb/HostController.cc

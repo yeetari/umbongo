@@ -2,16 +2,14 @@
 
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/acpi/GenericAddress.hh>
-#include <kernel/acpi/HpetTable.hh>
 #include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/mem/MemoryManager.hh>
-#include <kernel/proc/Hpet.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Log.hh>
@@ -27,7 +25,6 @@ constexpr uint16 k_scheduler_frequency = 250;
 constexpr uint8 k_timer_vector = 40;
 
 Thread *s_base_thread = nullptr;
-Hpet *s_hpet = nullptr;
 SpinLock s_scheduler_lock;
 uint32 s_ticks = 0;
 
@@ -87,22 +84,13 @@ SharedPtr<Process> Process::from_pid(usize pid) {
     return {};
 }
 
-void Scheduler::initialise(acpi::HpetTable *hpet_table) {
-    // Retrieve HPET address from ACPI tables and make sure the values are sane.
-    const auto &hpet_address = hpet_table->base_address();
-    ENSURE(hpet_address.address_space == acpi::AddressSpace::SystemMemory);
-    ENSURE(hpet_address.register_bit_offset == 0);
-
-    // Allocate the HPET and enable the main counter.
-    s_hpet = new Hpet(hpet_address.address);
-    s_hpet->enable();
-
+void Scheduler::initialise() {
     // Start the APIC timer counting down from its max value.
     Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
     Processor::apic()->set_timer_count(0xffffffff);
 
     // Spin for 100ms and then calculate the total number of ticks occured in 100ms by the APIC timer.
-    s_hpet->spin(100);
+    TimeManager::spin(100);
     s_ticks = 0xffffffff - Processor::apic()->read_timer_count();
 
     // Calculate the number of ticks for our desired frequency.
@@ -196,6 +184,9 @@ void Scheduler::switch_next(RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
+    if (Processor::id() == 0) {
+        TimeManager::update();
+    }
     memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
     switch_next(regs);
 }
@@ -203,8 +194,7 @@ void Scheduler::timer_handler(RegisterState *regs) {
 void Scheduler::wait(usize millis) {
     // TODO: Yield instead of spinning. Currently, the code that calls this function is the USB code, which is in
     //       another thread and can potentially yield.
-    ASSERT_PEDANTIC(s_hpet != nullptr);
-    s_hpet->spin(millis);
+    TimeManager::spin(millis);
 }
 
 void Scheduler::yield(bool save_state) {
