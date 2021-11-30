@@ -12,12 +12,10 @@ extern bool g_console_enabled;
 
 SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
     switch (request) {
-    case IoctlRequest::FramebufferClear:
-        g_console_enabled = false;
-        memset(reinterpret_cast<uint32 *>(m_base), 0, m_pitch * m_height);
-        return 0;
     case IoctlRequest::FramebufferGetInfo: {
+        g_console_enabled = false;
         FramebufferInfo info{
+            .size = m_pitch * m_height,
             .width = m_width,
             .height = m_height,
         };

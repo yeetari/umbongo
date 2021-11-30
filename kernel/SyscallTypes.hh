@@ -8,6 +8,7 @@ struct FdPair {
 };
 
 struct FramebufferInfo {
+    usize size;
     uint32 width;
     uint32 height;
 };
@@ -25,7 +26,6 @@ struct PollFd {
 };
 
 enum class IoctlRequest : usize {
-    FramebufferClear,
     FramebufferGetInfo,
 };
 

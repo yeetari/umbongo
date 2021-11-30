@@ -21,7 +21,7 @@ public:
 };
 
 class Terminal {
-    const Framebuffer &m_fb;
+    Framebuffer &m_fb;
     Vector<Line> m_lines;
     uint32 m_column_count;
     uint32 m_row_count;
@@ -33,7 +33,7 @@ class Terminal {
     void set_char(uint32 row, uint32 col, char ch);
 
 public:
-    explicit Terminal(const Framebuffer &fb);
+    explicit Terminal(Framebuffer &fb);
 
     void backspace();
     void clear();

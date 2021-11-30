@@ -8,7 +8,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
-Terminal::Terminal(const Framebuffer &fb) : m_fb(fb) {
+Terminal::Terminal(Framebuffer &fb) : m_fb(fb) {
     m_column_count = fb.width() / g_font.advance();
     m_row_count = fb.height() / g_font.line_height();
     m_lines.grow(m_row_count, m_column_count);

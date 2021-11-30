@@ -4,6 +4,7 @@
 
 #include <core/EventLoop.hh>
 #include <core/File.hh>
+#include <core/Timer.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
@@ -27,6 +28,11 @@ usize main(usize, const char **) {
     Terminal alternate_terminal(framebuffer);
     Terminal *terminal = &default_terminal;
     framebuffer.clear();
+
+    core::Timer vsync_timer(event_loop, 60_Hz);
+    vsync_timer.set_on_fire([&framebuffer] {
+        framebuffer.swap_buffers();
+    });
 
     EscapeParser escape_parser(default_terminal, alternate_terminal);
     stdin.set_on_read_ready([&] {
