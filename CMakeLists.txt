@@ -52,6 +52,7 @@ if(BUILD_WARNINGS)
         -Weverything
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
+        -Wno-cast-function-type
         -Wno-covered-switch-default
         -Wno-gnu-anonymous-struct
         -Wno-gnu-zero-variadic-macro-arguments
@@ -60,7 +61,9 @@ if(BUILD_WARNINGS)
         -Wno-missing-variable-declarations
         -Wno-nested-anon-types
         -Wno-padded
+        -Wno-reserved-identifier
         -Wno-switch-enum
+        -Wno-unknown-warning-option
         -Wno-unused-member-function
         -Wno-unused-private-field
         -Wno-weak-vtables
