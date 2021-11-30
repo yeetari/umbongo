@@ -11,7 +11,6 @@
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/acpi/Table.hh>
-#include <kernel/cpu/LocalApic.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/devices/FramebufferDevice.hh>
@@ -36,6 +35,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
+
+class LocalApic;
 
 namespace {
 
