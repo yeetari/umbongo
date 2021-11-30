@@ -6,6 +6,7 @@
 
 enum class PhysicalPageSize : uint8 {
     Normal,
+    Large,
     Huge,
 };
 
@@ -13,7 +14,7 @@ class PhysicalPage : public Shareable<PhysicalPage> {
     uintptr m_phys{0};
 
 public:
-    static SharedPtr<PhysicalPage> allocate();
+    static SharedPtr<PhysicalPage> allocate(PhysicalPageSize size);
     static SharedPtr<PhysicalPage> create(uintptr phys, PhysicalPageSize size);
 
     // Maximum physical address size permitted in AMD64 is 52-bits, meaning we can use safely use 8 for the size enum.

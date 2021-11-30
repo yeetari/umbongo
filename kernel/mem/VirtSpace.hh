@@ -26,8 +26,9 @@ private:
     VirtSpace();
     explicit VirtSpace(const Vector<UniquePtr<Region>> &regions);
 
-    void map_4KiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
-    void map_1GiB(uintptr virt, uintptr phys, PageFlags flags = static_cast<PageFlags>(0));
+    void map_4KiB(uintptr virt, uintptr phys, PageFlags flags);
+    void map_2MiB(uintptr virt, uintptr phys, PageFlags flags);
+    void map_1GiB(uintptr virt, uintptr phys, PageFlags flags);
 
 public:
     VirtSpace(const VirtSpace &) = delete;

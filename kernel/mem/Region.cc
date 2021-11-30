@@ -33,25 +33,26 @@ Region::Region(uintptr base, usize size, RegionAccess access, bool free, Optiona
     if (free) {
         return;
     }
-    // TODO: Use 2 MiB pages.
     if (!phys_base) {
-        // TODO: Allocate huge pages here too.
-        for (usize i = 0; i < size / 4_KiB; i++) {
-            m_physical_pages.push(PhysicalPage::allocate());
-        }
+        do {
+            const usize map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
+            const auto page_size = map_size == 1_GiB   ? PhysicalPageSize::Huge
+                                   : map_size == 2_MiB ? PhysicalPageSize::Large
+                                                       : PhysicalPageSize::Normal;
+            m_physical_pages.push(PhysicalPage::allocate(page_size));
+            size -= map_size;
+        } while (size != 0);
         return;
     }
+    // TODO: Use 2 MiB pages.
     uintptr phys = *phys_base;
-    uintptr virt = base;
-    usize remaining_size = size;
     do {
-        const usize map_size = remaining_size >= 1_GiB ? 1_GiB : 4_KiB;
+        const usize map_size = size >= 1_GiB ? 1_GiB : 4_KiB;
         const auto page_size = map_size == 1_GiB ? PhysicalPageSize::Huge : PhysicalPageSize::Normal;
         m_physical_pages.push(PhysicalPage::create(phys, page_size));
         phys += map_size;
-        virt += map_size;
-        remaining_size -= map_size;
-    } while (remaining_size != 0);
+        size -= map_size;
+    } while (size != 0);
 }
 
 void Region::map(VirtSpace *virt_space) const {
@@ -61,6 +62,10 @@ void Region::map(VirtSpace *virt_space) const {
         case PhysicalPageSize::Normal:
             virt_space->map_4KiB(virt, physical_page->phys(), flags);
             virt += 4_KiB;
+            break;
+        case PhysicalPageSize::Large:
+            virt_space->map_2MiB(virt, physical_page->phys(), flags);
+            virt += 2_MiB;
             break;
         case PhysicalPageSize::Huge:
             virt_space->map_1GiB(virt, physical_page->phys(), flags);

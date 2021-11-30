@@ -38,6 +38,17 @@ void VirtSpace::map_4KiB(uintptr virt, uintptr phys, PageFlags flags) {
     pt->set(pt_index, phys, flags);
 }
 
+void VirtSpace::map_2MiB(uintptr virt, uintptr phys, PageFlags flags) {
+    ASSERT_PEDANTIC(virt % 2_MiB == 0);
+    ASSERT_PEDANTIC(phys % 2_MiB == 0);
+    const usize pml4_index = (virt >> 39ul) & 0x1fful;
+    const usize pdpt_index = (virt >> 30ul) & 0x1fful;
+    const usize pd_index = (virt >> 21ul) & 0x1fful;
+    auto *pdpt = m_pml4->ensure(pml4_index);
+    auto *pd = pdpt->ensure(pdpt_index);
+    pd->set(pd_index, phys, flags | PageFlags::Large);
+}
+
 void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
     ASSERT_PEDANTIC(virt % 1_GiB == 0);
     ASSERT_PEDANTIC(phys % 1_GiB == 0);
@@ -51,18 +62,23 @@ Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uin
     // Find first fit region to split.
     ScopedLock locker(m_lock);
     size = round_up(size, 4_KiB);
+    const usize alignment = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
     for (auto &region : m_regions) {
         if (!region->free()) {
             continue;
         }
-        if (region->size() >= size) {
-            uintptr base = region->base();
-            region->set_base(region->base() + size);
-            region->set_size(region->size() - size);
+        uintptr base = round_up(region->base(), alignment);
+        usize padding = base - region->base();
+        if (region->size() >= size + padding) {
+            ASSERT(base % alignment == 0);
+            usize original_size = region->size();
+            region->set_size(padding);
             auto &new_region =
-                m_regions.emplace(ustd::make_unique<Region>(base, size, access, false, ustd::move(phys_base)));
-            new_region->map(this);
-            return *new_region;
+                *m_regions.emplace(ustd::make_unique<Region>(base, size, access, false, ustd::move(phys_base)));
+            m_regions.emplace(ustd::make_unique<Region>(base + size, original_size - (size + padding),
+                                                        static_cast<RegionAccess>(0), true, 0ul));
+            new_region.map(this);
+            return new_region;
         }
     }
     ENSURE_NOT_REACHED("Failed to allocate region");
