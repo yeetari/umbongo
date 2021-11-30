@@ -7,6 +7,8 @@
 #include <kernel/ipc/ServerSocket.hh>
 #include <kernel/ipc/Socket.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/time/TimeManager.hh>
+#include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -19,7 +21,18 @@ bool ConnectBlocker::should_unblock() {
     return m_socket->connected();
 }
 
+PollBlocker::PollBlocker(const LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout)
+    : m_fds(fds), m_lock(lock), m_process(process) {
+    if (timeout > 0) {
+        m_deadline.emplace(TimeManager::ns_since_boot() + static_cast<usize>(timeout));
+    }
+}
+
 bool PollBlocker::should_unblock() {
+    if (m_deadline && TimeManager::ns_since_boot() > *m_deadline) {
+        return true;
+    }
+
     ScopedLock locker(m_lock);
     for (const auto &poll_fd : m_fds) {
         // TODO: Bounds checking.

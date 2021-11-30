@@ -277,10 +277,10 @@ SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     return fd;
 }
 
-SyscallResult Process::sys_poll(PollFd *fds, usize count) {
+SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
     LargeVector<PollFd> poll_fds(count);
     memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
-    Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this);
+    Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {
         // TODO: Bounds checking.
         auto &file = m_fds[poll_fd.fd]->file();

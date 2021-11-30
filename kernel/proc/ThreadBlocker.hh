@@ -3,6 +3,7 @@
 #include <kernel/fs/File.hh>
 #include <kernel/ipc/ServerSocket.hh>
 #include <kernel/ipc/Socket.hh>
+#include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -48,10 +49,10 @@ class PollBlocker : public ThreadBlocker {
     const LargeVector<PollFd> &m_fds;
     SpinLock &m_lock;
     Process &m_process;
+    Optional<usize> m_deadline;
 
 public:
-    PollBlocker(const LargeVector<PollFd> &fds, SpinLock &lock, Process &process)
-        : m_fds(fds), m_lock(lock), m_process(process) {}
+    PollBlocker(const LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout);
 
     bool should_unblock() override;
 };

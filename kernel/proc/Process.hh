@@ -64,7 +64,7 @@ public:
     SyscallResult sys_mmap(uint32 fd) const;
     SyscallResult sys_mount(const char *target, const char *fs_type) const;
     SyscallResult sys_open(const char *path, OpenMode mode);
-    SyscallResult sys_poll(PollFd *fds, usize count);
+    SyscallResult sys_poll(PollFd *fds, usize count, ssize timeout);
     SyscallResult sys_putchar(char ch) const;
     SyscallResult sys_read(uint32 fd, void *data, usize size);
     SyscallResult sys_read_directory(const char *path, uint8 *data);
