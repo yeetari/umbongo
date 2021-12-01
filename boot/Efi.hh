@@ -3,65 +3,28 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-using EfiHandle = void *;
+namespace efi {
 
-#define EFI_ERR(x) ((static_cast<usize>(1u) << 63u) | (x))
-enum class EfiStatus : usize {
-    Success = 0,
-    InvalidParameter = EFI_ERR(2u),
-    Unsupported = EFI_ERR(3u),
-    BufferTooSmall = EFI_ERR(5u),
-    NotReady = EFI_ERR(6u),
-};
-
-struct EfiInputKey {
-    uint16 scan_code;
-    uint16 unicode_char;
-};
-
-struct EfiGuid {
+struct Guid {
     uint32 dat1;
     uint16 dat2;
     uint16 dat3;
     ustd::Array<uint8, 8> dat4;
 };
+using Handle = void *;
 
-// EFI Table Header (UEFI specification 2.8B section 4.2)
-struct EfiTableHeader {
-    uint64 signature;
-    uint32 revision;
-    uint32 header_size;
-    uint32 checksum;
-    uint32 reserved;
+consteval usize status_error(usize bit) {
+    return (1ull << 63ull) | bit;
+}
+enum class Status : usize {
+    Success = 0,
+    InvalidParameter = status_error(2u),
+    Unsupported = status_error(3u),
+    BufferTooSmall = status_error(5u),
+    NotReady = status_error(6u),
 };
 
-// EFI Simple Text Input Protocol (UEFI specification 2.8B section 12.3)
-struct EfiSimpleTextInputProtocol {
-    EfiStatus (*reset)(EfiSimpleTextInputProtocol *, bool);
-    EfiStatus (*read_key_stroke)(EfiSimpleTextInputProtocol *, EfiInputKey *key);
-};
-
-// EFI Simple Text Output Protocol (UEFI specification 2.8B section 12.4)
-struct EfiSimpleTextOutputProtocol {
-    void *reset;
-    EfiStatus (*output_string)(EfiSimpleTextOutputProtocol *, const wchar_t *);
-    void *test_string;
-    void *query_mode;
-    void *set_mode;
-    void *set_attribute;
-    EfiStatus (*clear_screen)(EfiSimpleTextOutputProtocol *);
-    void *set_cursor_position;
-    void *enable_cursor;
-    void *mode;
-};
-
-enum class EfiAllocateType : uint32 {
-    AllocateAnyPages,
-    AllocateMaxAddress,
-    AllocateAddress,
-};
-
-enum class EfiMemoryType : uint32 {
+enum class MemoryType : uint32 {
     Reserved,
     LoaderCode,
     LoaderData,
@@ -79,7 +42,7 @@ enum class EfiMemoryType : uint32 {
     PersistentMemory,
 };
 
-enum class EfiMemoryFlag : uint64 {
+enum class MemoryFlag : uint64 {
     Uncacheable = 1u << 0u,
     WriteCombining = 1u << 1u,
     WriteThrough = 1u << 2u,
@@ -88,56 +51,80 @@ enum class EfiMemoryFlag : uint64 {
     WriteProtected = 1u << 12u,
 };
 
-struct EfiMemoryDescriptor {
-    EfiMemoryType type;
+struct MemoryDescriptor {
+    MemoryType type;
     uint32 pad;
     uintptr phys_start;
     uintptr virt_start;
     uint64 page_count;
-    EfiMemoryFlag flags;
+    MemoryFlag flags;
+};
+
+// EFI Table Header (UEFI specification 2.8B section 4.2)
+struct TableHeader {
+    uint64 signature;
+    uint32 revision;
+    uint32 header_size;
+    uint32 checksum;
+    uint32 reserved;
+};
+
+enum class AllocateType : uint32 {
+    AllocateAnyPages,
+    AllocateMaxAddress,
+    AllocateAddress,
 };
 
 // EFI Boot Services Table (UEFI specification 2.8B section 4.4)
-struct EfiBootServicesTable : public EfiTableHeader {
+struct BootServices : public TableHeader {
     ustd::Array<void *, 2> unused0;
-    EfiStatus (*allocate_pages)(EfiAllocateType, EfiMemoryType, usize page_count, uintptr *memory);
+    Status (*allocate_pages)(AllocateType, MemoryType, usize page_count, uintptr *memory);
     void *unused1;
-    EfiStatus (*get_memory_map)(usize *size, EfiMemoryDescriptor *map, usize *key, usize *descriptor_size,
-                                uint32 *descriptor_version);
-    EfiStatus (*allocate_pool)(EfiMemoryType type, usize size, void **buffer);
-    EfiStatus (*free_pool)(void *buffer);
+    Status (*get_memory_map)(usize *size, MemoryDescriptor *map, usize *key, usize *descriptor_size,
+                             uint32 *descriptor_version);
+    Status (*allocate_pool)(MemoryType type, usize size, void **buffer);
+    Status (*free_pool)(void *buffer);
     ustd::Array<void *, 9> unused2;
-    EfiStatus (*handle_protocol)(EfiHandle handle, const EfiGuid *protocol, void **interface);
+    Status (*handle_protocol)(Handle handle, const Guid *protocol, void **interface);
     ustd::Array<void *, 9> unused3;
-    EfiStatus (*exit_boot_services)(EfiHandle handle, usize map_key);
+    Status (*exit_boot_services)(Handle handle, usize map_key);
     ustd::Array<void *, 10> unused4;
-    EfiStatus (*locate_protocol)(const EfiGuid *protocol, void *registration, void **interface);
+    Status (*locate_protocol)(const Guid *protocol, void *registration, void **interface);
 };
 
 // EFI Configuration Table (UEFI specification 2.8B section 4.6)
-struct EfiConfigurationTable {
-    EfiGuid vendor_guid;
+struct ConfigurationTable {
+    static constexpr Guid acpi_guid{0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81}};
+    Guid vendor_guid;
     void *vendor_table;
 };
 
+// EFI Simple Text Output Protocol (UEFI specification 2.8B section 12.4)
+struct SimpleTextOutputProtocol {
+    void *unused0;
+    Status (*output_string)(SimpleTextOutputProtocol *, const wchar_t *);
+    ustd::Array<void *, 4> unused1;
+    Status (*clear_screen)(SimpleTextOutputProtocol *);
+};
+
 // EFI System Table (UEFI specification 2.8B section 4.3)
-struct EfiSystemTable : public EfiTableHeader {
+struct SystemTable : public TableHeader {
     wchar_t *firmware_vendor;
     uint32 firmware_revision;
-    EfiHandle console_in_handle;
-    EfiSimpleTextInputProtocol *con_in;
-    EfiHandle console_out_handle;
-    EfiSimpleTextOutputProtocol *con_out;
-    EfiHandle standard_error_handle;
+    Handle console_in_handle;
+    void *con_in;
+    Handle console_out_handle;
+    SimpleTextOutputProtocol *con_out;
+    Handle standard_error_handle;
     void *std_err;
     void *runtime_services;
-    EfiBootServicesTable *boot_services;
+    BootServices *boot_services;
     usize configuration_table_count;
-    EfiConfigurationTable *configuration_table;
+    ConfigurationTable *configuration_table;
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
-enum class EfiFileFlag : uint64 {
+enum class FileFlag : uint64 {
     ReadOnly = 1ull << 0u,
     Hidden = 1ull << 1u,
     System = 1ull << 2u,
@@ -147,89 +134,93 @@ enum class EfiFileFlag : uint64 {
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
-enum class EfiFileMode : uint64 {
+enum class FileMode : uint64 {
     Read = 1ull << 0u,
     Write = 1ull << 1u,
     Create = 1ull << 63u,
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
-struct EfiFileInfo {
+struct FileInfo {
     uint64 size;
     uint64 file_size;
     uint64 physical_size;
     ustd::Array<uint8, 48> time;
-    EfiFileFlag flags;
+    FileFlag flags;
     wchar_t name[1]; // NOLINT
 };
 
 // EFI File Protocol (UEFI specification 2.8B section 13.5)
-struct EfiFileProtocol {
+struct FileProtocol {
     uint64 revision;
-    EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, EfiFileMode mode,
-                      EfiFileFlag flags);
-    EfiStatus (*close)(EfiFileProtocol *);
+    Status (*open)(FileProtocol *, FileProtocol **handle, const wchar_t *path, FileMode mode, FileFlag flags);
+    Status (*close)(FileProtocol *);
     ustd::Array<void *, 1> unused0;
-    EfiStatus (*read)(EfiFileProtocol *, usize *size, void *buffer);
+    Status (*read)(FileProtocol *, usize *size, void *buffer);
     ustd::Array<void *, 2> unused1;
-    EfiStatus (*set_position)(EfiFileProtocol *, uint64 position);
-    EfiStatus (*get_info)(EfiFileProtocol *, const EfiGuid *info_type, usize *size, void *buffer);
+    Status (*set_position)(FileProtocol *, uint64 position);
+    Status (*get_info)(FileProtocol *, const Guid *info_type, usize *size, void *buffer);
 };
 
-struct EfiPixelMask {
-    uint32 red;
-    uint32 green;
-    uint32 blue;
-    uint32 reserved;
-};
-
-enum class EfiGraphicsPixelFormat : uint32 {
+enum class GraphicsPixelFormat : uint32 {
     Rgb,
     Bgr,
     Mask,
     None,
 };
 
-struct EfiGraphicsOutputModeInfo {
+struct PixelMask {
+    uint32 red;
+    uint32 green;
+    uint32 blue;
+    uint32 reserved;
+};
+
+struct GraphicsOutputModeInfo {
     uint32 version;
     uint32 width;
     uint32 height;
-    EfiGraphicsPixelFormat pixel_format;
-    EfiPixelMask pixel_mask;
+    GraphicsPixelFormat pixel_format;
+    PixelMask pixel_mask;
     uint32 pixels_per_scan_line;
 };
 
-struct EfiGraphicsOutputProtocolMode {
+struct GraphicsOutputProtocolMode {
     uint32 max_mode;
     uint32 mode;
-    EfiGraphicsOutputModeInfo *info;
+    GraphicsOutputModeInfo *info;
     usize size_of_info;
     uintptr framebuffer_base;
     usize framebuffer_size;
 };
 
 // EFI Graphics Output Protocol (UEFI specification 2.8B section 12.9)
-struct EfiGraphicsOutputProtocol {
-    EfiStatus (*query_mode)(EfiGraphicsOutputProtocol *, uint32 mode, usize *size, EfiGraphicsOutputModeInfo **info);
-    EfiStatus (*set_mode)(EfiGraphicsOutputProtocol *, uint32 mode);
+struct GraphicsOutputProtocol {
+    static constexpr Guid guid{0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xdE, 0xd0, 0x80, 0x51, 0x6a}};
+    Status (*query_mode)(GraphicsOutputProtocol *, uint32 mode, usize *size, GraphicsOutputModeInfo **info);
+    Status (*set_mode)(GraphicsOutputProtocol *, uint32 mode);
     void *unused0;
-    EfiGraphicsOutputProtocolMode *mode;
+    GraphicsOutputProtocolMode *mode;
 };
 
 // EFI Loaded Image Protocol (UEFI specification 2.8B section 9.1)
-struct EfiLoadedImageProtocol {
+struct LoadedImageProtocol {
+    static constexpr Guid guid{0x5b1b31a1, 0x9562, 0x11d2, {0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
     uint32 revision;
-    EfiHandle parent_handle;
-    EfiSystemTable *system_table;
-    EfiHandle device_handle;
+    Handle parent_handle;
+    SystemTable *system_table;
+    Handle device_handle;
 };
 
 // EFI Simple File System Protocol (UEFI specification 2.8B section 13.4)
-struct EfiSimpleFileSystemProtocol {
+struct SimpleFileSystemProtocol {
+    static constexpr Guid guid{0x964e5b22, 0x6459, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
     uint64 revision;
-    EfiStatus (*open_volume)(EfiSimpleFileSystemProtocol *, EfiFileProtocol **);
+    Status (*open_volume)(SimpleFileSystemProtocol *, FileProtocol **);
 };
 
-inline constexpr EfiFileFlag operator&(EfiFileFlag a, EfiFileFlag b) {
-    return static_cast<EfiFileFlag>(static_cast<usize>(a) & static_cast<usize>(b));
+} // namespace efi
+
+inline constexpr efi::FileFlag operator&(efi::FileFlag a, efi::FileFlag b) {
+    return static_cast<efi::FileFlag>(static_cast<usize>(a) & static_cast<usize>(b));
 }

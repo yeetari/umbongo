@@ -50,6 +50,7 @@ if(BUILD_WARNINGS)
     add_compile_options(
         -Werror
         -Weverything
+        -Wno-c++20-compat
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
         -Wno-cast-function-type

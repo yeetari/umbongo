@@ -12,18 +12,7 @@ namespace {
 
 constexpr usize k_kernel_stack_page_count = 32;
 
-const EfiGuid g_acpi_table_guid{0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81}};
-
-const EfiGuid g_graphics_output_protocol_guid{
-    0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xdE, 0xd0, 0x80, 0x51, 0x6a}};
-
-const EfiGuid g_loaded_image_protocol_guid{
-    0x5b1b31a1, 0x9562, 0x11d2, {0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
-
-const EfiGuid g_simple_file_system_protocol_guid{
-    0x964e5b22, 0x6459, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b}};
-
-EfiSystemTable *s_st;
+efi::SystemTable *s_st;
 
 } // namespace
 
@@ -38,14 +27,14 @@ void dbg_put_char(char ch) {
 
 #define EFI_CHECK(expr, msg)                                                                                           \
     {                                                                                                                  \
-        EfiStatus status = (expr);                                                                                     \
-        ENSURE(status == EfiStatus::Success, (msg));                                                                   \
+        efi::Status status = (expr);                                                                                   \
+        ENSURE(status == efi::Status::Success, (msg));                                                                 \
     }
 
-static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, EfiFileProtocol *directory,
+static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, efi::FileProtocol *directory,
                                const char *path, usize path_length) {
     // Get size of file info struct.
-    EfiFileInfo *info = nullptr;
+    efi::FileInfo *info = nullptr;
     usize info_size = 0;
     directory->read(directory, &info_size, info);
     if (info_size == 0) {
@@ -54,7 +43,7 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
 
     // Allocate memory for file info struct.
     EFI_CHECK(
-        s_st->boot_services->allocate_pool(EfiMemoryType::LoaderData, info_size, reinterpret_cast<void **>(&info)),
+        s_st->boot_services->allocate_pool(efi::MemoryType::LoaderData, info_size, reinterpret_cast<void **>(&info)),
         "Failed to allocate memory for file info struct!")
     EFI_CHECK(directory->read(directory, &info_size, info), "Failed to read file info!")
 
@@ -69,19 +58,19 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
     }
 
     // Open file for reading.
-    EfiFileProtocol *file = nullptr;
-    EFI_CHECK(directory->open(directory, &file, name, EfiFileMode::Read, EfiFileFlag::ReadOnly),
+    efi::FileProtocol *file = nullptr;
+    EFI_CHECK(directory->open(directory, &file, name, efi::FileMode::Read, efi::FileFlag::ReadOnly),
               "Failed to load file from disk!")
     ENSURE(file != nullptr, "Failed to load file from disk!");
 
-    bool is_directory = (info->flags & EfiFileFlag::Directory) == EfiFileFlag::Directory;
+    bool is_directory = (info->flags & efi::FileFlag::Directory) == efi::FileFlag::Directory;
     ENSURE(info->physical_size >= info->file_size);
 
     // Allocate memory for ramfs entry.
     const usize entry_size = sizeof(RamFsEntry) + path_length + 1 + name_length + (!is_directory ? info->file_size : 0);
     const usize page_count = (entry_size + 4096 - 1) / 4096;
     auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &ram_fs;
-    EFI_CHECK(s_st->boot_services->allocate_pages(EfiAllocateType::AllocateAnyPages, EfiMemoryType::LoaderData,
+    EFI_CHECK(s_st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::LoaderData,
                                                   page_count, reinterpret_cast<uintptr *>(next_entry_ptr)),
               "Failed to allocate memory for ramfs entry!")
     current_entry = *next_entry_ptr;
@@ -118,38 +107,38 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
     return true;
 }
 
-EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
+efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     s_st = st;
 
-    // Flush input buffer and clear screen.
-    st->con_in->reset(st->con_in, false);
+    // Clear screen.
     st->con_out->clear_screen(st->con_out);
 
     // Retrieve loaded image protocol.
-    EfiLoadedImageProtocol *loaded_image = nullptr;
-    EFI_CHECK(st->boot_services->handle_protocol(image_handle, &g_loaded_image_protocol_guid,
+    efi::LoadedImageProtocol *loaded_image = nullptr;
+    EFI_CHECK(st->boot_services->handle_protocol(image_handle, &efi::LoadedImageProtocol::guid,
                                                  reinterpret_cast<void **>(&loaded_image)),
               "Loaded image protocol not present!")
     ENSURE(loaded_image != nullptr, "Loaded image protocol not present!");
 
     // Retrieve file system protocol.
-    EfiSimpleFileSystemProtocol *file_system = nullptr;
-    EFI_CHECK(st->boot_services->handle_protocol(loaded_image->device_handle, &g_simple_file_system_protocol_guid,
+    efi::SimpleFileSystemProtocol *file_system = nullptr;
+    EFI_CHECK(st->boot_services->handle_protocol(loaded_image->device_handle, &efi::SimpleFileSystemProtocol::guid,
                                                  reinterpret_cast<void **>(&file_system)),
               "File system protocol not present!")
     ENSURE(file_system != nullptr, "File system protocol not present!");
 
     // Open volume.
-    EfiFileProtocol *root_directory = nullptr;
+    efi::FileProtocol *root_directory = nullptr;
     ustd::dbgln("Opening volume...");
     EFI_CHECK(file_system->open_volume(file_system, &root_directory), "Failed to open volume!")
     ENSURE(root_directory != nullptr, "Failed to open volume!");
 
     // Load kernel from disk.
-    EfiFileProtocol *kernel_file = nullptr;
+    efi::FileProtocol *kernel_file = nullptr;
     ustd::dbgln("Loading kernel from disk...");
-    EFI_CHECK(root_directory->open(root_directory, &kernel_file, L"kernel", EfiFileMode::Read, EfiFileFlag::ReadOnly),
-              "Failed to load kernel from disk!")
+    EFI_CHECK(
+        root_directory->open(root_directory, &kernel_file, L"kernel", efi::FileMode::Read, efi::FileFlag::ReadOnly),
+        "Failed to load kernel from disk!")
     ENSURE(kernel_file != nullptr, "Failed to load kernel from disk!");
 
     // Parse kernel ELF header.
@@ -166,7 +155,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     elf::ProgramHeader *phdrs = nullptr;
     uint64 phdrs_size = kernel_header.ph_count * kernel_header.ph_size;
     EFI_CHECK(
-        st->boot_services->allocate_pool(EfiMemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
+        st->boot_services->allocate_pool(efi::MemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
         "Failed to allocate memory for kernel program headers!")
     EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64>(kernel_header.ph_off)),
               "Failed to set position of kernel file!")
@@ -180,7 +169,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
             continue;
         }
         const usize page_count = (phdr.memsz + 4096 - 1) / 4096;
-        EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAddress, EfiMemoryType::Reserved,
+        EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Reserved,
                                                     page_count, &phdr.paddr),
                   "Failed to claim physical memory for kernel!")
         // Zero out any uninitialised data.
@@ -202,7 +191,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Allocate stack for kernel.
     uintptr kernel_stack = 0;
-    EFI_CHECK(st->boot_services->allocate_pages(EfiAllocateType::AllocateAnyPages, EfiMemoryType::LoaderData,
+    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::LoaderData,
                                                 k_kernel_stack_page_count, &kernel_stack),
               "Failed to allocate memory for kernel stack!")
     ENSURE(kernel_stack != 0, "Failed to allocate memory for kernel stack!");
@@ -212,7 +201,7 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     ustd::dbgln("Finding ACPI RSDP...");
     for (usize i = 0; i < st->configuration_table_count; i++) {
         auto &table = st->configuration_table[i];
-        if (memcmp(&table.vendor_guid, &g_acpi_table_guid, sizeof(EfiGuid)) == 0) {
+        if (memcmp(&table.vendor_guid, &efi::ConfigurationTable::acpi_guid, sizeof(efi::Guid)) == 0) {
             rsdp = table.vendor_table;
             break;
         }
@@ -220,18 +209,18 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     ENSURE(rsdp != nullptr, "Failed to find ACPI RSDP!");
 
     // Get framebuffer info.
-    EfiGraphicsOutputProtocol *gop = nullptr;
+    efi::GraphicsOutputProtocol *gop = nullptr;
     ustd::dbgln("Querying framebuffer info...");
-    EFI_CHECK(
-        st->boot_services->locate_protocol(&g_graphics_output_protocol_guid, nullptr, reinterpret_cast<void **>(&gop)),
-        "Failed to locate graphics output protocol!")
+    EFI_CHECK(st->boot_services->locate_protocol(&efi::GraphicsOutputProtocol::guid, nullptr,
+                                                 reinterpret_cast<void **>(&gop)),
+              "Failed to locate graphics output protocol!")
     ENSURE(gop != nullptr, "Failed to locate graphics output protocol!");
 
     // Find best video mode.
     uint32 pixel_count = 0;
     uint32 preferred_mode = 0;
     for (uint32 i = 0; i < gop->mode->max_mode; i++) {
-        EfiGraphicsOutputModeInfo *info = nullptr;
+        efi::GraphicsOutputModeInfo *info = nullptr;
         usize info_size = 0;
         EFI_CHECK(gop->query_mode(gop, i, &info_size, &info), "Failed to query video mode!")
         if (info->width * info->height > pixel_count) {
@@ -251,17 +240,17 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     uint32 descriptor_version = 0;
     ustd::dbgln("Querying memory map size...");
     st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
-    ENSURE(descriptor_size >= sizeof(EfiMemoryDescriptor));
+    ENSURE(descriptor_size >= sizeof(efi::MemoryDescriptor));
 
     // Allocate extra page for EFI memory map because we're about to allocate the memory for it + our memory map.
     // TODO: We should try to allocate in a loop whilst EfiStatus::BufferTooSmall is returned.
     map_size += 4096;
 
     // Allocate some memory for EFI memory map.
-    EfiMemoryDescriptor *efi_map = nullptr;
+    efi::MemoryDescriptor *efi_map = nullptr;
     ustd::dbgln("Allocating memory for EFI memory map...");
     EFI_CHECK(
-        st->boot_services->allocate_pool(EfiMemoryType::LoaderData, map_size, reinterpret_cast<void **>(&efi_map)),
+        st->boot_services->allocate_pool(efi::MemoryType::LoaderData, map_size, reinterpret_cast<void **>(&efi_map)),
         "Failed to allocate memory for EFI memory map!")
     ENSURE(efi_map != nullptr, "Failed to allocate memory for EFI memory map!");
 
@@ -269,7 +258,8 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
     const usize efi_map_entry_count = map_size / descriptor_size;
     MemoryMapEntry *map = nullptr;
     ustd::dbgln("Allocating memory for memory map...");
-    EFI_CHECK(st->boot_services->allocate_pool(EfiMemoryType::LoaderData, efi_map_entry_count * sizeof(MemoryMapEntry),
+    EFI_CHECK(st->boot_services->allocate_pool(efi::MemoryType::LoaderData,
+                                               efi_map_entry_count * sizeof(MemoryMapEntry),
                                                reinterpret_cast<void **>(&map)),
               "Failed to allocate memory for memory map!")
     ENSURE(map != nullptr, "Failed to allocate memory for memory map!");
@@ -284,17 +274,17 @@ EfiStatus efi_main(EfiHandle image_handle, EfiSystemTable *st) {
 
     // Construct memory map.
     for (usize i = 0, j = 0; i < map_size; i += descriptor_size, j++) {
-        auto *descriptor = reinterpret_cast<EfiMemoryDescriptor *>(&reinterpret_cast<uint8 *>(efi_map)[i]);
+        auto *descriptor = reinterpret_cast<efi::MemoryDescriptor *>(&reinterpret_cast<uint8 *>(efi_map)[i]);
         auto *entry = &map[j];
         switch (descriptor->type) {
-        case EfiMemoryType::Conventional:
+        case efi::MemoryType::Conventional:
             entry->type = MemoryType::Available;
             break;
-        case EfiMemoryType::BootServicesCode:
-        case EfiMemoryType::BootServicesData:
-        case EfiMemoryType::LoaderCode:
-        case EfiMemoryType::LoaderData:
-            // TODO: Mark EfiMemoryType::AcpiReclaimable as reclaimable too?
+        case efi::MemoryType::BootServicesCode:
+        case efi::MemoryType::BootServicesData:
+        case efi::MemoryType::LoaderCode:
+        case efi::MemoryType::LoaderData:
+            // TODO: Mark efi::MemoryType::AcpiReclaimable as reclaimable too?
             entry->type = MemoryType::Reclaimable;
             break;
         default:
