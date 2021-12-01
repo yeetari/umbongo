@@ -267,7 +267,7 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) const 
 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
-    // Open file first so we don't leak a file descriptor.
+    // Open file first so that we don't leak a file descriptor.
     auto file = Vfs::open(path, mode, m_cwd);
     if (file.is_error()) {
         return file.error();

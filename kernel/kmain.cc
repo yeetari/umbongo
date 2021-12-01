@@ -234,8 +234,9 @@ extern "C" void kmain(BootInfo *boot_info) {
     ENSURE(hpet_table != nullptr);
     TimeManager::initialise(hpet_table);
 
-    // Start a new kernel thread that will perform the rest of the initialisation. We do this so we can safely start
-    // kernel threads, and so that the current stack we are using is no longer in use and we can reclaim the memory.
+    // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely
+    // start kernel threads, and so that the current stack we are using is no longer in use, meaning we can reclaim the
+    // memory.
     auto kernel_init_thread = Thread::create_kernel(&kernel_init);
     kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
     kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr>(xsdt);

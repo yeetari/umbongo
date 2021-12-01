@@ -283,7 +283,7 @@ extern "C" void syscall_handler(SyscallFrame *frame, Thread *thread) {
 }
 
 void Processor::initialise() {
-    // Create an fill an IDT with our asm handler stubs. Also make sure that the interrupt stub section isn't empty,
+    // Create and fill an IDT with our asm handler stubs. Also make sure that the interrupt stub section isn't empty,
     // which could happen if the linker accidentally removes it.
     ENSURE(&k_interrupt_stubs_start != &k_interrupt_stubs_end);
     auto *idt = new Idt;
@@ -315,7 +315,7 @@ void Processor::initialise() {
         write_cr4(read_cr4() | (1u << 11u));
     }
 
-    // Perform an extended cpuid and ensure that the syscall/sysret, NX and 1GiB page features are available.
+    // Perform an extended cpuid and ensure that the syscall/sysret, NX and 1 GiB page features are available.
     CpuId extended_cpu_id(0x80000001);
     ENSURE((extended_cpu_id.edx() & (1u << 11u)) != 0, "syscall/sysret not available!");
     ENSURE((extended_cpu_id.edx() & (1u << 20u)) != 0, "NX not available!");
@@ -334,7 +334,7 @@ void Processor::setup(uint8 id) {
     auto *gdt = new Gdt;
     auto *tss = new Tss;
 
-    // Setup a flat GDT.
+    // Set up a flat GDT.
     gdt->set(1, GlobalDescriptor::create_kernel(DescriptorType::Code));
     gdt->set(2, GlobalDescriptor::create_kernel(DescriptorType::Data));
     gdt->set(3, GlobalDescriptor::create_user(DescriptorType::Data));
@@ -342,7 +342,7 @@ void Processor::setup(uint8 id) {
     gdt->set(5, GlobalDescriptor::create_tss(reinterpret_cast<uintptr>(tss), sizeof(Tss) - 1));
     gdt->set(6, GlobalDescriptor::create_base_extended(reinterpret_cast<uintptr>(tss) >> 32u));
 
-    // Setup the TSS by allocating a stack for interrupt handling and setting the IO permission bitmap base to
+    // Set up the TSS by allocating a stack for interrupt handling and setting the IO permission bitmap base to
     // `sizeof(Tss)`. This makes any ring 3 attempt to use IO ports fail with a #GP exception since the TSS limit is
     // also its size.
     tss->rsp0 = tss->ist1 = new char[8_KiB] + 8_KiB;

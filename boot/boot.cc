@@ -101,7 +101,7 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
         EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8 *>(header->data)), "Failed to read from file!")
     }
 
-    // Finally close file and free memory for file info struct.
+    // Finally, close file and free memory for file info struct.
     EFI_CHECK(file->close(file), "Failed to close file!")
     EFI_CHECK(s_st->boot_services->free_pool(info), "Failed to free memory for file info struct!")
     return true;
@@ -216,7 +216,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
               "Failed to locate graphics output protocol!")
     ENSURE(gop != nullptr, "Failed to locate graphics output protocol!");
 
-    // Find best video mode.
+    // Find the best video mode.
     uint32 pixel_count = 0;
     uint32 preferred_mode = 0;
     for (uint32 i = 0; i < gop->mode->max_mode; i++) {
