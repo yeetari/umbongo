@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
+# TODO: Use presets for this.
 if(NOT CMAKE_TOOLCHAIN_FILE)
-    set(CMAKE_TOOLCHAIN_FILE toolchain/clang.cmake)
+    set(CMAKE_TOOLCHAIN_FILE toolchain/x86_64-pc-none-clang.cmake)
 endif()
 project(umbongo ASM_NASM C CXX)
 
