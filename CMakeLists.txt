@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 if(NOT CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE toolchain/clang.cmake)
 endif()
@@ -14,7 +14,6 @@ set(BUILD_WARNINGS OFF CACHE BOOL "Build with warnings")
 set(ENABLE_ASSERTIONS ON CACHE BOOL "Enable assertions")
 set(ENABLE_ASSERTIONS_PEDANTIC OFF CACHE BOOL "Enable pedantic assertions")
 set(LINK_TIME_OPT OFF CACHE BOOL "Build with LTO")
-set(OVMF_BINARY "${CMAKE_SOURCE_DIR}/OVMF.fd" CACHE STRING "OVMF binary for emulation")
 set_property(CACHE BUILD_TYPE PROPERTY STRINGS Debug Release)
 
 # Configure cmake options from global options.
@@ -45,7 +44,7 @@ function(target_gc_sections target)
 endfunction()
 
 # Enable warnings globally.
-# TODO: This probably shouldn't be here, maybe cmake profiles could be used instead?
+# TODO: This probably shouldn't be here, maybe cmake presets could be used instead?
 if(BUILD_WARNINGS)
     add_compile_options(
         -Werror
@@ -70,42 +69,56 @@ if(BUILD_WARNINGS)
         -Wno-zero-length-array)
 endif()
 
-# TODO: Don't add this target if mtools not found.
-add_custom_target(image
-    BYPRODUCTS fs.img
-    # Can't depend on install target, call it manually instead.
-    COMMAND ${CMAKE_COMMAND} --build . --target install
-    COMMAND dd if=/dev/zero of=fs.img bs=1k count=28800
-    COMMAND mformat -i fs.img -f 2880 -h 20 ::
-    COMMAND mcopy -si fs.img ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
-    COMMAND mcopy -si fs.img ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
-    USES_TERMINAL)
-
-find_program(QEMU_PROG NAMES qemu-system-x86_64)
-if(QEMU_PROG)
-    set(QEMU_FLAGS ${QEMU_FLAGS}
-        -bios ${OVMF_BINARY}
-        -cpu max
-        -debugcon stdio
-        -device qemu-xhci
-        -device usb-kbd
-        -device virtio-vga,xres=1920,yres=1080
-        -display sdl
-        -drive file=fs.img,if=ide,format=raw
-        -machine q35
-        -nodefaults
-        -no-reboot
-        -smp 8)
-    add_custom_target(run
-        COMMAND ${QEMU_PROG} ${QEMU_FLAGS} -enable-kvm
-        DEPENDS image
-        USES_TERMINAL)
-    add_custom_target(run-no-kvm
-        COMMAND ${QEMU_PROG} ${QEMU_FLAGS}
-        DEPENDS image
-        USES_TERMINAL)
+find_program(MCOPY_EXECUTABLE mcopy)
+find_program(MFORMAT_EXECUTABLE mformat)
+if(MCOPY_EXECUTABLE AND MFORMAT_EXECUTABLE)
+    add_custom_target(image
+        BYPRODUCTS fs.img
+        COMMAND truncate --size 28800000 fs.img
+        COMMAND ${MFORMAT_EXECUTABLE} -i fs.img -f 2880 -h 20 ::
+        COMMAND ${MCOPY_EXECUTABLE} -si fs.img ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
+        COMMAND ${MCOPY_EXECUTABLE} -si fs.img ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
+        DEPENDS install)
 else()
-    message(WARNING "Qemu not found, run target will be unavailable!")
+    message(WARNING "Failed to find mtools, image target will be unavailable!")
+endif()
+
+find_program(QEMU_EXECUTABLE qemu-system-x86_64)
+if(QEMU_EXECUTABLE)
+    if(EXISTS /dev/kvm)
+        set(KVM_AVAILABLE YES)
+    endif()
+    find_file(OVMF_BINARY
+        NAMES OVMF.fd OVMF_CODE.fd
+        PATHS ${CMAKE_SOURCE_DIR} /usr/share/ovmf /usr/share/edk2-ovmf)
+    if(OVMF_BINARY)
+        set(QEMU_FLAGS ${QEMU_FLAGS}
+            -bios ${OVMF_BINARY}
+            -cpu max
+            -debugcon stdio
+            -device qemu-xhci
+            -device usb-kbd
+            -device usb-storage,drive=esp
+            -device virtio-vga,xres=1920,yres=1080
+            -display sdl
+            -drive file=fat:rw:${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX},format=raw,id=esp,if=none
+            -machine q35
+            -nodefaults
+            -no-reboot
+            -smp 8)
+        add_custom_target(run
+            COMMAND ${QEMU_EXECUTABLE} ${QEMU_FLAGS} $<$<BOOL:${KVM_AVAILABLE}>:-enable-kvm>
+            DEPENDS install
+            USES_TERMINAL)
+        add_custom_target(run-no-kvm
+            COMMAND ${QEMU_EXECUTABLE} ${QEMU_FLAGS}
+            DEPENDS install
+            USES_TERMINAL)
+    else()
+        message(WARNING "Failed to find OVMF, run target will be unavailable!")
+    endif()
+else()
+    message(WARNING "Failed to find qemu, run target will be unavailable!")
 endif()
 
 # Build host targets first so they aren't affected by the upcoming options.
