@@ -13,7 +13,7 @@ class Framebuffer {
     bool m_dirty{false};
 
 public:
-    explicit Framebuffer(StringView path);
+    explicit Framebuffer(ustd::StringView path);
 
     void clear();
     void clear_region(uint32 x, uint32 y, uint32 width, uint32 height);

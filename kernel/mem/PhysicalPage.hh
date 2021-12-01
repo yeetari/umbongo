@@ -10,12 +10,12 @@ enum class PhysicalPageSize : uint8 {
     Huge,
 };
 
-class PhysicalPage : public Shareable<PhysicalPage> {
+class PhysicalPage : public ustd::Shareable<PhysicalPage> {
     uintptr m_phys{0};
 
 public:
-    static SharedPtr<PhysicalPage> allocate(PhysicalPageSize size);
-    static SharedPtr<PhysicalPage> create(uintptr phys, PhysicalPageSize size);
+    static ustd::SharedPtr<PhysicalPage> allocate(PhysicalPageSize size);
+    static ustd::SharedPtr<PhysicalPage> create(uintptr phys, PhysicalPageSize size);
 
     // Maximum physical address size permitted in AMD64 is 52-bits, meaning we can use safely use 8 for the size enum.
     PhysicalPage(uintptr phys, PhysicalPageSize size) : m_phys(phys | (static_cast<uint64>(size) << 56u)) {}

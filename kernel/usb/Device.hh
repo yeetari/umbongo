@@ -29,7 +29,7 @@ private:
     uint16 m_configuration_length{0};
 
     Endpoint *m_control_endpoint{nullptr};
-    Vector<Endpoint> m_endpoints;
+    ustd::Vector<Endpoint> m_endpoints;
 
     EndpointContext &endpoint_context(uint8 endpoint);
     InputControlContext &input_context();
@@ -54,7 +54,7 @@ public:
 
     Endpoint *create_endpoint(uint8 address);
     void setup(const Port &port);
-    void read_descriptor(Span<uint8> data);
+    void read_descriptor(ustd::Span<uint8> data);
     void read_configuration();
     void set_configuration(uint8 config_value);
     void configure_endpoint(Endpoint *endpoint);

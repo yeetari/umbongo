@@ -20,7 +20,7 @@ Client::~Client() {
     }
 }
 
-bool Client::connect(StringView path) {
+bool Client::connect(ustd::StringView path) {
     if (auto rc = Syscall::invoke(Syscall::connect, path.data()); rc >= 0) {
         m_fd.emplace(static_cast<uint32>(rc));
     } else {
@@ -32,7 +32,7 @@ bool Client::connect(StringView path) {
 
 void Client::send_message(const Message &message) {
     // NOLINTNEXTLINE
-    Array<uint8, 8_KiB> buffer;
+    ustd::Array<uint8, 8_KiB> buffer;
     MessageEncoder encoder(buffer.span());
     message.encode(encoder);
     [[maybe_unused]] auto bytes_written = Syscall::invoke(Syscall::write, *m_fd, buffer.data(), encoder.size());
@@ -40,7 +40,7 @@ void Client::send_message(const Message &message) {
     ASSERT(static_cast<usize>(bytes_written) == encoder.size());
 }
 
-usize Client::wait_message(Span<uint8> buffer) {
+usize Client::wait_message(ustd::Span<uint8> buffer) {
     auto bytes_read = Syscall::invoke(Syscall::read, *m_fd, buffer.data(), buffer.size());
     ASSERT(bytes_read >= 0);
     return static_cast<usize>(bytes_read);

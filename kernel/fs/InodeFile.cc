@@ -5,10 +5,10 @@
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
-SysResult<usize> InodeFile::read(Span<void> data, usize offset) {
+SysResult<usize> InodeFile::read(ustd::Span<void> data, usize offset) {
     return m_inode->read(data, offset);
 }
 
-SysResult<usize> InodeFile::write(Span<const void> data, usize offset) {
+SysResult<usize> InodeFile::write(ustd::Span<const void> data, usize offset) {
     return m_inode->write(data, offset);
 }

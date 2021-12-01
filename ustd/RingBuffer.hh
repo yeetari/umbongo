@@ -37,5 +37,3 @@ T RingBuffer<T, Capacity>::dequeue() {
 }
 
 } // namespace ustd
-
-using ustd::RingBuffer;

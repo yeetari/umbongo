@@ -60,7 +60,7 @@ void *Region::allocate(usize size) {
             free_chunk_count += k_bucket_bit_count;
             continue;
         }
-        if (bucket == Limits<usize>::max()) {
+        if (bucket == ustd::Limits<usize>::max()) {
             free_chunk_count = 0;
             continue;
         }

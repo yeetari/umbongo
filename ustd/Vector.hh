@@ -260,6 +260,3 @@ const T &Vector<T, SizeType>::operator[](SizeType index) const {
 }
 
 } // namespace ustd
-
-using ustd::LargeVector;
-using ustd::Vector;

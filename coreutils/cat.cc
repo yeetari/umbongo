@@ -7,7 +7,7 @@
 #include <ustd/Vector.hh>
 
 usize main(usize argc, const char **argv) {
-    Vector<uint32> fds;
+    ustd::Vector<uint32> fds;
     for (usize i = 1; i < argc; i++) {
         ssize fd = Syscall::invoke(Syscall::open, argv[i], OpenMode::None);
         if (fd < 0) {
@@ -23,7 +23,7 @@ usize main(usize argc, const char **argv) {
     for (uint32 fd : fds) {
         while (true) {
             // NOLINTNEXTLINE
-            Array<uint8, 128_KiB> buf;
+            ustd::Array<uint8, 128_KiB> buf;
             auto bytes_read = Syscall::invoke(Syscall::read, fd, buf.data(), buf.size());
             if (bytes_read == 0) {
                 break;

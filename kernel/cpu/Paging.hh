@@ -43,7 +43,7 @@ public:
 
 template <typename Entry>
 class [[gnu::aligned(4_KiB)]] PageLevel {
-    Array<PageLevelEntry<Entry>, 512> m_entries{};
+    ustd::Array<PageLevelEntry<Entry>, 512> m_entries{};
 
 public:
     constexpr PageLevel() = default;
@@ -78,7 +78,7 @@ public:
         return m_entries[index].entry();
     }
 
-    const Array<PageLevelEntry<Entry>, 512> &entries() const { return m_entries; }
+    const ustd::Array<PageLevelEntry<Entry>, 512> &entries() const { return m_entries; }
 };
 
 using Page = uintptr;                                   // PTE

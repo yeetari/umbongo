@@ -17,7 +17,7 @@ usize s_pid_counter = 0;
 
 } // namespace
 
-Process::Process(bool is_kernel, SharedPtr<VirtSpace> virt_space)
+Process::Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space)
     : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()), m_virt_space(ustd::move(virt_space)) {}
 
 uint32 Process::allocate_fd() {
@@ -31,6 +31,6 @@ uint32 Process::allocate_fd() {
     return m_fds.size() - 1;
 }
 
-UniquePtr<Thread> Process::create_thread() {
+ustd::UniquePtr<Thread> Process::create_thread() {
     return ustd::make_unique<Thread>(this);
 }

@@ -10,11 +10,11 @@
 namespace core {
 
 class File : public Watchable {
-    Optional<uint32> m_fd;
+    ustd::Optional<uint32> m_fd;
 
 public:
-    explicit File(Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
-    explicit File(StringView path);
+    explicit File(ustd::Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
+    explicit File(ustd::StringView path);
     File(const File &) = delete;
     File(File &&other) noexcept : m_fd(ustd::move(other.m_fd)) {}
     ~File() override;
@@ -23,9 +23,9 @@ public:
     File &operator=(File &&) = delete;
 
     void close();
-    bool open(StringView path);
-    ssize read(Span<void> data);
-    ssize read(Span<void> data, usize offset);
+    bool open(ustd::StringView path);
+    ssize read(ustd::Span<void> data);
+    ssize read(ustd::Span<void> data, usize offset);
     ssize rebind(uint32 fd);
 
     explicit operator bool() const { return m_fd.has_value(); }

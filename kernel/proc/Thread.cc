@@ -29,7 +29,7 @@
 
 namespace {
 
-Optional<String> interpreter_for(File &file) {
+ustd::Optional<ustd::String> interpreter_for(File &file) {
     elf::Header header{};
     if (file.read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
         return {};
@@ -42,7 +42,7 @@ Optional<String> interpreter_for(File &file) {
         }
         if (phdr.type == elf::SegmentType::Interp) {
             // TODO: Size limit.
-            String path(phdr.filesz - 1);
+            ustd::String path(phdr.filesz - 1);
             if (file.read({path.data(), phdr.filesz - 1}, phdr.offset) != phdr.filesz - 1) {
                 return {};
             }
@@ -54,20 +54,20 @@ Optional<String> interpreter_for(File &file) {
 
 } // namespace
 
-UniquePtr<Thread> Thread::create_kernel(uintptr entry_point) {
-    auto *process = new Process(true, SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
+ustd::UniquePtr<Thread> Thread::create_kernel(uintptr entry_point) {
+    auto *process = new Process(true, ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
     auto thread = process->create_thread();
     thread->m_register_state.rip = entry_point;
     return thread;
 }
 
-UniquePtr<Thread> Thread::create_user() {
+ustd::UniquePtr<Thread> Thread::create_user() {
     auto *process = new Process(false, MemoryManager::kernel_space()->clone());
     return process->create_thread();
 }
 
 Thread::Thread(Process *process) : m_process(process) {
-    process->m_thread_count.fetch_add(1, MemoryOrder::AcqRel);
+    process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
     m_kernel_stack = new uint8[64_KiB] + 64_KiB;
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
@@ -80,7 +80,7 @@ Thread::Thread(Process *process) : m_process(process) {
 
 Thread::~Thread() {
     delete (m_kernel_stack - 64_KiB);
-    m_process->m_thread_count.fetch_sub(1, MemoryOrder::AcqRel);
+    m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
     if (m_prev != nullptr) {
         ASSERT(m_next != nullptr);
         m_prev->m_next = m_next;
@@ -88,7 +88,7 @@ Thread::~Thread() {
     }
 }
 
-SysResult<> Thread::exec(StringView path, const Vector<String> &args) {
+SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String> &args) {
     auto file = Vfs::open(path, OpenMode::None, m_process->m_cwd);
     if (file.is_error()) {
         return file.error();
@@ -101,7 +101,7 @@ SysResult<> Thread::exec(StringView path, const Vector<String> &args) {
     InterruptDisabler disabler;
     auto *original_space = MemoryManager::current_space();
     MemoryManager::switch_space(*m_process->m_virt_space);
-    ScopeGuard space_guard([original_space] {
+    ustd::ScopeGuard space_guard([original_space] {
         MemoryManager::switch_space(*original_space);
     });
 
@@ -157,8 +157,8 @@ SysResult<> Thread::exec(StringView path, const Vector<String> &args) {
     }
 
     // Setup user stack.
-    Vector<uintptr> argv;
-    auto push_arg = [&](StringView arg) {
+    ustd::Vector<uintptr> argv;
+    auto push_arg = [&](ustd::StringView arg) {
         m_register_state.rsp -= round_up(arg.length() + 1, sizeof(usize));
         memcpy(reinterpret_cast<void *>(m_register_state.rsp), arg.data(), arg.length());
         *(reinterpret_cast<char *>(m_register_state.rsp) + arg.length()) = '\0';

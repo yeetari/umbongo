@@ -85,6 +85,3 @@ void Atomic<T>::store(T value, MemoryOrder order) volatile {
 }
 
 } // namespace ustd
-
-using ustd::Atomic;
-using ustd::MemoryOrder;

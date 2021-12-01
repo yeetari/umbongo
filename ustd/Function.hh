@@ -120,5 +120,3 @@ Function<R(Args...)> &Function<R(Args...)>::operator=(Function &&other) noexcept
 }
 
 } // namespace ustd
-
-using ustd::Function;

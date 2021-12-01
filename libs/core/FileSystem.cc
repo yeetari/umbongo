@@ -7,7 +7,7 @@
 
 namespace core {
 
-ssize mount(StringView target, StringView fs_type) {
+ssize mount(ustd::StringView target, ustd::StringView fs_type) {
     if (auto rc = Syscall::invoke(Syscall::mkdir, target.data()); rc < 0 && rc != SysError::AlreadyExists) {
         return rc;
     }

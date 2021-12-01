@@ -13,18 +13,18 @@
 
 struct MemoryManager;
 
-class VirtSpace : public Shareable<VirtSpace> {
+class VirtSpace : public ustd::Shareable<VirtSpace> {
     friend MemoryManager;
     friend Region;
 
 private:
     // TODO: Use a better data structure for regions.
-    UniquePtr<Pml4> m_pml4;
-    Vector<UniquePtr<Region>> m_regions;
+    ustd::UniquePtr<Pml4> m_pml4;
+    ustd::Vector<ustd::UniquePtr<Region>> m_regions;
     mutable SpinLock m_lock;
 
     VirtSpace();
-    explicit VirtSpace(const Vector<UniquePtr<Region>> &regions);
+    explicit VirtSpace(const ustd::Vector<ustd::UniquePtr<Region>> &regions);
 
     void map_4KiB(uintptr virt, uintptr phys, PageFlags flags);
     void map_2MiB(uintptr virt, uintptr phys, PageFlags flags);
@@ -38,7 +38,7 @@ public:
     VirtSpace &operator=(const VirtSpace &) = delete;
     VirtSpace &operator=(VirtSpace &&) = delete;
 
-    Region &allocate_region(usize size, RegionAccess access, Optional<uintptr> phys_base = {});
-    Region &create_region(uintptr base, usize size, RegionAccess access, Optional<uintptr> phys_base = {});
-    SharedPtr<VirtSpace> clone() const;
+    Region &allocate_region(usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
+    Region &create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
+    ustd::SharedPtr<VirtSpace> clone() const;
 };

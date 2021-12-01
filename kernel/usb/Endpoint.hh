@@ -29,8 +29,8 @@ public:
     Endpoint &operator=(Endpoint &&) = delete;
 
     void setup(EndpointType type, uint16 packet_size);
-    void send_control(ControlTransfer *transfer, TransferType transfer_type, Span<void> data = {nullptr, 0});
-    void setup_interval_input(Span<uint8> buffer, uint8 interval);
+    void send_control(ControlTransfer *transfer, TransferType transfer_type, ustd::Span<void> data = {nullptr, 0});
+    void setup_interval_input(ustd::Span<uint8> buffer, uint8 interval);
 
     uint8 id() const { return m_id; }
 };

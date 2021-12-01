@@ -5,6 +5,6 @@
 
 namespace core {
 
-ssize mount(StringView target, StringView fs_type);
+ssize mount(ustd::StringView target, ustd::StringView fs_type);
 
 } // namespace core

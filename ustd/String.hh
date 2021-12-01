@@ -37,5 +37,3 @@ public:
 };
 
 } // namespace ustd
-
-using ustd::String;

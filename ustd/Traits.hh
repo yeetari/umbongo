@@ -89,12 +89,3 @@ template <typename T>
 concept IsTriviallyDestructible = __is_trivially_destructible(T);
 
 } // namespace ustd
-
-using ustd::Conditional;
-using ustd::IsConvertibleTo;
-using ustd::IsIntegral;
-using ustd::IsMoveConstructible;
-using ustd::IsPointer;
-using ustd::IsSame;
-using ustd::IsTriviallyCopyable;
-using ustd::IsTriviallyDestructible;

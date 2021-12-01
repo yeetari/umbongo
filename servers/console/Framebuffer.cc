@@ -8,7 +8,7 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-Framebuffer::Framebuffer(StringView path) : m_file(path) {
+Framebuffer::Framebuffer(ustd::StringView path) : m_file(path) {
     ENSURE(m_file, "Failed to open framebuffer");
     Syscall::invoke(Syscall::ioctl, m_file.fd(), IoctlRequest::FramebufferGetInfo, &m_info);
     m_back_buffer = Syscall::invoke<uint32 *>(Syscall::allocate_region, m_info.size, MemoryProt::Write);

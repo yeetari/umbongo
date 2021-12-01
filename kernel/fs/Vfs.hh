@@ -13,12 +13,12 @@ class Inode;
 
 struct Vfs {
     static void initialise();
-    static void mount_root(UniquePtr<FileSystem> &&fs);
+    static void mount_root(ustd::UniquePtr<FileSystem> &&fs);
 
-    static SysResult<Inode *> create(StringView path, Inode *base, InodeType type);
-    static SysResult<> mkdir(StringView path, Inode *base);
-    static SysResult<> mount(StringView path, UniquePtr<FileSystem> &&fs);
-    static SysResult<SharedPtr<File>> open(StringView path, OpenMode mode, Inode *base);
-    static SysResult<Inode *> open_directory(StringView path, Inode *base);
+    static SysResult<Inode *> create(ustd::StringView path, Inode *base, InodeType type);
+    static SysResult<> mkdir(ustd::StringView path, Inode *base);
+    static SysResult<> mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs);
+    static SysResult<ustd::SharedPtr<File>> open(ustd::StringView path, OpenMode mode, Inode *base);
+    static SysResult<Inode *> open_directory(ustd::StringView path, Inode *base);
     static Inode *root_inode();
 };

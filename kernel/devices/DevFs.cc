@@ -18,7 +18,7 @@
 
 namespace {
 
-Vector<DevFs *> s_all;
+ustd::Vector<DevFs *> s_all;
 SpinLock s_all_lock;
 
 } // namespace
@@ -71,23 +71,23 @@ Inode *DevFsInode::child(usize) {
     ENSURE_NOT_REACHED();
 }
 
-Inode *DevFsInode::create(StringView, InodeType) {
+Inode *DevFsInode::create(ustd::StringView, InodeType) {
     ENSURE_NOT_REACHED();
 }
 
-Inode *DevFsInode::lookup(StringView) {
+Inode *DevFsInode::lookup(ustd::StringView) {
     ENSURE_NOT_REACHED();
 }
 
-SharedPtr<File> DevFsInode::open_impl() {
+ustd::SharedPtr<File> DevFsInode::open_impl() {
     return m_device;
 }
 
-usize DevFsInode::read(Span<void>, usize) {
+usize DevFsInode::read(ustd::Span<void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
-void DevFsInode::remove(StringView) {
+void DevFsInode::remove(ustd::StringView) {
     ENSURE_NOT_REACHED();
 }
 
@@ -95,26 +95,26 @@ usize DevFsInode::size() {
     return 0;
 }
 
-usize DevFsInode::write(Span<const void>, usize) {
+usize DevFsInode::write(ustd::Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
 Inode *DevFsRootInode::child(usize index) {
-    ASSERT(index < Limits<uint32>::max());
+    ASSERT(index < ustd::Limits<uint32>::max());
     ScopedLock locker(m_lock);
     return m_children[static_cast<uint32>(index)].obj();
 }
 
-void DevFsRootInode::create(StringView name, Device *device) {
+void DevFsRootInode::create(ustd::StringView name, Device *device) {
     ScopedLock locker(m_lock);
     m_children.emplace(new DevFsInode(name, this, device));
 }
 
-Inode *DevFsRootInode::create(StringView, InodeType) {
+Inode *DevFsRootInode::create(ustd::StringView, InodeType) {
     ENSURE_NOT_REACHED();
 }
 
-Inode *DevFsRootInode::lookup(StringView name) {
+Inode *DevFsRootInode::lookup(ustd::StringView name) {
     if (name == ".") {
         return this;
     }
@@ -130,15 +130,15 @@ Inode *DevFsRootInode::lookup(StringView name) {
     return nullptr;
 }
 
-SharedPtr<File> DevFsRootInode::open_impl() {
+ustd::SharedPtr<File> DevFsRootInode::open_impl() {
     ENSURE_NOT_REACHED();
 }
 
-usize DevFsRootInode::read(Span<void>, usize) {
+usize DevFsRootInode::read(ustd::Span<void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
-void DevFsRootInode::remove(StringView name) {
+void DevFsRootInode::remove(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (uint32 i = 0; i < m_children.size(); i++) {
         if (name == m_children[i]->name()) {
@@ -153,6 +153,6 @@ usize DevFsRootInode::size() {
     return m_children.size();
 }
 
-usize DevFsRootInode::write(Span<const void>, usize) {
+usize DevFsRootInode::write(ustd::Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }

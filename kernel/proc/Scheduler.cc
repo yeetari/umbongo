@@ -31,7 +31,7 @@ uint32 s_ticks = 0;
 void dump_backtrace(RegisterState *regs) {
     auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
     while (rbp != nullptr && rbp[1] != 0) {
-        dbgln("{:h}", rbp[1]);
+        ustd::dbgln("{:h}", rbp[1]);
         rbp = reinterpret_cast<uint64 *>(*rbp);
     }
 }
@@ -41,11 +41,11 @@ void handle_fault(RegisterState *regs) {
     auto &process = thread->process();
     if ((regs->cs & 3u) == 0u) {
         log_unlock();
-        dbgln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
+        ustd::dbgln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }
-    dbgln("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
+    ustd::dbgln("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
     dump_backtrace(regs);
     thread->kill();
     Scheduler::switch_next(regs);
@@ -58,11 +58,11 @@ void handle_page_fault(RegisterState *regs) {
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
         log_unlock();
-        dbgln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
+        ustd::dbgln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
     }
-    dbgln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
+    ustd::dbgln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
     dump_backtrace(regs);
     thread->kill();
     Scheduler::switch_next(regs);
@@ -72,7 +72,7 @@ void handle_page_fault(RegisterState *regs) {
 
 extern "C" void switch_now(RegisterState *regs);
 
-SharedPtr<Process> Process::from_pid(usize pid) {
+ustd::SharedPtr<Process> Process::from_pid(usize pid) {
     ScopedLock locker(s_scheduler_lock);
     Thread *thread = s_base_thread;
     do {
@@ -112,7 +112,7 @@ void Scheduler::initialise() {
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
 }
 
-void Scheduler::insert_thread(UniquePtr<Thread> &&unique_thread) {
+void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
     ScopedLock locker(s_scheduler_lock);
     auto *thread = unique_thread.disown();
     auto *prev = s_base_thread->m_prev;
@@ -151,7 +151,7 @@ void Scheduler::start() {
 
 void Scheduler::switch_next(RegisterState *regs) {
     ScopedLock locker(s_scheduler_lock);
-    Processor::current_thread()->m_cpu.store(-1, MemoryOrder::Release);
+    Processor::current_thread()->m_cpu.store(-1, ustd::MemoryOrder::Release);
 
     auto *next_thread = Processor::current_thread();
     do {
@@ -170,8 +170,8 @@ void Scheduler::switch_next(RegisterState *regs) {
                 next_thread->m_state = ThreadState::Alive;
             }
         }
-    } while (next_thread->m_state != ThreadState::Alive || next_thread->m_cpu.load(MemoryOrder::Acquire) != -1);
-    next_thread->m_cpu.store(Processor::id(), MemoryOrder::Release);
+    } while (next_thread->m_state != ThreadState::Alive || next_thread->m_cpu.load(ustd::MemoryOrder::Acquire) != -1);
+    next_thread->m_cpu.store(Processor::id(), ustd::MemoryOrder::Release);
     locker.unlock();
     memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     auto &process = *next_thread->m_process;

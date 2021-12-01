@@ -17,7 +17,7 @@ TrbRing::TrbRing(bool insert_link) {
     }
 }
 
-Span<TransferRequestBlock> TrbRing::dequeue() {
+ustd::Span<TransferRequestBlock> TrbRing::dequeue() {
     const auto start_index = m_index;
     usize length = 0;
     for (; m_queue[m_index].cycle == m_cycle_state; length++) { // NOLINT

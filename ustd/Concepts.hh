@@ -17,8 +17,3 @@ template <typename T>
 concept TriviallyCopyable = IsTriviallyCopyable<T>;
 
 } // namespace ustd
-
-using ustd::ConvertibleTo;
-using ustd::Integral;
-using ustd::SameAs;
-using ustd::TriviallyCopyable;

@@ -49,14 +49,14 @@ void watch_loop(HostController *controller) {
             if (port.connected()) {
                 if (!port.enabled()) {
                     if (!port.reset()) {
-                        dbgln(" usb: Failed to reset port {}!", port.number());
+                        ustd::dbgln(" usb: Failed to reset port {}!", port.number());
                     }
                     continue;
                 }
-                dbgln(" usb: Device attached to port {}", port.number());
+                ustd::dbgln(" usb: Device attached to port {}", port.number());
                 controller->on_attach(port);
             } else {
-                dbgln(" usb: Device removed from port {}", port.number());
+                ustd::dbgln(" usb: Device removed from port {}", port.number());
                 controller->on_detach(port);
             }
         }
@@ -102,7 +102,7 @@ void HostController::enable() {
     m_run_offset = read_cap<uint32>(k_cap_reg_run_offset) & ~0x1fu;
 
     const auto usb_spec = read_config<uint8>(k_config_reg_sbrn);
-    dbgln(" usb: Host Controller is compliant with USB specification {}.{}", usb_spec >> 4u, usb_spec & 0xfu);
+    ustd::dbgln(" usb: Host Controller is compliant with USB specification {}.{}", usb_spec >> 4u, usb_spec & 0xfu);
 
     // Ensure run/stop bit is clear and wait until halted bit set. We can only modify the config/control registers when
     // the controller is halted.
@@ -150,7 +150,7 @@ void HostController::enable() {
             // Supported Protocol - dword 0 contains the major/minor version.
             uint8 major = (ext_cap >> 24u) & 0xffu;
             uint8 minor = (ext_cap >> 16u) & 0xffu;
-            dbgln(" usb: Host Controller supports USB {}.{}", major, minor);
+            ustd::dbgln(" usb: Host Controller supports USB {}.{}", major, minor);
 
             // And dword 2 contains the compatible port offset and count.
             auto port_info = read_cap<uint32>((xecp + 2) * sizeof(uint32));
@@ -227,7 +227,7 @@ void HostController::enable() {
         }
         if (port.initialise(this) && port.connected()) {
             if (!port.reset()) {
-                dbgln(" usb: Failed to reset port {}!", port.number());
+                ustd::dbgln(" usb: Failed to reset port {}!", port.number());
             }
             continue;
         }
@@ -237,7 +237,7 @@ void HostController::enable() {
             ASSERT(paired != nullptr);
             if (paired->initialise(this) && paired->connected()) {
                 if (!paired->reset()) {
-                    dbgln(" usb: Failed to reset port {}!", port.number());
+                    ustd::dbgln(" usb: Failed to reset port {}!", port.number());
                 }
             }
         }
@@ -258,8 +258,8 @@ void HostController::handle_interrupt() {
     for (auto &event : m_event_ring->dequeue()) {
         const auto event_type = static_cast<uint8>(event.type);
         if (((event.status >> 24u) & 0xffu) != 1) {
-            dbgln(" usb: Received event {} with unsuccessful completion code {}!", event_type,
-                  (event.status >> 24u) & 0xffu);
+            ustd::dbgln(" usb: Received event {} with unsuccessful completion code {}!", event_type,
+                        (event.status >> 24u) & 0xffu);
         }
         switch (event.type) {
         case TrbType::TransferEvent: {
@@ -286,14 +286,14 @@ void HostController::handle_interrupt() {
         case TrbType::PortStatusChangeEvent: {
             auto &port = m_ports[((event.data >> 24u) & 0xffu) - 1];
             if (!port.initialised()) {
-                dbgln(" usb: Uninitialised port {} experienced status change event!", port.number());
+                ustd::dbgln(" usb: Uninitialised port {} experienced status change event!", port.number());
                 break;
             }
             port.set_status_changed();
             break;
         }
         default:
-            dbgln(" usb: Received unrecognised event {}!", event_type);
+            ustd::dbgln(" usb: Received unrecognised event {}!", event_type);
             break;
         }
     }
@@ -334,7 +334,7 @@ void HostController::on_attach(Port &port) {
     ENSURE(id_device.slot_state() == SlotState::Default);
 
     // Request first 8 bytes of device descriptor.
-    Array<uint8, 8> early_device_descriptor{};
+    ustd::Array<uint8, 8> early_device_descriptor{};
     id_device.read_descriptor(early_device_descriptor.span());
 
     // Reset port again.
@@ -355,7 +355,7 @@ void HostController::on_attach(Port &port) {
     const auto device_descriptor_length = early_device_descriptor[0];
     ENSURE(device_descriptor_length >= sizeof(DeviceDescriptor));
 
-    Vector<uint8> device_descriptor_bytes(device_descriptor_length);
+    ustd::Vector<uint8> device_descriptor_bytes(device_descriptor_length);
     id_device.read_descriptor(device_descriptor_bytes.span());
 
     auto *device_descriptor = reinterpret_cast<DeviceDescriptor *>(device_descriptor_bytes.data());

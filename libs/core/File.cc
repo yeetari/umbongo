@@ -8,7 +8,7 @@
 
 namespace core {
 
-File::File(StringView path) {
+File::File(ustd::StringView path) {
     auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
     if (fd >= 0) {
         m_fd.emplace(static_cast<uint32>(fd));
@@ -26,7 +26,7 @@ void File::close() {
     }
 }
 
-bool File::open(StringView path) {
+bool File::open(ustd::StringView path) {
     close();
     auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
     if (fd >= 0) {
@@ -36,14 +36,14 @@ bool File::open(StringView path) {
     return false;
 }
 
-ssize File::read(Span<void> data) {
+ssize File::read(ustd::Span<void> data) {
     if (!m_fd) {
         return -1;
     }
     return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());
 }
 
-ssize File::read(Span<void> data, usize offset) {
+ssize File::read(ustd::Span<void> data, usize offset) {
     if (!m_fd) {
         return -1;
     }

@@ -37,7 +37,7 @@ usize main(usize, const char **) {
     EscapeParser escape_parser(default_terminal, alternate_terminal);
     stdin.set_on_read_ready([&] {
         // NOLINTNEXTLINE
-        Array<char, 8_KiB> buffer;
+        ustd::Array<char, 8_KiB> buffer;
         ssize bytes_read = 0;
         if (bytes_read = stdin.read(buffer.span()); bytes_read < 0) {
             ENSURE_NOT_REACHED();

@@ -21,7 +21,7 @@ class [[gnu::packed]] HpetTable : public Table {
     uint8 m_page_protection;
 
 public:
-    static constexpr Array<uint8, 4> k_signature{'H', 'P', 'E', 'T'};
+    static constexpr ustd::Array<uint8, 4> k_signature{'H', 'P', 'E', 'T'};
 
     uint8 comparator_count() const { return m_comparator_count; }
     const GenericAddress &base_address() const { return m_base_address; }

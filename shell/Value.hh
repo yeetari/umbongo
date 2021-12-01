@@ -42,48 +42,48 @@ enum class BuiltinFunction {
 
 class Builtin : public Value {
     const BuiltinFunction m_function;
-    const Vector<const char *> m_args;
+    const ustd::Vector<const char *> m_args;
 
 public:
     static constexpr auto k_kind = ValueKind::Builtin;
-    Builtin(BuiltinFunction function, Vector<const char *> &&args)
+    Builtin(BuiltinFunction function, ustd::Vector<const char *> &&args)
         : Value(k_kind), m_function(function), m_args(ustd::move(args)) {}
 
     BuiltinFunction function() const { return m_function; }
-    const Vector<const char *> &args() const { return m_args; }
+    const ustd::Vector<const char *> &args() const { return m_args; }
 };
 
 class Job : public Value {
-    const String m_command;
-    const Vector<const char *> m_args;
+    const ustd::String m_command;
+    const ustd::Vector<const char *> m_args;
     usize m_pid{0};
 
 public:
     static constexpr auto k_kind = ValueKind::Job;
-    Job(String &&command, Vector<const char *> &&args)
+    Job(ustd::String &&command, ustd::Vector<const char *> &&args)
         : Value(k_kind), m_command(ustd::move(command)), m_args(ustd::move(args)) {}
 
     void await_completion() const;
-    void spawn(const Vector<FdPair> &copy_fds);
+    void spawn(const ustd::Vector<FdPair> &copy_fds);
 };
 
 class ListValue : public Value {
-    const Vector<UniquePtr<Value>> m_values;
+    const ustd::Vector<ustd::UniquePtr<Value>> m_values;
 
 public:
     static constexpr auto k_kind = ValueKind::List;
-    explicit ListValue(Vector<UniquePtr<Value>> &&values) : Value(k_kind), m_values(ustd::move(values)) {}
+    explicit ListValue(ustd::Vector<ustd::UniquePtr<Value>> &&values) : Value(k_kind), m_values(ustd::move(values)) {}
 
-    const Vector<UniquePtr<Value>> &values() const { return m_values; }
+    const ustd::Vector<ustd::UniquePtr<Value>> &values() const { return m_values; }
 };
 
 class PipeValue : public Value {
-    const UniquePtr<Value> m_lhs;
-    const UniquePtr<Value> m_rhs;
+    const ustd::UniquePtr<Value> m_lhs;
+    const ustd::UniquePtr<Value> m_rhs;
 
 public:
     static constexpr auto k_kind = ValueKind::Pipe;
-    PipeValue(UniquePtr<Value> &&lhs, UniquePtr<Value> &&rhs)
+    PipeValue(ustd::UniquePtr<Value> &&lhs, ustd::UniquePtr<Value> &&rhs)
         : Value(k_kind), m_lhs(ustd::move(lhs)), m_rhs(ustd::move(rhs)) {}
 
     Value &lhs() const { return *m_lhs; }
@@ -91,13 +91,13 @@ public:
 };
 
 class StringValue : public Value {
-    const String m_text;
+    const ustd::String m_text;
 
 public:
     static constexpr auto k_kind = ValueKind::String;
-    explicit StringValue(String text) : Value(k_kind), m_text(ustd::move(text)) {}
+    explicit StringValue(ustd::String text) : Value(k_kind), m_text(ustd::move(text)) {}
 
-    const String &text() const { return m_text; }
+    const ustd::String &text() const { return m_text; }
 };
 
 template <typename T>

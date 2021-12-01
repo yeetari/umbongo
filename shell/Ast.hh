@@ -21,48 +21,48 @@ public:
     Node &operator=(Node &&) = delete;
 
     virtual void dump(usize indent) const;
-    virtual UniquePtr<Value> evaluate() const = 0;
+    virtual ustd::UniquePtr<Value> evaluate() const = 0;
 };
 
 class Command : public Node {
-    const UniquePtr<Node> m_node;
+    const ustd::UniquePtr<Node> m_node;
 
 public:
-    explicit Command(UniquePtr<Node> &&node) : m_node(ustd::move(node)) {}
+    explicit Command(ustd::UniquePtr<Node> &&node) : m_node(ustd::move(node)) {}
 
     void dump(usize indent) const override;
-    UniquePtr<Value> evaluate() const override;
+    ustd::UniquePtr<Value> evaluate() const override;
 };
 
 class List : public Node {
-    const Vector<UniquePtr<Node>> m_nodes;
+    const ustd::Vector<ustd::UniquePtr<Node>> m_nodes;
 
 public:
-    explicit List(Vector<UniquePtr<Node>> &&nodes) : m_nodes(ustd::move(nodes)) {}
+    explicit List(ustd::Vector<ustd::UniquePtr<Node>> &&nodes) : m_nodes(ustd::move(nodes)) {}
 
     void dump(usize indent) const override;
-    UniquePtr<Value> evaluate() const override;
+    ustd::UniquePtr<Value> evaluate() const override;
 };
 
 class Pipe : public Node {
-    const UniquePtr<Node> m_lhs;
-    const UniquePtr<Node> m_rhs;
+    const ustd::UniquePtr<Node> m_lhs;
+    const ustd::UniquePtr<Node> m_rhs;
 
 public:
-    Pipe(UniquePtr<Node> &&lhs, UniquePtr<Node> &&rhs) : m_lhs(ustd::move(lhs)), m_rhs(ustd::move(rhs)) {}
+    Pipe(ustd::UniquePtr<Node> &&lhs, ustd::UniquePtr<Node> &&rhs) : m_lhs(ustd::move(lhs)), m_rhs(ustd::move(rhs)) {}
 
     void dump(usize indent) const override;
-    UniquePtr<Value> evaluate() const override;
+    ustd::UniquePtr<Value> evaluate() const override;
 };
 
 class StringLiteral : public Node {
-    const String m_text;
+    const ustd::String m_text;
 
 public:
-    explicit StringLiteral(String text) : m_text(ustd::move(text)) {}
+    explicit StringLiteral(ustd::String text) : m_text(ustd::move(text)) {}
 
     void dump(usize indent) const override;
-    UniquePtr<Value> evaluate() const override;
+    ustd::UniquePtr<Value> evaluate() const override;
 };
 
 } // namespace ast

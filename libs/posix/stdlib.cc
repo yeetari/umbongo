@@ -190,7 +190,7 @@ char *getcwd(char *, size_t) {
 }
 
 char *getenv(const char *name) {
-    dbgln("getenv({})", name);
+    ustd::dbgln("getenv({})", name);
     return nullptr;
 }
 

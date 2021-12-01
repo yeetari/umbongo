@@ -9,8 +9,8 @@
 class DoubleBuffer;
 
 class Socket final : public File {
-    SharedPtr<DoubleBuffer> m_read_buffer;
-    SharedPtr<DoubleBuffer> m_write_buffer;
+    ustd::SharedPtr<DoubleBuffer> m_read_buffer;
+    ustd::SharedPtr<DoubleBuffer> m_write_buffer;
 
 public:
     Socket(DoubleBuffer *read_buffer, DoubleBuffer *write_buffer);
@@ -25,8 +25,8 @@ public:
 
     bool can_read() override;
     bool can_write() override;
-    SysResult<usize> read(Span<void> data, usize offset) override;
-    SysResult<usize> write(Span<const void> data, usize offset) override;
+    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
+    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 
     bool connected() const;
     DoubleBuffer *read_buffer() const { return m_read_buffer.obj(); }

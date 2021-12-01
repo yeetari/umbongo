@@ -20,11 +20,11 @@ bool Socket::can_write() {
     return m_write_buffer->ref_count() != 2 || !m_write_buffer->full();
 }
 
-SysResult<usize> Socket::read(Span<void> data, usize) {
+SysResult<usize> Socket::read(ustd::Span<void> data, usize) {
     return m_read_buffer->read(data);
 }
 
-SysResult<usize> Socket::write(Span<const void> data, usize) {
+SysResult<usize> Socket::write(ustd::Span<const void> data, usize) {
     return m_write_buffer->write(data);
 }
 

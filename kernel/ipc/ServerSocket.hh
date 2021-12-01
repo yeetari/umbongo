@@ -11,7 +11,7 @@
 class Socket;
 
 class ServerSocket final : public File {
-    Vector<SharedPtr<Socket>> m_connection_queue;
+    ustd::Vector<ustd::SharedPtr<Socket>> m_connection_queue;
     mutable SpinLock m_lock;
 
 public:
@@ -25,11 +25,11 @@ public:
 
     bool is_server_socket() const override { return true; }
 
-    SharedPtr<Socket> accept();
+    ustd::SharedPtr<Socket> accept();
     bool can_accept() const;
     bool can_read() override;
     bool can_write() override;
-    SysResult<> queue_connection_from(SharedPtr<Socket> socket);
-    SysResult<usize> read(Span<void> data, usize offset) override;
-    SysResult<usize> write(Span<const void> data, usize offset) override;
+    SysResult<> queue_connection_from(ustd::SharedPtr<Socket> socket);
+    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
+    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };

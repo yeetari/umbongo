@@ -27,7 +27,7 @@ bool DoubleBuffer::full() const {
     return m_size - m_write_buffer->size == 0;
 }
 
-usize DoubleBuffer::read(Span<void> data) {
+usize DoubleBuffer::read(ustd::Span<void> data) {
     ScopedLock locker(m_lock);
     if (m_read_position >= m_read_buffer->size && m_write_buffer->size != 0) {
         ustd::swap(m_read_buffer, m_write_buffer);
@@ -43,7 +43,7 @@ usize DoubleBuffer::read(Span<void> data) {
     return read_size;
 }
 
-usize DoubleBuffer::write(Span<const void> data) {
+usize DoubleBuffer::write(ustd::Span<const void> data) {
     ScopedLock locker(m_lock);
     usize write_size = ustd::min(data.size(), m_size - m_write_buffer->size);
     memcpy(m_write_buffer->data + m_write_buffer->size, data.data(), write_size);

@@ -8,12 +8,12 @@
 
 namespace {
 
-Vector<Device *> s_devices;
+ustd::Vector<Device *> s_devices;
 SpinLock s_devices_lock;
 
 } // namespace
 
-Vector<Device *> Device::all_devices() {
+ustd::Vector<Device *> Device::all_devices() {
     ScopedLock locker(s_devices_lock);
     return s_devices;
 }

@@ -8,8 +8,8 @@
 
 namespace core {
 
-Optional<Pipe> create_pipe() {
-    Array<uint32, 2> pipe_fds{};
+ustd::Optional<Pipe> create_pipe() {
+    ustd::Array<uint32, 2> pipe_fds{};
     if (Syscall::invoke(Syscall::create_pipe, pipe_fds.data()) < 0) {
         return {};
     }

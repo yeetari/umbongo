@@ -13,10 +13,10 @@ namespace ipc {
 class Message;
 
 class Client : public core::Watchable {
-    Optional<uint32> m_fd;
+    ustd::Optional<uint32> m_fd;
 
 public:
-    explicit Client(Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
+    explicit Client(ustd::Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
     Client(const Client &) = delete;
     Client(Client &&other) noexcept : m_fd(ustd::move(other.m_fd)) {}
     ~Client() override;
@@ -24,9 +24,9 @@ public:
     Client &operator=(const Client &) = delete;
     Client &operator=(Client &&) = delete;
 
-    bool connect(StringView path);
+    bool connect(ustd::StringView path);
     void send_message(const Message &message);
-    usize wait_message(Span<uint8> buffer);
+    usize wait_message(ustd::Span<uint8> buffer);
 
     template <typename T, typename... Args>
     void send_message(Args &&...args);
@@ -44,7 +44,7 @@ void Client::send_message(Args &&...args) {
 template <typename T>
 T Client::wait_message() {
     // NOLINTNEXTLINE
-    Array<uint8, 8_KiB> buffer;
+    ustd::Array<uint8, 8_KiB> buffer;
     usize bytes_read = wait_message(buffer.span());
     return T::decode({buffer.data(), bytes_read});
 }

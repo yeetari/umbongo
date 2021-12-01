@@ -72,5 +72,3 @@ SharedPtr<T> make_shared(Args &&...args) {
 }
 
 } // namespace ustd
-
-using ustd::SharedPtr;

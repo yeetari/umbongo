@@ -16,51 +16,51 @@
 #include <ustd/Vector.hh>
 
 class DevFsInode final : public Inode {
-    String m_name;
-    SharedPtr<Device> m_device;
+    ustd::String m_name;
+    ustd::SharedPtr<Device> m_device;
 
 public:
-    DevFsInode(StringView name, Inode *parent, Device *device)
+    DevFsInode(ustd::StringView name, Inode *parent, Device *device)
         : Inode(InodeType::Device, parent), m_name(name), m_device(device) {}
 
     Inode *child(usize index) override;
-    Inode *create(StringView name, InodeType type) override;
-    Inode *lookup(StringView name) override;
-    SharedPtr<File> open_impl() override;
-    usize read(Span<void> data, usize offset) override;
-    void remove(StringView name) override;
+    Inode *create(ustd::StringView name, InodeType type) override;
+    Inode *lookup(ustd::StringView name) override;
+    ustd::SharedPtr<File> open_impl() override;
+    usize read(ustd::Span<void> data, usize offset) override;
+    void remove(ustd::StringView name) override;
     usize size() override;
     void truncate() override {}
-    usize write(Span<const void> data, usize offset) override;
+    usize write(ustd::Span<const void> data, usize offset) override;
 
-    StringView name() const override { return m_name.view(); }
-    const SharedPtr<Device> &device() { return m_device; }
+    ustd::StringView name() const override { return m_name.view(); }
+    const ustd::SharedPtr<Device> &device() { return m_device; }
 };
 
 class DevFsRootInode final : public Inode {
-    String m_name;
-    Vector<UniquePtr<DevFsInode>> m_children;
+    ustd::String m_name;
+    ustd::Vector<ustd::UniquePtr<DevFsInode>> m_children;
     mutable SpinLock m_lock;
 
 public:
-    DevFsRootInode(Inode *parent, StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
+    DevFsRootInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
 
     Inode *child(usize index) override;
-    void create(StringView name, Device *device);
-    Inode *create(StringView name, InodeType type) override;
-    Inode *lookup(StringView name) override;
-    SharedPtr<File> open_impl() override;
-    usize read(Span<void> data, usize offset) override;
-    void remove(StringView name) override;
+    void create(ustd::StringView name, Device *device);
+    Inode *create(ustd::StringView name, InodeType type) override;
+    Inode *lookup(ustd::StringView name) override;
+    ustd::SharedPtr<File> open_impl() override;
+    usize read(ustd::Span<void> data, usize offset) override;
+    void remove(ustd::StringView name) override;
     usize size() override;
     void truncate() override {}
-    usize write(Span<const void> data, usize offset) override;
+    usize write(ustd::Span<const void> data, usize offset) override;
 
-    StringView name() const override { return m_name.view(); }
+    ustd::StringView name() const override { return m_name.view(); }
 };
 
 class DevFs final : public FileSystem {
-    Optional<DevFsRootInode> m_root_inode;
+    ustd::Optional<DevFsRootInode> m_root_inode;
 
 public:
     static void notify_attach(Device *device);

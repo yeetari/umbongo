@@ -9,14 +9,14 @@
 struct SysSuccess {};
 
 template <typename T = SysSuccess>
-using SysResult = Result<T, SysError>;
+using SysResult = ustd::Result<T, SysError>;
 
 class SyscallResult {
     usize m_value;
 
 public:
     SyscallResult(SysError error) : m_value(static_cast<usize>(error)) {}
-    template <ConvertibleTo<usize> T>
+    template <ustd::ConvertibleTo<usize> T>
     SyscallResult(T value) : m_value(static_cast<usize>(value)) {}
     template <typename T>
     SyscallResult(T *value) : m_value(reinterpret_cast<usize>(value)) {}

@@ -6,7 +6,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/SharedPtr.hh>
-#include <ustd/String.hh>
+#include <ustd/String.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -27,11 +27,11 @@ class Thread {
     friend Scheduler;
 
 private:
-    const SharedPtr<Process> m_process;
+    const ustd::SharedPtr<Process> m_process;
     RegisterState m_register_state{};
     ThreadState m_state{ThreadState::Alive};
-    UniquePtr<ThreadBlocker> m_blocker;
-    Atomic<int16> m_cpu{-1};
+    ustd::UniquePtr<ThreadBlocker> m_blocker;
+    ustd::Atomic<int16> m_cpu{-1};
     uint8 *m_kernel_stack{nullptr};
 
     Thread *m_prev{nullptr};
@@ -39,11 +39,11 @@ private:
 
 public:
     template <typename F>
-    static UniquePtr<Thread> create_kernel(F function) {
+    static ustd::UniquePtr<Thread> create_kernel(F function) {
         return create_kernel(reinterpret_cast<uintptr>(function));
     }
-    static UniquePtr<Thread> create_kernel(uintptr entry_point);
-    static UniquePtr<Thread> create_user();
+    static ustd::UniquePtr<Thread> create_kernel(uintptr entry_point);
+    static ustd::UniquePtr<Thread> create_user();
 
     explicit Thread(Process *process);
     Thread(const Thread &) = delete;
@@ -55,7 +55,7 @@ public:
 
     template <typename T, typename... Args>
     void block(Args &&...args);
-    SysResult<> exec(StringView path, const Vector<String> &args = {});
+    SysResult<> exec(ustd::StringView path, const ustd::Vector<ustd::String> &args = {});
     void kill();
 
     Process &process() const { return *m_process; }

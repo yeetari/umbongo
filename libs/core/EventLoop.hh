@@ -10,9 +10,9 @@ class Timer;
 class Watchable;
 
 class EventLoop {
-    Vector<PollFd> m_poll_fds;
-    Vector<Timer *> m_timers;
-    Vector<Watchable *> m_watchables;
+    ustd::Vector<PollFd> m_poll_fds;
+    ustd::Vector<Timer *> m_timers;
+    ustd::Vector<Watchable *> m_watchables;
 
     uint32 index_of(Timer *timer);
     uint32 index_of(Watchable *watchable);

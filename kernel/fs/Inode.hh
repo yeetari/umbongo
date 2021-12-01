@@ -10,10 +10,10 @@
 class Inode {
     Inode *m_parent;
     InodeType m_type;
-    SharedPtr<File> m_ipc_file;
+    ustd::SharedPtr<File> m_ipc_file;
 
 protected:
-    virtual SharedPtr<File> open_impl() = 0;
+    virtual ustd::SharedPtr<File> open_impl() = 0;
 
 public:
     Inode(InodeType type, Inode *parent) : m_parent(parent), m_type(type) {}
@@ -24,20 +24,20 @@ public:
     Inode &operator=(const Inode &) = delete;
     Inode &operator=(Inode &&) noexcept = default;
 
-    void bind_ipc_file(SharedPtr<File> ipc_file);
-    SharedPtr<File> open();
+    void bind_ipc_file(ustd::SharedPtr<File> ipc_file);
+    ustd::SharedPtr<File> open();
 
     virtual Inode *child(usize index) = 0;
-    virtual Inode *create(StringView name, InodeType type) = 0;
-    virtual Inode *lookup(StringView name) = 0;
-    virtual usize read(Span<void> data, usize offset) = 0;
-    virtual void remove(StringView name) = 0;
+    virtual Inode *create(ustd::StringView name, InodeType type) = 0;
+    virtual Inode *lookup(ustd::StringView name) = 0;
+    virtual usize read(ustd::Span<void> data, usize offset) = 0;
+    virtual void remove(ustd::StringView name) = 0;
     virtual usize size() = 0;
     virtual void truncate() = 0;
-    virtual usize write(Span<const void> data, usize offset) = 0;
+    virtual usize write(ustd::Span<const void> data, usize offset) = 0;
 
-    virtual StringView name() const = 0;
+    virtual ustd::StringView name() const = 0;
     Inode *parent() const { return m_parent; }
     InodeType type() const { return m_type; }
-    SharedPtr<File> ipc_file() const { return m_ipc_file; }
+    ustd::SharedPtr<File> ipc_file() const { return m_ipc_file; }
 };

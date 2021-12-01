@@ -65,14 +65,14 @@ struct [[gnu::packed]] TransferRequestBlock {
 };
 
 class [[gnu::aligned(64_KiB), gnu::packed]] TrbRing {
-    Array<TransferRequestBlock, 256> m_queue{};
+    ustd::Array<TransferRequestBlock, 256> m_queue{};
     bool m_cycle_state{true};
     usize m_index{0};
 
 public:
     explicit TrbRing(bool insert_link);
 
-    Span<TransferRequestBlock> dequeue();
+    ustd::Span<TransferRequestBlock> dequeue();
     TransferRequestBlock *enqueue(TransferRequestBlock * trb);
 
     TransferRequestBlock *current() { return &m_queue[m_index]; }

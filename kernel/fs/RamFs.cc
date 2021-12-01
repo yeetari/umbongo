@@ -24,15 +24,15 @@ void RamFs::mount(Inode *parent, Inode *host) {
 }
 
 Inode *RamFsInode::child(usize index) {
-    ASSERT(index < Limits<uint32>::max());
+    ASSERT(index < ustd::Limits<uint32>::max());
     return m_children[static_cast<uint32>(index)].obj();
 }
 
-Inode *RamFsInode::create(StringView name, InodeType type) {
+Inode *RamFsInode::create(ustd::StringView name, InodeType type) {
     return m_children.emplace(new RamFsInode(type, this, name)).obj();
 }
 
-Inode *RamFsInode::lookup(StringView name) {
+Inode *RamFsInode::lookup(ustd::StringView name) {
     if (name == ".") {
         return this;
     }
@@ -47,11 +47,11 @@ Inode *RamFsInode::lookup(StringView name) {
     return nullptr;
 }
 
-SharedPtr<File> RamFsInode::open_impl() {
+ustd::SharedPtr<File> RamFsInode::open_impl() {
     return ustd::make_shared<InodeFile>(this);
 }
 
-usize RamFsInode::read(Span<void> data, usize offset) {
+usize RamFsInode::read(ustd::Span<void> data, usize offset) {
     if (offset >= m_data.size()) {
         return 0;
     }
@@ -63,7 +63,7 @@ usize RamFsInode::read(Span<void> data, usize offset) {
     return size;
 }
 
-void RamFsInode::remove(StringView) {
+void RamFsInode::remove(ustd::StringView) {
     // TODO: Implement.
     ENSURE_NOT_REACHED();
 }
@@ -77,7 +77,7 @@ void RamFsInode::truncate() {
     m_data.clear();
 }
 
-usize RamFsInode::write(Span<const void> data, usize offset) {
+usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
     usize size = data.size();
     m_data.grow(offset + size);
     memcpy(m_data.data() + offset, data.data(), size);

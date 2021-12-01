@@ -9,12 +9,12 @@
 class VirtSpace;
 
 class FileHandle {
-    SharedPtr<File> m_file;
+    ustd::SharedPtr<File> m_file;
     AttachDirection m_direction;
     usize m_offset{0};
 
 public:
-    explicit FileHandle(const SharedPtr<File> &file, AttachDirection direction = AttachDirection::ReadWrite);
+    explicit FileHandle(const ustd::SharedPtr<File> &file, AttachDirection direction = AttachDirection::ReadWrite);
     FileHandle(const FileHandle &other) : FileHandle(other.m_file, other.m_direction) { m_offset = other.m_offset; }
     FileHandle(FileHandle &&) = default;
     ~FileHandle();

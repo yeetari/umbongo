@@ -27,7 +27,7 @@ public:
     GetTerminalSizeRespone(uint32 column_count, uint32 row_count)
         : m_column_count(column_count), m_row_count(row_count) {}
 
-    static GetTerminalSizeRespone decode(Span<const uint8> buffer) {
+    static GetTerminalSizeRespone decode(ustd::Span<const uint8> buffer) {
         ipc::MessageDecoder decoder(buffer);
         [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
         ASSERT(kind == MessageKind::GetTerminalSizeResponse);

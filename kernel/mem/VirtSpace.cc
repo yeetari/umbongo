@@ -15,7 +15,7 @@ VirtSpace::VirtSpace() : m_pml4(new Pml4) {
     m_regions.push(ustd::make_unique<Region>(0ul, 256_TiB, static_cast<RegionAccess>(0), true, 0ul));
 }
 
-VirtSpace::VirtSpace(const Vector<UniquePtr<Region>> &regions) : m_pml4(new Pml4) {
+VirtSpace::VirtSpace(const ustd::Vector<ustd::UniquePtr<Region>> &regions) : m_pml4(new Pml4) {
     m_regions.ensure_capacity(regions.size());
     for (const auto &region : regions) {
         m_regions.push(ustd::make_unique<Region>(*region));
@@ -58,7 +58,7 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
     pdpt->set(pdpt_index, phys, flags | PageFlags::Large);
 }
 
-Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uintptr> phys_base) {
+Region &VirtSpace::allocate_region(usize size, RegionAccess access, ustd::Optional<uintptr> phys_base) {
     // Find first fit region to split.
     ScopedLock locker(m_lock);
     size = round_up(size, 4_KiB);
@@ -84,7 +84,7 @@ Region &VirtSpace::allocate_region(usize size, RegionAccess access, Optional<uin
     ENSURE_NOT_REACHED("Failed to allocate region");
 }
 
-Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, Optional<uintptr> phys_base) {
+Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base) {
     ScopedLock locker(m_lock);
     size = round_up(size, 4_KiB);
     for (auto &region : m_regions) {
@@ -106,7 +106,7 @@ Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, 
     ENSURE_NOT_REACHED("Failed to allocate fixed region");
 }
 
-SharedPtr<VirtSpace> VirtSpace::clone() const {
+ustd::SharedPtr<VirtSpace> VirtSpace::clone() const {
     ScopedLock locker(m_lock);
-    return SharedPtr<VirtSpace>(new VirtSpace(m_regions));
+    return ustd::SharedPtr<VirtSpace>(new VirtSpace(m_regions));
 }

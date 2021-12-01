@@ -126,7 +126,3 @@ void printf(const char *fmt, const Args &...args) {
 }
 
 } // namespace ustd
-
-using ustd::dbg;
-using ustd::dbgln;
-using ustd::printf;

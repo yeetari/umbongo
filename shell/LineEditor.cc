@@ -11,7 +11,7 @@
 #include <ustd/Vector.hh>
 
 void LineEditor::clear() {
-    printf("\x1b[J");
+    ustd::printf("\x1b[J");
     m_buffer.clear();
     m_cursor_pos = 0;
     begin_line();
@@ -27,36 +27,36 @@ void LineEditor::clear_line() {
 
 void LineEditor::goto_start() {
     for (uint32 i = 0; i < m_cursor_pos; i++) {
-        printf("\x1b[D");
+        ustd::printf("\x1b[D");
     }
     m_cursor_pos = 0;
 }
 
 void LineEditor::goto_end() {
     for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
-        printf("\x1b[C");
+        ustd::printf("\x1b[C");
     }
     m_cursor_pos = m_buffer.size();
 }
 
 void LineEditor::begin_line() {
-    printf("\x1b[38;2;179;179;255m");
+    ustd::printf("\x1b[38;2;179;179;255m");
     auto cwd_length = Syscall::invoke<usize>(Syscall::getcwd, nullptr);
-    String cwd(cwd_length);
+    ustd::String cwd(cwd_length);
     Syscall::invoke(Syscall::getcwd, cwd.data());
-    StringView cwd_view = cwd.view();
+    ustd::StringView cwd_view = cwd.view();
     if (cwd.length() >= 5) {
-        StringView start(cwd.data(), 5);
+        ustd::StringView start(cwd.data(), 5);
         if (start == "/home") {
-            printf("~");
-            cwd_view = StringView(cwd.data() + 5, cwd.length() - 5);
+            ustd::printf("~");
+            cwd_view = ustd::StringView(cwd.data() + 5, cwd.length() - 5);
         }
     }
-    printf("{} {}", cwd_view, m_prompt);
-    printf("\x1b[38;2;255;255;255m");
+    ustd::printf("{} {}", cwd_view, m_prompt);
+    ustd::printf("\x1b[38;2;255;255;255m");
 }
 
-Optional<String> LineEditor::handle_key_event(KeyEvent event) {
+ustd::Optional<ustd::String> LineEditor::handle_key_event(KeyEvent event) {
     if (event.character() == '\b') {
         if (m_cursor_pos == 0) {
             return {};
@@ -66,7 +66,7 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
         return {};
     }
     if (event.character() == '\n') {
-        String line(m_buffer.data(), m_buffer.size());
+        ustd::String line(m_buffer.data(), m_buffer.size());
         put_char('\n');
         if (line.empty()) {
             return ustd::move(line);
@@ -98,10 +98,10 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
                 break;
             }
             m_cursor_pos++;
-            printf("\x1b[C");
+            ustd::printf("\x1b[C");
             for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
                 m_cursor_pos++;
-                printf("\x1b[C");
+                ustd::printf("\x1b[C");
                 if (m_buffer[m_cursor_pos] == ' ') {
                     break;
                 }
@@ -112,17 +112,17 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
                 break;
             }
             m_cursor_pos--;
-            printf("\x1b[D");
+            ustd::printf("\x1b[D");
             for (uint32 i = m_cursor_pos; i > 0; i--) {
                 m_cursor_pos--;
-                printf("\x1b[D");
+                ustd::printf("\x1b[D");
                 if (m_buffer[m_cursor_pos] == ' ') {
                     break;
                 }
             }
             if (m_cursor_pos != 0) {
                 m_cursor_pos++;
-                printf("\x1b[C");
+                ustd::printf("\x1b[C");
             }
             break;
         }
@@ -158,13 +158,13 @@ Optional<String> LineEditor::handle_key_event(KeyEvent event) {
     case 0x4f:
         if (m_cursor_pos < m_buffer.size()) {
             m_cursor_pos++;
-            printf("\x1b[C");
+            ustd::printf("\x1b[C");
         }
         return {};
     case 0x50:
         if (m_cursor_pos > 0) {
             m_cursor_pos--;
-            printf("\x1b[D");
+            ustd::printf("\x1b[D");
         }
         return {};
     }

@@ -43,5 +43,3 @@ public:
 };
 
 } // namespace ustd
-
-using ustd::Span;

@@ -5,7 +5,7 @@
 
 namespace core {
 
-[[noreturn]] void abort_error(StringView msg, ssize rc);
-StringView error_string(ssize rc);
+[[noreturn]] void abort_error(ustd::StringView msg, ssize rc);
+ustd::StringView error_string(ssize rc);
 
 } // namespace core

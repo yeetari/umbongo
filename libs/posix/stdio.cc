@@ -50,7 +50,7 @@ namespace {
 // NOLINTNEXTLINE
 alignas(FILE) uint8_t s_default_streams[3][sizeof(FILE)];
 
-int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<size_t> max_len = {}) {
+int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, ustd::Optional<size_t> max_len = {}) {
     size_t len = 0;
     auto put_char = [&](char ch) {
         if (max_len && len >= *max_len) {
@@ -73,7 +73,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<s
         bool left_pad = false;
         size_t long_qualifiers = 0;
         size_t field_width = 0;
-        auto put_string = [&](StringView string) {
+        auto put_string = [&](ustd::StringView string) {
             if (!has_dot && (field_width == 0 || field_width < string.length())) {
                 field_width = string.length();
             }
@@ -145,7 +145,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<s
         case 'd':
         case 'u':
         case 'x': {
-            Array<char, 20> buf{};
+            ustd::Array<char, 20> buf{};
             bool negative = false;
             size_t num = 0;
             size_t num_len = 0;
@@ -193,7 +193,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<s
             break;
         }
         default:
-            dbgln("Unrecognised format specifier {:c}", *p);
+            ustd::dbgln("Unrecognised format specifier {:c}", *p);
             ENSURE_NOT_REACHED();
         }
     }
@@ -206,7 +206,7 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, Optional<s
 
 int scanf_impl(const char *str, [[maybe_unused]] const char *fmt, va_list ap) {
     // TODO: Implement properly.
-    StringView format(fmt);
+    ustd::StringView format(fmt);
     ASSERT(format == "%lu" || format == "%d.%d.%d");
     if (format == "%lu") {
         *va_arg(ap, size_t *) = static_cast<size_t>(atoi(str));
@@ -236,7 +236,7 @@ OpenMode parse_mode(const char *mode) {
         case 't':
             break;
         default:
-            dbgln("Unknown mode {:c}", *ch);
+            ustd::dbgln("Unknown mode {:c}", *ch);
             ENSURE_NOT_REACHED();
         }
     }

@@ -19,10 +19,10 @@ class Region {
     usize m_size;
     RegionAccess m_access;
     bool m_free;
-    Vector<SharedPtr<PhysicalPage>> m_physical_pages;
+    ustd::Vector<ustd::SharedPtr<PhysicalPage>> m_physical_pages;
 
 public:
-    Region(uintptr base, usize size, RegionAccess access, bool free, Optional<uintptr> phys_base);
+    Region(uintptr base, usize size, RegionAccess access, bool free, ustd::Optional<uintptr> phys_base);
     Region(const Region &) = default;
     Region(Region &&) noexcept = default;
     ~Region() = default;

@@ -6,8 +6,8 @@
 class Framebuffer;
 
 class Line {
-    Vector<char> m_chars;
-    Vector<uint32> m_colours;
+    ustd::Vector<char> m_chars;
+    ustd::Vector<uint32> m_colours;
     bool m_dirty{false};
 
 public:
@@ -15,14 +15,14 @@ public:
 
     void set_dirty(bool dirty) { m_dirty = dirty; }
 
-    Vector<char> &chars() { return m_chars; }
-    Vector<uint32> &colours() { return m_colours; }
+    ustd::Vector<char> &chars() { return m_chars; }
+    ustd::Vector<uint32> &colours() { return m_colours; }
     bool dirty() const { return m_dirty; }
 };
 
 class Terminal {
     Framebuffer &m_fb;
-    Vector<Line> m_lines;
+    ustd::Vector<Line> m_lines;
     uint32 m_column_count;
     uint32 m_row_count;
 

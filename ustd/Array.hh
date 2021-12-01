@@ -38,5 +38,3 @@ template <typename T, typename... Args>
 Array(T, Args...) -> Array<T, sizeof...(Args) + 1>;
 
 } // namespace ustd
-
-using ustd::Array;

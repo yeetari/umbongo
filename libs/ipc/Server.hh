@@ -22,12 +22,12 @@ class MessageDecoder;
 
 class Server : public core::Watchable {
     core::EventLoop &m_event_loop;
-    Optional<uint32> m_fd;
-    Vector<UniquePtr<Client>> m_clients;
-    Function<void(Client &, MessageDecoder &)> m_on_read;
+    ustd::Optional<uint32> m_fd;
+    ustd::Vector<ustd::UniquePtr<Client>> m_clients;
+    ustd::Function<void(Client &, MessageDecoder &)> m_on_read;
 
 public:
-    Server(core::EventLoop &event_loop, StringView path);
+    Server(core::EventLoop &event_loop, ustd::StringView path);
     Server(const Server &) = delete;
     Server(Server &&) = delete;
     ~Server() override;
@@ -35,7 +35,7 @@ public:
     Server &operator=(const Server &) = delete;
     Server &operator=(Server &&) = delete;
 
-    void set_on_read(Function<void(Client &, MessageDecoder &)> on_read) { m_on_read = ustd::move(on_read); }
+    void set_on_read(ustd::Function<void(Client &, MessageDecoder &)> on_read) { m_on_read = ustd::move(on_read); }
 
     uint32 fd() const override { return *m_fd; }
 };

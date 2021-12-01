@@ -5,11 +5,11 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Utility.hh>
 
-void Inode::bind_ipc_file(SharedPtr<File> ipc_file) {
+void Inode::bind_ipc_file(ustd::SharedPtr<File> ipc_file) {
     m_ipc_file = ustd::move(ipc_file);
 }
 
-SharedPtr<File> Inode::open() {
+ustd::SharedPtr<File> Inode::open() {
     if (m_type == InodeType::IpcFile) {
         return m_ipc_file;
     }

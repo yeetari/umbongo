@@ -48,7 +48,7 @@ SyscallResult Process::sys_accept(uint32 fd) {
     }
     auto &server = static_cast<ServerSocket &>(file);
     if (!server.can_accept()) {
-        Processor::current_thread()->block<AcceptBlocker>(SharedPtr<ServerSocket>(&server));
+        Processor::current_thread()->block<AcceptBlocker>(ustd::SharedPtr<ServerSocket>(&server));
     }
     auto accepted = server.accept();
     uint32 accepted_fd = allocate_fd();
@@ -138,7 +138,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     ASSERT(argv != nullptr);
     ASSERT(copy_fds != nullptr);
 
-    Vector<String> args;
+    ustd::Vector<ustd::String> args;
     for (usize i = 0;; i++) {
         if (argv[i] == nullptr) {
             break;
@@ -154,7 +154,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
         new_process.m_fds[fd_pair.child].emplace(*m_fds[fd_pair.parent]);
     }
 
-    String copied_path(path);
+    ustd::String copied_path(path);
     if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
         return rc.error();
     }
@@ -193,7 +193,7 @@ SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
 
 SyscallResult Process::sys_exit(usize code) const {
     if (code != 0) {
-        dbgln("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
+        ustd::dbgln("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
     }
     Scheduler::yield_and_kill();
     return 0;
@@ -201,12 +201,12 @@ SyscallResult Process::sys_exit(usize code) const {
 
 SyscallResult Process::sys_getcwd(char *path) const {
     ScopedLock locker(m_lock);
-    Vector<Inode *> inodes;
+    ustd::Vector<Inode *> inodes;
     for (auto *inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
         inodes.push(inode);
     }
     // TODO: Would be nice to have some kind of ustd::reverse_iterator(inodes) function.
-    Vector<char> path_characters;
+    ustd::Vector<char> path_characters;
     for (uint32 i = inodes.size(); i-- != 0;) {
         path_characters.push('/');
         for (auto ch : inodes[i]->name()) {
@@ -254,10 +254,10 @@ SyscallResult Process::sys_mmap(uint32 fd) const {
 
 SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
     ScopedLock locker(m_lock);
-    UniquePtr<FileSystem> fs;
-    if (StringView(fs_type) == "dev") {
+    ustd::UniquePtr<FileSystem> fs;
+    if (ustd::StringView(fs_type) == "dev") {
         fs = ustd::make_unique<DevFs>();
-    } else if (StringView(fs_type) == "ram") {
+    } else if (ustd::StringView(fs_type) == "ram") {
         fs = ustd::make_unique<RamFs>();
     } else {
         return SysError::Invalid;
@@ -278,7 +278,7 @@ SyscallResult Process::sys_open(const char *path, OpenMode mode) {
 }
 
 SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
-    LargeVector<PollFd> poll_fds(count);
+    ustd::LargeVector<PollFd> poll_fds(count);
     memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
     Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {

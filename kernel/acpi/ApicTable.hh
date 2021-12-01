@@ -13,10 +13,10 @@ class ApicTableIterator;
 class [[gnu::packed]] ApicTable : public Table {
     uint32 m_local_apic;
     uint32 m_flags;
-    Array<InterruptController, 0> m_controllers;
+    ustd::Array<InterruptController, 0> m_controllers;
 
 public:
-    static constexpr Array<uint8, 4> k_signature{'A', 'P', 'I', 'C'};
+    static constexpr ustd::Array<uint8, 4> k_signature{'A', 'P', 'I', 'C'};
 
     ApicTableIterator begin() const;
     ApicTableIterator end() const;

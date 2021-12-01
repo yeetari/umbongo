@@ -21,7 +21,7 @@ bool ConnectBlocker::should_unblock() {
     return m_socket->connected();
 }
 
-PollBlocker::PollBlocker(const LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout)
+PollBlocker::PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout)
     : m_fds(fds), m_lock(lock), m_process(process) {
     if (timeout > 0) {
         m_deadline.emplace(TimeManager::ns_since_boot() + static_cast<usize>(timeout));

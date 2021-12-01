@@ -6,8 +6,8 @@
 namespace elf {
 
 struct Header {
-    Array<uint8, 4> magic;
-    Array<uint8, 12> ident;
+    ustd::Array<uint8, 4> magic;
+    ustd::Array<uint8, 12> ident;
     uint16 type;
     uint16 machine;
     uint32 version;

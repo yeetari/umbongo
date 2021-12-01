@@ -43,14 +43,14 @@ Token Lexer::next_token() {
         return TokenKind::Pipe;
     }
     if (is_identifier_character(ch)) {
-        Vector<char> buf;
+        ustd::Vector<char> buf;
         buf.push(ch);
         while (m_source_position != m_source.length() && is_identifier_character(m_source[m_source_position])) {
             buf.push(m_source[m_source_position++]);
         }
-        return String(buf.data(), buf.size());
+        return ustd::String(buf.data(), buf.size());
     }
-    printf("ush: unexpected {:c}\n", ch);
+    ustd::printf("ush: unexpected {:c}\n", ch);
     return TokenKind::Eof;
 }
 

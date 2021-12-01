@@ -64,5 +64,3 @@ Result<T, E>::~Result() {
 }
 
 } // namespace ustd
-
-using ustd::Result;

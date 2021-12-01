@@ -11,7 +11,7 @@ class Device : public File {
     bool m_connected{true};
 
 public:
-    static Vector<Device *> all_devices();
+    static ustd::Vector<Device *> all_devices();
 
     Device();
     Device(const Device &) = delete;
@@ -21,8 +21,8 @@ public:
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
-    SysResult<usize> read(Span<void>, usize) override { return 0u; }
-    SysResult<usize> write(Span<const void>, usize) override { return 0u; }
+    SysResult<usize> read(ustd::Span<void>, usize) override { return 0u; }
+    SysResult<usize> write(ustd::Span<const void>, usize) override { return 0u; }
 
     void disconnect();
     bool valid() override { return m_connected; }

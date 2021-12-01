@@ -61,7 +61,7 @@ class [[gnu::packed]] DescriptorTable {
     const uint16 m_limit{sizeof(m_descriptors) - 1};
     const uintptr m_base{reinterpret_cast<uintptr>(&m_descriptors)};
     uint64 : 48;
-    Array<Descriptor, Count> m_descriptors{};
+    ustd::Array<Descriptor, Count> m_descriptors{};
 
 public:
     DescriptorTable() {
@@ -182,15 +182,15 @@ struct [[gnu::packed]] SyscallFrame {
 // though it doesn't.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wglobal-constructors"
-Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
+ustd::Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 using SyscallHandler = SyscallResult (Process::*)(uint64, uint64, uint64);
 #define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
-Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
+ustd::Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
 #pragma clang diagnostic pop
 
 LocalApic *s_apic = nullptr;
-Atomic<uint8> s_initialised_ap_count = 0;
+ustd::Atomic<uint8> s_initialised_ap_count = 0;
 
 uint64 read_cr0() {
     uint64 cr0 = 0;
@@ -236,7 +236,7 @@ void write_msr(uint32 msr, uint64 value) {
 }
 
 [[noreturn]] void unhandled_interrupt(RegisterState *regs) {
-    dbgln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
+    ustd::dbgln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 
@@ -252,7 +252,7 @@ extern "C" void flush_gdt(Gdt *gdt);
 extern "C" void syscall_stub();
 
 extern "C" void ap_entry(uint8 id) {
-    s_initialised_ap_count.fetch_add(1, MemoryOrder::AcqRel);
+    s_initialised_ap_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
     Processor::setup(id);
     Scheduler::setup();
     Scheduler::start();
@@ -305,13 +305,13 @@ void Processor::initialise() {
     if ((extended_features.ebx() & (1u << 7u)) != 0) {
         // Enable CR4.SMEP (Supervisor Memory Execute Protection). This prevents the kernel from executing user
         // accessible code.
-        dbgln(" cpu: Enabling SMEP");
+        ustd::dbgln(" cpu: Enabling SMEP");
         write_cr4(read_cr4() | (1u << 20u));
     }
     if ((extended_features.ecx() & (1u << 2u)) != 0) {
         // Enable CR4.UMIP (User-Mode Instruction Prevention). This prevents user code from executing instructions like
         // sgdt and sidt.
-        dbgln(" cpu: Enabling UMIP");
+        ustd::dbgln(" cpu: Enabling UMIP");
         write_cr4(read_cr4() | (1u << 11u));
     }
 
@@ -381,7 +381,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
     ENSURE(bootstrap_size <= 4_KiB);
     memcpy(reinterpret_cast<void *>(0x8000), reinterpret_cast<void *>(reinterpret_cast<uintptr>(&ap_bootstrap)),
            bootstrap_size);
-    ScopeGuard free_bootstrap_guard([] {
+    ustd::ScopeGuard free_bootstrap_guard([] {
         MemoryManager::free_frame(0x8000);
     });
 
@@ -390,7 +390,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
         if (controller->type == 0) {
             auto *local_apic = reinterpret_cast<acpi::LocalApicController *>(controller);
             if ((local_apic->flags & 1u) == 0 && (local_apic->flags & 2u) == 0) {
-                dbgln(" cpu: CPU {} not available!", local_apic->apic_id);
+                ustd::dbgln(" cpu: CPU {} not available!", local_apic->apic_id);
                 continue;
             }
             ap_count++;
@@ -414,10 +414,10 @@ void Processor::start_aps(acpi::ApicTable *madt) {
         Scheduler::wait(1);
     }
 
-    while (s_initialised_ap_count.load(MemoryOrder::Acquire) != ap_count) {
+    while (s_initialised_ap_count.load(ustd::MemoryOrder::Acquire) != ap_count) {
         asm volatile("pause");
     }
-    dbgln(" cpu: Started {} APs", ap_count);
+    ustd::dbgln(" cpu: Started {} APs", ap_count);
 }
 
 void Processor::set_apic(LocalApic *apic) {

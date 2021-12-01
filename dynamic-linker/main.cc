@@ -18,7 +18,7 @@ usize main(usize argc, const char **argv) {
     elf::Header header{};
     file.read({&header, sizeof(elf::Header)});
 
-    uintptr region_base = Limits<uintptr>::max();
+    uintptr region_base = ustd::Limits<uintptr>::max();
     uintptr region_end = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
@@ -77,7 +77,7 @@ usize main(usize argc, const char **argv) {
             relocation_entry_size = entry.value;
             break;
         default:
-            dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
+            ustd::dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
@@ -101,7 +101,7 @@ usize main(usize argc, const char **argv) {
             *ptr = static_cast<usize>(static_cast<ssize>(base_offset) + rela.addend);
             break;
         default:
-            dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
+            ustd::dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }

@@ -14,7 +14,7 @@ const char *Token::kind_string(TokenKind kind) {
     }
 }
 
-const String &Token::text() const {
+const ustd::String &Token::text() const {
     ASSERT(m_kind == TokenKind::Identifier);
     return m_text;
 }

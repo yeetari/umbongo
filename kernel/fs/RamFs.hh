@@ -14,27 +14,27 @@
 #include <ustd/Vector.hh>
 
 class RamFsInode final : public Inode {
-    String m_name;
-    LargeVector<uint8> m_data;
-    Vector<UniquePtr<RamFsInode>> m_children;
+    ustd::String m_name;
+    ustd::LargeVector<uint8> m_data;
+    ustd::Vector<ustd::UniquePtr<RamFsInode>> m_children;
 
 public:
-    RamFsInode(InodeType type, Inode *parent, StringView name) : Inode(type, parent), m_name(name) {}
+    RamFsInode(InodeType type, Inode *parent, ustd::StringView name) : Inode(type, parent), m_name(name) {}
 
     Inode *child(usize index) override;
-    Inode *create(StringView name, InodeType type) override;
-    Inode *lookup(StringView name) override;
-    SharedPtr<File> open_impl() override;
-    usize read(Span<void> data, usize offset) override;
-    void remove(StringView name) override;
+    Inode *create(ustd::StringView name, InodeType type) override;
+    Inode *lookup(ustd::StringView name) override;
+    ustd::SharedPtr<File> open_impl() override;
+    usize read(ustd::Span<void> data, usize offset) override;
+    void remove(ustd::StringView name) override;
     usize size() override;
     void truncate() override;
-    usize write(Span<const void> data, usize offset) override;
-    StringView name() const override { return m_name.view(); }
+    usize write(ustd::Span<const void> data, usize offset) override;
+    ustd::StringView name() const override { return m_name.view(); }
 };
 
 class RamFs final : public FileSystem {
-    Optional<RamFsInode> m_root_inode;
+    ustd::Optional<RamFsInode> m_root_inode;
 
 public:
     void mount(Inode *parent, Inode *host) override;

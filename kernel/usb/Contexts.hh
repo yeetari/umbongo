@@ -10,7 +10,7 @@ namespace usb {
 struct [[gnu::packed]] InputControlContext {
     uint32 disable;
     uint32 enable;
-    Array<uint32, 5> controller_reserved;
+    ustd::Array<uint32, 5> controller_reserved;
     uint8 config_value;
     uint8 interface_num;
     uint8 alternate_setting;
@@ -35,7 +35,7 @@ struct [[gnu::packed]] SlotContext {
     uint8 device_address;
     usize : 19;
     SlotState slot_slate : 5;
-    Array<uint32, 4> controller_reserved;
+    ustd::Array<uint32, 4> controller_reserved;
 };
 
 struct [[gnu::packed]] EndpointContext {
@@ -56,31 +56,31 @@ struct [[gnu::packed]] EndpointContext {
     uint64 tr_dequeue_ptr;
     uint16 average_trb_length;
     uint16 max_esit_low;
-    Array<uint32, 3> controller_reserved;
+    ustd::Array<uint32, 3> controller_reserved;
 };
 
 struct [[gnu::aligned(4_KiB)]] DeviceContext {
     InputControlContext input;
     SlotContext slot;
-    Array<EndpointContext, 31> endpoints;
+    ustd::Array<EndpointContext, 31> endpoints;
 };
 
 struct LargeInputControlContext : public InputControlContext {
-    Array<uint8, 32> extra;
+    ustd::Array<uint8, 32> extra;
 };
 
 struct LargeSlotContext : public SlotContext {
-    Array<uint8, 32> extra;
+    ustd::Array<uint8, 32> extra;
 };
 
 struct LargeEndpointContext : public EndpointContext {
-    Array<uint8, 32> extra;
+    ustd::Array<uint8, 32> extra;
 };
 
 struct [[gnu::aligned(4_KiB)]] LargeDeviceContext {
     LargeInputControlContext input;
     LargeSlotContext slot;
-    Array<LargeEndpointContext, 31> endpoints;
+    ustd::Array<LargeEndpointContext, 31> endpoints;
 };
 
 } // namespace usb

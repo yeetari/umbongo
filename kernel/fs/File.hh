@@ -14,7 +14,7 @@ enum class AttachDirection {
     ReadWrite,
 };
 
-class File : public Shareable<File> {
+class File : public ustd::Shareable<File> {
 public:
     File() = default;
     File(const File &) = delete;
@@ -35,7 +35,7 @@ public:
     virtual bool can_write() = 0;
     virtual SyscallResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
     virtual uintptr mmap(VirtSpace &) { return 0; }
-    virtual SysResult<usize> read(Span<void> data, usize offset = 0) = 0;
-    virtual SysResult<usize> write(Span<const void> data, usize offset = 0) = 0;
+    virtual SysResult<usize> read(ustd::Span<void> data, usize offset = 0) = 0;
+    virtual SysResult<usize> write(ustd::Span<const void> data, usize offset = 0) = 0;
     virtual bool valid() { return true; }
 };

@@ -76,5 +76,3 @@ constexpr T &Optional<T>::emplace(Args &&...args) {
 }
 
 } // namespace ustd
-
-using ustd::Optional;

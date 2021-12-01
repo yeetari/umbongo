@@ -11,8 +11,8 @@ class Watchable {
     friend EventLoop;
 
 private:
-    Function<void()> m_on_read_ready;
-    Function<void()> m_on_write_ready;
+    ustd::Function<void()> m_on_read_ready;
+    ustd::Function<void()> m_on_write_ready;
 
 public:
     Watchable() = default;
@@ -23,8 +23,8 @@ public:
     Watchable &operator=(const Watchable &) = delete;
     Watchable &operator=(Watchable &&) = delete;
 
-    void set_on_read_ready(Function<void()> on_read_ready) { m_on_read_ready = ustd::move(on_read_ready); }
-    void set_on_write_ready(Function<void()> on_write_ready) { m_on_write_ready = ustd::move(on_write_ready); }
+    void set_on_read_ready(ustd::Function<void()> on_read_ready) { m_on_read_ready = ustd::move(on_read_ready); }
+    void set_on_write_ready(ustd::Function<void()> on_write_ready) { m_on_write_ready = ustd::move(on_write_ready); }
 
     virtual uint32 fd() const = 0;
 };

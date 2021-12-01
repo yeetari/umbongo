@@ -23,7 +23,7 @@ struct EfiGuid {
     uint32 dat1;
     uint16 dat2;
     uint16 dat3;
-    Array<uint8, 8> dat4;
+    ustd::Array<uint8, 8> dat4;
 };
 
 // EFI Table Header (UEFI specification 2.8B section 4.2)
@@ -99,18 +99,18 @@ struct EfiMemoryDescriptor {
 
 // EFI Boot Services Table (UEFI specification 2.8B section 4.4)
 struct EfiBootServicesTable : public EfiTableHeader {
-    Array<void *, 2> unused0;
+    ustd::Array<void *, 2> unused0;
     EfiStatus (*allocate_pages)(EfiAllocateType, EfiMemoryType, usize page_count, uintptr *memory);
     void *unused1;
     EfiStatus (*get_memory_map)(usize *size, EfiMemoryDescriptor *map, usize *key, usize *descriptor_size,
                                 uint32 *descriptor_version);
     EfiStatus (*allocate_pool)(EfiMemoryType type, usize size, void **buffer);
     EfiStatus (*free_pool)(void *buffer);
-    Array<void *, 9> unused2;
+    ustd::Array<void *, 9> unused2;
     EfiStatus (*handle_protocol)(EfiHandle handle, const EfiGuid *protocol, void **interface);
-    Array<void *, 9> unused3;
+    ustd::Array<void *, 9> unused3;
     EfiStatus (*exit_boot_services)(EfiHandle handle, usize map_key);
-    Array<void *, 10> unused4;
+    ustd::Array<void *, 10> unused4;
     EfiStatus (*locate_protocol)(const EfiGuid *protocol, void *registration, void **interface);
 };
 
@@ -158,7 +158,7 @@ struct EfiFileInfo {
     uint64 size;
     uint64 file_size;
     uint64 physical_size;
-    Array<uint8, 48> time;
+    ustd::Array<uint8, 48> time;
     EfiFileFlag flags;
     wchar_t name[1]; // NOLINT
 };
@@ -169,9 +169,9 @@ struct EfiFileProtocol {
     EfiStatus (*open)(EfiFileProtocol *, EfiFileProtocol **handle, const wchar_t *path, EfiFileMode mode,
                       EfiFileFlag flags);
     EfiStatus (*close)(EfiFileProtocol *);
-    Array<void *, 1> unused0;
+    ustd::Array<void *, 1> unused0;
     EfiStatus (*read)(EfiFileProtocol *, usize *size, void *buffer);
-    Array<void *, 2> unused1;
+    ustd::Array<void *, 2> unused1;
     EfiStatus (*set_position)(EfiFileProtocol *, uint64 position);
     EfiStatus (*get_info)(EfiFileProtocol *, const EfiGuid *info_type, usize *size, void *buffer);
 };

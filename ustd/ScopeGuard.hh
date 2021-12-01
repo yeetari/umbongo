@@ -22,5 +22,3 @@ template <typename Callback>
 ScopeGuard(Callback) -> ScopeGuard<Callback>;
 
 } // namespace ustd
-
-using ustd::ScopeGuard;

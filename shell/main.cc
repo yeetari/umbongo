@@ -21,19 +21,19 @@
 
 namespace {
 
-void execute(Value &value, Vector<FdPair> &rewirings) {
+void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
     if (auto *builtin = value.as_or_null<Builtin>()) {
         const auto &args = builtin->args();
         switch (builtin->function()) {
         case BuiltinFunction::Cd:
             if (args.size() != 1 && args.size() != 2) {
-                printf("ush: cd: too many arguments\n");
+                ustd::printf("ush: cd: too many arguments\n");
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
             auto rc = Syscall::invoke(Syscall::chdir, dir);
             if (rc < 0) {
-                printf("ush: cd: {}: {}\n", dir, core::error_string(rc));
+                ustd::printf("ush: cd: {}: {}\n", dir, core::error_string(rc));
             }
             break;
         }
@@ -41,7 +41,7 @@ void execute(Value &value, Vector<FdPair> &rewirings) {
         job->spawn(rewirings);
         job->await_completion();
     } else if (auto *pipe = value.as_or_null<PipeValue>()) {
-        Array<uint32, 2> pipe_fds{};
+        ustd::Array<uint32, 2> pipe_fds{};
         Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
         rewirings.push(FdPair{pipe_fds[1], 1});
         execute(pipe->lhs(), rewirings);
@@ -62,7 +62,7 @@ void Job::await_completion() const {
     Syscall::invoke(Syscall::wait_pid, m_pid);
 }
 
-void Job::spawn(const Vector<FdPair> &copy_fds) {
+void Job::spawn(const ustd::Vector<FdPair> &copy_fds) {
     if (m_pid != 0) {
         return;
     }
@@ -96,7 +96,7 @@ usize main(usize, const char **) {
                 Lexer lexer(ustd::move(*line));
                 Parser parser(lexer);
                 auto node = parser.parse();
-                Vector<FdPair> rewirings;
+                ustd::Vector<FdPair> rewirings;
                 execute(*node->evaluate(), rewirings);
                 break;
             }

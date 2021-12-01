@@ -40,7 +40,7 @@ void Endpoint::setup(EndpointType type, uint16 packet_size) {
     context.tr_dequeue_ptr = reinterpret_cast<uint64>(m_transfer_ring) | 1u;
 }
 
-void Endpoint::send_control(ControlTransfer *transfer, TransferType transfer_type, Span<void> data) {
+void Endpoint::send_control(ControlTransfer *transfer, TransferType transfer_type, ustd::Span<void> data) {
     ASSERT(data.size() < 65535);
     transfer->length = static_cast<uint16>(data.size());
 
@@ -86,7 +86,7 @@ void Endpoint::send_control(ControlTransfer *transfer, TransferType transfer_typ
     }
 }
 
-void Endpoint::setup_interval_input(Span<uint8> buffer, uint8 interval) {
+void Endpoint::setup_interval_input(ustd::Span<uint8> buffer, uint8 interval) {
     m_device->endpoint_context(m_id).interval = calculate_interval(interval);
     TransferRequestBlock in_trb{
         .data_ptr = buffer.data(),

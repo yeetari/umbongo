@@ -49,11 +49,9 @@ constexpr bool StringView::operator==(StringView other) const {
 
 } // namespace ustd
 
-using ustd::StringView;
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuser-defined-literals"
-constexpr StringView operator"" sv(const char *string, usize length) {
+constexpr ustd::StringView operator"" sv(const char *string, usize length) {
     return {string, length};
 }
 #pragma clang diagnostic pop

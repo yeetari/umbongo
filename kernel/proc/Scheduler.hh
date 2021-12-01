@@ -8,7 +8,7 @@ class Thread;
 
 struct Scheduler {
     static void initialise();
-    static void insert_thread(UniquePtr<Thread> &&thread);
+    static void insert_thread(ustd::UniquePtr<Thread> &&thread);
     static void setup();
     static void start();
     static void switch_next(RegisterState *);

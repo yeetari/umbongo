@@ -27,7 +27,7 @@ struct MemoryManagerData {
 } s_data;
 SpinLock s_lock;
 
-Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
+ustd::Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
     const usize page_count = round_up(size, k_frame_size) / k_frame_size;
     for (usize i = boot_info->map_entry_count; i > 0; i--) {
         auto &entry = boot_info->map[i];
@@ -106,7 +106,8 @@ void parse_memory_map(BootInfo *boot_info) {
         free_bytes += !is_frame_set(i) ? k_frame_size : 0;
         total_bytes += k_frame_size;
     }
-    dbgln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+    ustd::dbgln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB,
+                (free_bytes * 100) / total_bytes);
 }
 
 } // namespace
@@ -141,11 +142,11 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
         }
     }
     if (total_reclaimed >= 1_MiB) {
-        dbgln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
+        ustd::dbgln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
     } else if (total_reclaimed >= 1_KiB) {
-        dbgln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
+        ustd::dbgln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
     } else {
-        dbgln(" mem: Reclaimed {}B of memory", total_reclaimed);
+        ustd::dbgln(" mem: Reclaimed {}B of memory", total_reclaimed);
     }
 }
 

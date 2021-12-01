@@ -21,10 +21,10 @@ namespace {
 
 class Mount {
     Inode *m_host;
-    UniquePtr<FileSystem> m_fs;
+    ustd::UniquePtr<FileSystem> m_fs;
 
 public:
-    Mount(Inode *host, UniquePtr<FileSystem> &&fs) : m_host(host), m_fs(ustd::move(fs)) {}
+    Mount(Inode *host, ustd::UniquePtr<FileSystem> &&fs) : m_host(host), m_fs(ustd::move(fs)) {}
 
     Inode *host() const { return m_host; }
     FileSystem &fs() const { return *m_fs; }
@@ -33,7 +33,7 @@ public:
 // clang-format off
 struct VfsData {
     Inode *root_inode{nullptr};
-    Vector<Mount> mounts;
+    ustd::Vector<Mount> mounts;
 } *s_data = nullptr;
 // clang-format on
 
@@ -46,15 +46,16 @@ Mount *find_mount(Inode *host) {
     return nullptr;
 }
 
-Inode *resolve_path(StringView path, Inode *base, Inode **out_parent = nullptr, StringView *out_part = nullptr) {
+Inode *resolve_path(ustd::StringView path, Inode *base, Inode **out_parent = nullptr,
+                    ustd::StringView *out_part = nullptr) {
     usize path_position = 0;
     auto consume_part = [&]() {
         if (path_position >= path.length()) {
-            return StringView();
+            return ustd::StringView();
         }
         if (path[path_position] == '/') {
             path_position++;
-            return StringView("/");
+            return ustd::StringView("/");
         }
         usize part_start = path_position;
         for (usize i = part_start; i < path.length(); i++) {
@@ -63,7 +64,7 @@ Inode *resolve_path(StringView path, Inode *base, Inode **out_parent = nullptr, 
             }
             path_position++;
         }
-        return StringView(path.begin() + part_start, path_position - part_start);
+        return ustd::StringView(path.begin() + part_start, path_position - part_start);
     };
 
     Inode *current = path[0] == '/' ? s_data->root_inode : base;
@@ -102,16 +103,16 @@ void Vfs::initialise() {
     s_data = new VfsData;
 }
 
-void Vfs::mount_root(UniquePtr<FileSystem> &&fs) {
+void Vfs::mount_root(ustd::UniquePtr<FileSystem> &&fs) {
     ASSERT(s_data->root_inode == nullptr);
     fs->mount(fs->root_inode(), nullptr);
     s_data->root_inode = fs->root_inode();
     s_data->mounts.emplace(nullptr, ustd::move(fs));
 }
 
-SysResult<Inode *> Vfs::create(StringView path, Inode *base, InodeType type) {
+SysResult<Inode *> Vfs::create(ustd::StringView path, Inode *base, InodeType type) {
     Inode *parent = nullptr;
-    StringView name;
+    ustd::StringView name;
     if (resolve_path(path, base, &parent, &name) != nullptr) {
         return SysError::AlreadyExists;
     }
@@ -124,7 +125,7 @@ SysResult<Inode *> Vfs::create(StringView path, Inode *base, InodeType type) {
     return parent->create(name, type);
 }
 
-SysResult<> Vfs::mkdir(StringView path, Inode *base) {
+SysResult<> Vfs::mkdir(ustd::StringView path, Inode *base) {
     auto inode = create(path, base, InodeType::Directory);
     if (inode.is_error()) {
         return inode.error();
@@ -132,7 +133,7 @@ SysResult<> Vfs::mkdir(StringView path, Inode *base) {
     return SysSuccess{};
 }
 
-SysResult<> Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
+SysResult<> Vfs::mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs) {
     Inode *parent = nullptr;
     auto *host = resolve_path(path, nullptr, &parent);
     if (host == nullptr) {
@@ -143,7 +144,7 @@ SysResult<> Vfs::mount(StringView path, UniquePtr<FileSystem> &&fs) {
     return SysSuccess{};
 }
 
-SysResult<SharedPtr<File>> Vfs::open(StringView path, OpenMode mode, Inode *base) {
+SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode, Inode *base) {
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         if ((mode & OpenMode::Create) == OpenMode::Create) {
@@ -161,7 +162,7 @@ SysResult<SharedPtr<File>> Vfs::open(StringView path, OpenMode mode, Inode *base
     return inode->open();
 }
 
-SysResult<Inode *> Vfs::open_directory(StringView path, Inode *base) {
+SysResult<Inode *> Vfs::open_directory(ustd::StringView path, Inode *base) {
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         return SysError::NonExistent;

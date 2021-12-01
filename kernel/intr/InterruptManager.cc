@@ -19,8 +19,8 @@ struct Override {
 };
 
 // TODO: Make these Vectors with inline capacity.
-Array<IoApic, 4> s_io_apics;
-Array<Override, 8> s_overrides;
+ustd::Array<IoApic, 4> s_io_apics;
+ustd::Array<Override, 8> s_overrides;
 uint8 s_io_apic_count = 0;
 uint8 s_override_count = 0;
 
@@ -55,7 +55,7 @@ IoApic *io_apic_for_gsi(uint32 gsi) {
 } // namespace
 
 void InterruptManager::mask_pic() {
-    dbgln("intr: Found legacy PIC, masking");
+    ustd::dbgln("intr: Found legacy PIC, masking");
     port_write<uint8>(0x21, 0xff);
     port_write<uint8>(0xa1, 0xff);
 }
@@ -63,15 +63,15 @@ void InterruptManager::mask_pic() {
 void InterruptManager::register_io_apic(uint32 base, uint32 gsi_base) {
     ENSURE(s_io_apic_count < s_io_apics.size());
     auto *io_apic = new (&s_io_apics[s_io_apic_count++]) IoApic(reinterpret_cast<volatile uint32 *>(base), gsi_base);
-    dbgln("intr: Found IO APIC {} at {} controlling interrupts {} to {}", io_apic->id(), io_apic->base(), gsi_base,
-          gsi_base + io_apic->redirection_entry_count());
+    ustd::dbgln("intr: Found IO APIC {} at {} controlling interrupts {} to {}", io_apic->id(), io_apic->base(),
+                gsi_base, gsi_base + io_apic->redirection_entry_count());
 }
 
 void InterruptManager::register_override(uint8 isa, uint32 gsi, InterruptPolarity polarity,
                                          InterruptTriggerMode trigger_mode) {
     ENSURE(s_override_count < s_overrides.size());
-    dbgln("intr: Redirecting ISA {} to GSI {} ({}, {})", isa, gsi, polarity_str(polarity),
-          trigger_mode_str(trigger_mode));
+    ustd::dbgln("intr: Redirecting ISA {} to GSI {} ({}, {})", isa, gsi, polarity_str(polarity),
+                trigger_mode_str(trigger_mode));
     s_overrides[s_override_count++] = {isa, gsi, polarity, trigger_mode};
 }
 

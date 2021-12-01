@@ -11,15 +11,15 @@ class Lexer;
 class Parser {
     Lexer &m_lexer;
 
-    Optional<Token> consume(TokenKind kind);
+    ustd::Optional<Token> consume(TokenKind kind);
     Token expect(TokenKind kind);
 
-    UniquePtr<ast::Node> parse_command();
-    UniquePtr<ast::Node> parse_list();
-    UniquePtr<ast::Node> parse_pipe();
+    ustd::UniquePtr<ast::Node> parse_command();
+    ustd::UniquePtr<ast::Node> parse_list();
+    ustd::UniquePtr<ast::Node> parse_pipe();
 
 public:
     explicit Parser(Lexer &lexer) : m_lexer(lexer) {}
 
-    UniquePtr<ast::Node> parse();
+    ustd::UniquePtr<ast::Node> parse();
 };

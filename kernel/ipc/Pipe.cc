@@ -47,10 +47,10 @@ bool Pipe::can_write() {
     return !m_buffer.full();
 }
 
-SysResult<usize> Pipe::read(Span<void> data, usize) {
+SysResult<usize> Pipe::read(ustd::Span<void> data, usize) {
     return m_buffer.read(data);
 }
 
-SysResult<usize> Pipe::write(Span<const void> data, usize) {
+SysResult<usize> Pipe::write(ustd::Span<const void> data, usize) {
     return m_buffer.write(data);
 }

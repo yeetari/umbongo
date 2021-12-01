@@ -4,7 +4,7 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
-SharedPtr<PhysicalPage> PhysicalPage::allocate(PhysicalPageSize size) {
+ustd::SharedPtr<PhysicalPage> PhysicalPage::allocate(PhysicalPageSize size) {
     switch (size) {
     case PhysicalPageSize::Normal:
         return ustd::make_shared<PhysicalPage>(MemoryManager::alloc_frame(), size);
@@ -18,7 +18,7 @@ SharedPtr<PhysicalPage> PhysicalPage::allocate(PhysicalPageSize size) {
     }
 }
 
-SharedPtr<PhysicalPage> PhysicalPage::create(uintptr phys, PhysicalPageSize size) {
+ustd::SharedPtr<PhysicalPage> PhysicalPage::create(uintptr phys, PhysicalPageSize size) {
     return ustd::make_shared<PhysicalPage>(phys, size);
 }
 

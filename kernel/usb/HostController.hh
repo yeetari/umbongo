@@ -29,7 +29,7 @@ class HostController final : public pci::Device {
     TrbRing *m_command_ring{nullptr};
     TrbRing *m_event_ring{nullptr};
     Interrupter *m_interrupter{nullptr};
-    Vector<Port> m_ports;
+    ustd::Vector<Port> m_ports;
 
     template <typename T>
     T read_cap(uint16 offset) const;
@@ -55,7 +55,7 @@ public:
 
     uintptr op_offset() const { return m_base + m_cap_length; }
     uint8 context_size() const { return m_context_size; }
-    Vector<Port> &ports() { return m_ports; }
+    ustd::Vector<Port> &ports() { return m_ports; }
 };
 
 } // namespace usb

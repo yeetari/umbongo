@@ -18,6 +18,6 @@ public:
     ssize rebind_write(uint32 fd);
 };
 
-Optional<Pipe> create_pipe();
+ustd::Optional<Pipe> create_pipe();
 
 } // namespace core

@@ -7,7 +7,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
-FileHandle::FileHandle(const SharedPtr<File> &file, AttachDirection direction) : m_file(file), m_direction(direction) {
+FileHandle::FileHandle(const ustd::SharedPtr<File> &file, AttachDirection direction)
+    : m_file(file), m_direction(direction) {
     file->attach(direction);
 }
 

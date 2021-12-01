@@ -16,7 +16,7 @@ ServerSocket::ServerSocket(uint32 backlog_limit) {
 
 ServerSocket::~ServerSocket() = default;
 
-SharedPtr<Socket> ServerSocket::accept() {
+ustd::SharedPtr<Socket> ServerSocket::accept() {
     ScopedLock locker(m_lock);
     auto client = m_connection_queue.take(0);
     return ustd::make_shared<Socket>(client->write_buffer(), client->read_buffer());
@@ -35,7 +35,7 @@ bool ServerSocket::can_write() {
     return true;
 }
 
-SysResult<> ServerSocket::queue_connection_from(SharedPtr<Socket> socket) {
+SysResult<> ServerSocket::queue_connection_from(ustd::SharedPtr<Socket> socket) {
     ScopedLock locker(m_lock);
     if (m_connection_queue.size() + 1 >= m_connection_queue.capacity()) {
         return SysError::Busy;
@@ -44,10 +44,10 @@ SysResult<> ServerSocket::queue_connection_from(SharedPtr<Socket> socket) {
     return SysSuccess{};
 }
 
-SysResult<usize> ServerSocket::read(Span<void>, usize) {
+SysResult<usize> ServerSocket::read(ustd::Span<void>, usize) {
     return SysError::Invalid;
 }
 
-SysResult<usize> ServerSocket::write(Span<const void>, usize) {
+SysResult<usize> ServerSocket::write(ustd::Span<const void>, usize) {
     return SysError::Invalid;
 }

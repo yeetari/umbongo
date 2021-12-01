@@ -18,7 +18,7 @@ namespace {
 
 constexpr uint8 k_base_vector = 70;
 
-Vector<HostController> s_controllers;
+ustd::Vector<HostController> s_controllers;
 uint8 s_current_vector = k_base_vector;
 
 void irq_handler(RegisterState *regs) {
@@ -28,8 +28,8 @@ void irq_handler(RegisterState *regs) {
 } // namespace
 
 void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uint8 function) {
-    dbgln(" usb: Registered xHCI controller at {:h4}:{:h2}:{:h2}:{:h2}", bus->segment_num(), bus->num(), device,
-          function);
+    ustd::dbgln(" usb: Registered xHCI controller at {:h4}:{:h2}:{:h2}:{:h2}", bus->segment_num(), bus->num(), device,
+                function);
     auto &controller = s_controllers.emplace(bus, device, function);
     controller.configure();
     if (controller.msix_supported()) {
@@ -37,7 +37,7 @@ void UsbManager::register_host_controller(const pci::Bus *bus, uint8 device, uin
     } else if (controller.msi_supported()) {
         controller.enable_msi(s_current_vector);
     } else {
-        dbgln(" usb: Controller doesn't support MSI or MSI-X, skipping!");
+        ustd::dbgln(" usb: Controller doesn't support MSI or MSI-X, skipping!");
         return;
     }
     Processor::wire_interrupt(s_current_vector++, &irq_handler);
@@ -52,7 +52,8 @@ void UsbManager::spawn_watch_threads() {
 
 Device *UsbManager::register_device(Device &&device, const DeviceDescriptor *descriptor) {
     if (descriptor->dclass != 0) {
-        dbgln(" usb: Found device {:h2}:{:h2}:{:h2}", descriptor->dclass, descriptor->dsubclass, descriptor->dprotocol);
+        ustd::dbgln(" usb: Found device {:h2}:{:h2}:{:h2}", descriptor->dclass, descriptor->dsubclass,
+                    descriptor->dprotocol);
         return nullptr;
     }
 
@@ -61,14 +62,14 @@ Device *UsbManager::register_device(Device &&device, const DeviceDescriptor *des
     device.walk_configuration([&](void *desc, DescriptorType type) {
         if (type == DescriptorType::Interface) {
             auto *interface = static_cast<InterfaceDescriptor *>(desc);
-            dbgln(" usb: Found interface {:h2}:{:h2}:{:h2}", interface->iclass, interface->isubclass,
-                  interface->iprotocol);
+            ustd::dbgln(" usb: Found interface {:h2}:{:h2}:{:h2}", interface->iclass, interface->isubclass,
+                        interface->iprotocol);
             if (interface->iclass != 3) {
                 return;
             }
-            dbgln(" usb: Found HID device {:h2}:{:h2}", interface->isubclass, interface->iprotocol);
+            ustd::dbgln(" usb: Found HID device {:h2}:{:h2}", interface->isubclass, interface->iprotocol);
             if (interface->isubclass == 1 && interface->iprotocol == 1) {
-                dbgln(" usb: Found HID keyboard");
+                ustd::dbgln(" usb: Found HID keyboard");
                 auto *kb_device = new UsbKeyboardDevice(ustd::move(device));
                 ret = kb_device;
                 DevFs::notify_attach(kb_device);

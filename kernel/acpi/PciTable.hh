@@ -18,10 +18,10 @@ struct [[gnu::packed]] PciSegment {
 
 class [[gnu::packed]] PciTable : public Table {
     uint64 : 64;
-    Array<PciSegment, 0> m_segments;
+    ustd::Array<PciSegment, 0> m_segments;
 
 public:
-    static constexpr Array<uint8, 4> k_signature{'M', 'C', 'F', 'G'};
+    static constexpr ustd::Array<uint8, 4> k_signature{'M', 'C', 'F', 'G'};
 
     PciTableIterator begin() const;
     PciTableIterator end() const;

@@ -69,5 +69,3 @@ UniquePtr<T> make_unique(Args &&...args) {
 }
 
 } // namespace ustd
-
-using ustd::UniquePtr;

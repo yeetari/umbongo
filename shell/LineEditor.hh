@@ -8,9 +8,9 @@
 #include <ustd/Vector.hh>
 
 class LineEditor {
-    const StringView m_prompt;
-    Vector<char> m_buffer;
-    Vector<String> m_history;
+    const ustd::StringView m_prompt;
+    ustd::Vector<char> m_buffer;
+    ustd::Vector<ustd::String> m_history;
     uint32 m_cursor_pos{0};
     uint32 m_history_pos{0};
 
@@ -20,8 +20,8 @@ class LineEditor {
     void goto_end();
 
 public:
-    explicit LineEditor(StringView prompt) : m_prompt(prompt) {}
+    explicit LineEditor(ustd::StringView prompt) : m_prompt(prompt) {}
 
     void begin_line();
-    Optional<String> handle_key_event(KeyEvent event);
+    ustd::Optional<ustd::String> handle_key_event(KeyEvent event);
 };

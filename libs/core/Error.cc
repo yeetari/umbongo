@@ -12,7 +12,7 @@ namespace {
 
 // These need to match with the enum in kernel/SysError.hh
 // clang-format off
-Array k_error_list{
+ustd::Array k_error_list{
     "success",
     "bad fd",
     "no such file or directory",
@@ -27,13 +27,13 @@ Array k_error_list{
 
 } // namespace
 
-[[noreturn]] void abort_error(StringView msg, ssize rc) {
+[[noreturn]] void abort_error(ustd::StringView msg, ssize rc) {
     dbgln("{}: {}", msg, error_string(rc));
     Syscall::invoke(Syscall::exit, 1);
     ENSURE_NOT_REACHED();
 }
 
-StringView error_string(ssize rc) {
+ustd::StringView error_string(ssize rc) {
     rc = -rc;
     if (rc < 0 || static_cast<usize>(rc) >= k_error_list.size()) {
         return "unknown error"sv;

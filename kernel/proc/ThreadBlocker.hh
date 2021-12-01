@@ -28,37 +28,37 @@ public:
 };
 
 class AcceptBlocker : public ThreadBlocker {
-    SharedPtr<ServerSocket> m_server;
+    ustd::SharedPtr<ServerSocket> m_server;
 
 public:
-    explicit AcceptBlocker(SharedPtr<ServerSocket> server) : m_server(ustd::move(server)) {}
+    explicit AcceptBlocker(ustd::SharedPtr<ServerSocket> server) : m_server(ustd::move(server)) {}
 
     bool should_unblock() override;
 };
 
 class ConnectBlocker : public ThreadBlocker {
-    SharedPtr<Socket> m_socket;
+    ustd::SharedPtr<Socket> m_socket;
 
 public:
-    explicit ConnectBlocker(SharedPtr<Socket> socket) : m_socket(ustd::move(socket)) {}
+    explicit ConnectBlocker(ustd::SharedPtr<Socket> socket) : m_socket(ustd::move(socket)) {}
 
     bool should_unblock() override;
 };
 
 class PollBlocker : public ThreadBlocker {
-    const LargeVector<PollFd> &m_fds;
+    const ustd::LargeVector<PollFd> &m_fds;
     SpinLock &m_lock;
     Process &m_process;
-    Optional<usize> m_deadline;
+    ustd::Optional<usize> m_deadline;
 
 public:
-    PollBlocker(const LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout);
+    PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout);
 
     bool should_unblock() override;
 };
 
 class ReadBlocker : public ThreadBlocker {
-    SharedPtr<File> m_file;
+    ustd::SharedPtr<File> m_file;
 
 public:
     explicit ReadBlocker(File &file) : m_file(&file) {}
@@ -67,7 +67,7 @@ public:
 };
 
 class WaitBlocker final : public ThreadBlocker {
-    SharedPtr<Process> m_process;
+    ustd::SharedPtr<Process> m_process;
 
 public:
     explicit WaitBlocker(usize pid);
@@ -76,7 +76,7 @@ public:
 };
 
 class WriteBlocker : public ThreadBlocker {
-    SharedPtr<File> m_file;
+    ustd::SharedPtr<File> m_file;
 
 public:
     explicit WriteBlocker(File &file) : m_file(&file) {}

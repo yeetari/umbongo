@@ -28,7 +28,7 @@ PageFlags page_flags(RegionAccess access) {
 
 } // namespace
 
-Region::Region(uintptr base, usize size, RegionAccess access, bool free, Optional<uintptr> phys_base)
+Region::Region(uintptr base, usize size, RegionAccess access, bool free, ustd::Optional<uintptr> phys_base)
     : m_base(base), m_size(size), m_access(access), m_free(free) {
     if (free) {
         return;

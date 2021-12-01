@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
                              "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`"
                              "abcdefghijklmnopqrstuvwxyz{|}~";
     output_file << "namespace {\n\n";
-    output_file << "Array<FontGlyph, " << characters.size() << "> s_glyphs{{\n";
+    output_file << "ustd::Array<FontGlyph, " << characters.size() << "> s_glyphs{{\n";
     for (auto ch : characters) {
         FT_UInt char_index = face.get_char_index(ch);
         auto *glyph = face.load_glyph(char_index, FT_LOAD_DEFAULT);

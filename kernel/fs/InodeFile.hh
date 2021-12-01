@@ -17,8 +17,8 @@ public:
 
     bool can_read() override { return true; }
     bool can_write() override { return true; }
-    SysResult<usize> read(Span<void> data, usize offset) override;
-    SysResult<usize> write(Span<const void> data, usize offset) override;
+    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
+    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 
     Inode *inode() const { return m_inode; }
 };

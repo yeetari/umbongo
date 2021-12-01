@@ -26,6 +26,6 @@ public:
     void detach(AttachDirection) override;
     bool can_read() override;
     bool can_write() override;
-    SysResult<usize> read(Span<void> data, usize offset) override;
-    SysResult<usize> write(Span<const void> data, usize offset) override;
+    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
+    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };

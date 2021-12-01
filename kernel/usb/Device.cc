@@ -74,13 +74,13 @@ void Device::setup(const Port &port) {
     slot_context().port_num = port.socket() + 1;
 
     // Create control endpoint.
-    constexpr Array<uint16, 5> packet_sizes{8, 8, 8, 64, 512};
+    constexpr ustd::Array<uint16, 5> packet_sizes{8, 8, 8, 64, 512};
     const uint16 packet_size = packet_sizes[port.speed()];
     m_control_endpoint = &m_endpoints.emplace(this, static_cast<uint8>(0));
     m_control_endpoint->setup(EndpointType::Control, packet_size);
 }
 
-void Device::read_descriptor(Span<uint8> data) {
+void Device::read_descriptor(ustd::Span<uint8> data) {
     ControlTransfer transfer{
         .recipient = ControlRecipient::Device,
         .type = ControlType::Standard,

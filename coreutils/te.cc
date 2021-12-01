@@ -15,7 +15,7 @@
 namespace {
 
 class Line {
-    Vector<char> m_chars;
+    ustd::Vector<char> m_chars;
 
 public:
     void put_char(char ch) { m_chars.push(ch); }
@@ -33,13 +33,13 @@ public:
 class Editor {
     const uint32 m_screen_column_count;
     const uint32 m_screen_row_count;
-    String m_path;
-    Vector<Line> m_lines;
+    ustd::String m_path;
+    ustd::Vector<Line> m_lines;
     uint32 m_cursor_x{0};
     uint32 m_cursor_y{0};
     uint32 m_file_x{0};
     uint32 m_file_y{0};
-    Optional<uint32> m_saved_cursor_x;
+    ustd::Optional<uint32> m_saved_cursor_x;
 
 public:
     Editor(uint32 screen_column_count, uint32 screen_row_count);
@@ -50,21 +50,21 @@ public:
     Editor &operator=(const Editor &) = delete;
     Editor &operator=(Editor &&) = delete;
 
-    bool load(String &&path);
+    bool load(ustd::String &&path);
     bool read_key();
     void render();
 };
 
 Editor::Editor(uint32 screen_column_count, uint32 screen_row_count)
     : m_screen_column_count(screen_column_count), m_screen_row_count(screen_row_count) {
-    printf("\x1b[?1049h");
+    ustd::printf("\x1b[?1049h");
 }
 
 Editor::~Editor() {
-    printf("\x1b[?1049l");
+    ustd::printf("\x1b[?1049l");
 }
 
-bool Editor::load(String &&path) {
+bool Editor::load(ustd::String &&path) {
     // TODO: Use core::File.
     m_path = ustd::move(path);
     auto fd = Syscall::invoke(Syscall::open, m_path.data(), OpenMode::Create);
@@ -231,7 +231,7 @@ void Editor::render() {
         m_file_y = m_cursor_y - (m_screen_row_count - 1);
     }
 
-    printf("\x1b[J");
+    ustd::printf("\x1b[J");
     for (uint32 row = 0; row < m_screen_row_count; row++) {
         uint32 file_row = row + m_file_y;
         if (file_row >= m_lines.size()) {
@@ -249,14 +249,14 @@ void Editor::render() {
             put_char('\n');
         }
     }
-    printf("\x1b[{};{}H", m_cursor_y - m_file_y, m_cursor_x - m_file_x);
+    ustd::printf("\x1b[{};{}H", m_cursor_y - m_file_y, m_cursor_x - m_file_x);
 }
 
 } // namespace
 
 usize main(usize argc, const char **argv) {
     if (argc != 2) {
-        printf("Usage: {} <file>\n", argv[0]);
+        ustd::printf("Usage: {} <file>\n", argv[0]);
         return 0;
     }
     auto terminal_size = console::terminal_size();

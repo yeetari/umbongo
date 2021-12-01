@@ -16,7 +16,7 @@
 
 namespace {
 
-const Array s_scancode_table{
+const ustd::Array s_scancode_table{
     '\0', '\0', '\0', '\0', 'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',
     'n',  'o',  'p',  'q',  'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z',  '1',  '2',  '3',  '4',
     '5',  '6',  '7',  '8',  '9',  '0',  '\n', '\0', '\b', '\t', ' ',  '-',  '=',  '[',  ']',  '#',  '\0',
@@ -25,7 +25,7 @@ const Array s_scancode_table{
     '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\\',
 };
 
-const Array s_scancode_table_shift{
+const ustd::Array s_scancode_table_shift{
     '\0', '\0', '\0', '\0', 'A',  'B',  'C',  'D',  'E',  'F',  'G',  'H',  'I',  'J',  'K',  'L',  'M',
     'N',  'O',  'P',  'Q',  'R',  'S',  'T',  'U',  'V',  'W',  'X',  'Y',  'Z',  '!',  '"',  '\0', '$',
     '%',  '^',  '&',  '*',  '(',  ')',  '\n', '\0', '\b', '\0', ' ',  '_',  '+',  '{',  '}',  '~',  '\0',
@@ -92,7 +92,7 @@ void UsbKeyboardDevice::poll() {
     memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
 }
 
-SysResult<usize> UsbKeyboardDevice::read(Span<void> data, usize) {
+SysResult<usize> UsbKeyboardDevice::read(ustd::Span<void> data, usize) {
     usize nread = 0;
     for (usize i = 0; i < data.size(); i += sizeof(KeyEvent), nread += sizeof(KeyEvent)) {
         if (m_ring_buffer.empty()) {

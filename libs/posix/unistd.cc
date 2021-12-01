@@ -33,7 +33,7 @@ pid_t getpid(void) {
 }
 
 int unlink(const char *path) {
-    dbgln("unlink({})", path);
+    ustd::dbgln("unlink({})", path);
     return 0;
 }
 

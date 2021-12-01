@@ -5,7 +5,7 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
-class DoubleBuffer : public Shareable<DoubleBuffer> {
+class DoubleBuffer : public ustd::Shareable<DoubleBuffer> {
     struct Buffer {
         uint8 *data{nullptr};
         usize size{0};
@@ -30,6 +30,6 @@ public:
 
     bool empty() const;
     bool full() const;
-    usize read(Span<void> data);
-    usize write(Span<const void> data);
+    usize read(ustd::Span<void> data);
+    usize write(ustd::Span<const void> data);
 };

@@ -8,7 +8,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
-bool compare_name(StringView lhs, StringView rhs) {
+bool compare_name(ustd::StringView lhs, ustd::StringView rhs) {
     if (int rc = memcmp(lhs.data(), rhs.data(), ustd::min(lhs.length(), rhs.length()))) {
         return rc > 0;
     }
@@ -23,12 +23,12 @@ usize main(usize argc, const char **argv) {
         return 1;
     }
     auto byte_count = static_cast<usize>(rc);
-    LargeVector<char> data;
+    ustd::LargeVector<char> data;
     data.ensure_capacity(byte_count);
     Syscall::invoke(Syscall::read_directory, path, data.data());
-    Vector<StringView> views;
+    ustd::Vector<ustd::StringView> views;
     for (usize byte_offset = 0; byte_offset != byte_count;) {
-        StringView view(data.data() + byte_offset);
+        ustd::StringView view(data.data() + byte_offset);
         views.push(view);
         byte_offset += view.length() + 1;
     }

@@ -8,17 +8,17 @@
 namespace ipc {
 
 class MessageDecoder {
-    const Span<const uint8> m_buffer;
+    const ustd::Span<const uint8> m_buffer;
     const uint8 *m_ptr;
 
 public:
-    explicit MessageDecoder(Span<const uint8> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
+    explicit MessageDecoder(ustd::Span<const uint8> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
 
-    template <TriviallyCopyable T>
+    template <ustd::TriviallyCopyable T>
     T decode();
 };
 
-template <TriviallyCopyable T>
+template <ustd::TriviallyCopyable T>
 T MessageDecoder::decode() {
     ASSERT(m_ptr + sizeof(T) <= m_buffer.data() + m_buffer.size());
     T ret;

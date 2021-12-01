@@ -14,7 +14,7 @@
 namespace ast {
 namespace {
 
-void build_string_vector(const Value &value, Vector<const char *> &vector) {
+void build_string_vector(const Value &value, ustd::Vector<const char *> &vector) {
     if (const auto *list = value.as_or_null<ListValue>()) {
         for (const auto &list_value : list->values()) {
             build_string_vector(*list_value, vector);
@@ -26,14 +26,14 @@ void build_string_vector(const Value &value, Vector<const char *> &vector) {
     }
 }
 
-Vector<const char *> build_string_vector(const Value &value) {
-    Vector<const char *> vector;
+ustd::Vector<const char *> build_string_vector(const Value &value) {
+    ustd::Vector<const char *> vector;
     build_string_vector(value, vector);
     return vector;
 }
 
-String find_command(StringView name) {
-    String path(name.length() + 5);
+ustd::String find_command(ustd::StringView name) {
+    ustd::String path(name.length() + 5);
     memcpy(path.data() + 5, name.data(), name.length());
     path.data()[0] = '/';
     path.data()[1] = 'b';
@@ -54,13 +54,13 @@ void Node::dump(usize indent) const {
 
 void Command::dump(usize indent) const {
     Node::dump(indent);
-    dbgln("Command");
+    ustd::dbgln("Command");
     m_node->dump(indent + 1);
 }
 
 void List::dump(usize indent) const {
     Node::dump(indent);
-    dbgln("List");
+    ustd::dbgln("List");
     for (const auto &node : m_nodes) {
         node->dump(indent + 1);
     }
@@ -68,27 +68,27 @@ void List::dump(usize indent) const {
 
 void Pipe::dump(usize indent) const {
     Node::dump(indent);
-    dbgln("Pipe");
+    ustd::dbgln("Pipe");
     m_lhs->dump(indent + 1);
     m_rhs->dump(indent + 1);
 }
 
 void StringLiteral::dump(usize indent) const {
     Node::dump(indent);
-    dbgln("StringLiteral({})", m_text.view());
+    ustd::dbgln("StringLiteral({})", m_text.view());
 }
 
-UniquePtr<Value> Command::evaluate() const {
+ustd::UniquePtr<Value> Command::evaluate() const {
     auto args = build_string_vector(*m_node->evaluate());
-    StringView command(args[0]);
+    ustd::StringView command(args[0]);
     if (command == "cd") {
         return ustd::make_unique<Builtin>(BuiltinFunction::Cd, ustd::move(args));
     }
     return ustd::make_unique<Job>(find_command(command), ustd::move(args));
 }
 
-UniquePtr<Value> List::evaluate() const {
-    Vector<UniquePtr<Value>> values;
+ustd::UniquePtr<Value> List::evaluate() const {
+    ustd::Vector<ustd::UniquePtr<Value>> values;
     values.ensure_capacity(m_nodes.size());
     for (const auto &node : m_nodes) {
         values.push(node->evaluate());
@@ -96,11 +96,11 @@ UniquePtr<Value> List::evaluate() const {
     return ustd::make_unique<ListValue>(ustd::move(values));
 }
 
-UniquePtr<Value> Pipe::evaluate() const {
+ustd::UniquePtr<Value> Pipe::evaluate() const {
     return ustd::make_unique<PipeValue>(m_lhs->evaluate(), m_rhs->evaluate());
 }
 
-UniquePtr<Value> StringLiteral::evaluate() const {
+ustd::UniquePtr<Value> StringLiteral::evaluate() const {
     return ustd::make_unique<StringValue>(m_text);
 }
 

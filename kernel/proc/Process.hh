@@ -17,7 +17,7 @@ class Inode;
 struct Scheduler;
 class Thread;
 
-class Process : public Shareable<Process> {
+class Process : public ustd::Shareable<Process> {
     friend Scheduler;
     friend Thread;
 
@@ -25,17 +25,17 @@ private:
     const usize m_pid;
     const bool m_is_kernel;
     Inode *m_cwd;
-    SharedPtr<VirtSpace> m_virt_space;
-    Vector<Optional<FileHandle>> m_fds;
-    Atomic<usize> m_thread_count{0};
+    ustd::SharedPtr<VirtSpace> m_virt_space;
+    ustd::Vector<ustd::Optional<FileHandle>> m_fds;
+    ustd::Atomic<usize> m_thread_count{0};
     mutable SpinLock m_lock;
 
-    Process(bool is_kernel, SharedPtr<VirtSpace> virt_space);
+    Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space);
 
     uint32 allocate_fd();
 
 public:
-    static SharedPtr<Process> from_pid(usize pid);
+    static ustd::SharedPtr<Process> from_pid(usize pid);
 
     Process(const Process &) = delete;
     Process(Process &&) = delete;
@@ -44,7 +44,7 @@ public:
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;
 
-    UniquePtr<Thread> create_thread();
+    ustd::UniquePtr<Thread> create_thread();
 
     SyscallResult sys_accept(uint32 fd);
     SyscallResult sys_allocate_region(usize size, MemoryProt prot);
@@ -76,5 +76,5 @@ public:
     usize pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
     FileHandle &file_handle(uint32 fd) { return *m_fds[fd]; }
-    usize thread_count() const { return m_thread_count.load(MemoryOrder::Relaxed); }
+    usize thread_count() const { return m_thread_count.load(ustd::MemoryOrder::Relaxed); }
 };

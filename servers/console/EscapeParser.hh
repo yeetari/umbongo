@@ -10,7 +10,7 @@ class EscapeParser {
     Terminal &m_alternate_terminal;
     uint32 m_current_param{0};
     bool m_in_escape{false};
-    Vector<uint32> m_params;
+    ustd::Vector<uint32> m_params;
 
 public:
     EscapeParser(Terminal &default_terminal, Terminal &alternate_terminal)

@@ -7,12 +7,12 @@ namespace acpi {
 
 // System Description Table Header (ACPI specification 6.4 section 5.2.6)
 class [[gnu::packed]] Table {
-    Array<uint8, 4> m_signature;
+    ustd::Array<uint8, 4> m_signature;
     uint32 m_length;
     uint8 m_revision;
     uint8 m_checksum;
-    Array<uint8, 6> m_oem_id;
-    Array<uint8, 8> m_oem_table_id;
+    ustd::Array<uint8, 6> m_oem_id;
+    ustd::Array<uint8, 8> m_oem_table_id;
     uint32 m_oem_revision;
     uint32 m_creator_id;
     uint32 m_creator_revision;
@@ -27,7 +27,7 @@ public:
 
     bool valid() const;
 
-    const Array<uint8, 4> &signature() const { return m_signature; }
+    const ustd::Array<uint8, 4> &signature() const { return m_signature; }
     uint8 revision() const { return m_revision; }
     uint32 length() const { return m_length; }
 };

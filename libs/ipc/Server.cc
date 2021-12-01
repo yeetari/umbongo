@@ -17,7 +17,7 @@
 
 namespace ipc {
 
-Server::Server(core::EventLoop &event_loop, StringView path) : m_event_loop(event_loop) {
+Server::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loop(event_loop) {
     if (auto rc = Syscall::invoke(Syscall::create_server_socket, path.data(), 4); rc >= 0) {
         m_fd.emplace(static_cast<uint32>(rc));
     }
@@ -34,7 +34,7 @@ Server::Server(core::EventLoop &event_loop, StringView path) : m_event_loop(even
         m_event_loop.watch(*client, PollEvents::Read);
         client->set_on_read_ready([this, client] {
             // NOLINTNEXTLINE
-            Array<uint8, 8_KiB> buffer;
+            ustd::Array<uint8, 8_KiB> buffer;
             usize bytes_read = client->wait_message(buffer.span());
             if (bytes_read == 0) {
                 m_event_loop.unwatch(*client);

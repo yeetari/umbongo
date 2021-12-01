@@ -21,7 +21,7 @@ int fcntl(int fd, int cmd, ...) {
     if (cmd == F_GETFD || cmd == F_SETFD) {
         return 0;
     }
-    dbgln("Unknown fcntl({}, {}, {})", fd, cmd, arg);
+    ustd::dbgln("Unknown fcntl({}, {}, {})", fd, cmd, arg);
     ENSURE_NOT_REACHED("Unknown fcntl");
 }
 
@@ -38,7 +38,7 @@ int open(const char *path, int oflag, ...) {
     }
     flags &= ~(O_CREAT | O_TRUNC);
     if (flags != 0) {
-        dbgln("Unknown open flag bitset {:h}", flags);
+        ustd::dbgln("Unknown open flag bitset {:h}", flags);
         ENSURE_NOT_REACHED();
     }
 
