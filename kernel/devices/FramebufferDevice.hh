@@ -8,13 +8,13 @@
 class VirtSpace;
 
 class FramebufferDevice final : public Device {
-    uintptr m_base;
-    uint32 m_width;
-    uint32 m_height;
-    uint64 m_pitch;
+    const uintptr m_base;
+    const uint32 m_width;
+    const uint32 m_height;
+    const uint64 m_pitch;
 
 public:
-    explicit FramebufferDevice(uintptr base, uint32 width, uint32 height, uint64 pitch)
+    FramebufferDevice(uintptr base, uint32 width, uint32 height, uint64 pitch)
         : m_base(base), m_width(width), m_height(height), m_pitch(pitch) {}
 
     bool can_read() override { return true; }
