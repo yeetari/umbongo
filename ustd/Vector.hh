@@ -59,6 +59,11 @@ public:
     T &operator[](SizeType index);
     const T &operator[](SizeType index) const;
 
+    T &first() { return begin()[0]; }
+    const T &first() const { return begin()[0]; }
+    T &last() { return end()[-1]; }
+    const T &last() const { return end()[-1]; }
+
     bool empty() const { return m_size == 0; }
     T *data() const { return m_data; }
     SizeType capacity() const { return m_capacity; }
