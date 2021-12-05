@@ -1,7 +1,6 @@
 #pragma once
 
 #include <kernel/KeyEvent.hh> // IWYU pragma: keep
-#include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -23,5 +22,5 @@ public:
     explicit LineEditor(ustd::StringView prompt) : m_prompt(prompt) {}
 
     void begin_line();
-    ustd::Optional<ustd::String> handle_key_event(KeyEvent event);
+    ustd::StringView handle_key_event(KeyEvent event);
 };

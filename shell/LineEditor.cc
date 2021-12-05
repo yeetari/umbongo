@@ -3,7 +3,6 @@
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Log.hh>
-#include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -56,7 +55,7 @@ void LineEditor::begin_line() {
     ustd::printf("\x1b[38;2;255;255;255m");
 }
 
-ustd::Optional<ustd::String> LineEditor::handle_key_event(KeyEvent event) {
+ustd::StringView LineEditor::handle_key_event(KeyEvent event) {
     if (event.character() == '\b') {
         if (m_cursor_pos == 0) {
             return {};
@@ -69,13 +68,13 @@ ustd::Optional<ustd::String> LineEditor::handle_key_event(KeyEvent event) {
         auto line = ustd::String::copy_raw(m_buffer.data(), m_buffer.size());
         put_char('\n');
         if (line.empty()) {
-            return ustd::move(line);
+            return {};
         }
         m_buffer.clear();
         m_cursor_pos = 0;
-        m_history.push(line);
+        m_history.push(ustd::move(line));
         m_history_pos = m_history.size();
-        return ustd::move(line);
+        return m_history.last().view();
     }
     if (event.ctrl_pressed()) {
         switch (event.character()) {

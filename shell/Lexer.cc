@@ -2,7 +2,9 @@
 #include "Token.hh"
 
 #include <ustd/Log.hh>
+#include <ustd/Span.hh>
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 

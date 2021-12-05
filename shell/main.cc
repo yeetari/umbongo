@@ -11,12 +11,10 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
-#include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
-#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace {
@@ -89,11 +87,8 @@ usize main(usize, const char **) {
                     break;
                 }
             }
-            if (auto line = editor.handle_key_event(event)) {
-                if (line->empty()) {
-                    break;
-                }
-                Lexer lexer(ustd::move(*line));
+            if (auto line = editor.handle_key_event(event); !line.empty()) {
+                Lexer lexer(line);
                 Parser parser(lexer);
                 auto node = parser.parse();
                 ustd::Vector<FdPair> rewirings;
