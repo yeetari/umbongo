@@ -49,6 +49,7 @@ public:
 
     Span<T> span() { return {m_data, m_size}; }
     Span<const T> span() const { return {m_data, m_size}; }
+    Span<T> take_all();
 
     T *begin() { return m_data; }
     T *end() { return m_data + m_size; }
@@ -241,6 +242,12 @@ T Vector<T, SizeType>::take(SizeType index) {
     auto elem = move(begin()[index]);
     remove(index);
     return elem;
+}
+
+template <typename T, typename SizeType>
+Span<T> Vector<T, SizeType>::take_all() {
+    m_capacity = 0u;
+    return {exchange(m_data, nullptr), exchange(m_size, 0u)};
 }
 
 template <typename T, typename SizeType>
