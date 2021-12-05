@@ -66,7 +66,7 @@ ustd::Optional<ustd::String> LineEditor::handle_key_event(KeyEvent event) {
         return {};
     }
     if (event.character() == '\n') {
-        ustd::String line(m_buffer.data(), m_buffer.size());
+        auto line = ustd::String::copy_raw(m_buffer.data(), m_buffer.size());
         put_char('\n');
         if (line.empty()) {
             return ustd::move(line);

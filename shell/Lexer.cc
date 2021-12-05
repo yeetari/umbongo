@@ -48,7 +48,7 @@ Token Lexer::next_token() {
         while (m_source_position != m_source.length() && is_identifier_character(m_source[m_source_position])) {
             buf.push(m_source[m_source_position++]);
         }
-        return ustd::String(buf.data(), buf.size());
+        return ustd::String::copy_raw(buf.data(), buf.size());
     }
     ustd::printf("ush: unexpected {:c}\n", ch);
     return TokenKind::Eof;

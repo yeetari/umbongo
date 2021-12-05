@@ -7,10 +7,18 @@
 
 namespace ustd {
 
-String::String(const char *data, usize length) : m_length(length) {
-    m_data = new char[length + 1];
-    m_data[length] = '\0';
-    memcpy(m_data, data, length);
+String String::copy_raw(const char *data, usize length) {
+    String string(length);
+    memcpy(string.m_data, data, length);
+    return string;
+}
+
+String String::move_raw(char *data, usize length) {
+    ASSERT(data[length] == '\0');
+    String string;
+    string.m_data = data;
+    string.m_length = length;
+    return string;
 }
 
 String::String(usize length) : m_length(length) {
