@@ -1,4 +1,4 @@
-add_library(ustd Abi.cc Assert.cc Memory.cc String.cc)
+add_library(ustd Abi.cc Assert.cc Memory.cc String.cc StringBuilder.cc)
 install(TARGETS ustd DESTINATION lib)
 target_compile_definitions(ustd PUBLIC
     $<$<BOOL:${ENABLE_ASSERTIONS}>:ASSERTIONS>
