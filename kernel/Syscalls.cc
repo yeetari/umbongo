@@ -127,7 +127,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     auto new_thread = Thread::create_user();
     auto &new_process = new_thread->process();
     new_process.m_cwd = m_cwd;
-    new_process.m_fds.grow(m_fds.size());
+    new_process.m_fds.ensure_size(m_fds.size());
     for (uint32 i = 0; i < m_fds.size(); i++) {
         if (m_fds[i]) {
             new_process.m_fds[i].emplace(*m_fds[i]);
@@ -150,7 +150,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
             break;
         }
         auto &fd_pair = copy_fds[i];
-        new_process.m_fds.grow(fd_pair.child + 1);
+        new_process.m_fds.ensure_size(fd_pair.child + 1);
         new_process.m_fds[fd_pair.child].emplace(*m_fds[fd_pair.parent]);
     }
 
@@ -186,7 +186,7 @@ SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
     if (src == dst) {
         return 0;
     }
-    m_fds.grow(dst + 1);
+    m_fds.ensure_size(dst + 1);
     m_fds[dst].emplace(*m_fds[src]);
     return 0;
 }

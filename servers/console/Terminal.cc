@@ -11,7 +11,7 @@
 Terminal::Terminal(Framebuffer &fb) : m_fb(fb) {
     m_column_count = fb.width() / g_font.advance();
     m_row_count = fb.height() / g_font.line_height();
-    m_lines.grow(m_row_count, m_column_count);
+    m_lines.ensure_size(m_row_count, m_column_count);
 }
 
 void Terminal::set_char(uint32 row, uint32 col, char ch) {

@@ -129,7 +129,7 @@ void HostController::enable() {
 
     const uint8 slot_count = (hcs_params1 >> 0u) & 0xffu;
     const uint8 port_count = (hcs_params1 >> 24u) & 0xffu;
-    m_ports.grow(port_count);
+    m_ports.ensure_size(port_count);
 
     // Iterate extended capabilities to build port info and relinquish BIOS control if present.
     uint16 xecp = (hcc_params1 >> 16u) & 0xffffu;

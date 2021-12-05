@@ -22,7 +22,7 @@ public:
     constexpr Vector() = default;
     template <typename... Args>
     explicit Vector(SizeType size, Args &&...args);
-    Vector(const Vector &other);
+    Vector(const Vector &);
     Vector(Vector &&other) noexcept
         : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0u)),
           m_size(exchange(other.m_size, 0u)) {}
@@ -33,9 +33,9 @@ public:
 
     void clear();
     void ensure_capacity(SizeType capacity);
-    void reallocate(SizeType capacity);
     template <typename... Args>
-    void grow(SizeType size, Args &&...args);
+    void ensure_size(SizeType size, Args &&...args);
+    void reallocate(SizeType capacity);
 
     template <typename... Args>
     T &emplace(Args &&...args);
@@ -71,7 +71,7 @@ using LargeVector = Vector<T, usize>;
 template <typename T, typename SizeType>
 template <typename... Args>
 Vector<T, SizeType>::Vector(SizeType size, Args &&...args) {
-    grow(size, forward<Args>(args)...);
+    ensure_size(size, forward<Args>(args)...);
 }
 
 template <typename T, typename SizeType>
@@ -89,12 +89,8 @@ Vector<T, SizeType>::Vector(const Vector &other) {
 
 template <typename T, typename SizeType>
 Vector<T, SizeType>::~Vector() {
-    if constexpr (!IsTriviallyDestructible<T>) {
-        for (auto *elem = end(); elem != begin();) {
-            (--elem)->~T();
-        }
-    }
-    delete reinterpret_cast<uint8 *>(m_data);
+    clear();
+    delete[] reinterpret_cast<uint8 *>(m_data);
 }
 
 template <typename T, typename SizeType>
@@ -126,6 +122,23 @@ void Vector<T, SizeType>::ensure_capacity(SizeType capacity) {
 }
 
 template <typename T, typename SizeType>
+template <typename... Args>
+void Vector<T, SizeType>::ensure_size(SizeType size, Args &&...args) {
+    if (size <= m_size) {
+        return;
+    }
+    ensure_capacity(size);
+    if constexpr (!IsTriviallyCopyable<T> || sizeof...(Args) != 0) {
+        for (SizeType i = m_size; i < size; i++) {
+            new (begin() + i) T(forward<Args>(args)...);
+        }
+    } else {
+        memset(begin() + m_size, 0, size * sizeof(T) - m_size * sizeof(T));
+    }
+    m_size = size;
+}
+
+template <typename T, typename SizeType>
 void Vector<T, SizeType>::reallocate(SizeType capacity) {
     ASSERT(capacity >= m_size);
     T *new_data = reinterpret_cast<T *>(new uint8[capacity * sizeof(T)]);
@@ -139,26 +152,9 @@ void Vector<T, SizeType>::reallocate(SizeType capacity) {
     } else {
         memcpy(new_data, m_data, size_bytes());
     }
-    delete reinterpret_cast<uint8 *>(m_data);
+    delete[] reinterpret_cast<uint8 *>(m_data);
     m_data = new_data;
     m_capacity = capacity;
-}
-
-template <typename T, typename SizeType>
-template <typename... Args>
-void Vector<T, SizeType>::grow(SizeType size, Args &&...args) {
-    if (size <= m_size) {
-        return;
-    }
-    ensure_capacity(size);
-    if constexpr (!IsTriviallyCopyable<T> || sizeof...(Args) != 0) {
-        for (SizeType i = m_size; i < size; i++) {
-            new (begin() + i) T(forward<Args>(args)...);
-        }
-    } else {
-        memset(begin() + m_size, 0, size * sizeof(T) - m_size * sizeof(T));
-    }
-    m_size = size;
 }
 
 template <typename T, typename SizeType>

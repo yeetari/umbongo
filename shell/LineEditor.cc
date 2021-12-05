@@ -171,7 +171,7 @@ ustd::Optional<ustd::String> LineEditor::handle_key_event(KeyEvent event) {
     if (event.character() == '\0') {
         return {};
     }
-    m_buffer.grow(m_buffer.size() + 1);
+    m_buffer.ensure_size(m_buffer.size() + 1);
     for (uint32 i = m_buffer.size() - m_cursor_pos - 1; i > 0; i--) {
         m_buffer[m_cursor_pos + i] = m_buffer[m_cursor_pos + i - 1];
     }

@@ -79,7 +79,7 @@ void RamFsInode::truncate() {
 
 usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
     usize size = data.size();
-    m_data.grow(offset + size);
+    m_data.ensure_size(offset + size);
     memcpy(m_data.data() + offset, data.data(), size);
     return size;
 }
