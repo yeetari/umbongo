@@ -2,7 +2,6 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -27,5 +26,5 @@ public:
     void disconnect();
     bool valid() override { return m_connected; }
 
-    virtual const char *name() const { ENSURE_NOT_REACHED(); }
+    virtual const char *name() const = 0;
 };
