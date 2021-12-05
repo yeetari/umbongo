@@ -79,7 +79,6 @@ if(MCOPY_EXECUTABLE AND MFORMAT_EXECUTABLE)
         COMMAND truncate --size 28800000 fs.img
         COMMAND ${MFORMAT_EXECUTABLE} -i fs.img -f 2880 -h 20 ::
         COMMAND ${MCOPY_EXECUTABLE} -si fs.img ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
-        COMMAND ${MCOPY_EXECUTABLE} -si fs.img ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX}/* ::
         DEPENDS install)
 else()
     message(WARNING "Failed to find mtools, image target will be unavailable!")
@@ -133,6 +132,7 @@ include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 
 add_subdirectory(boot)
 add_subdirectory(dynamic-linker)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX} DESTINATION ${CMAKE_BINARY_DIR})
 
 add_link_options(LINKER:-dynamic-linker,/bin/dynamic-linker)
 add_subdirectory(coreutils)
