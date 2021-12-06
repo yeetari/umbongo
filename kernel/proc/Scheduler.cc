@@ -202,13 +202,13 @@ void Scheduler::yield(bool save_state) {
         asm volatile("int $40");
         return;
     }
+    asm volatile("cli");
     RegisterState regs{};
     switch_next(&regs);
     switch_now(&regs);
 }
 
 void Scheduler::yield_and_kill() {
-    asm volatile("cli");
     Processor::current_thread()->kill();
     yield(false);
 }
