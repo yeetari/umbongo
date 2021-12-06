@@ -6,6 +6,8 @@ class Hpet {
     const uint64 m_address;
     uint64 m_period;
     uint64 m_previous_count{0};
+    uint32 m_32_bit_wraps{0};
+    bool m_64_bit{false};
 
     uint64 read_counter() const;
 

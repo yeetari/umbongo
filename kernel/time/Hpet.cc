@@ -1,6 +1,5 @@
 #include <kernel/time/Hpet.hh>
 
-#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -14,8 +13,8 @@ struct [[gnu::packed]] GeneralCaps {
 
 Hpet::Hpet(uint64 address) : m_address(address) {
     const auto *caps = reinterpret_cast<const volatile GeneralCaps *>(address);
-    ENSURE((caps->attributes & (1u << 13u)) != 0u, "HPET not 64-bit!");
     m_period = caps->period;
+    m_64_bit = (caps->attributes & (1u << 13u)) != 0u;
 }
 
 void Hpet::enable() const {
@@ -24,7 +23,11 @@ void Hpet::enable() const {
 }
 
 uint64 Hpet::read_counter() const {
-    return *reinterpret_cast<volatile uint64 *>(m_address + 0xf0);
+    auto value = *reinterpret_cast<volatile uint64 *>(m_address + 0xf0);
+    if (m_64_bit) {
+        value |= (static_cast<uint64>(m_32_bit_wraps) << 32u);
+    }
+    return value;
 }
 
 void Hpet::spin(uint64 millis) const {
@@ -42,6 +45,9 @@ uint64 Hpet::update_time() {
         delta_count = current_count - m_previous_count;
     } else {
         delta_count = m_previous_count - current_count;
+        if (!m_64_bit) {
+            m_32_bit_wraps++;
+        }
     }
     m_previous_count = current_count;
     return (delta_count * m_period) / 1000000ul;
