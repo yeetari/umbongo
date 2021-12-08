@@ -23,6 +23,10 @@ usize main(usize, const char **) {
         core::abort_error("Failed to bind stdout pipe end", rc);
     }
 
+    if (auto rc = core::create_process("/bin/usb-server"); rc < 0) {
+        core::abort_error("Failed to start /bin/usb-server", rc);
+    }
+
     core::File keyboard;
     while (!keyboard.open("/dev/kb")) {
     }
