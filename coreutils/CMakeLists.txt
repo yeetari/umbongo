@@ -7,5 +7,6 @@ endfunction()
 
 umbongo_utility(cat)
 umbongo_utility(ls)
+umbongo_utility(lspci)
 umbongo_utility(te console)
 umbongo_utility(yes)
