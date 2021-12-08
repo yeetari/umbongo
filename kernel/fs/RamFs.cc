@@ -73,6 +73,7 @@ usize RamFsInode::size() {
 }
 
 void RamFsInode::truncate() {
+    // TODO: Clear with capacity.
     ASSERT(m_children.empty());
     m_data.clear();
 }

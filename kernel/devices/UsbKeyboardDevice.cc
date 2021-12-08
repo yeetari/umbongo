@@ -36,7 +36,7 @@ const ustd::Array s_scancode_table_shift{
 
 } // namespace
 
-UsbKeyboardDevice::UsbKeyboardDevice(usb::Device &&device) : usb::Device(ustd::move(device)) {
+UsbKeyboardDevice::UsbKeyboardDevice(usb::Device &&device) : ::Device("kb"), usb::Device(ustd::move(device)) {
     walk_configuration([this](void *descriptor, usb::DescriptorType type) {
         if (type == usb::DescriptorType::Configuration) {
             auto *config_descriptor = static_cast<usb::ConfigDescriptor *>(descriptor);

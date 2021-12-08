@@ -15,12 +15,10 @@ class FramebufferDevice final : public Device {
 
 public:
     FramebufferDevice(uintptr base, uint32 width, uint32 height, uint64 pitch)
-        : m_base(base), m_width(width), m_height(height), m_pitch(pitch) {}
+        : Device("fb"), m_base(base), m_width(width), m_height(height), m_pitch(pitch) {}
 
     bool can_read() override { return true; }
     bool can_write() override { return true; }
     SyscallResult ioctl(IoctlRequest request, void *arg) override;
     uintptr mmap(VirtSpace &virt_space) override;
-
-    const char *name() const override { return "fb"; }
 };

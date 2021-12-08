@@ -1,36 +1,11 @@
 #include <kernel/devices/Device.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
-#include <kernel/SpinLock.hh>
 #include <kernel/devices/DevFs.hh>
-#include <ustd/Types.hh>
-#include <ustd/Vector.hh>
+#include <ustd/String.hh>
+#include <ustd/Utility.hh>
 
-namespace {
-
-ustd::Vector<Device *> s_devices;
-SpinLock s_devices_lock;
-
-} // namespace
-
-ustd::Vector<Device *> Device::all_devices() {
-    ScopedLock locker(s_devices_lock);
-    return s_devices;
-}
-
-Device::Device() {
-    ScopedLock locker(s_devices_lock);
-    s_devices.push(this);
-}
-
-Device::~Device() {
-    ScopedLock locker(s_devices_lock);
-    for (uint32 i = 0; i < s_devices.size(); i++) {
-        if (s_devices[i] == this) {
-            s_devices.remove(i);
-            break;
-        }
-    }
+Device::Device(ustd::String &&path) : m_path(ustd::move(path)) {
+    DevFs::notify_attach(this, m_path.view());
 }
 
 void Device::disconnect() {

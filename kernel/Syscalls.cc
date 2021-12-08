@@ -5,7 +5,6 @@
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/Processor.hh>
-#include <kernel/devices/DevFs.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/FileSystem.hh>
@@ -255,9 +254,7 @@ SyscallResult Process::sys_mmap(uint32 fd) const {
 SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
     ScopedLock locker(m_lock);
     ustd::UniquePtr<FileSystem> fs;
-    if (ustd::StringView(fs_type) == "dev") {
-        fs = ustd::make_unique<DevFs>();
-    } else if (ustd::StringView(fs_type) == "ram") {
+    if (ustd::StringView(fs_type) == "ram") {
         fs = ustd::make_unique<RamFs>();
     } else {
         return SysError::Invalid;

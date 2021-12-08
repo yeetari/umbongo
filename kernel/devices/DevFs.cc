@@ -1,70 +1,61 @@
 #include <kernel/devices/DevFs.hh>
 
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
-#include <kernel/SpinLock.hh>
 #include <kernel/devices/Device.hh>
 #include <kernel/fs/File.hh>
+#include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>
+#include <kernel/fs/Vfs.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace {
 
-ustd::Vector<DevFs *> s_all;
-SpinLock s_all_lock;
+DevFs *s_instance = nullptr;
 
 } // namespace
 
-void DevFs::notify_attach(Device *device) {
-    ScopedLock locker(s_all_lock);
-    for (auto *dev_fs : s_all) {
-        dev_fs->attach_device(device);
-    }
+void DevFs::initialise() {
+    auto dev_fs = ustd::make_unique<DevFs>();
+    s_instance = dev_fs.obj();
+    Vfs::mkdir("/dev", nullptr);
+    Vfs::mount("/dev", ustd::move(dev_fs));
+    Vfs::mkdir("/dev/pci", nullptr);
+}
+
+void DevFs::notify_attach(Device *device, ustd::StringView path) {
+    ASSERT_PEDANTIC(s_instance != nullptr);
+    s_instance->attach_device(device, path);
 }
 
 void DevFs::notify_detach(Device *device) {
-    ScopedLock locker(s_all_lock);
-    for (auto *dev_fs : s_all) {
-        dev_fs->detach_device(device);
-    }
+    ASSERT_PEDANTIC(s_instance != nullptr);
+    s_instance->detach_device(device);
 }
 
-DevFs::~DevFs() {
-    ScopedLock locker(s_all_lock);
-    for (uint32 i = 0; i < s_all.size(); i++) {
-        if (s_all[i] == this) {
-            s_all.remove(i);
-            return;
-        }
-    }
-}
-
-void DevFs::attach_device(Device *device) {
-    m_root_inode->create(device->name(), device);
+void DevFs::attach_device(Device *device, ustd::StringView path) {
+    auto inode = Vfs::create(path, m_root_inode.obj(), InodeType::Device);
+    ASSERT(!inode.is_error());
+    static_cast<DevFsInode *>(*inode)->bind(device);
 }
 
 void DevFs::detach_device(Device *device) {
-    m_root_inode->remove(device->name());
+    m_root_inode->remove(device->path());
 }
 
 void DevFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);
     m_root_inode.emplace(parent, host->name());
-    {
-        ScopedLock locker(s_all_lock);
-        s_all.push(this);
-    }
-    for (auto *device : Device::all_devices()) {
-        attach_device(device);
-    }
 }
 
 Inode *DevFsInode::child(usize) {
@@ -99,22 +90,25 @@ usize DevFsInode::write(ustd::Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
-Inode *DevFsRootInode::child(usize index) {
+Inode *DevFsDirectoryInode::child(usize index) {
     ASSERT(index < ustd::Limits<uint32>::max());
     ScopedLock locker(m_lock);
     return m_children[static_cast<uint32>(index)].obj();
 }
 
-void DevFsRootInode::create(ustd::StringView name, Device *device) {
+Inode *DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     ScopedLock locker(m_lock);
-    m_children.emplace(new DevFsInode(name, this, device));
+    switch (type) {
+    case InodeType::Device:
+        return m_children.emplace(new DevFsInode(name, this)).obj();
+    case InodeType::Directory:
+        return m_children.emplace(new DevFsDirectoryInode(this, name)).obj();
+    default:
+        ENSURE_NOT_REACHED();
+    }
 }
 
-Inode *DevFsRootInode::create(ustd::StringView, InodeType) {
-    ENSURE_NOT_REACHED();
-}
-
-Inode *DevFsRootInode::lookup(ustd::StringView name) {
+Inode *DevFsDirectoryInode::lookup(ustd::StringView name) {
     if (name == ".") {
         return this;
     }
@@ -130,15 +124,15 @@ Inode *DevFsRootInode::lookup(ustd::StringView name) {
     return nullptr;
 }
 
-ustd::SharedPtr<File> DevFsRootInode::open_impl() {
+ustd::SharedPtr<File> DevFsDirectoryInode::open_impl() {
     ENSURE_NOT_REACHED();
 }
 
-usize DevFsRootInode::read(ustd::Span<void>, usize) {
+usize DevFsDirectoryInode::read(ustd::Span<void>, usize) {
     ENSURE_NOT_REACHED();
 }
 
-void DevFsRootInode::remove(ustd::StringView name) {
+void DevFsDirectoryInode::remove(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (uint32 i = 0; i < m_children.size(); i++) {
         if (name == m_children[i]->name()) {
@@ -148,11 +142,11 @@ void DevFsRootInode::remove(ustd::StringView name) {
     }
 }
 
-usize DevFsRootInode::size() {
+usize DevFsDirectoryInode::size() {
     ScopedLock locker(m_lock);
     return m_children.size();
 }
 
-usize DevFsRootInode::write(ustd::Span<const void>, usize) {
+usize DevFsDirectoryInode::write(ustd::Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }

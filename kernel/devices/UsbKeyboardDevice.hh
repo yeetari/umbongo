@@ -32,6 +32,4 @@ public:
     void disconnect() override;
     void poll() override;
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
-
-    const char *name() const override { return "kb"; }
 };

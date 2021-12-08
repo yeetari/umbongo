@@ -8,9 +8,6 @@
 #include <ustd/Utility.hh>
 
 usize main(usize, const char **) {
-    if (auto rc = core::mount("/dev", "dev"); rc < 0) {
-        core::abort_error("Failed to mount /dev", rc);
-    }
     if (auto rc = core::mount("/run", "ram"); rc < 0) {
         core::abort_error("Failed to mount /run", rc);
     }

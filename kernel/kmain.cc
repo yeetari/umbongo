@@ -13,6 +13,7 @@
 #include <kernel/acpi/Table.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
+#include <kernel/devices/DevFs.hh>
 #include <kernel/devices/FramebufferDevice.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -69,6 +70,24 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     auto *madt = xsdt->find<acpi::ApicTable>();
     Processor::start_aps(madt);
 
+    // Setup in-memory file system.
+    auto root_fs = ustd::make_unique<RamFs>();
+    Vfs::initialise();
+    Vfs::mount_root(ustd::move(root_fs));
+
+    // Copy over files loaded by UEFI into the ramdisk.
+    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
+        if (entry->is_directory) {
+            Vfs::mkdir(entry->name, nullptr);
+            continue;
+        }
+        auto *inode = *Vfs::create(entry->name, nullptr, InodeType::RegularFile);
+        inode->write({entry->data, entry->data_size}, 0);
+    }
+
+    // Create and mount the device filesystem.
+    DevFs::initialise();
+
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr);
 
@@ -122,21 +141,6 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
         }
     }
     usb::UsbManager::spawn_watch_threads();
-
-    // Setup in-memory file system.
-    auto root_fs = ustd::make_unique<RamFs>();
-    Vfs::initialise();
-    Vfs::mount_root(ustd::move(root_fs));
-
-    // Copy over files loaded by UEFI into the ramdisk.
-    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
-        if (entry->is_directory) {
-            Vfs::mkdir(entry->name, nullptr);
-            continue;
-        }
-        auto *inode = *Vfs::create(entry->name, nullptr, InodeType::RegularFile);
-        inode->write({entry->data, entry->data_size}, 0);
-    }
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
                                      boot_info->pixels_per_scan_line * sizeof(uint32));
