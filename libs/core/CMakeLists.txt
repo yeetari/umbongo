@@ -1,4 +1,5 @@
 add_library(core
+    Directory.cc
     Error.cc
     EventLoop.cc
     File.cc
