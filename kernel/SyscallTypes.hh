@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
 struct FdPair {
@@ -11,6 +12,12 @@ struct FramebufferInfo {
     usize size;
     uint32 width;
     uint32 height;
+};
+
+struct PciDeviceInfo {
+    ustd::Array<uintptr, 6> bars;
+    uint16 vendor_id;
+    uint16 device_id;
 };
 
 enum class PollEvents : uint16 {

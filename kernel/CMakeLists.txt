@@ -43,6 +43,7 @@ add_executable(kernel
     mem/Region.cc
     mem/VirtSpace.cc
     pci/Device.cc
+    pci/Function.cc
     proc/Process.cc
     proc/Scheduler.cc
     proc/Thread.cc

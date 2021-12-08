@@ -25,6 +25,7 @@
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/pci/Bus.hh>
 #include <kernel/pci/Device.hh>
+#include <kernel/pci/Function.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/time/TimeManager.hh>
@@ -132,6 +133,9 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
         ustd::dbgln(" pci:  - {:h4}:{:h2}:{:h2}:{:h2} - {:h4}:{:h4} ({:h2}:{:h2}:{:h2})", device.bus->segment_num(),
                     device.bus->num(), device.device, device.function, device.vendor_id, device.device_id, device.clas,
                     device.subc, device.prif);
+        auto *function = new pci::Function(device.bus->segment_base(), device.bus->segment_num(), device.bus->num(),
+                                           device.device, device.function);
+        function->leak_ref();
     }
 
     // Attempt to initialise any found XHCI controllers.
