@@ -3,6 +3,7 @@
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -24,6 +25,11 @@ ssize create_process(const char *path, ustd::Vector<const char *> argv, ustd::Ve
     argv.push(nullptr);
     copy_fds.push({0, 0});
     return Syscall::invoke(Syscall::create_process, path, argv.data(), copy_fds.data());
+}
+
+[[noreturn]] void exit(usize code) {
+    Syscall::invoke(Syscall::exit, code);
+    ENSURE_NOT_REACHED();
 }
 
 } // namespace core
