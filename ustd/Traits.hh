@@ -65,7 +65,7 @@ template <bool B, typename T, typename F>
 using Conditional = typename detail::Conditional<B, T, F>::type;
 
 template <typename T, typename U>
-inline constexpr bool IsConvertibleTo = requires(T obj) {
+inline constexpr bool IsConvertibleTo = detail::IsSameCheck<T, U>::value || requires(T obj) {
     static_cast<U>(obj);
 };
 
