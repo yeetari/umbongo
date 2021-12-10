@@ -2,9 +2,23 @@
 
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Vector.hh>
 
 namespace ustd {
+
+void StringBuilder::append_single(const char *, const char *arg) {
+    while (*arg != '\0') {
+        m_buffer.push(*arg++);
+    }
+}
+
+void StringBuilder::append_single(const char *, StringView arg) {
+    m_buffer.ensure_capacity(m_buffer.size() + arg.length());
+    for (char ch : arg) {
+        m_buffer.push(ch);
+    }
+}
 
 void StringBuilder::append_single(const char *, const String &arg) {
     m_buffer.ensure_capacity(m_buffer.size() + arg.length());

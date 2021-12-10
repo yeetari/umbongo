@@ -4,6 +4,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Concepts.hh> // IWYU pragma: keep
 #include <ustd/String.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -14,6 +15,8 @@ class StringBuilder {
 
     template <Integral T>
     void append_single(const char *opts, T arg);
+    void append_single(const char *opts, const char *arg);
+    void append_single(const char *opts, StringView arg);
     void append_single(const char *opts, const String &arg);
     template <typename T>
     void append_part(const char *&fmt, const T &arg);
