@@ -83,6 +83,7 @@ public:
         ASSERT(m_is_error);
         return m_error;
     }
+    void value() const {}
 };
 
 template <typename T, typename E>

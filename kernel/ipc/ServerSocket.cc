@@ -41,7 +41,7 @@ SysResult<> ServerSocket::queue_connection_from(ustd::SharedPtr<Socket> socket) 
         return SysError::Busy;
     }
     m_connection_queue.push(ustd::move(socket));
-    return SysSuccess{};
+    return {};
 }
 
 SysResult<usize> ServerSocket::read(ustd::Span<void>, usize) {

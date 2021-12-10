@@ -178,7 +178,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 
     // Allocate some space for heap storage.
     m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
-    return SysSuccess{};
+    return {};
 }
 
 void Thread::kill() {

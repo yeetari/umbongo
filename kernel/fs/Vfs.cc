@@ -127,7 +127,7 @@ SysResult<Inode *> Vfs::create(ustd::StringView path, Inode *base, InodeType typ
 
 SysResult<> Vfs::mkdir(ustd::StringView path, Inode *base) {
     TRY(create(path, base, InodeType::Directory));
-    return SysSuccess{};
+    return {};
 }
 
 SysResult<> Vfs::mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs) {
@@ -138,7 +138,7 @@ SysResult<> Vfs::mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs) 
     }
     fs->mount(parent, host);
     s_data->mounts.emplace(host, ustd::move(fs));
-    return SysSuccess{};
+    return {};
 }
 
 SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode, Inode *base) {

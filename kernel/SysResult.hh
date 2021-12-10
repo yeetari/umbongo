@@ -6,10 +6,7 @@
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
-// TODO: Replace SysSuccess with void?
-struct SysSuccess {};
-
-template <typename T = SysSuccess>
+template <typename T = void>
 using SysResult = ustd::Result<T, SysError>;
 
 class SyscallResult {
@@ -21,7 +18,7 @@ public:
     SyscallResult(T value) : m_value(static_cast<usize>(value)) {}
     template <typename T>
     SyscallResult(T *value) : m_value(reinterpret_cast<usize>(value)) {}
-    SyscallResult(SysResult<SysSuccess> result) : m_value(0) {
+    SyscallResult(SysResult<> result) : m_value(0) {
         if (result.is_error()) {
             m_value = static_cast<usize>(result.error());
         }
