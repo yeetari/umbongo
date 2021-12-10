@@ -13,7 +13,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
-#include <ustd/Optional.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>

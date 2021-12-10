@@ -6,17 +6,13 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
-#include <ustd/StringView.hh>
+#include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
 usize main(usize argc, const char **argv) {
-    core::File file(argv[0]);
-    if (!file) {
-        return 1;
-    }
-
-    elf::Header header{};
-    file.read({&header, sizeof(elf::Header)});
+    // TODO: Better file read error checking (should be tighter in core::File).
+    auto file = EXPECT(core::File::open(argv[0]));
+    auto header = EXPECT(file.read<elf::Header>());
 
     uintptr region_base = ustd::Limits<uintptr>::max();
     uintptr region_end = 0;

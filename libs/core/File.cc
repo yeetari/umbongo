@@ -1,18 +1,21 @@
 #include <core/File.hh>
+#include <kernel/SysError.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 namespace core {
 
-File::File(ustd::StringView path) {
+ustd::Result<File, SysError> File::open(ustd::StringView path) {
     auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
-    if (fd >= 0) {
-        m_fd.emplace(static_cast<uint32>(fd));
+    if (fd < 0) {
+        return static_cast<SysError>(fd);
     }
+    return File(static_cast<uint32>(fd));
 }
 
 File::~File() {
@@ -26,27 +29,11 @@ void File::close() {
     }
 }
 
-bool File::open(ustd::StringView path) {
-    close();
-    auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
-    if (fd >= 0) {
-        m_fd.emplace(static_cast<uint32>(fd));
-        return true;
-    }
-    return false;
-}
-
 ssize File::read(ustd::Span<void> data) {
-    if (!m_fd) {
-        return -1;
-    }
     return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());
 }
 
 ssize File::read(ustd::Span<void> data, usize offset) {
-    if (!m_fd) {
-        return -1;
-    }
     if (auto rc = Syscall::invoke(Syscall::seek, *m_fd, offset, SeekMode::Set); rc < 0) {
         return rc;
     }

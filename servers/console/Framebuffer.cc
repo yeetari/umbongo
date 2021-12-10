@@ -5,11 +5,11 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
-Framebuffer::Framebuffer(ustd::StringView path) : m_file(path) {
-    ENSURE(m_file, "Failed to open framebuffer");
+Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {
     Syscall::invoke(Syscall::ioctl, m_file.fd(), IoctlRequest::FramebufferGetInfo, &m_info);
     m_back_buffer = Syscall::invoke<uint32 *>(Syscall::allocate_region, m_info.size, MemoryProt::Write);
     m_front_buffer = Syscall::invoke<uint32 *>(Syscall::mmap, m_file.fd());

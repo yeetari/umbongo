@@ -7,6 +7,7 @@
 #include <ustd/Format.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringBuilder.hh>
 #include <ustd/StringView.hh>
@@ -15,16 +16,13 @@
 namespace {
 
 void print_device(const char *name) {
-    core::File file(ustd::format("/dev/pci/{}", name).view());
-    if (!file) {
+    auto file_or_error = core::File::open(ustd::format("/dev/pci/{}", name).view());
+    if (file_or_error.is_error()) {
         ustd::printf("lspci: no device {}\n", name);
         core::exit(1);
     }
-    PciDeviceInfo info{};
-    if (auto rc = file.read({&info, sizeof(PciDeviceInfo)}); rc < 0) {
-        ustd::printf("lspci: {}: {}\n", name, core::error_string(rc));
-        core::exit(1);
-    }
+    auto file = file_or_error.value();
+    auto info = EXPECT(file.read<PciDeviceInfo>());
     ustd::StringBuilder builder;
     builder.append("{}\n", name);
     builder.append(" - Vendor ID: {:h4}\n", info.vendor_id);

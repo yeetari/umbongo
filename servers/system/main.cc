@@ -4,6 +4,7 @@
 #include <core/Pipe.hh>
 #include <core/Process.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -28,7 +29,12 @@ usize main(usize, const char **) {
     }
 
     core::File keyboard;
-    while (!keyboard.open("/dev/kb")) {
+    while (true) {
+        auto keyboard_or_error = core::File::open("/dev/kb");
+        if (!keyboard_or_error.is_error()) {
+            keyboard = keyboard_or_error.value();
+            break;
+        }
     }
     if (auto rc = keyboard.rebind(0); rc < 0) {
         core::abort_error("Failed to bind keyboard to stdin", rc);
