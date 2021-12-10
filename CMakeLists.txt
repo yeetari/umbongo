@@ -56,6 +56,7 @@ if(BUILD_WARNINGS)
         -Wno-cast-function-type
         -Wno-covered-switch-default
         -Wno-gnu-anonymous-struct
+        -Wno-gnu-statement-expression
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-missing-noreturn
         -Wno-missing-prototypes

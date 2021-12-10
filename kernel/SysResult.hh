@@ -6,6 +6,7 @@
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
+// TODO: Replace SysSuccess with void?
 struct SysSuccess {};
 
 template <typename T = SysSuccess>

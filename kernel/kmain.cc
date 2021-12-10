@@ -3,7 +3,6 @@
 #include <kernel/Console.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
-#include <kernel/SysResult.hh>
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/HpetTable.hh>
 #include <kernel/acpi/InterruptController.hh>
@@ -33,6 +32,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -79,10 +79,10 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // Copy over files loaded by UEFI into the ramdisk.
     for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
         if (entry->is_directory) {
-            Vfs::mkdir(entry->name, nullptr);
+            EXPECT(Vfs::mkdir(entry->name, nullptr));
             continue;
         }
-        auto *inode = *Vfs::create(entry->name, nullptr, InodeType::RegularFile);
+        auto *inode = EXPECT(Vfs::create(entry->name, nullptr, InodeType::RegularFile));
         inode->write({entry->data, entry->data_size}, 0);
     }
 
@@ -154,7 +154,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     MemoryManager::reclaim(boot_info);
 
     auto init_thread = Thread::create_user();
-    init_thread->exec("/bin/system-server"sv);
+    EXPECT(init_thread->exec("/bin/system-server"sv));
     Scheduler::insert_thread(ustd::move(init_thread));
     Scheduler::yield_and_kill();
 }

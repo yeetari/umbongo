@@ -90,10 +90,7 @@ Thread::~Thread() {
 }
 
 SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String> &args) {
-    auto file = Vfs::open(path, OpenMode::None, m_process->m_cwd);
-    if (file.is_error()) {
-        return file.error();
-    }
+    auto file = TRY(Vfs::open(path, OpenMode::None, m_process->m_cwd));
     auto &stack_region =
         m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     m_register_state.rsp = stack_region.base() + stack_region.size();
@@ -106,18 +103,15 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         MemoryManager::switch_space(*original_space);
     });
 
-    auto interpreter_path = interpreter_for(**file);
+    auto interpreter_path = interpreter_for(*file);
     if (!interpreter_path) {
         // If there was an error trying to parse the interpreter location, not if the executable doesn't have one.
         return SysError::NoExec;
     }
-    auto executable = *file;
+    auto executable = file;
     if (!interpreter_path->empty()) {
-        auto interpreter = Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd);
-        if (interpreter.is_error()) {
-            return interpreter.error();
-        }
-        executable = ustd::move(*interpreter);
+        auto interpreter = TRY(Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd));
+        executable = ustd::move(interpreter);
     }
 
     elf::Header header{};

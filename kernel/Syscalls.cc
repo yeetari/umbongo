@@ -70,11 +70,7 @@ SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
 
 SyscallResult Process::sys_chdir(const char *path) {
     ScopedLock locker(m_lock);
-    auto directory = Vfs::open_directory(path, m_cwd);
-    if (directory.is_error()) {
-        return directory.error();
-    }
-    m_cwd = *directory;
+    m_cwd = TRY(Vfs::open_directory(path, m_cwd));
     return 0;
 }
 
@@ -88,11 +84,7 @@ SyscallResult Process::sys_close(uint32 fd) {
 }
 
 SyscallResult Process::sys_connect(const char *path) {
-    auto file_or_error = Vfs::open(path, OpenMode::None, m_cwd);
-    if (file_or_error.is_error()) {
-        return file_or_error.error();
-    }
-    auto &file = *file_or_error;
+    auto file = TRY(Vfs::open(path, OpenMode::None, m_cwd));
     if (!file->is_server_socket()) {
         return SysError::Invalid;
     }
@@ -164,10 +156,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
 // TODO: A bind syscall - create_pipe and create_server_socket both return anonymous files, that can be bound to inodes.
 SyscallResult Process::sys_create_server_socket(const char *path, uint32 backlog_limit) {
     // TODO: Upper limit for backlog_limit.
-    auto inode = Vfs::create(path, m_cwd, InodeType::IpcFile);
-    if (inode.is_error()) {
-        return inode.error();
-    }
+    auto *inode = TRY(Vfs::create(path, m_cwd, InodeType::IpcFile));
     ScopedLock locker(m_lock);
     auto server = ustd::make_shared<ServerSocket>(backlog_limit);
     uint32 fd = allocate_fd();
@@ -264,13 +253,10 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) const 
 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
-    // Open file first so that we don't leak a file descriptor.
-    auto file = Vfs::open(path, mode, m_cwd);
-    if (file.is_error()) {
-        return file.error();
-    }
+    // Try to open the file first so that we don't leak a file descriptor in the event of failure.
+    auto file = TRY(Vfs::open(path, mode, m_cwd));
     uint32 fd = allocate_fd();
-    m_fds[fd].emplace(ustd::move(*file));
+    m_fds[fd].emplace(ustd::move(file));
     return fd;
 }
 
@@ -312,19 +298,12 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
     if (!file.can_read()) {
         Processor::current_thread()->block<ReadBlocker>(file);
     }
-    auto bytes_read = handle->read(data, size);
-    if (bytes_read.is_error()) {
-        return bytes_read.error();
-    }
-    return *bytes_read;
+    return TRY(handle->read(data, size));
 }
 
 SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     ScopedLock locker(m_lock);
-    auto directory = Vfs::open_directory(path, m_cwd);
-    if (directory.is_error()) {
-        return directory.error();
-    }
+    auto *directory = TRY(Vfs::open_directory(path, m_cwd));
     if (data == nullptr) {
         usize byte_count = 0;
         for (usize i = 0; i < directory->size(); i++) {
@@ -390,9 +369,5 @@ SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
     if (!file.can_write()) {
         Processor::current_thread()->block<WriteBlocker>(file);
     }
-    auto bytes_written = handle->write(data, size);
-    if (bytes_written.is_error()) {
-        return bytes_written.error();
-    }
-    return *bytes_written;
+    return TRY(handle->write(data, size));
 }

@@ -126,10 +126,7 @@ SysResult<Inode *> Vfs::create(ustd::StringView path, Inode *base, InodeType typ
 }
 
 SysResult<> Vfs::mkdir(ustd::StringView path, Inode *base) {
-    auto inode = create(path, base, InodeType::Directory);
-    if (inode.is_error()) {
-        return inode.error();
-    }
+    TRY(create(path, base, InodeType::Directory));
     return SysSuccess{};
 }
 
@@ -148,11 +145,7 @@ SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode,
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
         if ((mode & OpenMode::Create) == OpenMode::Create) {
-            auto created_inode = Vfs::create(path, base, InodeType::RegularFile);
-            if (created_inode.is_error()) {
-                return created_inode.error();
-            }
-            return created_inode->open();
+            return TRY(Vfs::create(path, base, InodeType::RegularFile))->open();
         }
         return SysError::NonExistent;
     }

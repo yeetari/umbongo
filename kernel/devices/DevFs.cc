@@ -28,9 +28,9 @@ DevFs *s_instance = nullptr;
 void DevFs::initialise() {
     auto dev_fs = ustd::make_unique<DevFs>();
     s_instance = dev_fs.obj();
-    Vfs::mkdir("/dev", nullptr);
-    Vfs::mount("/dev", ustd::move(dev_fs));
-    Vfs::mkdir("/dev/pci", nullptr);
+    EXPECT(Vfs::mkdir("/dev", nullptr));
+    EXPECT(Vfs::mount("/dev", ustd::move(dev_fs)));
+    EXPECT(Vfs::mkdir("/dev/pci", nullptr));
 }
 
 void DevFs::notify_attach(Device *device, ustd::StringView path) {
@@ -44,9 +44,8 @@ void DevFs::notify_detach(Device *device) {
 }
 
 void DevFs::attach_device(Device *device, ustd::StringView path) {
-    auto inode = Vfs::create(path, m_root_inode.obj(), InodeType::Device);
-    ASSERT(!inode.is_error());
-    static_cast<DevFsInode *>(*inode)->bind(device);
+    auto *inode = EXPECT(Vfs::create(path, m_root_inode.obj(), InodeType::Device));
+    static_cast<DevFsInode *>(inode)->bind(device);
 }
 
 void DevFs::detach_device(Device *device) {
