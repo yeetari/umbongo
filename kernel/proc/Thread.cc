@@ -16,6 +16,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
@@ -159,7 +160,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     // Setup user stack.
     ustd::Vector<uintptr> argv;
     auto push_arg = [&](ustd::StringView arg) {
-        m_register_state.rsp -= round_up(arg.length() + 1, sizeof(usize));
+        m_register_state.rsp -= ustd::round_up(arg.length() + 1, sizeof(usize));
         memcpy(reinterpret_cast<void *>(m_register_state.rsp), arg.data(), arg.length());
         *(reinterpret_cast<char *>(m_register_state.rsp) + arg.length()) = '\0';
         argv.push(m_register_state.rsp);

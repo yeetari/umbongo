@@ -132,7 +132,7 @@ Region *s_base_region = nullptr;
 SpinLock s_lock;
 
 Region *create_region() {
-    constexpr usize aligned_size = round_up(sizeof(Region), 16);
+    constexpr usize aligned_size = ustd::round_up(sizeof(Region), 16);
     auto *memory = MemoryManager::alloc_contiguous(1_MiB);
     auto *region = new (memory) Region(reinterpret_cast<uint8 *>(memory) + aligned_size, 1_MiB - aligned_size);
     Region *last_region = nullptr;
@@ -185,7 +185,7 @@ void deallocate(void *ptr) {
 
 void Heap::initialise() {
     ASSERT(s_base_region == nullptr);
-    constexpr usize aligned_size = round_up(sizeof(Region), 16);
+    constexpr usize aligned_size = ustd::round_up(sizeof(Region), 16);
     auto *memory = MemoryManager::alloc_contiguous(1_MiB);
     s_base_region = new (memory) Region(reinterpret_cast<uint8 *>(memory) + aligned_size, 1_MiB - aligned_size);
 }

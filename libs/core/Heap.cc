@@ -1,3 +1,4 @@
+#include <ustd/Numeric.hh>
 #include <ustd/Types.hh>
 
 namespace {
@@ -7,7 +8,7 @@ uintptr s_pos = 6_TiB;
 } // namespace
 
 void *operator new(usize size) {
-    s_pos = round_up(s_pos, 16);
+    s_pos = ustd::round_up(s_pos, 16);
     auto *ret = reinterpret_cast<void *>(s_pos);
     s_pos += size;
     return ret;

@@ -32,11 +32,3 @@ constexpr usize operator"" _GiB(unsigned long long num) {
 constexpr usize operator"" _TiB(unsigned long long num) {
     return num * 0x10000000000;
 }
-
-constexpr usize round_down(usize roundee, usize roundend) {
-    return roundee & ~(roundend - 1);
-}
-
-constexpr usize round_up(usize roundee, usize roundend) {
-    return (roundee + roundend - 1) & ~(roundend - 1);
-}

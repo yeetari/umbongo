@@ -71,4 +71,12 @@ constexpr const T &min(const T &a, const T &b) {
     return b < a ? b : a;
 }
 
+constexpr usize round_down(usize roundee, usize roundend) {
+    return roundee & ~(roundend - 1);
+}
+
+constexpr usize round_up(usize roundee, usize roundend) {
+    return (roundee + roundend - 1) & ~(roundend - 1);
+}
+
 } // namespace ustd

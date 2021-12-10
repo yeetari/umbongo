@@ -4,6 +4,7 @@
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -61,13 +62,13 @@ void VirtSpace::map_1GiB(uintptr virt, uintptr phys, PageFlags flags) {
 Region &VirtSpace::allocate_region(usize size, RegionAccess access, ustd::Optional<uintptr> phys_base) {
     // Find first fit region to split.
     ScopedLock locker(m_lock);
-    size = round_up(size, 4_KiB);
+    size = ustd::round_up(size, 4_KiB);
     const usize alignment = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
     for (auto &region : m_regions) {
         if (!region->free()) {
             continue;
         }
-        uintptr base = round_up(region->base(), alignment);
+        uintptr base = ustd::round_up(region->base(), alignment);
         usize padding = base - region->base();
         if (region->size() >= size + padding) {
             ASSERT(base % alignment == 0);
@@ -86,7 +87,7 @@ Region &VirtSpace::allocate_region(usize size, RegionAccess access, ustd::Option
 
 Region &VirtSpace::create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base) {
     ScopedLock locker(m_lock);
-    size = round_up(size, 4_KiB);
+    size = ustd::round_up(size, 4_KiB);
     for (auto &region : m_regions) {
         if (!region->free()) {
             continue;
