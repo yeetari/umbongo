@@ -64,6 +64,7 @@ if(BUILD_WARNINGS)
         -Wno-nested-anon-types
         -Wno-padded
         -Wno-reserved-identifier
+        -Wno-shadow-uncaptured-local
         -Wno-switch-enum
         -Wno-unknown-warning-option
         -Wno-unused-member-function
