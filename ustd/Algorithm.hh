@@ -45,6 +45,13 @@ constexpr void fill(Container &container, const T &value) {
     }
 }
 
+template <typename It, typename T>
+constexpr void fill_n(It it, usize size, T value) {
+    for (usize i = 0; i < size; i++) {
+        *it++ = static_cast<RemoveRef<decltype(*it)>>(value);
+    }
+}
+
 template <Container Container, typename GreaterThan, typename SizeType = decltype(declval<Container>().size())>
 constexpr void sort(Container &container, GreaterThan gt) {
     if (container.size() == 0) {
