@@ -10,7 +10,6 @@
 #include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Utility.hh>
 
 namespace {
@@ -69,7 +68,7 @@ void *malloc(size_t size) {
 
 void *calloc(size_t count, size_t size) {
     void *ptr = malloc(count * size);
-    memset(ptr, 0, count * size);
+    __builtin_memset(ptr, 0, count * size);
     return ptr;
 }
 
@@ -85,7 +84,7 @@ void *realloc(void *ptr, size_t size) {
     if (new_ptr != nullptr) {
         // TODO: Not right at all. We are copying random memory into the new buffer when size is greater than the old
         //       size.
-        memcpy(new_ptr, ptr, size);
+        __builtin_memcpy(new_ptr, ptr, size);
         free(ptr);
     }
     return new_ptr;

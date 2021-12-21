@@ -22,7 +22,7 @@ template <ustd::TriviallyCopyable T>
 T MessageDecoder::decode() {
     ASSERT(m_ptr + sizeof(T) <= m_buffer.data() + m_buffer.size());
     T ret;
-    memcpy(&ret, m_ptr, sizeof(T));
+    __builtin_memcpy(&ret, m_ptr, sizeof(T));
     m_ptr += sizeof(T);
     return ret;
 }

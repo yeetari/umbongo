@@ -1,7 +1,6 @@
 #include <ustd/String.hh>
 
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -9,7 +8,7 @@ namespace ustd {
 
 String String::copy_raw(const char *data, usize length) {
     String string(length);
-    memcpy(string.m_data, data, length);
+    __builtin_memcpy(string.m_data, data, length);
     return string;
 }
 

@@ -8,7 +8,6 @@
 #include <kernel/usb/Endpoint.hh>
 #include <kernel/usb/EndpointType.hh>
 #include <ustd/Array.hh>
-#include <ustd/Memory.hh>
 #include <ustd/RingBuffer.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
@@ -89,7 +88,7 @@ void UsbKeyboardDevice::poll() {
         const bool ctrl_pressed = m_modifiers[0] || m_modifiers[4];
         m_ring_buffer.enqueue(KeyEvent(key, ch, alt_pressed, ctrl_pressed));
     }
-    memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
+    __builtin_memcpy(m_compare_buffer.data(), m_buffer.data(), m_buffer.size());
 }
 
 SysResult<usize> UsbKeyboardDevice::read(ustd::Span<void> data, usize) {

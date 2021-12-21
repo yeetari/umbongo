@@ -48,7 +48,11 @@ static bool traverse_directory(RamFsEntry *&ram_fs, RamFsEntry *&current_entry, 
     EFI_CHECK(directory->read(directory, &info_size, info), "Failed to read file info!")
 
     const auto *name = static_cast<const wchar_t *>(info->name);
-    const usize name_length = wstrlen(name) + 1;
+    usize name_length = 0;
+    while (name[name_length] != '\0') {
+        name_length++;
+    }
+    name_length++;
     ustd::StringView name_view(reinterpret_cast<const char *>(name));
     if (name_view == reinterpret_cast<const char *>(L"kernel") ||
         name_view == reinterpret_cast<const char *>(L"NvVars") || name_view == reinterpret_cast<const char *>(L".") ||
@@ -174,7 +178,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
                   "Failed to claim physical memory for kernel!")
         // Zero out any uninitialised data.
         if (phdr.filesz != phdr.memsz) {
-            memset(reinterpret_cast<void *>(phdr.paddr), 0, phdr.memsz);
+            __builtin_memset(reinterpret_cast<void *>(phdr.paddr), 0, phdr.memsz);
         }
         kernel_file->set_position(kernel_file, static_cast<uint64>(phdr.offset));
         EFI_CHECK(kernel_file->read(kernel_file, &phdr.filesz, reinterpret_cast<void *>(phdr.paddr)),
@@ -201,7 +205,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     ustd::dbgln("Finding ACPI RSDP...");
     for (usize i = 0; i < st->configuration_table_count; i++) {
         auto &table = st->configuration_table[i];
-        if (memcmp(&table.vendor_guid, &efi::ConfigurationTable::acpi_guid, sizeof(efi::Guid)) == 0) {
+        if (__builtin_memcmp(&table.vendor_guid, &efi::ConfigurationTable::acpi_guid, sizeof(efi::Guid)) == 0) {
             rsdp = table.vendor_table;
             break;
         }

@@ -13,7 +13,6 @@
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -173,7 +172,7 @@ void Scheduler::switch_next(RegisterState *regs) {
     } while (next_thread->m_state != ThreadState::Alive || next_thread->m_cpu.load(ustd::MemoryOrder::Acquire) != -1);
     next_thread->m_cpu.store(Processor::id(), ustd::MemoryOrder::Release);
     locker.unlock();
-    memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
+    __builtin_memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     auto &process = *next_thread->m_process;
     if (MemoryManager::current_space() != process.m_virt_space.obj()) {
         MemoryManager::switch_space(*process.m_virt_space);
@@ -187,7 +186,7 @@ void Scheduler::timer_handler(RegisterState *regs) {
     if (Processor::id() == 0) {
         TimeManager::update();
     }
-    memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
+    __builtin_memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
     switch_next(regs);
 }
 

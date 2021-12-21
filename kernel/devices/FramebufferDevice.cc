@@ -5,7 +5,6 @@
 #include <kernel/SyscallTypes.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 
 extern bool g_console_enabled;
@@ -19,7 +18,7 @@ SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
             .width = m_width,
             .height = m_height,
         };
-        memcpy(arg, &info, sizeof(FramebufferInfo));
+        __builtin_memcpy(arg, &info, sizeof(FramebufferInfo));
         return 0;
     }
     default:

@@ -1,7 +1,6 @@
 #include <kernel/ipc/DoubleBuffer.hh>
 
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
@@ -38,7 +37,7 @@ usize DoubleBuffer::read(ustd::Span<void> data) {
         return 0;
     }
     usize read_size = ustd::min(data.size(), m_read_buffer->size - m_read_position);
-    memcpy(data.data(), m_read_buffer->data + m_read_position, read_size);
+    __builtin_memcpy(data.data(), m_read_buffer->data + m_read_position, read_size);
     m_read_position += read_size;
     return read_size;
 }
@@ -46,7 +45,7 @@ usize DoubleBuffer::read(ustd::Span<void> data) {
 usize DoubleBuffer::write(ustd::Span<const void> data) {
     ScopedLock locker(m_lock);
     usize write_size = ustd::min(data.size(), m_size - m_write_buffer->size);
-    memcpy(m_write_buffer->data + m_write_buffer->size, data.data(), write_size);
+    __builtin_memcpy(m_write_buffer->data + m_write_buffer->size, data.data(), write_size);
     m_write_buffer->size += write_size;
     return write_size;
 }

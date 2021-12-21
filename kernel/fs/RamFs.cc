@@ -5,7 +5,6 @@
 #include <kernel/fs/InodeFile.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
@@ -59,7 +58,7 @@ usize RamFsInode::read(ustd::Span<void> data, usize offset) {
     if (size > m_data.size() - offset) {
         size = m_data.size() - offset;
     }
-    memcpy(data.data(), m_data.data() + offset, size);
+    __builtin_memcpy(data.data(), m_data.data() + offset, size);
     return size;
 }
 
@@ -81,6 +80,6 @@ void RamFsInode::truncate() {
 usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
     usize size = data.size();
     m_data.ensure_size(offset + size);
-    memcpy(m_data.data() + offset, data.data(), size);
+    __builtin_memcpy(m_data.data() + offset, data.data(), size);
     return size;
 }

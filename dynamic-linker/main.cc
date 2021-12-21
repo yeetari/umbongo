@@ -4,7 +4,6 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
@@ -40,7 +39,7 @@ usize main(usize argc, const char **argv) {
             dynamic_table_offset = phdr.offset;
         } else if (phdr.type == elf::SegmentType::Load) {
             // TODO: Only bother zeroing bss.
-            memset(reinterpret_cast<void *>(base_offset + phdr.vaddr), 0, phdr.memsz);
+            __builtin_memset(reinterpret_cast<void *>(base_offset + phdr.vaddr), 0, phdr.memsz);
             file.read({reinterpret_cast<void *>(base_offset + phdr.vaddr), phdr.filesz}, phdr.offset);
         }
     }

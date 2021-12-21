@@ -22,7 +22,7 @@ constexpr bool equal(const Container &a, const Container &b) {
         return false;
     }
     if constexpr (IsTriviallyCopyable<T>) {
-        return memcmp(a.data(), b.data(), b.size_bytes()) == 0;
+        return __builtin_memcmp(a.data(), b.data(), b.size_bytes()) == 0;
     }
     for (usize i = 0; i < a.size(); i++) {
         if (a[i] != b[i]) {

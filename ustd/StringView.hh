@@ -44,7 +44,7 @@ constexpr bool StringView::operator==(StringView other) const {
     if (length() != other.length()) {
         return false;
     }
-    return memcmp(data(), other.data(), length()) == 0;
+    return __builtin_memcmp(data(), other.data(), length()) == 0;
 }
 
 } // namespace ustd

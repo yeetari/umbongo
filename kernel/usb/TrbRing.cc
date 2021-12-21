@@ -2,7 +2,6 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
@@ -32,7 +31,7 @@ ustd::Span<TransferRequestBlock> TrbRing::dequeue() {
 
 TransferRequestBlock *TrbRing::enqueue(TransferRequestBlock *in_trb) {
     in_trb->cycle = m_cycle_state;
-    auto *trb = memcpy(&m_queue[m_index++], in_trb, sizeof(TransferRequestBlock));
+    auto *trb = __builtin_memcpy(&m_queue[m_index++], in_trb, sizeof(TransferRequestBlock));
     auto &next_trb = m_queue[m_index];
     if (next_trb.type == TrbType::Link) {
         ASSERT_PEDANTIC(next_trb.data_ptr == m_queue.data());

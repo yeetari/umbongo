@@ -80,7 +80,7 @@ void parse_memory_map(BootInfo *boot_info) {
 
     // Construct the frame bitset and initially mark all frames as reserved.
     s_data.frame_bitset = new (reinterpret_cast<void *>(*bitset_location)) usize[bucket_count];
-    memset(s_data.frame_bitset, 0xff, bucket_count * sizeof(usize));
+    __builtin_memset(s_data.frame_bitset, 0xff, bucket_count * sizeof(usize));
 
     // Mark available frames as usable. Reclaimable memory will be reclaimed later, after the initial kernel stack is no
     // longer in use.

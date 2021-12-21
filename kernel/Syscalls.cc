@@ -25,7 +25,6 @@
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
@@ -207,7 +206,7 @@ SyscallResult Process::sys_getcwd(char *path) const {
     if (path == nullptr) {
         return path_characters.size();
     }
-    memcpy(path, path_characters.data(), path_characters.size());
+    __builtin_memcpy(path, path_characters.data(), path_characters.size());
     return 0;
 }
 
@@ -262,7 +261,7 @@ SyscallResult Process::sys_open(const char *path, OpenMode mode) {
 
 SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
     ustd::LargeVector<PollFd> poll_fds(count);
-    memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
+    __builtin_memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
     Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {
         // TODO: Bounds checking.
@@ -275,7 +274,7 @@ SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
             poll_fd.revents |= PollEvents::Write;
         }
     }
-    memcpy(fds, poll_fds.data(), count * sizeof(PollFd));
+    __builtin_memcpy(fds, poll_fds.data(), count * sizeof(PollFd));
     return 0;
 }
 
@@ -315,7 +314,7 @@ SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     usize byte_offset = 0;
     for (usize i = 0; i < directory->size(); i++) {
         auto *child = directory->child(i);
-        memcpy(data + byte_offset, child->name().data(), child->name().length());
+        __builtin_memcpy(data + byte_offset, child->name().data(), child->name().length());
         data[byte_offset + child->name().length()] = '\0';
         byte_offset += child->name().length() + 1;
     }

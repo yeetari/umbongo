@@ -89,7 +89,7 @@ Vector<T, SizeType>::Vector(const Vector &other) {
             new (data++) T(elem);
         }
     } else {
-        memcpy(m_data, other.data(), other.size_bytes());
+        __builtin_memcpy(m_data, other.data(), other.size_bytes());
     }
 }
 
@@ -139,7 +139,7 @@ void Vector<T, SizeType>::ensure_size(SizeType size, Args &&...args) {
             new (begin() + i) T(forward<Args>(args)...);
         }
     } else {
-        memset(begin() + m_size, 0, size * sizeof(T) - m_size * sizeof(T));
+        __builtin_memset(begin() + m_size, 0, size * sizeof(T) - m_size * sizeof(T));
     }
     m_size = size;
 }
@@ -156,7 +156,7 @@ void Vector<T, SizeType>::reallocate(SizeType capacity) {
             (--elem)->~T();
         }
     } else {
-        memcpy(new_data, m_data, size_bytes());
+        __builtin_memcpy(new_data, m_data, size_bytes());
     }
     delete[] reinterpret_cast<uint8 *>(m_data);
     m_data = new_data;
@@ -197,7 +197,7 @@ template <typename T, typename SizeType>
 void Vector<T, SizeType>::push(const T &elem) {
     ensure_capacity(m_size + 1);
     if constexpr (IsTriviallyCopyable<T>) {
-        memcpy(end(), &elem, sizeof(T));
+        __builtin_memcpy(end(), &elem, sizeof(T));
     } else {
         new (end()) T(elem);
     }
@@ -232,7 +232,7 @@ void Vector<T, SizeType>::remove(SizeType index) {
     }
     m_size--;
     if constexpr (IsTriviallyCopyable<T>) {
-        memcpy(begin() + index, begin() + index + 1, (m_size - index) * sizeof(T));
+        __builtin_memcpy(begin() + index, begin() + index + 1, (m_size - index) * sizeof(T));
         return;
     }
     for (SizeType i = index; i < m_size; i++) {

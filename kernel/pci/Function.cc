@@ -54,7 +54,7 @@ SysResult<usize> Function::read(ustd::Span<void> data, usize offset) {
         .device_id = m_device_id,
     };
     const auto size = ustd::min(data.size(), sizeof(PciDeviceInfo));
-    memcpy(data.data(), &info, size);
+    __builtin_memcpy(data.data(), &info, size);
     return size;
 }
 

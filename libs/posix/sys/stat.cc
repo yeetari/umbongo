@@ -1,6 +1,5 @@
 #include <sys/stat.h>
 
-#include <string.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -23,12 +22,12 @@ int mkdir(const char *, mode_t) {
 
 int stat(const char *, struct stat *st) {
     // TODO
-    memset(st, 0, sizeof(struct stat));
+    __builtin_memset(st, 0, sizeof(struct stat));
     return 0;
 }
 
 int fstat(int fd, struct stat *st) {
-    memset(st, 0, sizeof(struct stat));
+    __builtin_memset(st, 0, sizeof(struct stat));
     ssize_t size = Syscall::invoke(Syscall::size, fd);
     ASSERT(size >= 0);
     st->st_mode = S_IFREG | S_IRWXU;

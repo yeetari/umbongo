@@ -31,7 +31,7 @@ public:
         m_chunk_count = memory_size / (k_chunk_size + 1);
         ASSERT(m_chunk_count * k_chunk_size + (m_chunk_count + 7) / 8 <= memory_size);
         m_bitset = reinterpret_cast<usize *>(memory + m_chunk_count * k_chunk_size);
-        memset(m_bitset, 0, m_chunk_count / 8);
+        __builtin_memset(m_bitset, 0, m_chunk_count / 8);
     }
 
     void *allocate(usize size);

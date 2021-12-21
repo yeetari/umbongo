@@ -3,7 +3,6 @@
 
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -34,7 +33,7 @@ ustd::Vector<const char *> build_string_vector(const Value &value) {
 
 ustd::String find_command(ustd::StringView name) {
     ustd::String path(name.length() + 5);
-    memcpy(path.data() + 5, name.data(), name.length());
+    __builtin_memcpy(path.data() + 5, name.data(), name.length());
     path.data()[0] = '/';
     path.data()[1] = 'b';
     path.data()[2] = 'i';

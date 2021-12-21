@@ -40,11 +40,3 @@ extern "C" usize strlen(const char *str) {
     }
     return len;
 }
-
-extern "C" usize wstrlen(const wchar_t *str) {
-    usize len = 0;
-    while (str[len] != '\0') {
-        len++;
-    }
-    return len;
-}

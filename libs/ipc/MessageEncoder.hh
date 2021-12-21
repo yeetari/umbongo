@@ -25,7 +25,7 @@ public:
 template <ustd::TriviallyCopyable T>
 void MessageEncoder::encode(const T &obj) {
     ASSERT(m_size + sizeof(T) < m_buffer.size());
-    memcpy(m_ptr + m_size, &obj, sizeof(T));
+    __builtin_memcpy(m_ptr + m_size, &obj, sizeof(T));
     m_size += sizeof(T);
 }
 

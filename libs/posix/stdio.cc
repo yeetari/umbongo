@@ -405,7 +405,7 @@ int fputc(int c, FILE *stream) {
 
 int fputs(const char *str, FILE *stream) {
     ASSERT(stream != nullptr);
-    size_t len = strlen(str);
+    size_t len = __builtin_strlen(str);
     return stream->write(str, len) < len ? EOF : 1;
 }
 

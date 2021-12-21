@@ -16,7 +16,6 @@
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
@@ -379,8 +378,8 @@ void Processor::start_aps(acpi::ApicTable *madt) {
     const usize bootstrap_size =
         reinterpret_cast<uintptr>(&ap_bootstrap_end) - reinterpret_cast<uintptr>(&ap_bootstrap);
     ENSURE(bootstrap_size <= 4_KiB);
-    memcpy(reinterpret_cast<void *>(0x8000), reinterpret_cast<void *>(reinterpret_cast<uintptr>(&ap_bootstrap)),
-           bootstrap_size);
+    __builtin_memcpy(reinterpret_cast<void *>(0x8000),
+                     reinterpret_cast<void *>(reinterpret_cast<uintptr>(&ap_bootstrap)), bootstrap_size);
     ustd::ScopeGuard free_bootstrap_guard([] {
         MemoryManager::free_frame(0x8000);
     });

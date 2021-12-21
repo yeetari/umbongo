@@ -4,7 +4,6 @@
 
 #include <kernel/Font.hh>
 #include <ustd/Algorithm.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -18,8 +17,8 @@ void Terminal::set_char(uint32 row, uint32 col, char ch) {
     auto &line = m_lines[row];
     line.set_dirty(true);
     if (ch == '\b') {
-        memcpy(&line.chars()[col], &line.chars()[col + 1], line.chars().size() - col - 1);
-        memcpy(&line.colours()[col], &line.colours()[col + 1], line.colours().size() - col - 1);
+        __builtin_memcpy(&line.chars()[col], &line.chars()[col + 1], line.chars().size() - col - 1);
+        __builtin_memcpy(&line.colours()[col], &line.colours()[col + 1], line.colours().size() - col - 1);
         return;
     }
     for (uint32 i = line.chars().size() - col - 1; i > 0; i--) {

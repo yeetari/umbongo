@@ -4,7 +4,6 @@
 #include <kernel/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -16,13 +15,13 @@ Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open
 }
 
 void Framebuffer::clear() {
-    memset(m_back_buffer, 0, m_info.size);
+    __builtin_memset(m_back_buffer, 0, m_info.size);
     m_dirty = true;
 }
 
 void Framebuffer::clear_region(uint32 x, uint32 y, uint32 width, uint32 height) {
     for (uint32 y1 = y; y1 < y + height; y1++) {
-        memset(&m_back_buffer[y1 * m_info.width + x], 0, width * sizeof(uint32));
+        __builtin_memset(&m_back_buffer[y1 * m_info.width + x], 0, width * sizeof(uint32));
     }
     m_dirty = true;
 }
@@ -39,5 +38,5 @@ void Framebuffer::swap_buffers() {
         return;
     }
     m_dirty = false;
-    memcpy(m_front_buffer, m_back_buffer, m_info.size);
+    __builtin_memcpy(m_front_buffer, m_back_buffer, m_info.size);
 }

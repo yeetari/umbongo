@@ -10,7 +10,7 @@
 #include <ustd/Vector.hh>
 
 bool compare_name(ustd::String &lhs, ustd::String &rhs) {
-    if (int rc = memcmp(lhs.data(), rhs.data(), ustd::min(lhs.length(), rhs.length()))) {
+    if (int rc = __builtin_memcmp(lhs.data(), rhs.data(), ustd::min(lhs.length(), rhs.length()))) {
         return rc > 0;
     }
     return lhs.length() > rhs.length();

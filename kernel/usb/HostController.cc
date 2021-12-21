@@ -186,7 +186,7 @@ void HostController::enable() {
     auto *scratchpad = new (ustd::align_val_t(4_KiB)) void *[scratch_buffer_count];
     for (uint32 i = 0; i < scratch_buffer_count; i++) {
         auto *buffer = new (ustd::align_val_t(4_KiB)) uint8[4_KiB];
-        memset(buffer, 0, 4_KiB);
+        __builtin_memset(buffer, 0, 4_KiB);
         scratchpad[i] = buffer;
     }
 
@@ -385,7 +385,7 @@ void HostController::send_command(TransferRequestBlock *command) {
     while ((trb->status & (1u << 31u)) == 0) {
         Scheduler::wait(1);
     }
-    memcpy(command, trb, sizeof(TransferRequestBlock));
+    __builtin_memcpy(command, trb, sizeof(TransferRequestBlock));
 }
 
 void HostController::spawn_watch_thread() {
