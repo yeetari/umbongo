@@ -70,6 +70,7 @@ public:
     SyscallResult sys_read_directory(const char *path, uint8 *data);
     SyscallResult sys_seek(uint32 fd, usize offset, SeekMode mode);
     SyscallResult sys_size(uint32 fd);
+    SyscallResult sys_virt_to_phys(uintptr virt);
     SyscallResult sys_wait_pid(usize pid);
     SyscallResult sys_write(uint32 fd, void *data, usize size);
 

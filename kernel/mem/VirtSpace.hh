@@ -38,6 +38,9 @@ public:
     VirtSpace &operator=(const VirtSpace &) = delete;
     VirtSpace &operator=(VirtSpace &&) = delete;
 
+    auto begin() const { return m_regions.begin(); }
+    auto end() const { return m_regions.end(); }
+
     Region &allocate_region(usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
     Region &create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
     ustd::SharedPtr<VirtSpace> clone() const;

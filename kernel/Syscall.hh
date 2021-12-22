@@ -31,6 +31,7 @@ namespace Syscall {
     S(read_directory)                                                                                                  \
     S(seek)                                                                                                            \
     S(size)                                                                                                            \
+    S(virt_to_phys)                                                                                                    \
     S(wait_pid)                                                                                                        \
     S(write)
 

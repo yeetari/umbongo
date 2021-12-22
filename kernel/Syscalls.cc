@@ -17,6 +17,7 @@
 #include <kernel/ipc/Pipe.hh>
 #include <kernel/ipc/ServerSocket.hh>
 #include <kernel/ipc/Socket.hh>
+#include <kernel/mem/PhysicalPage.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Scheduler.hh>
@@ -350,6 +351,46 @@ SyscallResult Process::sys_size(uint32 fd) {
         return SysError::Invalid;
     }
     return static_cast<InodeFile &>(file).inode()->size();
+}
+
+SyscallResult Process::sys_virt_to_phys(uintptr virt) {
+    ScopedLock locker(m_lock);
+    for (const auto &region : *m_virt_space) {
+        if (virt < region->base() || virt >= (region->base() + region->size())) {
+            continue;
+        }
+        for (uintptr page_virt = region->base(); const auto &physical_page : region->physical_pages()) {
+            uintptr page_end = page_virt;
+            switch (physical_page->size()) {
+            case PhysicalPageSize::Normal:
+                page_end += 4_KiB;
+                break;
+            case PhysicalPageSize::Large:
+                page_end += 2_MiB;
+                break;
+            case PhysicalPageSize::Huge:
+                page_end += 1_GiB;
+                break;
+            }
+            if (virt < page_virt || virt >= page_end) {
+                continue;
+            }
+            usize offset = virt - page_virt;
+            switch (physical_page->size()) {
+            case PhysicalPageSize::Normal:
+                page_virt += 4_KiB;
+                break;
+            case PhysicalPageSize::Large:
+                page_virt += 2_MiB;
+                break;
+            case PhysicalPageSize::Huge:
+                page_virt += 1_GiB;
+                break;
+            }
+            return physical_page->phys() + offset;
+        }
+    }
+    return SysError::NonExistent;
 }
 
 SyscallResult Process::sys_wait_pid(usize pid) {

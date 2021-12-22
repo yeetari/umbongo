@@ -39,6 +39,7 @@ public:
     usize size() const { return m_size; }
     RegionAccess access() const { return m_access; }
     bool free() const { return m_free; }
+    const auto &physical_pages() const { return m_physical_pages; }
 };
 
 inline constexpr RegionAccess operator&(RegionAccess a, RegionAccess b) {
