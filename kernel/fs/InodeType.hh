@@ -1,8 +1,7 @@
 #pragma once
 
 enum class InodeType {
-    Device,
+    AnonymousFile,
     Directory,
-    IpcFile,
     RegularFile,
 };

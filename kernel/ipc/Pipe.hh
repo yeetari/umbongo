@@ -22,6 +22,8 @@ public:
     Pipe &operator=(const Pipe &) = delete;
     Pipe &operator=(Pipe &&) = delete;
 
+    bool is_pipe() const override { return true; }
+
     void attach(AttachDirection) override;
     void detach(AttachDirection) override;
     bool can_read() override;

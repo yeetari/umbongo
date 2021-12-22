@@ -152,7 +152,7 @@ SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode,
     if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
         inode->truncate();
     }
-    return inode->open();
+    return TRY(inode->open());
 }
 
 SysResult<Inode *> Vfs::open_directory(ustd::StringView path, Inode *base) {

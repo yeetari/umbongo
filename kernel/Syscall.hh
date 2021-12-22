@@ -9,6 +9,7 @@ namespace Syscall {
 #define ENUMERATE_SYSCALLS(S)                                                                                          \
     S(accept)                                                                                                          \
     S(allocate_region)                                                                                                 \
+    S(bind)                                                                                                            \
     S(chdir)                                                                                                           \
     S(close)                                                                                                           \
     S(connect)                                                                                                         \

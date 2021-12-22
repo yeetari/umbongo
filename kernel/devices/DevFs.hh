@@ -1,7 +1,6 @@
 #pragma once
 
 #include <kernel/SpinLock.hh>
-#include <kernel/devices/Device.hh>
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -15,14 +14,14 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+class Device;
+
 class DevFsInode final : public Inode {
     ustd::String m_name;
-    ustd::SharedPtr<Device> m_device;
 
 public:
-    DevFsInode(ustd::StringView name, Inode *parent) : Inode(InodeType::Device, parent), m_name(name) {}
+    DevFsInode(Inode *parent, ustd::StringView name) : Inode(InodeType::AnonymousFile, parent), m_name(name) {}
 
-    void bind(Device *device) { m_device = ustd::SharedPtr<Device>(device); }
     Inode *child(usize index) override;
     Inode *create(ustd::StringView name, InodeType type) override;
     Inode *lookup(ustd::StringView name) override;
@@ -32,9 +31,7 @@ public:
     usize size() override;
     void truncate() override {}
     usize write(ustd::Span<const void> data, usize offset) override;
-
     ustd::StringView name() const override { return m_name.view(); }
-    const ustd::SharedPtr<Device> &device() { return m_device; }
 };
 
 class DevFsDirectoryInode final : public Inode {
@@ -54,7 +51,6 @@ public:
     usize size() override;
     void truncate() override {}
     usize write(ustd::Span<const void> data, usize offset) override;
-
     ustd::StringView name() const override { return m_name.view(); }
 };
 

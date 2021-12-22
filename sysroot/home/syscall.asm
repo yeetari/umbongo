@@ -1,7 +1,7 @@
 bits 64
 
-SYS_EXIT  equ 9
-SYS_WRITE equ 26
+SYS_EXIT  equ 10
+SYS_WRITE equ 27
 
 section .rodata
 string: db "Hello, world", 0x0a

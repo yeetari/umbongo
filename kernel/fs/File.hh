@@ -25,6 +25,7 @@ public:
     File &operator=(File &&) = delete;
 
     virtual bool is_inode_file() const { return false; }
+    virtual bool is_pipe() const { return false; }
     virtual bool is_server_socket() const { return false; }
     virtual bool is_socket() const { return false; }
 

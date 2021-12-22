@@ -44,8 +44,8 @@ void DevFs::notify_detach(Device *device) {
 }
 
 void DevFs::attach_device(Device *device, ustd::StringView path) {
-    auto *inode = EXPECT(Vfs::create(path, m_root_inode.obj(), InodeType::Device));
-    static_cast<DevFsInode *>(inode)->bind(device);
+    auto *inode = EXPECT(Vfs::create(path, m_root_inode.obj(), InodeType::AnonymousFile));
+    inode->bind_anonymous_file(ustd::SharedPtr<Device>(device));
 }
 
 void DevFs::detach_device(Device *device) {
@@ -70,7 +70,7 @@ Inode *DevFsInode::lookup(ustd::StringView) {
 }
 
 ustd::SharedPtr<File> DevFsInode::open_impl() {
-    return m_device;
+    ENSURE_NOT_REACHED();
 }
 
 usize DevFsInode::read(ustd::Span<void>, usize) {
@@ -98,8 +98,8 @@ Inode *DevFsDirectoryInode::child(usize index) {
 Inode *DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     ScopedLock locker(m_lock);
     switch (type) {
-    case InodeType::Device:
-        return m_children.emplace(new DevFsInode(name, this)).obj();
+    case InodeType::AnonymousFile:
+        return m_children.emplace(new DevFsInode(this, name)).obj();
     case InodeType::Directory:
         return m_children.emplace(new DevFsDirectoryInode(this, name)).obj();
     default:

@@ -71,6 +71,13 @@ SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     return region.base();
 }
 
+SyscallResult Process::sys_bind(uint32 fd, const char *path) {
+    auto *inode = TRY(Vfs::create(path, m_cwd, InodeType::AnonymousFile));
+    ScopedLock locker(m_lock);
+    inode->bind_anonymous_file(ustd::SharedPtr<File>(&m_fds[fd]->file()));
+    return fd;
+}
+
 SyscallResult Process::sys_chdir(const char *path) {
     ScopedLock locker(m_lock);
     m_cwd = TRY(Vfs::open_directory(path, m_cwd));
@@ -156,15 +163,12 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     return new_process.pid();
 }
 
-// TODO: A bind syscall - create_pipe and create_server_socket both return anonymous files, that can be bound to inodes.
-SyscallResult Process::sys_create_server_socket(const char *path, uint32 backlog_limit) {
+SyscallResult Process::sys_create_server_socket(uint32 backlog_limit) {
     // TODO: Upper limit for backlog_limit.
-    auto *inode = TRY(Vfs::create(path, m_cwd, InodeType::IpcFile));
     ScopedLock locker(m_lock);
     auto server = ustd::make_shared<ServerSocket>(backlog_limit);
     uint32 fd = allocate_fd();
     m_fds[fd].emplace(server);
-    inode->bind_ipc_file(server);
     return fd;
 }
 
@@ -257,9 +261,10 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) const 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     ScopedLock locker(m_lock);
     // Try to open the file first so that we don't leak a file descriptor in the event of failure.
+    // TODO: Don't assume Read!
     auto file = TRY(Vfs::open(path, mode, m_cwd));
     uint32 fd = allocate_fd();
-    m_fds[fd].emplace(ustd::move(file));
+    m_fds[fd].emplace(ustd::move(file), file->is_pipe() ? AttachDirection::Read : AttachDirection::ReadWrite);
     return fd;
 }
 
