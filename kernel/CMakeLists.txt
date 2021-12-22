@@ -70,5 +70,5 @@ target_compile_options(kernel PRIVATE
     -Wno-exit-time-destructors
     -Wno-global-constructors)
 target_gc_sections(kernel)
-target_link_libraries(kernel PRIVATE kernel_asm ustd)
+target_link_libraries(kernel PRIVATE elf kernel_asm ustd)
 target_link_options(kernel PRIVATE LINKER:-T,${CMAKE_CURRENT_SOURCE_DIR}/linker.ld,-no-pie)
