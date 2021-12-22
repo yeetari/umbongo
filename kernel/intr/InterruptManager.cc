@@ -1,13 +1,17 @@
 #include <kernel/intr/InterruptManager.hh>
 
 #include <kernel/Port.hh>
+#include <kernel/cpu/Processor.hh>
+#include <kernel/cpu/RegisterState.hh>
 #include <kernel/intr/InterruptType.hh>
 #include <kernel/intr/IoApic.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Function.hh>
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 namespace {
 
@@ -21,6 +25,8 @@ struct Override {
 // TODO: Make these Vectors with inline capacity.
 ustd::Array<IoApic, 4> s_io_apics;
 ustd::Array<Override, 8> s_overrides;
+ustd::Array<ustd::Function<void()>, 256> s_custom_handlers;
+uint8 s_current_vector = 70;
 uint8 s_io_apic_count = 0;
 uint8 s_override_count = 0;
 
@@ -53,6 +59,16 @@ IoApic *io_apic_for_gsi(uint32 gsi) {
 }
 
 } // namespace
+
+// TODO: Proper allocator.
+uint8 InterruptManager::allocate(ustd::Function<void()> &&handler) {
+    uint8 vector = s_current_vector++;
+    s_custom_handlers[vector] = ustd::move(handler);
+    Processor::wire_interrupt(vector, [](RegisterState *regs) {
+        s_custom_handlers[regs->int_num]();
+    });
+    return vector;
+}
 
 void InterruptManager::mask_pic() {
     ustd::dbgln("intr: Found legacy PIC, masking");
