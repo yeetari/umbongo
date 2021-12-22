@@ -22,8 +22,8 @@ public:
     UniquePtr &operator=(UniquePtr &&) noexcept;
 
     void clear();
-    template <typename... Args>
-    T &emplace(Args &&...args);
+    template <typename U = T, typename... Args>
+    U &emplace(Args &&...args);
 
     explicit operator bool() const noexcept { return m_obj != nullptr; }
     bool has_value() const noexcept { return m_obj != nullptr; }
@@ -56,11 +56,11 @@ void UniquePtr<T>::clear() {
 }
 
 template <typename T>
-template <typename... Args>
-T &UniquePtr<T>::emplace(Args &&...args) {
+template <typename U, typename... Args>
+U &UniquePtr<T>::emplace(Args &&...args) {
     clear();
-    m_obj = new T(forward<Args>(args)...);
-    return operator*();
+    m_obj = new U(forward<Args>(args)...);
+    return static_cast<U &>(operator*());
 }
 
 template <typename T, typename... Args>
