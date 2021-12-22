@@ -13,5 +13,6 @@ ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<cons
 ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<const char *> argv,
                                              ustd::Vector<FdPair> copy_fds);
 [[noreturn]] void exit(usize code);
+void sleep(usize ns);
 
 } // namespace core
