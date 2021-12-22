@@ -16,6 +16,8 @@ public:
 
     template <ustd::TriviallyCopyable T>
     T decode();
+
+    usize bytes_decoded() const { return static_cast<usize>(m_ptr - m_buffer.data()); }
 };
 
 template <ustd::TriviallyCopyable T>

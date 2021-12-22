@@ -39,8 +39,11 @@ Server::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loo
                 ENSURE_NOT_REACHED();
             }
             ASSERT(m_on_read);
-            MessageDecoder decoder({buffer.data(), bytes_read});
-            m_on_read(*client, decoder);
+            for (usize position = 0u; position < bytes_read;) {
+                MessageDecoder decoder({buffer.data() + position, bytes_read});
+                m_on_read(*client, decoder);
+                position += decoder.bytes_decoded();
+            }
         });
     });
 }
