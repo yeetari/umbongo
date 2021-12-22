@@ -1,6 +1,7 @@
 #include <kernel/fs/RamFs.hh>
 
-#include <kernel/fs/File.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/fs/File.hh>    // IWYU pragma: keep
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
 #include <kernel/fs/InodeType.hh>
@@ -15,8 +16,6 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
-// TODO: Needs proper locking.
-
 void RamFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);
     m_root_inode.emplace(InodeType::Directory, parent, host != nullptr ? host->name() : "/"sv);
@@ -24,10 +23,12 @@ void RamFs::mount(Inode *parent, Inode *host) {
 
 Inode *RamFsInode::child(usize index) {
     ASSERT(index < ustd::Limits<uint32>::max());
+    ScopedLock locker(m_lock);
     return m_children[static_cast<uint32>(index)].obj();
 }
 
 Inode *RamFsInode::create(ustd::StringView name, InodeType type) {
+    ScopedLock locker(m_lock);
     return m_children.emplace(new RamFsInode(type, this, name)).obj();
 }
 
@@ -38,6 +39,7 @@ Inode *RamFsInode::lookup(ustd::StringView name) {
     if (name == "..") {
         return parent();
     }
+    ScopedLock locker(m_lock);
     for (auto &child : m_children) {
         if (name == child->m_name.view()) {
             return child.obj();
@@ -51,6 +53,7 @@ ustd::SharedPtr<File> RamFsInode::open_impl() {
 }
 
 usize RamFsInode::read(ustd::Span<void> data, usize offset) {
+    ScopedLock locker(m_lock);
     if (offset >= m_data.size()) {
         return 0;
     }
@@ -68,16 +71,19 @@ void RamFsInode::remove(ustd::StringView) {
 }
 
 usize RamFsInode::size() {
+    ScopedLock locker(m_lock);
     return !m_children.empty() ? m_children.size() : m_data.size();
 }
 
 void RamFsInode::truncate() {
     // TODO: Clear with capacity.
+    ScopedLock locker(m_lock);
     ASSERT(m_children.empty());
     m_data.clear();
 }
 
 usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
+    ScopedLock locker(m_lock);
     usize size = data.size();
     m_data.ensure_size(offset + size);
     __builtin_memcpy(m_data.data() + offset, data.data(), size);

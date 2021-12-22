@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -17,6 +18,7 @@ class RamFsInode final : public Inode {
     ustd::String m_name;
     ustd::LargeVector<uint8> m_data;
     ustd::Vector<ustd::UniquePtr<RamFsInode>> m_children;
+    mutable SpinLock m_lock;
 
 public:
     RamFsInode(InodeType type, Inode *parent, ustd::StringView name) : Inode(type, parent), m_name(name) {}
