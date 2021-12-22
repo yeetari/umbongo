@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 template <typename T = uint8>
 T port_read(uint16 port) requires(sizeof(T) <= 4) {
     T value;
@@ -13,3 +15,5 @@ template <typename T>
 void port_write(uint16 port, T value) requires(sizeof(T) <= 4) {
     asm volatile("out %0, %1" : : "a"(value), "Nd"(port));
 }
+
+} // namespace kernel

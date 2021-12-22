@@ -5,6 +5,8 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class Inode;
 
 class InodeFile final : public File {
@@ -22,3 +24,5 @@ public:
 
     Inode *inode() const { return m_inode; }
 };
+
+} // namespace kernel

@@ -3,6 +3,9 @@
 #include <ustd/Types.hh>
 
 struct BootInfo;
+
+namespace kernel {
+
 class VirtSpace;
 
 struct MemoryManager {
@@ -20,3 +23,5 @@ struct MemoryManager {
     static VirtSpace *current_space();
     static VirtSpace *kernel_space();
 };
+
+} // namespace kernel

@@ -7,6 +7,8 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class Device : public File {
     const ustd::String m_path;
     bool m_connected{true};
@@ -21,3 +23,5 @@ public:
     bool valid() override { return m_connected; }
     ustd::StringView path() const { return m_path.view(); }
 };
+
+} // namespace kernel

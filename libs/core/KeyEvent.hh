@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace core {
+
 class KeyEvent {
     uint8 m_code{0};
     char m_character{0};
@@ -18,3 +20,5 @@ public:
     bool alt_pressed() const { return m_alt_pressed; }
     bool ctrl_pressed() const { return m_ctrl_pressed; }
 };
+
+} // namespace core

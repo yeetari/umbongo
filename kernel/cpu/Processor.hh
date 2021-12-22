@@ -2,11 +2,13 @@
 
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class ApicTable;
 
-} // namespace acpi
+} // namespace kernel::acpi
+
+namespace kernel {
 
 class LocalApic;
 struct RegisterState;
@@ -31,3 +33,5 @@ struct Processor {
     static Thread *current_thread();
     static uint8 id();
 };
+
+} // namespace kernel

@@ -1,8 +1,7 @@
 #include <console/Console.hh>
 #include <core/Error.hh>
-#include <kernel/KeyEvent.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
+#include <core/KeyEvent.hh>
+#include <core/Syscall.hh>
 #include <ustd/Log.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
@@ -67,7 +66,7 @@ Editor::~Editor() {
 bool Editor::load(ustd::String &&path) {
     // TODO: Use core::File.
     m_path = ustd::move(path);
-    auto fd_or_error = Syscall::invoke(Syscall::open, m_path.data(), OpenMode::Create);
+    auto fd_or_error = core::syscall(Syscall::open, m_path.data(), kernel::OpenMode::Create);
     if (fd_or_error.is_error()) {
         printf("te: {}: {}\n", m_path.view(), core::error_string(fd_or_error.error()));
         return false;
@@ -75,10 +74,10 @@ bool Editor::load(ustd::String &&path) {
     auto fd = fd_or_error.value();
 
     auto *line = &m_lines.emplace();
-    auto size = EXPECT(Syscall::invoke<usize>(Syscall::size, fd));
+    auto size = EXPECT(core::syscall<usize>(Syscall::size, fd));
     for (usize i = 0; i < size; i++) {
         char ch = 0;
-        EXPECT(Syscall::invoke(Syscall::read, fd, &ch, 1));
+        EXPECT(core::syscall(Syscall::read, fd, &ch, 1));
         if (ch == '\n') {
             line = &m_lines.emplace();
             continue;
@@ -88,14 +87,14 @@ bool Editor::load(ustd::String &&path) {
     if (m_lines.size() > 1) {
         m_lines.pop();
     }
-    EXPECT(Syscall::invoke(Syscall::close, fd));
+    EXPECT(core::syscall(Syscall::close, fd));
     return true;
 }
 
 bool Editor::read_key() {
     // TODO: Global stdin file to .read<KeyEvent>() from.
-    KeyEvent event;
-    EXPECT(Syscall::invoke<ssize>(Syscall::read, 0, &event, sizeof(KeyEvent)));
+    core::KeyEvent event;
+    EXPECT(core::syscall<ssize>(Syscall::read, 0, &event, sizeof(core::KeyEvent)));
     if (event.code() >= 0x4f && event.code() <= 0x52) {
         if (event.ctrl_pressed()) {
             return true;
@@ -171,13 +170,13 @@ bool Editor::read_key() {
     }
     if (event.ctrl_pressed() && event.character() == 'x') {
         // TODO: Use core::File.
-        auto fd = EXPECT(Syscall::invoke<uint32>(Syscall::open, m_path.data(), OpenMode::Truncate));
+        auto fd = EXPECT(core::syscall<uint32>(Syscall::open, m_path.data(), kernel::OpenMode::Truncate));
         for (const auto &line : m_lines) {
             const char newline = '\n';
-            EXPECT(Syscall::invoke(Syscall::write, fd, line.data(), line.column_count()));
-            EXPECT(Syscall::invoke(Syscall::write, fd, &newline, 1));
+            EXPECT(core::syscall(Syscall::write, fd, line.data(), line.column_count()));
+            EXPECT(core::syscall(Syscall::write, fd, &newline, 1));
         }
-        EXPECT(Syscall::invoke(Syscall::close, fd));
+        EXPECT(core::syscall(Syscall::close, fd));
         return false;
     }
     if (event.ctrl_pressed()) {

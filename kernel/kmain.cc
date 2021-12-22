@@ -35,6 +35,13 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 
+extern void (*k_ctors_start)();
+extern void (*k_ctors_end)();
+
+usize __stack_chk_guard = 0xdeadc0de;
+
+namespace kernel {
+
 class LocalApic;
 
 namespace {
@@ -103,11 +110,6 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 }
 
 } // namespace
-
-extern void (*k_ctors_start)();
-extern void (*k_ctors_end)();
-
-usize __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] extern "C" void __stack_chk_fail() {
     auto *rbp = static_cast<uint64 *>(__builtin_frame_address(0));
@@ -196,3 +198,5 @@ extern "C" void kmain(BootInfo *boot_info) {
     Scheduler::setup();
     Scheduler::start();
 }
+
+} // namespace kernel

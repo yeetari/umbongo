@@ -1,10 +1,9 @@
 #include <ipc/Server.hh>
 
 #include <core/EventLoop.hh>
+#include <core/Syscall.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
@@ -19,13 +18,13 @@
 namespace ipc {
 
 Server::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loop(event_loop) {
-    m_fd.emplace(EXPECT(Syscall::invoke<uint32>(Syscall::create_server_socket, 4)));
-    EXPECT(Syscall::invoke(Syscall::bind, *m_fd, path.data()));
-    event_loop.watch(*this, PollEvents::Accept);
+    m_fd.emplace(EXPECT(core::syscall<uint32>(Syscall::create_server_socket, 4)));
+    EXPECT(core::syscall(Syscall::bind, *m_fd, path.data()));
+    event_loop.watch(*this, kernel::PollEvents::Accept);
     set_on_read_ready([this] {
-        uint32 client_fd = EXPECT(Syscall::invoke<uint32>(Syscall::accept, *m_fd));
+        uint32 client_fd = EXPECT(core::syscall<uint32>(Syscall::accept, *m_fd));
         auto *client = m_clients.emplace(new Client(client_fd)).obj();
-        m_event_loop.watch(*client, PollEvents::Read);
+        m_event_loop.watch(*client, kernel::PollEvents::Read);
         client->set_on_read_ready([this, client] {
             // NOLINTNEXTLINE
             ustd::Array<uint8, 8_KiB> buffer;

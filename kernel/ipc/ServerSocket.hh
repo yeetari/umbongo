@@ -8,6 +8,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class Socket;
 
 class ServerSocket final : public File {
@@ -33,3 +35,5 @@ public:
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };
+
+} // namespace kernel

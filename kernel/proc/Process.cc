@@ -11,6 +11,7 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
 namespace {
 
 usize s_pid_counter = 0;
@@ -34,3 +35,5 @@ uint32 Process::allocate_fd() {
 ustd::UniquePtr<Thread> Process::create_thread() {
     return ustd::make_unique<Thread>(this);
 }
+
+} // namespace kernel

@@ -1,7 +1,6 @@
 #include <core/Error.hh>
 
-#include <kernel/SysError.hh>
-#include <kernel/Syscall.hh>
+#include <core/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -31,7 +30,7 @@ ustd::Array k_error_list{
 
 [[noreturn]] void abort_error(ustd::StringView msg, SysError error) {
     dbgln("{}: {}", msg, error_string(error));
-    EXPECT(Syscall::invoke(Syscall::exit, 1));
+    EXPECT(syscall(Syscall::exit, 1));
     ENSURE_NOT_REACHED();
 }
 

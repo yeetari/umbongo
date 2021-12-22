@@ -4,7 +4,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 Table *RootTable::entry(usize index) const {
     ASSERT(index < entry_count());
@@ -15,4 +15,4 @@ usize RootTable::entry_count() const {
     return (length() - sizeof(Table)) / sizeof(void *);
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

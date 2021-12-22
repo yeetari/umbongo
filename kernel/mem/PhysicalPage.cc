@@ -4,6 +4,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 ustd::SharedPtr<PhysicalPage> PhysicalPage::allocate(PhysicalPageSize size) {
     switch (size) {
     case PhysicalPageSize::Normal:
@@ -38,3 +40,5 @@ PhysicalPage::~PhysicalPage() {
         break;
     }
 }
+
+} // namespace kernel

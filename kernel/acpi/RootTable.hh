@@ -4,7 +4,7 @@
 #include <ustd/Algorithm.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class RootTableIterator;
 
@@ -67,4 +67,4 @@ T *RootTable::find() const {
     return nullptr;
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

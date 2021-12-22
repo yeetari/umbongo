@@ -7,16 +7,20 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class VirtSpace;
 
-namespace pci {
+} // namespace kernel
+
+namespace kernel::pci {
 
 struct Bar {
     uintptr address;
     usize size;
 };
 
-class Function final : public ::Device {
+class Function final : public Device {
     const uint16 m_segment;
     const uint8 m_bus;
     const uint8 m_device;
@@ -45,4 +49,4 @@ public:
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
 };
 
-} // namespace pci
+} // namespace kernel::pci

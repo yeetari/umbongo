@@ -2,7 +2,7 @@
 
 #include "Common.hh"
 
-#include <kernel/SysError.hh>
+#include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
@@ -70,14 +70,14 @@ class TrbRing {
     bool m_cycle_state{true};
 
 public:
-    static ustd::Result<ustd::UniquePtr<TrbRing>, SysError> create(bool insert_link);
+    static ustd::Result<ustd::UniquePtr<TrbRing>, core::SysError> create(bool insert_link);
 
     TrbRing(RawTrb *ring, bool insert_link);
     // TODO: Free m_ring in destructor.
 
     ustd::Span<RawTrb> dequeue();
     RawTrb &enqueue(const RawTrb &trb);
-    ustd::Result<uintptr, SysError> physical_base() const;
-    ustd::Result<uintptr, SysError> physical_head() const;
+    ustd::Result<uintptr, core::SysError> physical_base() const;
+    ustd::Result<uintptr, core::SysError> physical_head() const;
     RawTrb &operator[](usize index) const;
 };

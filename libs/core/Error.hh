@@ -5,6 +5,8 @@
 
 namespace core {
 
+using SysError = kernel::SysError;
+
 [[noreturn]] void abort_error(ustd::StringView msg, SysError error);
 ustd::StringView error_string(SysError error);
 

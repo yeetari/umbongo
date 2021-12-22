@@ -4,7 +4,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class PciTableIterator;
 
@@ -59,4 +59,4 @@ inline PciTableIterator PciTable::end() const {
     return {this, segment_count()};
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

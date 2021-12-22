@@ -27,6 +27,7 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
 namespace {
 
 ustd::Optional<ustd::String> interpreter_for(File &file) {
@@ -183,3 +184,5 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 void Thread::kill() {
     m_state = ThreadState::Dead;
 }
+
+} // namespace kernel

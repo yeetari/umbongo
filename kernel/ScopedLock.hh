@@ -1,5 +1,7 @@
 #pragma once
 
+namespace kernel {
+
 template <typename MutexType>
 class ScopedLock {
     MutexType *m_mutex;
@@ -25,3 +27,5 @@ public:
 
 template <typename MutexType>
 ScopedLock(MutexType) -> ScopedLock<MutexType>;
+
+} // namespace kernel

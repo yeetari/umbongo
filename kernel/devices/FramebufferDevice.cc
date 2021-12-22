@@ -7,6 +7,8 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 extern bool g_console_enabled;
 
 SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
@@ -31,3 +33,5 @@ uintptr FramebufferDevice::mmap(VirtSpace &virt_space) {
     auto &region = virt_space.allocate_region(size, RegionAccess::Writable | RegionAccess::UserAccessible, m_base);
     return region.base();
 }
+
+} // namespace kernel

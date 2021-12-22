@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/SysError.hh>
+#include <core/Error.hh>
 #include <ustd/Function.hh> // IWYU pragma: keep
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>

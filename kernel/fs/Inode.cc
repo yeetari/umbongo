@@ -8,6 +8,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Utility.hh>
 
+namespace kernel {
+
 void Inode::bind_anonymous_file(ustd::SharedPtr<File> anonymous_file) {
     ASSERT(!m_anonymous_file);
     m_anonymous_file = ustd::move(anonymous_file);
@@ -22,3 +24,5 @@ SysResult<ustd::SharedPtr<File>> Inode::open() {
     }
     return open_impl();
 }
+
+} // namespace kernel

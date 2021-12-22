@@ -7,8 +7,8 @@
 #include "HostController.hh"
 #include "TrbRing.hh"
 
+#include <core/Error.hh>
 #include <core/Process.hh>
-#include <kernel/SysError.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
@@ -18,7 +18,7 @@
 Endpoint::Endpoint(const Device &device, uint32 id) : m_device(device), m_id(id) {}
 Endpoint::~Endpoint() = default;
 
-ustd::Result<void, ustd::ErrorUnion<HostError, SysError>> Endpoint::setup(EndpointType type, uint16 packet_size) {
+ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(EndpointType type, uint16 packet_size) {
     auto &context = m_device.endpoint_context(m_id);
     m_transfer_ring = TRY(TrbRing::create(true));
     context.endpoint_type = type;

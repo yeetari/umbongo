@@ -2,7 +2,7 @@
 
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 enum class AccessSize : uint8 {
     Byte = 1,
@@ -25,4 +25,4 @@ struct [[gnu::packed]] GenericAddress {
     uint64 address;
 };
 
-} // namespace acpi
+} // namespace kernel::acpi

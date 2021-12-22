@@ -4,6 +4,7 @@
 #include <kernel/Font.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 uint64 s_bytes_per_scan_line;
@@ -54,3 +55,5 @@ void Console::put_char(char ch) {
     }
     s_current_x += g_font.advance();
 }
+
+} // namespace kernel

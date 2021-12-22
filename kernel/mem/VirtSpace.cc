@@ -12,6 +12,8 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 VirtSpace::VirtSpace() : m_pml4(new Pml4) {
     m_regions.push(ustd::make_unique<Region>(0ul, 256_TiB, static_cast<RegionAccess>(0), true, 0ul));
 }
@@ -111,3 +113,5 @@ ustd::SharedPtr<VirtSpace> VirtSpace::clone() const {
     ScopedLock locker(m_lock);
     return ustd::SharedPtr<VirtSpace>(new VirtSpace(m_regions));
 }
+
+} // namespace kernel

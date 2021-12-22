@@ -8,6 +8,8 @@
 #include <ustd/Numeric.hh>
 #include <ustd/Types.hh>
 
+using namespace kernel;
+
 namespace {
 
 constexpr usize k_allocation_header_check = 0xdeadbeef;

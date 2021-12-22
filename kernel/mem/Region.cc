@@ -10,6 +10,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
 namespace {
 
 PageFlags page_flags(RegionAccess access) {
@@ -85,3 +86,5 @@ void Region::map(VirtSpace *virt_space) const {
         }
     }
 }
+
+} // namespace kernel

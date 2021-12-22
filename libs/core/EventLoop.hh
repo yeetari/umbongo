@@ -10,7 +10,7 @@ class Timer;
 class Watchable;
 
 class EventLoop {
-    ustd::Vector<PollFd> m_poll_fds;
+    ustd::Vector<kernel::PollFd> m_poll_fds;
     ustd::Vector<Timer *> m_timers;
     ustd::Vector<Watchable *> m_watchables;
 
@@ -21,7 +21,7 @@ class EventLoop {
 public:
     void register_timer(Timer &timer);
     void unregister_timer(Timer &timer);
-    void watch(Watchable &watchable, PollEvents events);
+    void watch(Watchable &watchable, kernel::PollEvents events);
     void unwatch(Watchable &watchable);
     usize run();
 };

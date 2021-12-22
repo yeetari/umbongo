@@ -7,6 +7,8 @@
 #include <ustd/StringView.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
+namespace kernel {
+
 class File;
 class FileSystem;
 class Inode;
@@ -22,3 +24,5 @@ struct Vfs {
     static SysResult<Inode *> open_directory(ustd::StringView path, Inode *base);
     static Inode *root_inode();
 };
+
+} // namespace kernel

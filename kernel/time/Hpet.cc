@@ -2,6 +2,7 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 struct [[gnu::packed]] GeneralCaps {
@@ -52,3 +53,5 @@ uint64 Hpet::update_time() {
     m_previous_count = current_count;
     return (delta_count * m_period) / 1000000ul;
 }
+
+} // namespace kernel

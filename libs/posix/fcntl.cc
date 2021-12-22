@@ -6,8 +6,7 @@
 #include <stdint.h>
 #include <sys/cdefs.h>
 
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
+#include <core/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Result.hh>
@@ -30,12 +29,12 @@ int open(const char *path, int oflag, ...) {
     auto flags = static_cast<uint32_t>(oflag);
     flags &= ~(O_RDONLY | O_WRONLY);
 
-    auto mode = OpenMode::None;
+    auto mode = kernel::OpenMode::None;
     if ((flags & O_CREAT) == O_CREAT) {
-        mode |= OpenMode::Create;
+        mode |= kernel::OpenMode::Create;
     }
     if ((flags & O_TRUNC) == O_TRUNC) {
-        mode |= OpenMode::Truncate;
+        mode |= kernel::OpenMode::Truncate;
     }
     flags &= ~(O_CREAT | O_TRUNC);
     if (flags != 0) {
@@ -43,7 +42,7 @@ int open(const char *path, int oflag, ...) {
         ENSURE_NOT_REACHED();
     }
 
-    auto result = Syscall::invoke(Syscall::open, path, mode);
+    auto result = core::syscall(Syscall::open, path, mode);
     if (result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;

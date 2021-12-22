@@ -7,6 +7,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 FileHandle::FileHandle(const ustd::SharedPtr<File> &file, AttachDirection direction)
     : m_file(file), m_direction(direction) {
     file->attach(direction);
@@ -53,3 +55,5 @@ SysResult<usize> FileHandle::write(void *data, usize size) {
 bool FileHandle::valid() const {
     return m_file->valid();
 }
+
+} // namespace kernel

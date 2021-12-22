@@ -3,6 +3,8 @@
 #include <kernel/intr/InterruptType.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class IoApic {
     volatile uint32 *const m_base{nullptr};
     const uint32 m_gsi_base{0};
@@ -26,3 +28,5 @@ public:
     uint8 id() const { return m_id; }
     uint32 redirection_entry_count() const { return m_redirection_entry_count; }
 };
+
+} // namespace kernel

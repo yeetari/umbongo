@@ -14,6 +14,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class RamFsInode final : public Inode {
     ustd::String m_name;
     ustd::LargeVector<uint8> m_data;
@@ -42,3 +44,5 @@ public:
     void mount(Inode *parent, Inode *host) override;
     Inode *root_inode() override { return m_root_inode.obj(); }
 };
+
+} // namespace kernel

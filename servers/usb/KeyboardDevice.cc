@@ -6,9 +6,9 @@
 #include "Error.hh"
 #include "TrbRing.hh"
 
+#include <core/KeyEvent.hh>
 #include <core/Pipe.hh>
-#include <kernel/KeyEvent.hh>
-#include <kernel/Syscall.hh>
+#include <core/Syscall.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
 #include <ustd/Memory.hh>
@@ -40,7 +40,7 @@ constexpr ustd::Array s_scancode_table_shift{
 ustd::Result<void, DeviceError> KeyboardDevice::enable() {
     m_dma_buffer = EXPECT(mmio::alloc_dma_array<uint8>(8));
     m_pipe = EXPECT(core::create_pipe());
-    EXPECT(Syscall::invoke(Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
+    EXPECT(core::syscall(Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
     TRY(walk_configuration([this](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
         if (type == DescriptorType::Configuration) {
             auto *config_descriptor = static_cast<ConfigDescriptor *>(descriptor);
@@ -89,13 +89,13 @@ void KeyboardDevice::poll() {
             continue;
         }
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
-        KeyEvent key_event{
+        core::KeyEvent key_event{
             key,
             key < table.size() ? table[key] : '\0',
             m_modifiers[2] || m_modifiers[6],
             m_modifiers[0] || m_modifiers[4],
         };
-        EXPECT(Syscall::invoke(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(KeyEvent)));
+        EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
     }
     __builtin_memcpy(m_cmp_buffer.data(), m_dma_buffer, 8);
 }

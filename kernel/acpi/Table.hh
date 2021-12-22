@@ -3,7 +3,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 // System Description Table Header (ACPI specification 6.4 section 5.2.6)
 class [[gnu::packed]] Table {
@@ -32,4 +32,4 @@ public:
     uint32 length() const { return m_length; }
 };
 
-} // namespace acpi
+} // namespace kernel::acpi

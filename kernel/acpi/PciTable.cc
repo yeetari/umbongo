@@ -5,7 +5,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 const PciSegment *PciTable::segment(usize index) const {
     ASSERT(index < segment_count());
@@ -16,4 +16,4 @@ usize PciTable::segment_count() const {
     return (length() - sizeof(Table) - sizeof(uint64)) / sizeof(PciSegment);
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

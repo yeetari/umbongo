@@ -20,7 +20,7 @@
 usize main(usize, const char **) {
     core::EventLoop event_loop;
     core::File stdin(static_cast<uint32>(0));
-    event_loop.watch(stdin, PollEvents::Read);
+    event_loop.watch(stdin, kernel::PollEvents::Read);
 
     Framebuffer framebuffer("/dev/fb"sv);
     Terminal default_terminal(framebuffer);

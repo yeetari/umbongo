@@ -1,6 +1,5 @@
 #include <core/Error.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
+#include <core/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
 #include <ustd/Result.hh>
@@ -11,7 +10,7 @@ usize main(usize argc, const char **argv) {
     // TODO: Use Core::file
     ustd::Vector<uint32> fds;
     for (usize i = 1; i < argc; i++) {
-        auto fd = Syscall::invoke<uint32>(Syscall::open, argv[i], OpenMode::None);
+        auto fd = core::syscall<uint32>(Syscall::open, argv[i], kernel::OpenMode::None);
         if (fd.is_error()) {
             ustd::printf("cat: {}: {}\n", argv[i], core::error_string(fd.error()));
             return 1;
@@ -26,7 +25,7 @@ usize main(usize argc, const char **argv) {
         while (true) {
             // NOLINTNEXTLINE
             ustd::Array<uint8, 128_KiB> buf;
-            auto bytes_read_or_error = Syscall::invoke<usize>(Syscall::read, fd, buf.data(), buf.size());
+            auto bytes_read_or_error = core::syscall(Syscall::read, fd, buf.data(), buf.size());
             if (bytes_read_or_error.is_error()) {
                 ustd::printf("cat: failed to read from {}: {}\n", fd, core::error_string(bytes_read_or_error.error()));
                 return 1;
@@ -37,7 +36,7 @@ usize main(usize argc, const char **argv) {
             }
             for (usize total_written = 0; total_written < bytes_read;) {
                 auto bytes_written_or_error =
-                    Syscall::invoke<usize>(Syscall::write, 1, buf.data() + total_written, bytes_read - total_written);
+                    core::syscall(Syscall::write, 1, buf.data() + total_written, bytes_read - total_written);
                 if (bytes_written_or_error.is_error()) {
                     printf("cat: failed to write: {}\n", core::error_string(bytes_written_or_error.error()));
                     return 1;
@@ -45,7 +44,7 @@ usize main(usize argc, const char **argv) {
                 total_written += bytes_written_or_error.value();
             }
         }
-        EXPECT(Syscall::invoke(Syscall::close, fd));
+        EXPECT(core::syscall(Syscall::close, fd));
     }
     return 0;
 }

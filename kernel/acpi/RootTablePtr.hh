@@ -3,7 +3,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class RootTable;
 
@@ -24,4 +24,4 @@ public:
     RootTable *xsdt() const { return m_xsdt; }
 };
 
-} // namespace acpi
+} // namespace kernel::acpi

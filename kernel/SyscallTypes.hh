@@ -3,6 +3,8 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 struct FdPair {
     uint32 parent;
     uint32 child;
@@ -94,3 +96,5 @@ inline constexpr OpenMode operator|(OpenMode a, OpenMode b) {
 inline constexpr OpenMode &operator|=(OpenMode &a, OpenMode b) {
     return a = (a | b);
 }
+
+} // namespace kernel

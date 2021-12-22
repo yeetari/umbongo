@@ -7,6 +7,8 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class Pipe final : public File {
     DoubleBuffer m_buffer;
     uint32 m_reader_count{0};
@@ -31,3 +33,5 @@ public:
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };
+
+} // namespace kernel

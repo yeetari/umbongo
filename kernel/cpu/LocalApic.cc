@@ -2,6 +2,7 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 constexpr usize k_reg_eoi = 0xb0;
@@ -66,3 +67,5 @@ void LocalApic::set_timer_count(uint32 count) {
 uint32 LocalApic::read_timer_count() const {
     return read<uint32>(k_reg_timer_count_current);
 }
+
+} // namespace kernel

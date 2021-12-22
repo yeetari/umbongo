@@ -5,7 +5,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 // High Precision Event Timer Table (IA-PC HPET specification 1.0a section 3.2.4)
 class [[gnu::packed]] HpetTable : public Table {
@@ -27,4 +27,4 @@ public:
     const GenericAddress &base_address() const { return m_base_address; }
 };
 
-} // namespace acpi
+} // namespace kernel::acpi

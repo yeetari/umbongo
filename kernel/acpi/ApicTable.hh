@@ -5,7 +5,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class ApicTableIterator;
 
@@ -57,4 +57,4 @@ inline ApicTableIterator ApicTable::end() const {
     return {this, controller_count()};
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

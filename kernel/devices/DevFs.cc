@@ -19,6 +19,7 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
 namespace {
 
 DevFs *s_instance = nullptr;
@@ -149,3 +150,5 @@ usize DevFsDirectoryInode::size() {
 usize DevFsDirectoryInode::write(ustd::Span<const void>, usize) {
     ENSURE_NOT_REACHED();
 }
+
+} // namespace kernel

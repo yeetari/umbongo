@@ -5,7 +5,6 @@
 #include <core/Error.hh>
 #include <core/EventLoop.hh>
 #include <core/File.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Format.hh>
 #include <ustd/Log.hh>
@@ -24,7 +23,7 @@ ustd::Vector<HostController> find_host_controllers() {
     ustd::Vector<HostController> host_controllers;
     EXPECT(core::iterate_directory("/dev/pci", [&](ustd::StringView device_name) {
         auto file = EXPECT(core::File::open(ustd::format("/dev/pci/{}", device_name)));
-        auto info = EXPECT(file.read<PciDeviceInfo>());
+        auto info = EXPECT(file.read<kernel::PciDeviceInfo>());
         if (info.clas == 0x0c && info.subc == 0x03 && info.prif == 0x30) {
             host_controllers.emplace(device_name, ustd::move(file));
         }
@@ -40,14 +39,14 @@ usize main(usize, const char **) {
     for (auto &host_controller : host_controllers) {
         if (auto result = host_controller.enable(); result.is_error()) {
             auto error = result.error();
-            if (auto sys_error = error.as<SysError>()) {
+            if (auto sys_error = error.as<core::SysError>()) {
                 ustd::dbgln(" usb: skipping {}: {}", host_controller.name(), core::error_string(*sys_error));
             } else if (auto initialisation_error = error.as<HostError>()) {
                 ustd::dbgln(" usb: skipping {}: {}", host_controller.name(), host_error_string(*initialisation_error));
             }
             continue;
         }
-        event_loop.watch(host_controller.file(), PollEvents::Write);
+        event_loop.watch(host_controller.file(), kernel::PollEvents::Write);
     }
     return event_loop.run();
 }

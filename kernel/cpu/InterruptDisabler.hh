@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class InterruptDisabler {
     uint64 m_flags{0};
 
@@ -23,3 +25,5 @@ public:
     InterruptDisabler &operator=(const InterruptDisabler &) = delete;
     InterruptDisabler &operator=(InterruptDisabler &&) = delete;
 };
+
+} // namespace kernel

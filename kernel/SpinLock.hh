@@ -2,6 +2,8 @@
 
 #include <ustd/Atomic.hh>
 
+namespace kernel {
+
 class SpinLock {
     uint64 m_flags{0};
     ustd::Atomic<bool> m_locked{false};
@@ -25,3 +27,5 @@ public:
 
     bool locked() const { return m_locked.load(ustd::MemoryOrder::Relaxed); }
 };
+
+} // namespace kernel

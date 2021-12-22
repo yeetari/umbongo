@@ -6,6 +6,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
+namespace kernel {
+
 DoubleBuffer::DoubleBuffer(usize size) : m_size(size), m_read_buffer(&m_buffer1), m_write_buffer(&m_buffer2) {
     m_data = new uint8[size * 2];
     m_read_buffer->data = m_data + size;
@@ -49,3 +51,5 @@ usize DoubleBuffer::write(ustd::Span<const void> data) {
     m_write_buffer->size += write_size;
     return write_size;
 }
+
+} // namespace kernel

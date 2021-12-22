@@ -17,7 +17,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
-namespace pci {
+namespace kernel::pci {
 namespace {
 
 constexpr uint8 k_cap_msi = 0x05;
@@ -194,4 +194,4 @@ SysResult<usize> Function::read(ustd::Span<void> data, usize offset) {
     return size;
 }
 
-} // namespace pci
+} // namespace kernel::pci

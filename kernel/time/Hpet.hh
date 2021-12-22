@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class Hpet {
     const uint64 m_address;
     uint64 m_period;
@@ -18,3 +20,5 @@ public:
     void spin(uint64 millis) const;
     uint64 update_time();
 };
+
+} // namespace kernel

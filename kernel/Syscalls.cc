@@ -36,6 +36,8 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 SyscallResult Process::sys_accept(uint32 fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
@@ -419,3 +421,5 @@ SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
     }
     return TRY(handle->write(data, size));
 }
+
+} // namespace kernel

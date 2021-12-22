@@ -16,6 +16,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 void RamFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);
     m_root_inode.emplace(InodeType::Directory, parent, host != nullptr ? host->name() : "/"sv);
@@ -89,3 +91,5 @@ usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
     __builtin_memcpy(m_data.data() + offset, data.data(), size);
     return size;
 }
+
+} // namespace kernel

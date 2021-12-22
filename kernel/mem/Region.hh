@@ -6,6 +6,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class VirtSpace;
 
 enum class RegionAccess : uint8 {
@@ -53,3 +55,5 @@ inline constexpr RegionAccess operator|(RegionAccess a, RegionAccess b) {
 inline constexpr RegionAccess &operator|=(RegionAccess &a, RegionAccess b) {
     return a = (a | b);
 }
+
+} // namespace kernel

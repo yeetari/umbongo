@@ -6,6 +6,8 @@
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 template <typename T = void>
 using SysResult = ustd::Result<T, SysError>;
 
@@ -26,3 +28,5 @@ public:
 
     usize value() const { return m_value; }
 };
+
+} // namespace kernel

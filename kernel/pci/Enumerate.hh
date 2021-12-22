@@ -1,13 +1,13 @@
 #pragma once
 
-namespace acpi {
+namespace kernel::acpi {
 
 class PciTable;
 
-} // namespace acpi
+} // namespace kernel::acpi
 
-namespace pci {
+namespace kernel::pci {
 
 void enumerate(acpi::PciTable *mcfg);
 
-} // namespace pci
+} // namespace kernel::pci

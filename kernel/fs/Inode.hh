@@ -8,6 +8,8 @@
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class Inode {
     Inode *const m_parent;
     const InodeType m_type;
@@ -41,3 +43,5 @@ public:
     Inode *parent() const { return m_parent; }
     InodeType type() const { return m_type; }
 };
+
+} // namespace kernel

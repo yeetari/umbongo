@@ -1,5 +1,7 @@
 #pragma once
 
+namespace kernel {
+
 class Inode;
 
 class FileSystem {
@@ -15,3 +17,5 @@ public:
     virtual void mount(Inode *parent, Inode *host) = 0;
     virtual Inode *root_inode() = 0;
 };
+
+} // namespace kernel

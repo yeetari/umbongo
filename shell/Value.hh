@@ -64,7 +64,7 @@ public:
         : Value(k_kind), m_command(ustd::move(command)), m_args(ustd::move(args)) {}
 
     void await_completion() const;
-    void spawn(const ustd::Vector<FdPair> &copy_fds);
+    void spawn(const ustd::Vector<kernel::FdPair> &copy_fds);
 };
 
 class ListValue : public Value {

@@ -3,8 +3,8 @@
 #include "Error.hh"
 #include "Port.hh" // IWYU pragma: keep
 
+#include <core/Error.hh>
 #include <core/File.hh>
-#include <kernel/SysError.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
@@ -75,9 +75,9 @@ public:
     HostController &operator=(const HostController &) = delete;
     HostController &operator=(HostController &&) = delete;
 
-    ustd::Result<void, ustd::ErrorUnion<SysError, HostError>> enable();
+    ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> enable();
     void handle_interrupt();
-    ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, SysError>>
+    ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, core::SysError>>
     handle_port_status_change(const RawTrb &event);
     void ring_doorbell(uint32 slot, uint32 endpoint);
     ustd::Result<RawTrb, HostError> send_command(const RawTrb &command);

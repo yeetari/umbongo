@@ -5,10 +5,9 @@
 #include "Value.hh"
 
 #include <core/Error.hh>
+#include <core/KeyEvent.hh>
 #include <core/Process.hh>
-#include <kernel/KeyEvent.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
+#include <core/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
 #include <ustd/Result.hh>
@@ -20,7 +19,7 @@
 
 namespace {
 
-void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
+void execute(Value &value, ustd::Vector<kernel::FdPair> &rewirings) {
     if (auto *builtin = value.as_or_null<Builtin>()) {
         const auto &args = builtin->args();
         switch (builtin->function()) {
@@ -30,7 +29,7 @@ void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
-            if (auto result = Syscall::invoke(Syscall::chdir, dir); result.is_error()) {
+            if (auto result = core::syscall(Syscall::chdir, dir); result.is_error()) {
                 ustd::printf("ush: cd: {}: {}\n", dir, core::error_string(result.error()));
             }
             break;
@@ -41,14 +40,14 @@ void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
     } else if (auto *pipe = value.as_or_null<PipeValue>()) {
         // TODO: Use core::Pipe
         ustd::Array<uint32, 2> pipe_fds{};
-        EXPECT(Syscall::invoke(Syscall::create_pipe, pipe_fds.data()));
-        rewirings.push(FdPair{pipe_fds[1], 1});
+        EXPECT(core::syscall(Syscall::create_pipe, pipe_fds.data()));
+        rewirings.push(kernel::FdPair{pipe_fds[1], 1});
         execute(pipe->lhs(), rewirings);
-        EXPECT(Syscall::invoke(Syscall::close, pipe_fds[1]));
+        EXPECT(core::syscall(Syscall::close, pipe_fds[1]));
         rewirings.pop();
-        rewirings.push(FdPair{pipe_fds[0], 0});
+        rewirings.push(kernel::FdPair{pipe_fds[0], 0});
         execute(pipe->rhs(), rewirings);
-        EXPECT(Syscall::invoke(Syscall::close, pipe_fds[0]));
+        EXPECT(core::syscall(Syscall::close, pipe_fds[0]));
     }
 }
 
@@ -58,10 +57,10 @@ void Job::await_completion() const {
     if (m_pid == 0) {
         return;
     }
-    EXPECT(Syscall::invoke(Syscall::wait_pid, m_pid));
+    EXPECT(core::syscall(Syscall::wait_pid, m_pid));
 }
 
-void Job::spawn(const ustd::Vector<FdPair> &copy_fds) {
+void Job::spawn(const ustd::Vector<kernel::FdPair> &copy_fds) {
     if (m_pid != 0) {
         return;
     }
@@ -78,9 +77,9 @@ usize main(usize, const char **) {
     while (true) {
         editor.begin_line();
         while (true) {
-            KeyEvent event;
+            core::KeyEvent event;
             while (true) {
-                auto rc = Syscall::invoke(Syscall::read, 0, &event, sizeof(KeyEvent));
+                auto rc = core::syscall(Syscall::read, 0, &event, sizeof(core::KeyEvent));
                 if (rc.is_error()) {
                     return 1;
                 }
@@ -92,7 +91,7 @@ usize main(usize, const char **) {
                 Lexer lexer(line);
                 Parser parser(lexer);
                 auto node = parser.parse();
-                ustd::Vector<FdPair> rewirings;
+                ustd::Vector<kernel::FdPair> rewirings;
                 execute(*node->evaluate(), rewirings);
                 break;
             }

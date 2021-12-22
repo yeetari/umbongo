@@ -3,6 +3,8 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
+namespace kernel {
+
 struct RegisterState;
 class Thread;
 
@@ -17,3 +19,5 @@ struct Scheduler {
     static void yield(bool save_state);
     static void yield_and_kill();
 };
+
+} // namespace kernel

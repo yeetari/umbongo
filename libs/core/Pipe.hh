@@ -1,7 +1,7 @@
 #pragma once
 
+#include <core/Error.hh>
 #include <core/File.hh>
-#include <kernel/SysError.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>

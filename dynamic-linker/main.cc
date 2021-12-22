@@ -1,7 +1,6 @@
 #include <core/File.hh>
+#include <core/Syscall.hh>
 #include <elf/Elf.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
 #include <ustd/Numeric.hh>
@@ -25,8 +24,8 @@ usize main(usize argc, const char **argv) {
     }
 
     // TODO: Don't always allocate writable + executable.
-    auto base_offset = EXPECT(Syscall::invoke<uintptr>(Syscall::allocate_region, region_end - region_base,
-                                                       MemoryProt::Write | MemoryProt::Exec));
+    auto base_offset = EXPECT(core::syscall<uintptr>(Syscall::allocate_region, region_end - region_base,
+                                                     kernel::MemoryProt::Write | kernel::MemoryProt::Exec));
     usize dynamic_entry_count = 0;
     usize dynamic_table_offset = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {

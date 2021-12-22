@@ -1,8 +1,8 @@
 #pragma once
 
+#include <core/Error.hh>
 #include <core/Process.hh>
-#include <kernel/SysError.hh>
-#include <kernel/Syscall.hh>
+#include <core/Syscall.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
@@ -10,19 +10,19 @@
 namespace mmio {
 
 template <typename T>
-ustd::Result<T *, SysError> alloc_dma() {
-    constexpr auto prot = MemoryProt::Write | MemoryProt::Uncacheable;
-    auto *region = TRY(Syscall::invoke<T *>(Syscall::allocate_region, sizeof(T), prot));
+ustd::Result<T *, core::SysError> alloc_dma() {
+    constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
+    auto *region = TRY(core::syscall<T *>(Syscall::allocate_region, sizeof(T), prot));
     return &(*region = T{});
 }
 
 template <typename T>
-ustd::Result<T *, SysError> alloc_dma_array(usize size) {
+ustd::Result<T *, core::SysError> alloc_dma_array(usize size) {
     if (size == 0) {
         return nullptr;
     }
-    constexpr auto prot = MemoryProt::Write | MemoryProt::Uncacheable;
-    auto *region = TRY(Syscall::invoke<T *>(Syscall::allocate_region, size * sizeof(T), prot));
+    constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
+    auto *region = TRY(core::syscall<T *>(Syscall::allocate_region, size * sizeof(T), prot));
     ustd::fill_n(region, size, T{});
     return region;
 }
@@ -48,8 +48,8 @@ bool wait_timeout(const volatile T &value, T mask, T desired, usize timeout) {
     return true;
 }
 
-inline ustd::Result<uintptr, SysError> virt_to_phys(const void *virt) {
-    return virt != nullptr ? TRY(Syscall::invoke(Syscall::virt_to_phys, virt)) : 0ul;
+inline ustd::Result<uintptr, core::SysError> virt_to_phys(const void *virt) {
+    return virt != nullptr ? TRY(core::syscall(Syscall::virt_to_phys, virt)) : 0ul;
 }
 
 } // namespace mmio

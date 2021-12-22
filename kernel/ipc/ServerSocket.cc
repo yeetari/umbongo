@@ -10,6 +10,8 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 ServerSocket::ServerSocket(uint32 backlog_limit) {
     m_connection_queue.ensure_capacity(backlog_limit);
 }
@@ -51,3 +53,5 @@ SysResult<usize> ServerSocket::read(ustd::Span<void>, usize) {
 SysResult<usize> ServerSocket::write(ustd::Span<const void>, usize) {
     return SysError::Invalid;
 }
+
+} // namespace kernel

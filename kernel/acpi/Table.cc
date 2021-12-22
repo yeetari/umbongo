@@ -2,7 +2,7 @@
 
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 bool Table::valid() const {
     const auto *const dat = reinterpret_cast<const uint8 *>(this);
@@ -13,4 +13,4 @@ bool Table::valid() const {
     return sum == 0;
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

@@ -2,7 +2,7 @@
 
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 struct InterruptController {
     uint8 type;
@@ -33,4 +33,4 @@ struct [[gnu::packed]] InterruptSourceOverride : public InterruptController {
     };
 };
 
-} // namespace acpi
+} // namespace kernel::acpi

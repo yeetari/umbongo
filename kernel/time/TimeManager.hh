@@ -2,11 +2,13 @@
 
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 class HpetTable;
 
-} // namespace acpi
+} // namespace kernel::acpi
+
+namespace kernel {
 
 struct TimeManager {
     static void initialise(acpi::HpetTable *hpet_table);
@@ -14,3 +16,5 @@ struct TimeManager {
     static void update();
     static uint64 ns_since_boot();
 };
+
+} // namespace kernel

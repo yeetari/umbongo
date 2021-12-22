@@ -1,16 +1,15 @@
 #include "Framebuffer.hh"
 
 #include <core/File.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
+#include <core/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {
-    EXPECT(m_file.ioctl(IoctlRequest::FramebufferGetInfo, &m_info));
-    m_back_buffer = EXPECT(Syscall::invoke<uint32 *>(Syscall::allocate_region, m_info.size, MemoryProt::Write));
+    EXPECT(m_file.ioctl(kernel::IoctlRequest::FramebufferGetInfo, &m_info));
+    m_back_buffer = EXPECT(core::syscall<uint32 *>(Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
     m_front_buffer = EXPECT(m_file.mmap<uint32>());
 }
 

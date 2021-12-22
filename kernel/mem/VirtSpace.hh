@@ -11,6 +11,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 struct MemoryManager;
 
 class VirtSpace : public ustd::Shareable<VirtSpace> {
@@ -45,3 +47,5 @@ public:
     Region &create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
     ustd::SharedPtr<VirtSpace> clone() const;
 };
+
+} // namespace kernel

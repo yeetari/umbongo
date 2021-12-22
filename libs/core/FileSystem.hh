@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/SysError.hh>
+#include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 

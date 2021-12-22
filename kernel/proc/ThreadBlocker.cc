@@ -13,6 +13,8 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 bool AcceptBlocker::should_unblock() {
     return m_server->can_accept();
 }
@@ -60,3 +62,5 @@ bool WaitBlocker::should_unblock() {
 bool WriteBlocker::should_unblock() {
     return !m_file->valid() || m_file->can_write();
 }
+
+} // namespace kernel

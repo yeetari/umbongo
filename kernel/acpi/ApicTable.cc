@@ -5,7 +5,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
-namespace acpi {
+namespace kernel::acpi {
 
 InterruptController *ApicTable::controller(usize index) const {
     ASSERT(index < controller_count());
@@ -26,4 +26,4 @@ usize ApicTable::controller_count() const {
     return count;
 }
 
-} // namespace acpi
+} // namespace kernel::acpi

@@ -5,6 +5,8 @@
 #include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 enum class PageFlags : usize {
     Present = 1ul << 0ul,
     Writable = 1ul << 1ul,
@@ -86,3 +88,5 @@ using PageTable = PageLevel<Page>;                      // PDE
 using PageDirectory = PageLevel<PageTable>;             // PDPE
 using PageDirectoryPtrTable = PageLevel<PageDirectory>; // PML4E
 using Pml4 = PageLevel<PageDirectoryPtrTable>;
+
+} // namespace kernel

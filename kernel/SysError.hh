@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 enum class SysError : ssize {
     BadFd = -1,
     NonExistent = -2,
@@ -12,3 +14,5 @@ enum class SysError : ssize {
     AlreadyExists = -7,
     Busy = -8,
 };
+
+} // namespace kernel

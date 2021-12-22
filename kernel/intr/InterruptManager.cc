@@ -13,6 +13,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
+namespace kernel {
 namespace {
 
 struct Override {
@@ -106,3 +107,5 @@ void InterruptManager::wire_interrupt(uint32 irq, uint8 vector) {
     ENSURE(io_apic != nullptr);
     io_apic->set_redirection_entry(irq, vector, polarity, trigger_mode);
 }
+
+} // namespace kernel

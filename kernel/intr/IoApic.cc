@@ -3,6 +3,7 @@
 #include <kernel/intr/InterruptType.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 constexpr usize k_reg_id = 0x0;
@@ -38,3 +39,5 @@ void IoApic::set_redirection_entry(uint32 gsi, uint8 vector, InterruptPolarity p
     write<uint64>(k_reg_redtbl + gsi * 2,
                   (static_cast<uint64>(trigger_mode) << 15u) | (static_cast<uint64>(polarity) << 13u) | vector);
 }
+
+} // namespace kernel

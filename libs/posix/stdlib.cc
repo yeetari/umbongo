@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <sys/cdefs.h>
 
-#include <kernel/Syscall.hh>
+#include <core/Syscall.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -59,7 +59,7 @@ void abort() {
 }
 
 void exit(int status) {
-    EXPECT(Syscall::invoke(Syscall::exit, status));
+    EXPECT(core::syscall(Syscall::exit, status));
     ENSURE_NOT_REACHED();
 }
 

@@ -3,7 +3,7 @@
 #include "Common.hh"
 #include "Error.hh"
 
-#include <kernel/SysError.hh>
+#include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
@@ -53,7 +53,7 @@ public:
     Endpoint &operator=(const Endpoint &) = delete;
     Endpoint &operator=(Endpoint &&) = delete;
 
-    ustd::Result<void, ustd::ErrorUnion<HostError, SysError>> setup(EndpointType type, uint16 packet_size);
+    ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> setup(EndpointType type, uint16 packet_size);
     ustd::Result<void, DeviceError> send_control(ControlTransfer transfer, TransferType transfer_type,
                                                  ustd::Span<void> data = {});
     void set_interval(uint8 interval);

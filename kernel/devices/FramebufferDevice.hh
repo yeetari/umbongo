@@ -5,6 +5,8 @@
 #include <kernel/devices/Device.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class VirtSpace;
 
 class FramebufferDevice final : public Device {
@@ -22,3 +24,5 @@ public:
     SyscallResult ioctl(IoctlRequest request, void *arg) override;
     uintptr mmap(VirtSpace &virt_space) override;
 };
+
+} // namespace kernel

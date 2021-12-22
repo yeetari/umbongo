@@ -3,7 +3,7 @@
 #include "Common.hh"
 #include "Error.hh"
 
-#include <kernel/SysError.hh>
+#include <core/Error.hh>
 #include <ustd/Function.hh> // IWYU pragma: keep
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -47,7 +47,7 @@ public:
     virtual void poll() {}
 
     Endpoint &create_endpoint(uint32 address);
-    ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, SysError>> setup(const Port &port);
+    ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> setup(const Port &port);
     ustd::Result<void, DeviceError> read_descriptor(ustd::Span<uint8> descriptor);
     ustd::Result<void, DeviceError> set_configuration(uint8 config_value);
     ustd::Result<void, DeviceError>

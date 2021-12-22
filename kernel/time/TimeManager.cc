@@ -6,6 +6,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 Hpet *s_hpet;
@@ -35,3 +36,5 @@ void TimeManager::update() {
 uint64 TimeManager::ns_since_boot() {
     return s_ns_since_boot;
 }
+
+} // namespace kernel

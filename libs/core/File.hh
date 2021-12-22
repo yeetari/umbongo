@@ -1,7 +1,7 @@
 #pragma once
 
+#include <core/Error.hh>
 #include <core/Watchable.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -32,7 +32,7 @@ public:
     }
 
     void close();
-    ustd::Result<usize, SysError> ioctl(IoctlRequest request, void *arg = nullptr);
+    ustd::Result<usize, SysError> ioctl(kernel::IoctlRequest request, void *arg = nullptr);
     ustd::Result<uintptr, SysError> mmap();
     ustd::Result<usize, SysError> read(ustd::Span<void> data);
     ustd::Result<usize, SysError> read(ustd::Span<void> data, usize offset);

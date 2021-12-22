@@ -7,7 +7,7 @@
 
 class Framebuffer {
     core::File m_file;
-    FramebufferInfo m_info{};
+    kernel::FramebufferInfo m_info{};
     uint32 *m_back_buffer{nullptr};
     uint32 *m_front_buffer{nullptr};
     bool m_dirty{false};

@@ -4,7 +4,7 @@
 #include <kernel/pci/Function.hh>
 #include <ustd/Types.hh>
 
-namespace pci {
+namespace kernel::pci {
 namespace {
 
 uint16 read_vendor_id(const acpi::PciSegment *segment, uint8 bus, uint8 device, uint8 function) {
@@ -32,4 +32,4 @@ void enumerate(acpi::PciTable *mcfg) {
     }
 }
 
-} // namespace pci
+} // namespace kernel::pci

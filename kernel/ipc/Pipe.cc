@@ -8,6 +8,7 @@
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
 namespace {
 
 constexpr usize k_buffer_size = 64_KiB;
@@ -54,3 +55,5 @@ SysResult<usize> Pipe::read(ustd::Span<void> data, usize) {
 SysResult<usize> Pipe::write(ustd::Span<const void> data, usize) {
     return m_buffer.write(data);
 }
+
+} // namespace kernel

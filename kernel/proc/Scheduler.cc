@@ -18,6 +18,7 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
 
+namespace kernel {
 namespace {
 
 constexpr uint16 k_scheduler_frequency = 250;
@@ -211,3 +212,5 @@ void Scheduler::yield_and_kill() {
     Processor::current_thread()->kill();
     yield(false);
 }
+
+} // namespace kernel

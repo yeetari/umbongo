@@ -18,6 +18,10 @@
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+extern uint8 k_interrupt_stubs_start;
+extern uint8 k_interrupt_stubs_end;
+
+namespace kernel {
 namespace {
 
 constexpr usize k_gdt_entry_count = 7;
@@ -245,9 +249,6 @@ void write_msr(uint32 msr, uint64 value) {
 
 } // namespace
 
-extern uint8 k_interrupt_stubs_start;
-extern uint8 k_interrupt_stubs_end;
-
 extern "C" void ap_bootstrap();
 extern "C" void ap_bootstrap_end();
 extern "C" uintptr *ap_prepare();
@@ -470,3 +471,5 @@ Thread *Processor::current_thread() {
 uint8 Processor::id() {
     return static_cast<uint8>(read_gs(__builtin_offsetof(LocalStorage, id)));
 }
+
+} // namespace kernel

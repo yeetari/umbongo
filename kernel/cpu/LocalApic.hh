@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 enum class MessageType {
     Fixed = 0b000,
     LowestPriority = 0b001,
@@ -62,3 +64,5 @@ public:
 
     uint32 read_timer_count() const;
 };
+
+} // namespace kernel

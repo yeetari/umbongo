@@ -9,9 +9,9 @@
 #include "Port.hh"
 #include "TrbRing.hh"
 
+#include <core/Error.hh>
 #include <core/File.hh>
 #include <core/Process.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SyscallTypes.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
@@ -42,8 +42,8 @@ HostController::HostController(ustd::StringView name, core::File &&file) : m_nam
 HostController::HostController(HostController &&) noexcept = default;
 HostController::~HostController() = default;
 
-ustd::Result<void, ustd::ErrorUnion<SysError, HostError>> HostController::enable() {
-    TRY(m_file.ioctl(IoctlRequest::PciEnableDevice));
+ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::enable() {
+    TRY(m_file.ioctl(kernel::IoctlRequest::PciEnableDevice));
     auto *cap_regs = TRY(m_file.mmap<CapRegs>());
 
     const auto op_base = reinterpret_cast<uintptr>(cap_regs) + mmio::read(cap_regs->cap_length);
@@ -147,7 +147,7 @@ ustd::Result<void, ustd::ErrorUnion<SysError, HostError>> HostController::enable
     //  2. Enabling system bus interrupt generation by setting the Interrupter Enable (INTE) bit
     //  3. Enabling the interrupter by setting the Interrupt Enable (IE) bit
     //  4. Setting the run/stop bit and waiting for the halted bit to clear
-    TRY(m_file.ioctl(IoctlRequest::PciEnableInterrupts));
+    TRY(m_file.ioctl(kernel::IoctlRequest::PciEnableInterrupts));
     mmio::write(m_op_regs->command, mmio::read(m_op_regs->command) | (1u << 2u));
     mmio::write(m_run_regs->iman, (mmio::read(m_run_regs->iman) & ~0b11u) | (1u << 1u));
     mmio::write(m_op_regs->command, mmio::read(m_op_regs->command) | 1u);
@@ -250,7 +250,7 @@ void HostController::handle_interrupt() {
     mmio::write(m_run_regs->erst_dptr, dptr | (1u << 3u));
 }
 
-ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, SysError>>
+ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, core::SysError>>
 HostController::handle_port_status_change(const RawTrb &event) {
     const uint8 port_id = (event.data >> 24u) & 0xffu;
     if (port_id == 0 || port_id > m_ports.size()) {

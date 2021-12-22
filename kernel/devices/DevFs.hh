@@ -14,6 +14,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class Device;
 
 class DevFsInode final : public Inode {
@@ -67,3 +69,5 @@ public:
     void mount(Inode *parent, Inode *host) override;
     Inode *root_inode() override { return m_root_inode.obj(); }
 };
+
+} // namespace kernel

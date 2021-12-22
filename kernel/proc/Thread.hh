@@ -13,6 +13,8 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class Process;
 class ThreadBlocker;
 
@@ -70,3 +72,5 @@ void Thread::block(Args &&...args) {
     m_state = ThreadState::Blocked;
     Scheduler::yield(true);
 }
+
+} // namespace kernel

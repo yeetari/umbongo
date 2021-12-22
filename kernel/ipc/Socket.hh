@@ -6,6 +6,8 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class DoubleBuffer;
 
 class Socket final : public File {
@@ -32,3 +34,5 @@ public:
     DoubleBuffer *read_buffer() const { return m_read_buffer.obj(); }
     DoubleBuffer *write_buffer() const { return m_write_buffer.obj(); }
 };
+
+} // namespace kernel

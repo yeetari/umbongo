@@ -7,6 +7,8 @@
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 Socket::Socket(DoubleBuffer *read_buffer, DoubleBuffer *write_buffer)
     : m_read_buffer(read_buffer), m_write_buffer(write_buffer) {}
 
@@ -31,3 +33,5 @@ SysResult<usize> Socket::write(ustd::Span<const void> data, usize) {
 bool Socket::connected() const {
     return m_read_buffer->ref_count() == 2;
 }
+
+} // namespace kernel

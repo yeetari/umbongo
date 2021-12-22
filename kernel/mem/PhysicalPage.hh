@@ -4,6 +4,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 enum class PhysicalPageSize : uint8 {
     Normal,
     Large,
@@ -32,3 +34,5 @@ public:
     PhysicalPageSize size() const { return static_cast<PhysicalPageSize>((m_phys >> 56u) & 0xfu); }
     bool allocated() const { return (m_phys & (1ul << 63u)) == (1ul << 63u); }
 };
+
+} // namespace kernel

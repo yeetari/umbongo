@@ -22,7 +22,7 @@ void print_device(const char *name) {
         core::exit(1);
     }
     auto file = file_or_error.disown_value();
-    auto info = EXPECT(file.read<PciDeviceInfo>());
+    auto info = EXPECT(file.read<kernel::PciDeviceInfo>());
     ustd::StringBuilder builder;
     builder.append("{}\n", name);
     builder.append(" - Vendor ID: {:h4}\n", info.vendor_id);

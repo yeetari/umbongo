@@ -6,6 +6,8 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class VirtSpace;
 
 class FileHandle {
@@ -31,3 +33,5 @@ public:
 
     File &file() const { return *m_file; }
 };
+
+} // namespace kernel

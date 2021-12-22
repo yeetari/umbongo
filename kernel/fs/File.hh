@@ -6,6 +6,8 @@
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class VirtSpace;
 
 enum class AttachDirection {
@@ -40,3 +42,5 @@ public:
     virtual SysResult<usize> write(ustd::Span<const void> data, usize offset = 0) = 0;
     virtual bool valid() { return true; }
 };
+
+} // namespace kernel

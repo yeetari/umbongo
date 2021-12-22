@@ -13,6 +13,8 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
+
 class Inode;
 struct Scheduler;
 class Thread;
@@ -80,3 +82,5 @@ public:
     FileHandle &file_handle(uint32 fd) { return *m_fds[fd]; }
     usize thread_count() const { return m_thread_count.load(ustd::MemoryOrder::Relaxed); }
 };
+
+} // namespace kernel

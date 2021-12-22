@@ -8,6 +8,7 @@
 #include "HostController.hh"
 #include "Port.hh"
 
+#include <core/Error.hh>
 #include <kernel/SysError.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
@@ -64,7 +65,7 @@ Endpoint &Device::create_endpoint(uint32 address) {
     return *m_endpoints.emplace(new Endpoint(*this, id));
 }
 
-ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, SysError>> Device::setup(const Port &port) {
+ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> Device::setup(const Port &port) {
     switch (m_controller.context_size()) {
     case 32:
         m_context = TRY(mmio::alloc_dma<DeviceContext>());
@@ -88,7 +89,7 @@ ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, SysError>> Device:
         if (auto host_error = result.error().as<HostError>()) {
             return *host_error;
         }
-        if (auto sys_error = result.error().as<SysError>()) {
+        if (auto sys_error = result.error().as<core::SysError>()) {
             return *sys_error;
         }
         ENSURE_NOT_REACHED();

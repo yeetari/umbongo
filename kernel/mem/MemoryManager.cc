@@ -16,6 +16,7 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 
+namespace kernel {
 namespace {
 
 constexpr usize k_bucket_bit_count = sizeof(usize) * 8;
@@ -223,3 +224,5 @@ VirtSpace *MemoryManager::current_space() {
 VirtSpace *MemoryManager::kernel_space() {
     return s_data.kernel_space;
 }
+
+} // namespace kernel

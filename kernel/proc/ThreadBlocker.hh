@@ -10,6 +10,8 @@
 #include <ustd/Vector.hh>
 // IWYU pragma: no_include "kernel/proc/Process.hh"
 
+namespace kernel {
+
 struct PollFd;
 class Process; // IWYU pragma: keep
 class SpinLock;
@@ -83,3 +85,5 @@ public:
 
     bool should_unblock() override;
 };
+
+} // namespace kernel

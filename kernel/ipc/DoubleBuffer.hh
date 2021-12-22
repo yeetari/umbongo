@@ -5,6 +5,8 @@
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
+namespace kernel {
+
 class DoubleBuffer : public ustd::Shareable<DoubleBuffer> {
     struct Buffer {
         uint8 *data{nullptr};
@@ -33,3 +35,5 @@ public:
     usize read(ustd::Span<void> data);
     usize write(ustd::Span<const void> data);
 };
+
+} // namespace kernel

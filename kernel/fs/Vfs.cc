@@ -17,6 +17,7 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+namespace kernel {
 namespace {
 
 class Mount {
@@ -172,3 +173,5 @@ Inode *Vfs::root_inode() {
     }
     return s_data->root_inode;
 }
+
+} // namespace kernel

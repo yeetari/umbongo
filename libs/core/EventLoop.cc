@@ -1,10 +1,9 @@
 #include <core/EventLoop.hh>
 
 #include <core/Error.hh>
+#include <core/Syscall.hh>
 #include <core/Timer.hh>
 #include <core/Watchable.hh>
-#include <kernel/Syscall.hh>
-#include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Log.hh>
@@ -51,8 +50,8 @@ void EventLoop::unregister_timer(Timer &timer) {
     m_timers.remove(index_of(&timer));
 }
 
-void EventLoop::watch(Watchable &watchable, PollEvents events) {
-    m_poll_fds.push(PollFd{
+void EventLoop::watch(Watchable &watchable, kernel::PollEvents events) {
+    m_poll_fds.push(kernel::PollFd{
         .fd = watchable.fd(),
         .events = events,
     });
@@ -68,11 +67,11 @@ void EventLoop::unwatch(Watchable &watchable) {
 usize EventLoop::run() {
     while (true) {
         const auto timeout = next_timer_deadline();
-        if (auto rc = Syscall::invoke(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
+        if (auto rc = syscall(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
             dbgln("poll: {}", core::error_string(rc.error()));
             return 1;
         }
-        auto now = EXPECT(Syscall::invoke<usize>(Syscall::gettime));
+        auto now = EXPECT(syscall<usize>(Syscall::gettime));
         for (auto *timer : m_timers) {
             if (!timer->has_expired(now)) {
                 continue;
@@ -86,10 +85,12 @@ usize EventLoop::run() {
             auto &poll_fd = m_poll_fds[i - 1];
             auto *watchable = m_watchables[i - 1];
             ASSERT(poll_fd.fd == watchable->fd());
-            if ((poll_fd.revents & PollEvents::Read) == PollEvents::Read && watchable->m_on_read_ready) {
+            if ((poll_fd.revents & kernel::PollEvents::Read) == kernel::PollEvents::Read &&
+                watchable->m_on_read_ready) {
                 watchable->m_on_read_ready();
             }
-            if ((poll_fd.revents & PollEvents::Write) == PollEvents::Write && watchable->m_on_write_ready) {
+            if ((poll_fd.revents & kernel::PollEvents::Write) == kernel::PollEvents::Write &&
+                watchable->m_on_write_ready) {
                 watchable->m_on_write_ready();
             }
         }
