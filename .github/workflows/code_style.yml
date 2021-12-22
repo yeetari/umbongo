@@ -22,7 +22,7 @@ jobs:
   include-what-you-use:
     name: Include What You Use
     runs-on: ubuntu-latest
-    container: ubuntu:21.04
+    container: ubuntu:21.10
     steps:
       - name: Install tools
         run: |
@@ -38,8 +38,8 @@ jobs:
             parallel \
             wget
           mkdir /opt/include-what-you-use
-          wget -qO /opt/include-what-you-use.tar.gz https://include-what-you-use.org/downloads/include-what-you-use-0.15.src.tar.gz
-          tar xfz /opt/include-what-you-use.tar.gz -C /opt/include-what-you-use
+          wget -qO /opt/include-what-you-use.tar.gz https://include-what-you-use.org/downloads/include-what-you-use-0.17.src.tar.gz
+          tar xfz /opt/include-what-you-use.tar.gz -C /opt
           cmake -B/opt/include-what-you-use/build /opt/include-what-you-use
           cmake --build /opt/include-what-you-use/build --target install
       - name: Checkout
