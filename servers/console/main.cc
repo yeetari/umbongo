@@ -11,7 +11,6 @@
 #include <kernel/SyscallTypes.hh>
 #include <servers/console/IpcMessages.hh>
 #include <ustd/Array.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>

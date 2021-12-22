@@ -10,7 +10,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Format.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/ScopedChange.hh> // IWYU pragma: keep
 #include <ustd/Span.hh>

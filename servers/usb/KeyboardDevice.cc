@@ -11,7 +11,6 @@
 #include <core/Syscall.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 

@@ -1,6 +1,7 @@
 #include <sys/wait.h>
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 #include <ustd/Assert.hh>
 

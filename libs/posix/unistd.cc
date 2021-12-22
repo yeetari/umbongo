@@ -2,6 +2,7 @@
 
 #include <bits/error.hh>
 #include <errno.h>
+#include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

@@ -3,7 +3,7 @@
 #include <fcntl.h> // IWYU pragma: keep
 #include <sys/cdefs.h>
 #include <sys/types.h> // IWYU pragma: keep
-#include <time.h>
+#include <time.h>      // IWYU pragma: keep
 
 __BEGIN_DECLS
 

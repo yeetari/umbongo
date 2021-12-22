@@ -1,7 +1,7 @@
 #pragma once
 
 #include <limits.h> // IWYU pragma: keep
-#include <stddef.h>
+#include <stddef.h> // IWYU pragma: keep
 #include <sys/cdefs.h>
 #include <sys/types.h> // IWYU pragma: keep
 

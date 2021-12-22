@@ -8,7 +8,6 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Format.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>

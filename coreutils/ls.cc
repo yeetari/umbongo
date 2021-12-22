@@ -2,7 +2,6 @@
 #include <core/Error.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Log.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
