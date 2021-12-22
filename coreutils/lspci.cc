@@ -40,6 +40,7 @@ void print_device(const char *name) {
 usize main(usize argc, const char **argv) {
     if (argc == 2) {
         print_device(argv[1]);
+        return 0;
     }
     auto result = core::iterate_directory("/dev/pci", [](ustd::StringView name) {
         print_device(name.data());
