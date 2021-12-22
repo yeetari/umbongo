@@ -1,7 +1,7 @@
 #include <console/Console.hh>
 
+#include <console/IpcMessages.hh>
 #include <ipc/Client.hh>
-#include <servers/console/IpcMessages.hh>
 #include <ustd/Assert.hh>
 #include <ustd/StringView.hh>
 

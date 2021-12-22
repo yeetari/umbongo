@@ -2,6 +2,7 @@
 #include "Framebuffer.hh"
 #include "Terminal.hh"
 
+#include <console/IpcMessages.hh>
 #include <core/EventLoop.hh>
 #include <core/File.hh>
 #include <core/Timer.hh>
@@ -9,7 +10,6 @@
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
 #include <kernel/SyscallTypes.hh>
-#include <servers/console/IpcMessages.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
