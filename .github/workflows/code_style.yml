@@ -4,10 +4,11 @@ jobs:
   clang-format:
     name: Clang Format
     runs-on: ubuntu-latest
-    container: ubuntu:20.10
+    container: ubuntu:21.10
     steps:
       - name: Install tools
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           apt update -qq
           apt install -y clang-format git
       - name: Checkout
