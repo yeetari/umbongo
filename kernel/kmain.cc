@@ -28,7 +28,6 @@
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/time/TimeManager.hh>
-#include <kernel/usb/UsbManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
@@ -137,14 +136,6 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
                                            device.device, device.function);
         function->leak_ref();
     }
-
-    // Attempt to initialise any found XHCI controllers.
-    for (auto &device : pci_devices) {
-        if (device.clas == 0x0c && device.subc == 0x03 && device.prif == 0x30) {
-            usb::UsbManager::register_host_controller(device.bus, device.device, device.function);
-        }
-    }
-    usb::UsbManager::spawn_watch_threads();
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
                                      boot_info->pixels_per_scan_line * sizeof(uint32));

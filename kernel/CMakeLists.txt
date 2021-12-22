@@ -25,7 +25,6 @@ add_executable(kernel
     devices/DevFs.cc
     devices/Device.cc
     devices/FramebufferDevice.cc
-    devices/UsbKeyboardDevice.cc
     fs/FileHandle.cc
     fs/Inode.cc
     fs/InodeFile.cc
@@ -50,13 +49,6 @@ add_executable(kernel
     proc/ThreadBlocker.cc
     time/Hpet.cc
     time/TimeManager.cc
-    usb/Device.cc
-    usb/Endpoint.cc
-    usb/HostController.cc
-    usb/Interrupter.cc
-    usb/Port.cc
-    usb/TrbRing.cc
-    usb/UsbManager.cc
     Console.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
