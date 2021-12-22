@@ -4,6 +4,7 @@
 #include <ustd/Concepts.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Span.hh>
+#include <ustd/StringView.hh>
 
 namespace ipc {
 
@@ -27,6 +28,14 @@ T MessageDecoder::decode() {
     __builtin_memcpy(&ret, m_ptr, sizeof(T));
     m_ptr += sizeof(T);
     return ret;
+}
+
+template <>
+inline ustd::StringView MessageDecoder::decode() {
+    auto length = decode<usize>();
+    ustd::StringView view(reinterpret_cast<const char *>(m_ptr), length);
+    m_ptr += length;
+    return view;
 }
 
 } // namespace ipc

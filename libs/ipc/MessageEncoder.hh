@@ -4,6 +4,7 @@
 #include <ustd/Concepts.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Span.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 namespace ipc {
@@ -18,6 +19,7 @@ public:
 
     template <ustd::TriviallyCopyable T>
     void encode(const T &obj);
+    void encode(ustd::StringView view);
 
     usize size() const { return m_size; }
 };
@@ -27,6 +29,13 @@ void MessageEncoder::encode(const T &obj) {
     ASSERT(m_size + sizeof(T) < m_buffer.size());
     __builtin_memcpy(m_ptr + m_size, &obj, sizeof(T));
     m_size += sizeof(T);
+}
+
+inline void MessageEncoder::encode(ustd::StringView view) {
+    encode(view.length());
+    ASSERT(m_size + view.length() < m_buffer.size());
+    __builtin_memcpy(m_ptr + m_size, view.data(), view.length());
+    m_size += view.length();
 }
 
 } // namespace ipc
