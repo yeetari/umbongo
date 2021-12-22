@@ -41,7 +41,7 @@ add_executable(kernel
     mem/PhysicalPage.cc
     mem/Region.cc
     mem/VirtSpace.cc
-    pci/Device.cc
+    pci/Enumerate.cc
     pci/Function.cc
     proc/Process.cc
     proc/Scheduler.cc

@@ -22,9 +22,7 @@
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/intr/InterruptType.hh>
 #include <kernel/mem/MemoryManager.hh>
-#include <kernel/pci/Bus.hh>
-#include <kernel/pci/Device.hh>
-#include <kernel/pci/Function.hh>
+#include <kernel/pci/Enumerate.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/time/TimeManager.hh>
@@ -36,7 +34,6 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
-#include <ustd/Vector.hh>
 
 class LocalApic;
 
@@ -90,52 +87,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr);
-
-    struct PciDevice {
-        pci::Bus *bus;
-        uint8 device;
-        uint8 function;
-        uint16 vendor_id;
-        uint16 device_id;
-        uint8 clas;
-        uint8 subc;
-        uint8 prif;
-    };
-
-    // Enumerate all PCI devices.
-    ustd::Vector<PciDevice> pci_devices;
-    for (const auto *segment : *mcfg) {
-        const uint8 bus_count = segment->end_bus - segment->start_bus;
-        for (uint8 bus_num = 0; bus_num < bus_count; bus_num++) {
-            auto *bus = new pci::Bus(segment->base, segment->num, bus_num);
-            for (uint8 device_num = 0; device_num < 32; device_num++) {
-                for (uint8 function = 0; function < 8; function++) {
-                    pci::Device device(bus, device_num, function);
-                    if (device.vendor_id() == 0xffffu) {
-                        continue;
-                    }
-                    auto class_info = device.class_info();
-                    uint8 clas = (class_info >> 24u) & 0xffu;
-                    uint8 subc = (class_info >> 16u) & 0xffu;
-                    uint8 prif = (class_info >> 8u) & 0xffu;
-                    pci_devices.push(
-                        {bus, device_num, function, device.vendor_id(), device.device_id(), clas, subc, prif});
-                }
-            }
-        }
-    }
-
-    // List all found PCI devices.
-    ustd::dbgln(" pci: Found {} devices total", pci_devices.size());
-    ustd::dbgln(" pci:  - SEGM   BUS  DEV  FUNC   VENDID DEVID   CLAS SUBC PRIF");
-    for (auto &device : pci_devices) {
-        ustd::dbgln(" pci:  - {:h4}:{:h2}:{:h2}:{:h2} - {:h4}:{:h4} ({:h2}:{:h2}:{:h2})", device.bus->segment_num(),
-                    device.bus->num(), device.device, device.function, device.vendor_id, device.device_id, device.clas,
-                    device.subc, device.prif);
-        auto *function = new pci::Function(device.bus->segment_base(), device.bus->segment_num(), device.bus->num(),
-                                           device.device, device.function);
-        function->leak_ref();
-    }
+    pci::enumerate(mcfg);
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
                                      boot_info->pixels_per_scan_line * sizeof(uint32));
