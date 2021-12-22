@@ -27,9 +27,13 @@ void print_device(const char *name) {
     builder.append("{}\n", name);
     builder.append(" - Vendor ID: {:h4}\n", info.vendor_id);
     builder.append(" - Device ID: {:h4}\n", info.device_id);
+    builder.append(" - Class: {:h2}\n", info.clas);
+    builder.append(" - Subclass: {:h2}\n", info.subc);
+    builder.append(" - Prog IF: {:h2}\n", info.prif);
     for (usize i = 0; i < info.bars.size(); i++) {
-        if (info.bars[i] != 0) {
-            builder.append(" - BAR{}: {:h}\n", i, info.bars[i]);
+        const auto &bar = info.bars[i];
+        if (bar.address != 0) {
+            builder.append(" - BAR{}: {:h} ({} bytes)\n", i, bar.address, bar.size);
         }
     }
     ustd::printf("{}", builder.build().view());

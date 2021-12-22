@@ -14,10 +14,18 @@ struct FramebufferInfo {
     uint32 height;
 };
 
+struct PciBar {
+    uintptr address;
+    usize size;
+};
+
 struct PciDeviceInfo {
-    ustd::Array<uintptr, 6> bars;
+    ustd::Array<PciBar, 6> bars;
     uint16 vendor_id;
     uint16 device_id;
+    uint8 clas;
+    uint8 subc;
+    uint8 prif;
 };
 
 enum class PollEvents : uint16 {
@@ -34,6 +42,8 @@ struct PollFd {
 
 enum class IoctlRequest : usize {
     FramebufferGetInfo,
+    PciEnableDevice,
+    PciEnableInterrupts,
 };
 
 enum class MemoryProt : usize {
