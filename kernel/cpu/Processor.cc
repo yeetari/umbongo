@@ -5,7 +5,6 @@
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/InterruptController.hh>
 #include <kernel/cpu/LocalApic.hh>
-#include <kernel/cpu/PrivilegeLevel.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Process.hh>
@@ -53,6 +52,11 @@ enum class DescriptorType : uint8 {
     Tss = 0b01001,
     InterruptGate = 0b01110,
     TrapGate = 0b01111,
+};
+
+enum class PrivilegeLevel : uint8 {
+    Kernel = 0,
+    User = 3,
 };
 
 template <typename Descriptor, usize Count>
