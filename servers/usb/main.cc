@@ -6,8 +6,8 @@
 #include <core/EventLoop.hh>
 #include <core/File.hh>
 #include <kernel/SyscallTypes.hh>
+#include <log/Log.hh>
 #include <ustd/Format.hh>
-#include <ustd/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
@@ -33,15 +33,17 @@ ustd::Vector<HostController> find_host_controllers() {
 } // namespace
 
 usize main(usize, const char **) {
+    log::initialise("usb-server");
     core::EventLoop event_loop;
     auto host_controllers = find_host_controllers();
     for (auto &host_controller : host_controllers) {
         if (auto result = host_controller.enable(); result.is_error()) {
             auto error = result.error();
             if (auto sys_error = error.as<core::SysError>()) {
-                ustd::dbgln(" usb: skipping {}: {}", host_controller.name(), core::error_string(*sys_error));
+                log::warn("Skipping controller {}: {}", host_controller.name(), core::error_string(*sys_error));
             } else if (auto initialisation_error = error.as<HostError>()) {
-                ustd::dbgln(" usb: skipping {}: {}", host_controller.name(), host_error_string(*initialisation_error));
+                log::warn("Skipping controller {}: {}", host_controller.name(),
+                          host_error_string(*initialisation_error));
             }
             continue;
         }

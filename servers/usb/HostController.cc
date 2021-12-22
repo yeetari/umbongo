@@ -13,10 +13,10 @@
 #include <core/File.hh>
 #include <core/Process.hh>
 #include <kernel/SyscallTypes.hh>
+#include <log/Log.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/ScopeGuard.hh>
@@ -162,7 +162,7 @@ ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::
     });
     for (auto &port : m_ports) {
         if (port.connected() && !port.reset()) {
-            ustd::dbgln(" usb: Failed to reset port {}", 1);
+            log::warn("Failed to reset port {}", port.id());
         }
     }
     return {};
@@ -181,8 +181,7 @@ void HostController::handle_interrupt() {
         had_any_event = true;
         const uint8 completion_code = (event.status >> 24u) & 0xffu;
         if (completion_code != 1u) {
-            ustd::dbgln(" usb: Received event {} with completion code {}", static_cast<uint8>(event.type),
-                        completion_code);
+            log::warn("Received event {} with completion code {}", static_cast<uint8>(event.type), completion_code);
             continue;
         }
         switch (event.type) {
@@ -217,21 +216,18 @@ void HostController::handle_interrupt() {
         }
         case TrbType::PortStatusChangeEvent: {
             const uint8 port_id = (event.data >> 24u) & 0xffu;
-            // TODO: Better logging here.
             if (auto result = handle_port_status_change(event); result.is_error()) {
                 auto error = result.error();
                 if (auto device_error = error.as<DeviceError>()) {
-                    ustd::dbgln(" usb: Failed to handle port status change for port {}: {}", port_id,
-                                device_error_string(*device_error));
+                    log::info("Ignoring port {}: {}", port_id, device_error_string(*device_error));
                 } else if (auto host_error = error.as<HostError>()) {
-                    ustd::dbgln(" usb: Failed to handle port status change for port {}: {}", port_id,
-                                host_error_string(*host_error));
+                    log::info("Ignoring port {}: {}", port_id, host_error_string(*host_error));
                 }
             }
             break;
         }
         default:
-            ustd::dbgln(" usb: Received unrecognised event {}", static_cast<uint8>(event.type));
+            log::warn("Received unrecognised event {}", static_cast<uint8>(event.type));
             break;
         }
     }
@@ -239,12 +235,12 @@ void HostController::handle_interrupt() {
     uint64 dptr = mmio::read(m_run_regs->erst_dptr);
     if (auto new_dptr = EXPECT(m_event_ring->physical_head()); (dptr & ~0xfu) != (new_dptr & ~0xfu)) {
         if (!had_any_event) {
-            ustd::dbgln(" usb: Update dptr without dequeuing an event");
+            log::warn("Updated dptr without dequeuing an event");
         }
         dptr &= 0xfu;
         dptr |= new_dptr & ~0xfu;
     } else if (had_any_event) {
-        ustd::dbgln(" usb: Dequeued event but dptr didn't change");
+        log::warn("Dequeued event but dptr didn't change");
     }
     mmio::write(m_run_regs->erst_dptr, dptr | (1u << 3u));
 }
@@ -263,7 +259,7 @@ HostController::handle_port_status_change(const RawTrb &event) {
     auto enable_slot = TRY(send_command({
         .type = TrbType::EnableSlotCmd,
     }));
-    ustd::dbgln(" usb: Enabled slot {} for port {}", enable_slot.slot_id, port_id);
+    log::debug("Enabled slot {} for port {}", enable_slot.slot_id, port_id);
 
     auto &device_ptr = m_devices[enable_slot.slot_id - 1u];
     auto &device = device_ptr.emplace(*this, enable_slot.slot_id);
@@ -322,17 +318,16 @@ HostController::handle_port_status_change(const RawTrb &event) {
     ustd::Vector<uint8> descriptor_bytes(descriptor_length);
     TRY(device.read_descriptor(descriptor_bytes.span()));
     auto *descriptor = reinterpret_cast<DeviceDescriptor *>(descriptor_bytes.data());
+    log::info("Found device {:x4}:{:x4}", descriptor->vendor_id, descriptor->product_id);
     if (descriptor->dclass != 0u) {
-        ustd::dbgln(" usb: Found device {:h2}:{:h2}:{:h2}", descriptor->dclass, descriptor->dsubclass,
-                    descriptor->dprotocol);
         return DeviceError::NoDriverAvailable;
     }
 
     TRY(device.walk_configuration([](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
         if (type == DescriptorType::Interface) {
             auto *interface_descriptor = static_cast<InterfaceDescriptor *>(descriptor);
-            ustd::dbgln(" usb: Found interface {:h2}:{:h2}:{:h2}", interface_descriptor->iclass,
-                        interface_descriptor->isubclass, interface_descriptor->iprotocol);
+            log::info("Found interface {:x2}:{:x2}:{:x2}", interface_descriptor->iclass,
+                      interface_descriptor->isubclass, interface_descriptor->iprotocol);
             if (interface_descriptor->iclass != 3u || interface_descriptor->isubclass != 1u ||
                 interface_descriptor->iprotocol != 1u) {
                 return DeviceError::NoDriverAvailable;
