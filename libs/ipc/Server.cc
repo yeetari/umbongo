@@ -10,6 +10,7 @@
 #include <ustd/Function.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -18,18 +19,10 @@
 namespace ipc {
 
 Server::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loop(event_loop) {
-    if (auto rc = Syscall::invoke(Syscall::create_server_socket, path.data(), 4); rc >= 0) {
-        m_fd.emplace(static_cast<uint32>(rc));
-    }
-    ENSURE(m_fd);
+    m_fd.emplace(EXPECT(Syscall::invoke<uint32>(Syscall::create_server_socket, path.data(), 4)));
     event_loop.watch(*this, PollEvents::Accept);
     set_on_read_ready([this] {
-        uint32 client_fd = 0;
-        if (auto rc = Syscall::invoke(Syscall::accept, *m_fd); rc >= 0) {
-            client_fd = static_cast<uint32>(rc);
-        } else {
-            ENSURE_NOT_REACHED();
-        }
+        uint32 client_fd = EXPECT(Syscall::invoke<uint32>(Syscall::accept, *m_fd));
         auto *client = m_clients.emplace(new Client(client_fd)).obj();
         m_event_loop.watch(*client, PollEvents::Read);
         client->set_on_read_ready([this, client] {

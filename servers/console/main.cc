@@ -11,8 +11,8 @@
 #include <kernel/SyscallTypes.hh>
 #include <servers/console/IpcMessages.hh>
 #include <ustd/Array.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -37,12 +37,9 @@ usize main(usize, const char **) {
     stdin.set_on_read_ready([&] {
         // NOLINTNEXTLINE
         ustd::Array<char, 8_KiB> buffer;
-        ssize bytes_read = 0;
-        if (bytes_read = stdin.read(buffer.span()); bytes_read < 0) {
-            ENSURE_NOT_REACHED();
-        }
+        auto bytes_read = EXPECT(stdin.read(buffer.span()));
         terminal->clear_cursor();
-        for (usize i = 0; i < static_cast<usize>(bytes_read); i++) {
+        for (usize i = 0; i < bytes_read; i++) {
             char ch = buffer[i];
             if (escape_parser.parse(ch, terminal)) {
                 continue;

@@ -1,11 +1,11 @@
 #pragma once
 
+#include <kernel/SysError.hh>
 #include <ustd/StringView.hh>
-#include <ustd/Types.hh>
 
 namespace core {
 
-[[noreturn]] void abort_error(ustd::StringView msg, ssize rc);
-ustd::StringView error_string(ssize rc);
+[[noreturn]] void abort_error(ustd::StringView msg, SysError error);
+ustd::StringView error_string(SysError error);
 
 } // namespace core

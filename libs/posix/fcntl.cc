@@ -10,6 +10,7 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 
 __BEGIN_DECLS
 
@@ -42,12 +43,12 @@ int open(const char *path, int oflag, ...) {
         ENSURE_NOT_REACHED();
     }
 
-    auto rc = Syscall::invoke(Syscall::open, path, mode);
-    if (rc < 0) {
-        errno = posix::to_errno(rc);
+    auto result = Syscall::invoke(Syscall::open, path, mode);
+    if (result.is_error()) {
+        errno = posix::to_errno(result.error());
         return -1;
     }
-    return static_cast<int>(rc);
+    return static_cast<int>(result.value());
 }
 
 __END_DECLS

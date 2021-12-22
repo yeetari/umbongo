@@ -3,6 +3,7 @@
 #include <kernel/KeyEvent.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -40,9 +41,9 @@ void LineEditor::goto_end() {
 
 void LineEditor::begin_line() {
     ustd::printf("\x1b[38;2;179;179;255m");
-    auto cwd_length = Syscall::invoke<usize>(Syscall::getcwd, nullptr);
+    auto cwd_length = EXPECT(Syscall::invoke<usize>(Syscall::getcwd, nullptr));
     ustd::String cwd(cwd_length);
-    Syscall::invoke(Syscall::getcwd, cwd.data());
+    EXPECT(Syscall::invoke(Syscall::getcwd, cwd.data()));
     ustd::StringView cwd_view = cwd.view();
     if (cwd.length() >= 5) {
         ustd::StringView start(cwd.data(), 5);

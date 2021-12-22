@@ -2,6 +2,7 @@
 
 #include <core/Watchable.hh>
 #include <kernel/SysError.hh>
+#include <kernel/SyscallTypes.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -31,21 +32,30 @@ public:
     }
 
     void close();
-    ssize read(ustd::Span<void> data);
-    ssize read(ustd::Span<void> data, usize offset);
+    ustd::Result<usize, SysError> ioctl(IoctlRequest request, void *arg = nullptr);
+    ustd::Result<uintptr, SysError> mmap();
+    ustd::Result<usize, SysError> read(ustd::Span<void> data);
+    ustd::Result<usize, SysError> read(ustd::Span<void> data, usize offset);
+    ustd::Result<void, SysError> rebind(uint32 fd);
+    ustd::Result<usize, SysError> write(ustd::Span<const void> data);
+
+    template <typename T>
+    ustd::Result<T *, SysError> mmap();
     template <typename T>
     ustd::Result<T, SysError> read();
-    ssize rebind(uint32 fd);
 
     uint32 fd() const override { return *m_fd; }
 };
 
 template <typename T>
+ustd::Result<T *, SysError> File::mmap() {
+    return reinterpret_cast<T *>(TRY(mmap()));
+}
+
+template <typename T>
 ustd::Result<T, SysError> File::read() {
     T ret{};
-    if (auto rc = read({&ret, sizeof(T)}); rc != sizeof(T)) {
-        return static_cast<SysError>(rc);
-    }
+    TRY(read({&ret, sizeof(T)}));
     return ret;
 }
 

@@ -11,10 +11,7 @@
 namespace core {
 
 ustd::Result<File, SysError> File::open(ustd::StringView path) {
-    auto fd = Syscall::invoke(Syscall::open, path.data(), OpenMode::None);
-    if (fd < 0) {
-        return static_cast<SysError>(fd);
-    }
+    auto fd = TRY(Syscall::invoke<uint32>(Syscall::open, path.data(), OpenMode::None));
     return File(static_cast<uint32>(fd));
 }
 
@@ -24,31 +21,39 @@ File::~File() {
 
 void File::close() {
     if (m_fd) {
-        Syscall::invoke(Syscall::close, *m_fd);
+        static_cast<void>(Syscall::invoke(Syscall::close, *m_fd));
         m_fd.clear();
     }
 }
 
-ssize File::read(ustd::Span<void> data) {
-    return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());
+ustd::Result<usize, SysError> File::ioctl(IoctlRequest request, void *arg) {
+    return TRY(Syscall::invoke(Syscall::ioctl, *m_fd, request, arg));
 }
 
-ssize File::read(ustd::Span<void> data, usize offset) {
-    if (auto rc = Syscall::invoke(Syscall::seek, *m_fd, offset, SeekMode::Set); rc < 0) {
-        return rc;
-    }
-    return Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size());
+ustd::Result<uintptr, SysError> File::mmap() {
+    return TRY(Syscall::invoke(Syscall::mmap, *m_fd));
 }
 
-ssize File::rebind(uint32 fd) {
-    if (auto rc = Syscall::invoke(Syscall::dup_fd, *m_fd, fd); rc < 0) {
-        return rc;
-    }
+ustd::Result<usize, SysError> File::read(ustd::Span<void> data) {
+    return TRY(Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size()));
+}
+
+ustd::Result<usize, SysError> File::read(ustd::Span<void> data, usize offset) {
+    TRY(Syscall::invoke(Syscall::seek, *m_fd, offset, SeekMode::Set));
+    return TRY(Syscall::invoke(Syscall::read, *m_fd, data.data(), data.size()));
+}
+
+ustd::Result<void, SysError> File::rebind(uint32 fd) {
+    TRY(Syscall::invoke(Syscall::dup_fd, *m_fd, fd));
     if (*m_fd != fd) {
-        Syscall::invoke(Syscall::close, *m_fd);
+        TRY(Syscall::invoke(Syscall::close, *m_fd));
         m_fd.emplace(fd);
     }
-    return 0;
+    return {};
+}
+
+ustd::Result<usize, SysError> File::write(ustd::Span<const void> data) {
+    return TRY(Syscall::invoke(Syscall::write, *m_fd, data.data(), data.size()));
 }
 
 } // namespace core

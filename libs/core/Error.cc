@@ -1,9 +1,11 @@
 #include <core/Error.hh>
 
+#include <kernel/SysError.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
@@ -27,18 +29,18 @@ ustd::Array k_error_list{
 
 } // namespace
 
-[[noreturn]] void abort_error(ustd::StringView msg, ssize rc) {
-    dbgln("{}: {}", msg, error_string(rc));
-    Syscall::invoke(Syscall::exit, 1);
+[[noreturn]] void abort_error(ustd::StringView msg, SysError error) {
+    dbgln("{}: {}", msg, error_string(error));
+    EXPECT(Syscall::invoke(Syscall::exit, 1));
     ENSURE_NOT_REACHED();
 }
 
-ustd::StringView error_string(ssize rc) {
-    rc = -rc;
-    if (rc < 0 || static_cast<usize>(rc) >= k_error_list.size()) {
+ustd::StringView error_string(SysError error) {
+    ssize num = -static_cast<ssize>(error);
+    if (num < 0 || static_cast<usize>(num) >= k_error_list.size()) {
         return "unknown error"sv;
     }
-    return k_error_list[static_cast<usize>(rc)];
+    return k_error_list[static_cast<usize>(num)];
 }
 
 } // namespace core

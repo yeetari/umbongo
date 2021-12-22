@@ -11,6 +11,7 @@
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -29,9 +30,8 @@ void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
-            auto rc = Syscall::invoke(Syscall::chdir, dir);
-            if (rc < 0) {
-                ustd::printf("ush: cd: {}: {}\n", dir, core::error_string(rc));
+            if (auto result = Syscall::invoke(Syscall::chdir, dir); result.is_error()) {
+                ustd::printf("ush: cd: {}: {}\n", dir, core::error_string(result.error()));
             }
             break;
         }
@@ -39,15 +39,16 @@ void execute(Value &value, ustd::Vector<FdPair> &rewirings) {
         job->spawn(rewirings);
         job->await_completion();
     } else if (auto *pipe = value.as_or_null<PipeValue>()) {
+        // TODO: Use core::Pipe
         ustd::Array<uint32, 2> pipe_fds{};
-        Syscall::invoke(Syscall::create_pipe, pipe_fds.data());
+        EXPECT(Syscall::invoke(Syscall::create_pipe, pipe_fds.data()));
         rewirings.push(FdPair{pipe_fds[1], 1});
         execute(pipe->lhs(), rewirings);
-        Syscall::invoke(Syscall::close, pipe_fds[1]);
+        EXPECT(Syscall::invoke(Syscall::close, pipe_fds[1]));
         rewirings.pop();
         rewirings.push(FdPair{pipe_fds[0], 0});
         execute(pipe->rhs(), rewirings);
-        Syscall::invoke(Syscall::close, pipe_fds[0]);
+        EXPECT(Syscall::invoke(Syscall::close, pipe_fds[0]));
     }
 }
 
@@ -57,19 +58,19 @@ void Job::await_completion() const {
     if (m_pid == 0) {
         return;
     }
-    Syscall::invoke(Syscall::wait_pid, m_pid);
+    EXPECT(Syscall::invoke(Syscall::wait_pid, m_pid));
 }
 
 void Job::spawn(const ustd::Vector<FdPair> &copy_fds) {
     if (m_pid != 0) {
         return;
     }
-    ssize rc = core::create_process(m_command.data(), m_args, copy_fds);
-    if (rc < 0) {
+    auto result = core::create_process(m_command.data(), m_args, copy_fds);
+    if (result.is_error()) {
         printf("ush: {}: command not found\n", m_command.view());
         return;
     }
-    m_pid = static_cast<usize>(rc);
+    m_pid = result.value();
 }
 
 usize main(usize, const char **) {
@@ -79,11 +80,11 @@ usize main(usize, const char **) {
         while (true) {
             KeyEvent event;
             while (true) {
-                ssize rc = Syscall::invoke(Syscall::read, 0, &event, sizeof(KeyEvent));
-                if (rc < 0) {
+                auto rc = Syscall::invoke(Syscall::read, 0, &event, sizeof(KeyEvent));
+                if (rc.is_error()) {
                     return 1;
                 }
-                if (rc > 0) {
+                if (rc.value() > 0) {
                     break;
                 }
             }

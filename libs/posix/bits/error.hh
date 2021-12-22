@@ -8,8 +8,8 @@
 
 namespace posix {
 
-inline int to_errno(ssize_t error) {
-    switch (static_cast<SysError>(error)) {
+inline int to_errno(SysError error) {
+    switch (error) {
     case SysError::BadFd:
         return EBADF;
     case SysError::NonExistent:

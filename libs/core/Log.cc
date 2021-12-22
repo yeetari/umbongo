@@ -1,9 +1,9 @@
 #include <kernel/Syscall.hh>
 
 void dbg_put_char(char ch) {
-    Syscall::invoke(Syscall::putchar, ch);
+    static_cast<void>(Syscall::invoke(Syscall::putchar, ch));
 }
 
 void put_char(char ch) {
-    Syscall::invoke(Syscall::write, 1, &ch, 1);
+    static_cast<void>(Syscall::invoke(Syscall::write, 1, &ch, 1));
 }

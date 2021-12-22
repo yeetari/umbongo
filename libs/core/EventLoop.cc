@@ -8,6 +8,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -67,11 +68,11 @@ void EventLoop::unwatch(Watchable &watchable) {
 usize EventLoop::run() {
     while (true) {
         const auto timeout = next_timer_deadline();
-        if (auto rc = Syscall::invoke(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc < 0) {
-            dbgln("poll: {}", core::error_string(rc));
+        if (auto rc = Syscall::invoke(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
+            dbgln("poll: {}", core::error_string(rc.error()));
             return 1;
         }
-        auto now = Syscall::invoke<usize>(Syscall::gettime);
+        auto now = EXPECT(Syscall::invoke<usize>(Syscall::gettime));
         for (auto *timer : m_timers) {
             if (!timer->has_expired(now)) {
                 continue;

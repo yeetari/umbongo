@@ -7,20 +7,20 @@
 #include <ustd/Traits.hh>
 #include <ustd/Utility.hh>
 
-#define EXPECT(expr)                                                                                                   \
+#define EXPECT(expr, ...)                                                                                              \
     ({                                                                                                                 \
-        auto _result = (expr);                                                                                         \
-        ENSURE(!_result.is_error());                                                                                   \
-        _result.value();                                                                                               \
+        auto _result_expect = (expr);                                                                                  \
+        ENSURE(!_result_expect.is_error(), ##__VA_ARGS__);                                                             \
+        _result_expect.value();                                                                                        \
     })
 
 #define TRY(expr)                                                                                                      \
     ({                                                                                                                 \
-        auto _result = (expr);                                                                                         \
-        if (_result.is_error()) {                                                                                      \
-            return _result.error();                                                                                    \
+        auto _result_try = (expr);                                                                                     \
+        if (_result_try.is_error()) {                                                                                  \
+            return _result_try.error();                                                                                \
         }                                                                                                              \
-        _result.value();                                                                                               \
+        _result_try.value();                                                                                           \
     })
 
 namespace ustd {
@@ -65,7 +65,7 @@ public:
 
 template <typename E>
 class [[nodiscard]] Result<void, E> {
-    E m_error;
+    E m_error{};
     const bool m_is_error{false};
 
 public:

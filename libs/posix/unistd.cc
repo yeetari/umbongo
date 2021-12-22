@@ -8,6 +8,7 @@
 #include <kernel/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 
 __BEGIN_DECLS
 
@@ -16,9 +17,8 @@ int access(const char *, int) {
 }
 
 int close(int fd) {
-    auto rc = Syscall::invoke(Syscall::close, fd);
-    if (rc < 0) {
-        errno = posix::to_errno(rc);
+    if (auto result = Syscall::invoke(Syscall::close, fd); result.is_error()) {
+        errno = posix::to_errno(result.error());
         return -1;
     }
     return 0;
@@ -86,12 +86,12 @@ off_t lseek(int, off_t, int) {
 }
 
 ssize_t read(int fd, void *data, size_t size) {
-    auto rc = Syscall::invoke(Syscall::read, fd, data, size);
-    if (rc < 0) {
-        errno = posix::to_errno(rc);
+    auto result = Syscall::invoke<ssize_t>(Syscall::read, fd, data, size);
+    if (result.is_error()) {
+        errno = posix::to_errno(result.error());
         return -1;
     }
-    return rc;
+    return result.value();
 }
 
 ssize_t write(int, const void *, size_t) {

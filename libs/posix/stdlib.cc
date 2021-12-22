@@ -10,6 +10,7 @@
 #include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Log.hh>
+#include <ustd/Result.hh>
 #include <ustd/Utility.hh>
 
 namespace {
@@ -58,7 +59,7 @@ void abort() {
 }
 
 void exit(int status) {
-    Syscall::invoke(Syscall::exit, status);
+    EXPECT(Syscall::invoke(Syscall::exit, status));
     ENSURE_NOT_REACHED();
 }
 

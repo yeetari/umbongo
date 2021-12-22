@@ -2,16 +2,18 @@
 
 #include <kernel/SysError.hh>
 #include <kernel/Syscall.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
-#include <ustd/Types.hh>
 
 namespace core {
 
-ssize mount(ustd::StringView target, ustd::StringView fs_type) {
-    if (auto rc = Syscall::invoke(Syscall::mkdir, target.data()); rc < 0 && rc != SysError::AlreadyExists) {
-        return rc;
+ustd::Result<void, SysError> mount(ustd::StringView target, ustd::StringView fs_type) {
+    if (auto result = Syscall::invoke(Syscall::mkdir, target.data());
+        result.is_error() && result.error() != SysError::AlreadyExists) {
+        return result.error();
     }
-    return Syscall::invoke(Syscall::mount, target.data(), fs_type.data());
+    TRY(Syscall::invoke(Syscall::mount, target.data(), fs_type.data()));
+    return {};
 }
 
 } // namespace core

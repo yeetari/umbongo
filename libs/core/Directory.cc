@@ -1,26 +1,23 @@
 #include <core/Directory.hh>
 
+#include <kernel/SysError.hh>
 #include <kernel/Syscall.hh>
 #include <ustd/Function.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
 namespace core {
 
-ssize iterate_directory(ustd::StringView path, ustd::Function<void(ustd::StringView)> callback) {
-    ssize rc = Syscall::invoke(Syscall::read_directory, path.data(), nullptr);
-    if (rc < 0) {
-        return rc;
-    }
+ustd::Result<usize, SysError> iterate_directory(ustd::StringView path,
+                                                ustd::Function<void(ustd::StringView)> callback) {
     // TODO: ustd should have some kind of FixedArray container.
-    auto byte_count = static_cast<usize>(rc);
+    usize byte_count = TRY(Syscall::invoke(Syscall::read_directory, path.data(), nullptr));
     ustd::LargeVector<char> data;
     data.ensure_capacity(byte_count);
-    if (rc = Syscall::invoke(Syscall::read_directory, path.data(), data.data()); rc < 0) {
-        return rc;
-    }
-    ssize entry_count = 0;
+    TRY(Syscall::invoke(Syscall::read_directory, path.data(), data.data()));
+    usize entry_count = 0;
     for (usize byte_offset = 0; byte_offset != byte_count;) {
         ustd::StringView name(data.data() + byte_offset);
         callback(name);

@@ -9,7 +9,6 @@
 #include <ustd/Types.hh>
 
 usize main(usize argc, const char **argv) {
-    // TODO: Better file read error checking (should be tighter in core::File).
     auto file = EXPECT(core::File::open(argv[0]));
     auto header = EXPECT(file.read<elf::Header>());
 
@@ -17,7 +16,7 @@ usize main(usize argc, const char **argv) {
     uintptr region_end = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
-        file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i);
+        EXPECT(file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i));
         if (phdr.type == elf::SegmentType::Load) {
             ASSERT(phdr.filesz <= phdr.memsz);
             region_base = ustd::min(region_base, phdr.vaddr);
@@ -26,13 +25,13 @@ usize main(usize argc, const char **argv) {
     }
 
     // TODO: Don't always allocate writable + executable.
-    auto base_offset = Syscall::invoke<uintptr>(Syscall::allocate_region, region_end - region_base,
-                                                MemoryProt::Write | MemoryProt::Exec);
+    auto base_offset = EXPECT(Syscall::invoke<uintptr>(Syscall::allocate_region, region_end - region_base,
+                                                       MemoryProt::Write | MemoryProt::Exec));
     usize dynamic_entry_count = 0;
     usize dynamic_table_offset = 0;
     for (uint16 i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
-        file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i);
+        EXPECT(file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i));
         if (phdr.type == elf::SegmentType::Dynamic) {
             ASSERT(phdr.filesz % sizeof(elf::DynamicEntry) == 0);
             dynamic_entry_count = phdr.filesz / sizeof(elf::DynamicEntry);
@@ -40,7 +39,7 @@ usize main(usize argc, const char **argv) {
         } else if (phdr.type == elf::SegmentType::Load) {
             // TODO: Only bother zeroing bss.
             __builtin_memset(reinterpret_cast<void *>(base_offset + phdr.vaddr), 0, phdr.memsz);
-            file.read({reinterpret_cast<void *>(base_offset + phdr.vaddr), phdr.filesz}, phdr.offset);
+            EXPECT(file.read({reinterpret_cast<void *>(base_offset + phdr.vaddr), phdr.filesz}, phdr.offset));
         }
     }
 
@@ -49,7 +48,7 @@ usize main(usize argc, const char **argv) {
     usize relocation_table_size = 0;
     for (usize i = 0; i < dynamic_entry_count; i++) {
         elf::DynamicEntry entry{};
-        file.read({&entry, sizeof(elf::DynamicEntry)}, dynamic_table_offset + sizeof(elf::DynamicEntry) * i);
+        EXPECT(file.read({&entry, sizeof(elf::DynamicEntry)}, dynamic_table_offset + sizeof(elf::DynamicEntry) * i));
         switch (entry.type) {
         case elf::DynamicType::Null:
         case elf::DynamicType::Hash:
@@ -85,7 +84,7 @@ usize main(usize argc, const char **argv) {
     usize relocation_entry_count = relocation_entry_size != 0 ? relocation_table_size / relocation_entry_size : 0;
     for (usize i = 0; i < relocation_entry_count; i++) {
         elf::Rela rela{};
-        file.read({&rela, sizeof(elf::Rela)}, relocation_table_offset + relocation_entry_size * i);
+        EXPECT(file.read({&rela, sizeof(elf::Rela)}, relocation_table_offset + relocation_entry_size * i));
 
         auto *ptr = reinterpret_cast<usize *>(base_offset + rela.offset);
         auto type = static_cast<elf::RelocationType>(rela.info & 0xffffffffu);

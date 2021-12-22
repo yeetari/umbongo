@@ -41,11 +41,11 @@ usize main(usize argc, const char **argv) {
     if (argc == 2) {
         print_device(argv[1]);
     }
-    auto rc = core::iterate_directory("/dev/pci", [](ustd::StringView name) {
+    auto result = core::iterate_directory("/dev/pci", [](ustd::StringView name) {
         print_device(name.data());
     });
-    if (rc < 0) {
-        ustd::printf("lscpi: {}\n", core::error_string(rc));
+    if (result.is_error()) {
+        ustd::printf("lscpi: {}\n", core::error_string(result.error()));
         return 1;
     }
     return 0;

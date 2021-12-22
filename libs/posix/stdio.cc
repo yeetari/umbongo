@@ -16,8 +16,10 @@
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 
 struct FILE {
 private:
@@ -29,7 +31,7 @@ public:
     explicit FILE(uint32_t fd) : m_fd(fd) {}
     FILE(const FILE &) = delete;
     FILE(FILE &&) = delete;
-    ~FILE() { Syscall::invoke(Syscall::close, m_fd); }
+    ~FILE() { EXPECT(Syscall::invoke(Syscall::close, m_fd)); }
 
     FILE &operator=(const FILE &) = delete;
     FILE &operator=(FILE &&) = delete;
@@ -264,12 +266,12 @@ bool FILE::gets(uint8_t *data, int size) {
     while (size > 1) {
         uint8_t byte = 0;
         auto bytes_read = Syscall::invoke(Syscall::read, m_fd, &byte, 1);
-        if (bytes_read <= 0) {
+        if (bytes_read.is_error() || bytes_read.value() == 0) {
             *data = 0;
-            if (bytes_read == 0) {
+            if (bytes_read.value() == 0) {
                 m_eof = true;
             } else {
-                m_error = posix::to_errno(bytes_read);
+                m_error = posix::to_errno(bytes_read.error());
             }
             return total_read > 0;
         }
@@ -286,24 +288,23 @@ size_t FILE::read(void *data, size_t size) {
     size_t total_read = 0;
     while (size > 0) {
         auto bytes_read = Syscall::invoke(Syscall::read, m_fd, data, size);
-        if (bytes_read <= 0) {
-            if (bytes_read == 0) {
+        if (bytes_read.is_error() || bytes_read.value() == 0) {
+            if (bytes_read.value() == 0) {
                 m_eof = true;
             } else {
-                m_error = posix::to_errno(bytes_read);
+                m_error = posix::to_errno(bytes_read.error());
             }
             return total_read;
         }
-        total_read += static_cast<size_t>(bytes_read);
-        size -= static_cast<size_t>(bytes_read);
+        total_read += bytes_read.value();
+        size -= bytes_read.value();
     }
     return total_read;
 }
 
 int FILE::seek(long offset, int whence) {
     ENSURE(whence != SEEK_END, "TODO: Support SEEK_END");
-    ssize_t rc = Syscall::invoke(Syscall::seek, m_fd, offset, seek_mode(whence));
-    if (rc < 0) {
+    if (auto result = Syscall::invoke(Syscall::seek, m_fd, offset, seek_mode(whence)); result.is_error()) {
         return -1;
     }
     m_eof = false;
@@ -311,19 +312,19 @@ int FILE::seek(long offset, int whence) {
 }
 
 ssize_t FILE::tell() {
-    return Syscall::invoke(Syscall::seek, m_fd, 0, SeekMode::Add);
+    return EXPECT(Syscall::invoke<ssize_t>(Syscall::seek, m_fd, 0, SeekMode::Add));
 }
 
 size_t FILE::write(const void *data, size_t size) {
     size_t total_written = 0;
     while (size > 0) {
         auto bytes_written = Syscall::invoke(Syscall::write, m_fd, data, size);
-        if (bytes_written < 0) {
-            m_error = posix::to_errno(bytes_written);
+        if (bytes_written.is_error()) {
+            m_error = posix::to_errno(bytes_written.error());
             return total_written;
         }
-        total_written += static_cast<size_t>(bytes_written);
-        size -= static_cast<size_t>(bytes_written);
+        total_written += bytes_written.value();
+        size -= bytes_written.value();
     }
     return total_written;
 }
@@ -331,11 +332,11 @@ size_t FILE::write(const void *data, size_t size) {
 __BEGIN_DECLS
 
 FILE *fopen(const char *path, const char *mode) {
-    auto fd = Syscall::invoke(Syscall::open, path, parse_mode(mode));
-    if (fd < 0) {
+    auto fd = Syscall::invoke<uint32>(Syscall::open, path, parse_mode(mode));
+    if (fd.is_error()) {
         return nullptr;
     }
-    return new FILE(static_cast<uint32_t>(fd));
+    return new FILE(fd.value());
 }
 
 int feof(FILE *stream) {

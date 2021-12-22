@@ -1,10 +1,11 @@
 #pragma once
 
+#include <kernel/SysError.hh>
+#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
-#include <ustd/Types.hh>
 
 namespace core {
 
-ssize mount(ustd::StringView target, ustd::StringView fs_type);
+ustd::Result<void, SysError> mount(ustd::StringView target, ustd::StringView fs_type);
 
 } // namespace core

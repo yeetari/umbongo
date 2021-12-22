@@ -4,6 +4,7 @@
 #include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
+#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -19,11 +20,11 @@ bool compare_name(ustd::String &lhs, ustd::String &rhs) {
 usize main(usize argc, const char **argv) {
     const char *path = argc == 1 ? "." : argv[1];
     ustd::Vector<ustd::String> names;
-    auto rc = core::iterate_directory(path, [&](ustd::StringView name) {
+    auto result = core::iterate_directory(path, [&](ustd::StringView name) {
         names.emplace(name);
     });
-    if (rc < 0) {
-        ustd::printf("ls: {}: {}\n", path, core::error_string(rc));
+    if (result.is_error()) {
+        ustd::printf("ls: {}: {}\n", path, core::error_string(result.error()));
         return 1;
     }
     ustd::sort(names, compare_name);
