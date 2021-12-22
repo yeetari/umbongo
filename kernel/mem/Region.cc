@@ -23,6 +23,9 @@ PageFlags page_flags(RegionAccess access) {
     if ((access & RegionAccess::UserAccessible) == RegionAccess::UserAccessible) {
         flags |= PageFlags::User;
     }
+    if ((access & RegionAccess::Uncacheable) == RegionAccess::Uncacheable) {
+        flags |= PageFlags::CacheDisable;
+    }
     return flags;
 }
 
@@ -44,11 +47,12 @@ Region::Region(uintptr base, usize size, RegionAccess access, bool free, ustd::O
         } while (size != 0);
         return;
     }
-    // TODO: Use 2 MiB pages.
     uintptr phys = *phys_base;
     do {
-        const usize map_size = size >= 1_GiB ? 1_GiB : 4_KiB;
-        const auto page_size = map_size == 1_GiB ? PhysicalPageSize::Huge : PhysicalPageSize::Normal;
+        const usize map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
+        const auto page_size = map_size == 1_GiB   ? PhysicalPageSize::Huge
+                               : map_size == 2_MiB ? PhysicalPageSize::Large
+                                                   : PhysicalPageSize::Normal;
         m_physical_pages.push(PhysicalPage::create(phys, page_size));
         phys += map_size;
         size -= map_size;

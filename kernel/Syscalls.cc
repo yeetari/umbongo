@@ -63,6 +63,9 @@ SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
     if ((prot & MemoryProt::Exec) == MemoryProt::Exec) {
         access |= RegionAccess::Executable;
     }
+    if ((prot & MemoryProt::Uncacheable) == MemoryProt::Uncacheable) {
+        access |= RegionAccess::Uncacheable;
+    }
     auto &region = m_virt_space->allocate_region(size, access);
     return region.base();
 }

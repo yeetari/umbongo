@@ -39,6 +39,7 @@ enum class IoctlRequest : usize {
 enum class MemoryProt : usize {
     Write = 1u << 0u,
     Exec = 1u << 1u,
+    Uncacheable = 1u << 2u,
 };
 
 enum class OpenMode : usize {

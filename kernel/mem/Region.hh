@@ -12,6 +12,7 @@ enum class RegionAccess : uint8 {
     Writable = 1u << 0u,
     Executable = 1u << 1u,
     UserAccessible = 1u << 2u,
+    Uncacheable = 1u << 3u,
 };
 
 class Region {
