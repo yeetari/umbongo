@@ -86,7 +86,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     DevFs::initialise();
 
     auto *mcfg = xsdt->find<acpi::PciTable>();
-    ENSURE(mcfg != nullptr);
+    ENSURE(mcfg != nullptr && mcfg->valid());
     pci::enumerate(mcfg);
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
@@ -153,11 +153,10 @@ extern "C" void kmain(BootInfo *boot_info) {
         ustd::dbgln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0],
                     entry->signature()[1], entry->signature()[2], entry->signature()[3], entry, entry->revision(),
                     entry->valid());
-        ENSURE(entry->valid());
     }
 
     auto *madt = xsdt->find<acpi::ApicTable>();
-    ENSURE(madt != nullptr);
+    ENSURE(madt != nullptr && madt->valid());
     if ((madt->flags() & 1u) != 0) {
         InterruptManager::mask_pic();
     }
@@ -182,7 +181,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     Processor::set_apic(apic);
 
     auto *hpet_table = xsdt->find<acpi::HpetTable>();
-    ENSURE(hpet_table != nullptr);
+    ENSURE(hpet_table != nullptr && hpet_table->valid());
     TimeManager::initialise(hpet_table);
 
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely
