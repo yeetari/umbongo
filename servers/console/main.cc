@@ -15,6 +15,7 @@
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/Vector.hh>
 
 usize main(usize, const char **) {
     core::EventLoop event_loop;
@@ -58,7 +59,7 @@ usize main(usize, const char **) {
         terminal->render();
     });
 
-    ipc::Server server(event_loop, "/run/console"sv);
+    ipc::Server<ipc::Client> server(event_loop, "/run/console"sv);
     server.set_on_read([terminal](ipc::Client &client, ipc::MessageDecoder &decoder) {
         using namespace console;
         switch (decoder.decode<MessageKind>()) {
