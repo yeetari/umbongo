@@ -12,11 +12,13 @@
 
 namespace core {
 
+using OpenMode = kernel::OpenMode;
+
 class File : public Watchable {
     ustd::Optional<uint32> m_fd;
 
 public:
-    static ustd::Result<File, SysError> open(ustd::StringView path);
+    static ustd::Result<File, SysError> open(ustd::StringView path, OpenMode mode = OpenMode::None);
 
     File() = default;
     explicit File(uint32 fd) : m_fd(fd) {}

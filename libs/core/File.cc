@@ -9,8 +9,8 @@
 
 namespace core {
 
-ustd::Result<File, SysError> File::open(ustd::StringView path) {
-    auto fd = TRY(syscall<uint32>(Syscall::open, path.data(), kernel::OpenMode::None));
+ustd::Result<File, SysError> File::open(ustd::StringView path, OpenMode mode) {
+    auto fd = TRY(syscall<uint32>(Syscall::open, path.data(), mode));
     return File(static_cast<uint32>(fd));
 }
 
