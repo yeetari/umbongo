@@ -21,7 +21,7 @@ void print_device(const char *name) {
         ustd::printf("lspci: no device {}\n", name);
         core::exit(1);
     }
-    auto file = file_or_error.value();
+    auto file = file_or_error.disown_value();
     auto info = EXPECT(file.read<PciDeviceInfo>());
     ustd::StringBuilder builder;
     builder.append("{}\n", name);

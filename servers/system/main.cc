@@ -18,7 +18,7 @@ usize main(usize, const char **) {
     while (true) {
         auto keyboard_or_error = core::File::open("/dev/kb");
         if (!keyboard_or_error.is_error()) {
-            keyboard = keyboard_or_error.value();
+            keyboard = keyboard_or_error.disown_value();
             break;
         }
     }

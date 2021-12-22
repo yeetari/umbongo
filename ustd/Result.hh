@@ -12,7 +12,7 @@
     ({                                                                                                                 \
         auto _result_expect = (expr);                                                                                  \
         ENSURE(!_result_expect.is_error(), ##__VA_ARGS__);                                                             \
-        _result_expect.value();                                                                                        \
+        _result_expect.disown_value();                                                                                 \
     })
 
 #define TRY(expr)                                                                                                      \
@@ -21,7 +21,7 @@
         if (_result_try.is_error()) {                                                                                  \
             return _result_try.error();                                                                                \
         }                                                                                                              \
-        _result_try.value();                                                                                           \
+        _result_try.disown_value();                                                                                    \
     })
 
 namespace ustd {
@@ -109,10 +109,14 @@ public:
         ASSERT(m_is_error);
         return m_error;
     }
-    T value() {
+    T &value() {
         ASSERT(!m_is_error);
+        return *reinterpret_cast<T *>(m_value.data());
+    }
+    T disown_value() {
+        auto disowned = move(value());
         m_is_error = true;
-        return move(*reinterpret_cast<T *>(m_value.data()));
+        return disowned;
     }
 };
 
@@ -139,6 +143,7 @@ public:
         return m_error;
     }
     void value() const {}
+    void disown_value() const {}
 };
 
 template <typename T, typename E>
