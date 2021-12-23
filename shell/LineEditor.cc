@@ -102,7 +102,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
             for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
                 m_cursor_pos++;
                 ustd::printf("\x1b[C");
-                if (m_buffer[m_cursor_pos] == ' ') {
+                if (m_cursor_pos == m_buffer.size() || m_buffer[m_cursor_pos] == ' ') {
                     break;
                 }
             }
