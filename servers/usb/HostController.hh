@@ -13,6 +13,12 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+namespace core {
+
+class EventLoop;
+
+} // namespace core
+
 class Device;
 struct RawTrb;
 class TrbRing;
@@ -55,6 +61,7 @@ struct [[gnu::packed]] DoorbellArray {
 
 class HostController {
     ustd::String m_name;
+    core::EventLoop &m_event_loop;
     core::File m_file;
     const OpRegs *m_op_regs{nullptr};
     const RunRegs *m_run_regs{nullptr};
@@ -67,7 +74,7 @@ class HostController {
     uint8 m_context_size{0};
 
 public:
-    HostController(ustd::StringView name, core::File &&file);
+    HostController(ustd::StringView name, core::EventLoop &event_loop, core::File &&file);
     HostController(const HostController &) = delete;
     HostController(HostController &&) noexcept;
     ~HostController();

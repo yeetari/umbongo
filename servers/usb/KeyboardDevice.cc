@@ -2,6 +2,7 @@
 
 #include "Common.hh"
 #include "Descriptor.hh"
+#include "Device.hh"
 #include "Endpoint.hh"
 #include "Error.hh"
 #include "TrbRing.hh"
@@ -9,10 +10,13 @@
 #include <core/KeyEvent.hh>
 #include <core/Pipe.hh>
 #include <core/Syscall.hh>
+#include <core/Timer.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
+#include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 
 namespace {
 
@@ -36,7 +40,10 @@ constexpr ustd::Array s_scancode_table_shift{
 
 } // namespace
 
-ustd::Result<void, DeviceError> KeyboardDevice::enable() {
+KeyboardDevice::KeyboardDevice(Device &&device) : Device(ustd::move(device)) {}
+KeyboardDevice::~KeyboardDevice() = default;
+
+ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_loop) {
     m_dma_buffer = EXPECT(mmio::alloc_dma_array<uint8>(8));
     m_pipe = EXPECT(core::create_pipe());
     EXPECT(core::syscall(Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
@@ -64,6 +71,25 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable() {
         }
         return {};
     }));
+
+    // TODO: Disable timer if no key pressed?
+    m_repeat_timer = ustd::make_unique<core::Timer>(event_loop, 25_Hz);
+    m_repeat_timer->set_on_fire([this] {
+        if (m_last_code == 0u || !key_already_pressed(m_last_code)) {
+            return;
+        }
+        if (EXPECT(core::syscall(Syscall::gettime)) - m_last_time < 400000000u) {
+            return;
+        }
+        const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
+        core::KeyEvent key_event{
+            m_last_code,
+            m_last_code < table.size() ? table[m_last_code] : '\0',
+            m_modifiers[2] || m_modifiers[6],
+            m_modifiers[0] || m_modifiers[4],
+        };
+        EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
+    });
     return {};
 }
 
@@ -94,6 +120,8 @@ void KeyboardDevice::poll() {
             m_modifiers[2] || m_modifiers[6],
             m_modifiers[0] || m_modifiers[4],
         };
+        m_last_code = key;
+        m_last_time = EXPECT(core::syscall(Syscall::gettime));
         EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
     }
     __builtin_memcpy(m_cmp_buffer.data(), m_dma_buffer, 8);

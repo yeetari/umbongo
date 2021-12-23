@@ -18,13 +18,13 @@
 
 namespace {
 
-ustd::Vector<HostController> find_host_controllers() {
+ustd::Vector<HostController> find_host_controllers(core::EventLoop &event_loop) {
     ustd::Vector<HostController> host_controllers;
     EXPECT(core::iterate_directory("/dev/pci", [&](ustd::StringView device_name) {
         auto file = EXPECT(core::File::open(ustd::format("/dev/pci/{}", device_name)));
         auto info = EXPECT(file.read<kernel::PciDeviceInfo>());
         if (info.clas == 0x0c && info.subc == 0x03 && info.prif == 0x30) {
-            host_controllers.emplace(device_name, ustd::move(file));
+            host_controllers.emplace(device_name, event_loop, ustd::move(file));
         }
     }));
     return host_controllers;
@@ -35,7 +35,7 @@ ustd::Vector<HostController> find_host_controllers() {
 usize main(usize, const char **) {
     log::initialise("usb-server");
     core::EventLoop event_loop;
-    auto host_controllers = find_host_controllers();
+    auto host_controllers = find_host_controllers(event_loop);
     for (auto &host_controller : host_controllers) {
         if (auto result = host_controller.enable(); result.is_error()) {
             auto error = result.error();

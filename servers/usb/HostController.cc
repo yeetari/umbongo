@@ -37,7 +37,8 @@ struct [[gnu::packed]] EventRingSegment {
 
 } // namespace
 
-HostController::HostController(ustd::StringView name, core::File &&file) : m_name(name), m_file(ustd::move(file)) {}
+HostController::HostController(ustd::StringView name, core::EventLoop &event_loop, core::File &&file)
+    : m_name(name), m_event_loop(event_loop), m_file(ustd::move(file)) {}
 HostController::HostController(HostController &&) noexcept = default;
 HostController::~HostController() = default;
 
@@ -341,7 +342,7 @@ HostController::handle_port_status_change(const RawTrb &event) {
     destroy_guard.disarm();
     auto moved_device = ustd::move(device);
     auto &keyboard_device = device_ptr.emplace<KeyboardDevice>(ustd::move(moved_device));
-    TRY(keyboard_device.enable());
+    TRY(keyboard_device.enable(m_event_loop));
     return {};
 }
 
