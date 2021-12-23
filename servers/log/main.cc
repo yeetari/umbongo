@@ -18,21 +18,21 @@
 
 namespace {
 
-core::File *s_file;
-
 class Client final : public ipc::Client {
+    core::File *m_file{nullptr};
     ustd::String m_name;
 
 public:
     Client(uint32 fd) : ipc::Client(fd) {}
 
-    void initialise(ustd::StringView name);
+    void initialise(core::File &file, ustd::StringView name);
     void log(log::Level level, ustd::StringView message);
 };
 
 } // namespace
 
-void Client::initialise(ustd::StringView name) {
+void Client::initialise(core::File &file, ustd::StringView name) {
+    m_file = &file;
     new (&m_name) ustd::String(name);
 }
 
@@ -42,12 +42,11 @@ void Client::log(log::Level level, ustd::StringView message) {
     };
     auto time = EXPECT(core::syscall(Syscall::gettime)) / 1000000;
     auto line = ustd::format("+{} {} [{}] {}\n", time, level_strings[static_cast<usize>(level)], m_name, message);
-    EXPECT(s_file->write({line.data(), line.length()}));
+    EXPECT(m_file->write({line.data(), line.length()}));
 }
 
 usize main(usize, const char **) {
     auto file = EXPECT(core::File::open("/log", core::OpenMode::Create | core::OpenMode::Truncate));
-    s_file = &file;
     core::EventLoop event_loop;
     ipc::Server<Client> server(event_loop, "/run/log"sv);
     server.set_on_read([&](Client &client, ipc::MessageDecoder &decoder) {
@@ -55,7 +54,7 @@ usize main(usize, const char **) {
         switch (decoder.decode<MessageKind>()) {
         case MessageKind::Initialise: {
             auto name = decoder.decode<ustd::StringView>();
-            client.initialise(name);
+            client.initialise(file, name);
             break;
         }
         case MessageKind::Log: {
