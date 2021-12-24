@@ -2,7 +2,7 @@
 
 #include "Terminal.hh"
 
-#include <ustd/Log.hh>
+#include <log/Log.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -40,7 +40,7 @@ bool EscapeParser::parse(char ch, Terminal *&terminal) {
         break;
     case 'H':
         if (m_params.size() != 2) {
-            ustd::dbgln("CUP doesn't have row and column");
+            log::warn("CUP doesn't have row and column");
             break;
         }
         terminal->set_cursor(m_params[1], m_params[0]);
@@ -50,11 +50,11 @@ bool EscapeParser::parse(char ch, Terminal *&terminal) {
         break;
     case 'h':
         if (m_params.size() != 1) {
-            ustd::dbgln("Private mode enable doesn't have code");
+            log::warn("Private mode enable doesn't have code");
             break;
         }
         if (m_params[0] != 1049) {
-            ustd::dbgln("Unknown private code {}", m_params[0]);
+            log::warn("Unknown private code {}", m_params[0]);
             break;
         }
         terminal = &m_alternate_terminal;
@@ -62,11 +62,11 @@ bool EscapeParser::parse(char ch, Terminal *&terminal) {
         break;
     case 'l':
         if (m_params.size() != 1) {
-            ustd::dbgln("Private mode disable doesn't have code");
+            log::warn("Private mode disable doesn't have code");
             break;
         }
         if (m_params[0] != 1049) {
-            ustd::dbgln("Unknown private code {}", m_params[0]);
+            log::warn("Unknown private code {}", m_params[0]);
             break;
         }
         terminal = &m_default_terminal;
@@ -79,26 +79,26 @@ bool EscapeParser::parse(char ch, Terminal *&terminal) {
         switch (m_params[0]) {
         case 38: // Set foreground colour
             if (m_params.size() < 2) {
-                ustd::dbgln("SGR has no colour type");
+                log::warn("SGR has no colour type");
                 break;
             }
             if (m_params[1] != 2) {
-                ustd::dbgln("Unknown colour type {}", m_params[1]);
+                log::warn("Unknown colour type {}", m_params[1]);
                 break;
             }
             if (m_params.size() != 5) {
-                ustd::dbgln("Incorrect number of parameters for 24-bit colour set");
+                log::warn("Incorrect number of parameters for 24-bit colour set");
                 break;
             }
             terminal->set_colour(m_params[2], m_params[3], m_params[4]);
             break;
         default:
-            ustd::dbgln("Unknown SGR code {}", m_params[0]);
+            log::warn("Unknown SGR code {}", m_params[0]);
             break;
         }
         break;
     default:
-        ustd::dbgln("Unknown CSI code {:c}", ch);
+        log::warn("Unknown CSI code {:c}", ch);
         break;
     }
     return true;

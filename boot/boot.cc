@@ -3,7 +3,6 @@
 #include <elf/Elf.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -16,13 +15,39 @@ efi::SystemTable *s_st;
 
 } // namespace
 
-void dbg_put_char(char ch) {
-    if (ch == '\n') {
-        s_st->con_out->output_string(s_st->con_out, L"\r\n");
-        return;
+[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
+    s_st->con_out->output_string(s_st->con_out, L"\r\nAssertion '");
+    while (*expr != '\0') {
+        ustd::Array<wchar_t, 2> array{static_cast<wchar_t>(*expr++), '\0'};
+        s_st->con_out->output_string(s_st->con_out, array.data());
     }
-    ustd::Array<wchar_t, 2> array{static_cast<wchar_t>(ch), '\0'};
-    s_st->con_out->output_string(s_st->con_out, array.data());
+    s_st->con_out->output_string(s_st->con_out, L"' failed at ");
+    while (*file != '\0') {
+        ustd::Array<wchar_t, 2> array{static_cast<wchar_t>(*file++), '\0'};
+        s_st->con_out->output_string(s_st->con_out, array.data());
+    }
+    s_st->con_out->output_string(s_st->con_out, L":");
+    ustd::Array<wchar_t, 20> line_buf{'\0'};
+    usize line_len = 0;
+    do {
+        const char digit = static_cast<char>(line % 10);
+        line_buf[line_len++] = static_cast<wchar_t>('0' + digit);
+        line /= 10;
+    } while (line > 0);
+    for (usize i = line_len; i > 0; i--) {
+        ustd::Array<wchar_t, 2> array{line_buf[i - 1], '\0'};
+        s_st->con_out->output_string(s_st->con_out, array.data());
+    }
+    if (msg != nullptr) {
+        s_st->con_out->output_string(s_st->con_out, L"\r\n=> ");
+        while (*msg != '\0') {
+            ustd::Array<wchar_t, 2> array{static_cast<wchar_t>(*msg++), '\0'};
+            s_st->con_out->output_string(s_st->con_out, array.data());
+        }
+    }
+    while (true) {
+        asm volatile("cli; hlt");
+    }
 }
 
 #define EFI_CHECK(expr, msg)                                                                                           \
@@ -133,13 +158,13 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Open volume.
     efi::FileProtocol *root_directory = nullptr;
-    ustd::dbgln("Opening volume...");
+    s_st->con_out->output_string(s_st->con_out, L"Opening volume...\r\n");
     EFI_CHECK(file_system->open_volume(file_system, &root_directory), "Failed to open volume!")
     ENSURE(root_directory != nullptr, "Failed to open volume!");
 
     // Load kernel from disk.
     efi::FileProtocol *kernel_file = nullptr;
-    ustd::dbgln("Loading kernel from disk...");
+    s_st->con_out->output_string(s_st->con_out, L"Loading kernel from disk...\r\n");
     EFI_CHECK(
         root_directory->open(root_directory, &kernel_file, L"kernel", efi::FileMode::Read, efi::FileFlag::ReadOnly),
         "Failed to load kernel from disk!")
@@ -148,7 +173,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     // Parse kernel ELF header.
     elf::Header kernel_header{};
     uint64 kernel_header_size = sizeof(elf::Header);
-    ustd::dbgln("Parsing kernel ELF header...");
+    s_st->con_out->output_string(s_st->con_out, L"Parsing kernel ELF header...\r\n");
     EFI_CHECK(kernel_file->read(kernel_file, &kernel_header_size, &kernel_header), "Failed to read kernel header!")
     ENSURE(kernel_header.magic[0] == 0x7f, "Kernel ELF header corrupt!");
     ENSURE(kernel_header.magic[1] == 'E', "Kernel ELF header corrupt!");
@@ -166,7 +191,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     EFI_CHECK(kernel_file->read(kernel_file, &phdrs_size, phdrs), "Failed to read kernel program headers!")
 
     // Parse kernel load program headers.
-    ustd::dbgln("Parsing kernel load program headers...");
+    s_st->con_out->output_string(s_st->con_out, L"Parsing kernel load program headers...\r\n");
     for (uint16 i = 0; i < kernel_header.ph_count; i++) {
         auto &phdr = phdrs[i];
         if (phdr.type != elf::SegmentType::Load) {
@@ -202,7 +227,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Find ACPI RSDP.
     void *rsdp = nullptr;
-    ustd::dbgln("Finding ACPI RSDP...");
+    s_st->con_out->output_string(s_st->con_out, L"Finding ACPI RSDP...\r\n");
     for (usize i = 0; i < st->configuration_table_count; i++) {
         auto &table = st->configuration_table[i];
         if (__builtin_memcmp(&table.vendor_guid, &efi::ConfigurationTable::acpi_guid, sizeof(efi::Guid)) == 0) {
@@ -214,7 +239,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Get framebuffer info.
     efi::GraphicsOutputProtocol *gop = nullptr;
-    ustd::dbgln("Querying framebuffer info...");
+    s_st->con_out->output_string(s_st->con_out, L"Querying framebuffer info...\r\n");
     EFI_CHECK(st->boot_services->locate_protocol(&efi::GraphicsOutputProtocol::guid, nullptr,
                                                  reinterpret_cast<void **>(&gop)),
               "Failed to locate graphics output protocol!")
@@ -234,7 +259,6 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     }
 
     // Set video mode.
-    ustd::dbgln("Selecting mode {}", preferred_mode);
     EFI_CHECK(gop->set_mode(gop, preferred_mode), "Failed to set video mode!")
 
     // Get EFI memory map data.
@@ -242,7 +266,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     usize map_size = 0;
     usize descriptor_size = 0;
     uint32 descriptor_version = 0;
-    ustd::dbgln("Querying memory map size...");
+    s_st->con_out->output_string(s_st->con_out, L"Querying memory map size...\r\n");
     st->boot_services->get_memory_map(&map_size, nullptr, &map_key, &descriptor_size, &descriptor_version);
     ENSURE(descriptor_size >= sizeof(efi::MemoryDescriptor));
 
@@ -252,7 +276,8 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Allocate some memory for EFI memory map.
     efi::MemoryDescriptor *efi_map = nullptr;
-    ustd::dbgln("Allocating memory for EFI memory map...");
+
+    s_st->con_out->output_string(s_st->con_out, L"Allocating memory for EFI memory map...\r\n");
     EFI_CHECK(
         st->boot_services->allocate_pool(efi::MemoryType::LoaderData, map_size, reinterpret_cast<void **>(&efi_map)),
         "Failed to allocate memory for EFI memory map!")
@@ -261,7 +286,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     // Allocate some memory for our memory map.
     const usize efi_map_entry_count = map_size / descriptor_size;
     MemoryMapEntry *map = nullptr;
-    ustd::dbgln("Allocating memory for memory map...");
+    s_st->con_out->output_string(s_st->con_out, L"Allocating memory for memory map...\r\n");
     EFI_CHECK(st->boot_services->allocate_pool(efi::MemoryType::LoaderData,
                                                efi_map_entry_count * sizeof(MemoryMapEntry),
                                                reinterpret_cast<void **>(&map)),
@@ -269,7 +294,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     ENSURE(map != nullptr, "Failed to allocate memory for memory map!");
 
     // Retrieve EFI memory map.
-    ustd::dbgln("Retrieving EFI memory map...");
+    s_st->con_out->output_string(s_st->con_out, L"Retrieving EFI memory map...\r\n");
     EFI_CHECK(st->boot_services->get_memory_map(&map_size, efi_map, &map_key, &descriptor_size, &descriptor_version),
               "Failed to retrieve EFI memory map!")
 

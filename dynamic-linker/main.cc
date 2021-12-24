@@ -1,8 +1,8 @@
 #include <core/File.hh>
 #include <core/Syscall.hh>
 #include <elf/Elf.hh>
+#include <log/Log.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
@@ -70,7 +70,7 @@ usize main(usize argc, const char **argv) {
             relocation_entry_size = entry.value;
             break;
         default:
-            ustd::dbgln("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
+            log::error("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
@@ -94,7 +94,7 @@ usize main(usize argc, const char **argv) {
             *ptr = static_cast<usize>(static_cast<ssize>(base_offset) + rela.addend);
             break;
         default:
-            ustd::dbgln("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
+            log::error("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }

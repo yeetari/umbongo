@@ -8,9 +8,9 @@
 #include <sys/cdefs.h>
 
 #include <core/Syscall.hh>
+#include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
@@ -193,8 +193,8 @@ int printf_impl(char *str, const char *fmt, va_list ap, FILE *stream, ustd::Opti
             break;
         }
         default:
-            ustd::dbgln("Unrecognised format specifier {:c}", *p);
-            ENSURE_NOT_REACHED();
+            log::warn("Unrecognised format specifier {:c}", *p);
+            break;
         }
     }
 
@@ -236,7 +236,7 @@ kernel::OpenMode parse_mode(const char *mode) {
         case 't':
             break;
         default:
-            ustd::dbgln("Unknown mode {:c}", *ch);
+            log::error("Unknown open mode {:c}", *ch);
             ENSURE_NOT_REACHED();
         }
     }

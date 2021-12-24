@@ -6,10 +6,10 @@
 
 #include <core/Error.hh>
 #include <core/KeyEvent.hh>
+#include <core/Print.hh>
 #include <core/Process.hh>
 #include <core/Syscall.hh>
 #include <ustd/Array.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -25,12 +25,12 @@ void execute(Value &value, ustd::Vector<kernel::FdPair> &rewirings) {
         switch (builtin->function()) {
         case BuiltinFunction::Cd:
             if (args.size() != 1 && args.size() != 2) {
-                ustd::printf("ush: cd: too many arguments\n");
+                core::println("ush: cd: too many arguments");
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
             if (auto result = core::syscall(Syscall::chdir, dir); result.is_error()) {
-                ustd::printf("ush: cd: {}: {}\n", dir, core::error_string(result.error()));
+                core::println("ush: cd: {}: {}", dir, core::error_string(result.error()));
             }
             break;
         }
@@ -66,7 +66,7 @@ void Job::spawn(const ustd::Vector<kernel::FdPair> &copy_fds) {
     }
     auto result = core::create_process(m_command.data(), m_args, copy_fds);
     if (result.is_error()) {
-        printf("ush: {}: command not found\n", m_command.view());
+        core::println("ush: {}: command not found", m_command);
         return;
     }
     m_pid = result.value();

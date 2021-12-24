@@ -1,5 +1,6 @@
 #include <kernel/intr/InterruptManager.hh>
 
+#include <kernel/Dmesg.hh>
 #include <kernel/Port.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
@@ -8,7 +9,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
-#include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -72,7 +72,7 @@ uint8 InterruptManager::allocate(ustd::Function<void()> &&handler) {
 }
 
 void InterruptManager::mask_pic() {
-    ustd::dbgln("intr: Found legacy PIC, masking");
+    dmesg("intr: Found legacy PIC, masking");
     port_write<uint8>(0x21, 0xff);
     port_write<uint8>(0xa1, 0xff);
 }
@@ -80,15 +80,15 @@ void InterruptManager::mask_pic() {
 void InterruptManager::register_io_apic(uint32 base, uint32 gsi_base) {
     ENSURE(s_io_apic_count < s_io_apics.size());
     auto *io_apic = new (&s_io_apics[s_io_apic_count++]) IoApic(reinterpret_cast<volatile uint32 *>(base), gsi_base);
-    ustd::dbgln("intr: Found IO APIC {} at {} controlling interrupts {} to {}", io_apic->id(), io_apic->base(),
-                gsi_base, gsi_base + io_apic->redirection_entry_count());
+    dmesg("intr: Found IO APIC {} at {} controlling interrupts {} to {}", io_apic->id(), io_apic->base(), gsi_base,
+          gsi_base + io_apic->redirection_entry_count());
 }
 
 void InterruptManager::register_override(uint8 isa, uint32 gsi, InterruptPolarity polarity,
                                          InterruptTriggerMode trigger_mode) {
     ENSURE(s_override_count < s_overrides.size());
-    ustd::dbgln("intr: Redirecting ISA {} to GSI {} ({}, {})", isa, gsi, polarity_str(polarity),
-                trigger_mode_str(trigger_mode));
+    dmesg("intr: Redirecting ISA {} to GSI {} ({}, {})", isa, gsi, polarity_str(polarity),
+          trigger_mode_str(trigger_mode));
     s_overrides[s_override_count++] = {isa, gsi, polarity, trigger_mode};
 }
 

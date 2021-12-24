@@ -57,6 +57,7 @@ public:
     SyscallResult sys_create_pipe(uint32 *fds);
     SyscallResult sys_create_process(const char *path, const char **argv, FdPair *copy_fds);
     SyscallResult sys_create_server_socket(uint32 backlog_limit);
+    SyscallResult sys_debug_line(const char *line);
     SyscallResult sys_dup_fd(uint32 src, uint32 dst);
     SyscallResult sys_exit(usize code) const;
     SyscallResult sys_getcwd(char *path) const;
@@ -68,7 +69,6 @@ public:
     SyscallResult sys_mount(const char *target, const char *fs_type) const;
     SyscallResult sys_open(const char *path, OpenMode mode);
     SyscallResult sys_poll(PollFd *fds, usize count, ssize timeout);
-    SyscallResult sys_putchar(char ch) const;
     SyscallResult sys_read(uint32 fd, void *data, usize size);
     SyscallResult sys_read_directory(const char *path, uint8 *data);
     SyscallResult sys_seek(uint32 fd, usize offset, SeekMode mode);

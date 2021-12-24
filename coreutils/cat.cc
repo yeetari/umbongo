@@ -1,7 +1,7 @@
 #include <core/Error.hh>
+#include <core/Print.hh>
 #include <core/Syscall.hh>
 #include <ustd/Array.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -12,7 +12,7 @@ usize main(usize argc, const char **argv) {
     for (usize i = 1; i < argc; i++) {
         auto fd = core::syscall<uint32>(Syscall::open, argv[i], kernel::OpenMode::None);
         if (fd.is_error()) {
-            ustd::printf("cat: {}: {}\n", argv[i], core::error_string(fd.error()));
+            core::println("cat: {}: {}", argv[i], core::error_string(fd.error()));
             return 1;
         }
         fds.push(fd.value());
@@ -27,7 +27,7 @@ usize main(usize argc, const char **argv) {
             ustd::Array<uint8, 128_KiB> buf;
             auto bytes_read_or_error = core::syscall(Syscall::read, fd, buf.data(), buf.size());
             if (bytes_read_or_error.is_error()) {
-                ustd::printf("cat: failed to read from {}: {}\n", fd, core::error_string(bytes_read_or_error.error()));
+                core::println("cat: failed to read from {}: {}", fd, core::error_string(bytes_read_or_error.error()));
                 return 1;
             }
             auto bytes_read = bytes_read_or_error.value();
@@ -38,7 +38,7 @@ usize main(usize argc, const char **argv) {
                 auto bytes_written_or_error =
                     core::syscall(Syscall::write, 1, buf.data() + total_written, bytes_read - total_written);
                 if (bytes_written_or_error.is_error()) {
-                    printf("cat: failed to write: {}\n", core::error_string(bytes_written_or_error.error()));
+                    core::println("cat: failed to write: {}", core::error_string(bytes_written_or_error.error()));
                     return 1;
                 }
                 total_written += bytes_written_or_error.value();

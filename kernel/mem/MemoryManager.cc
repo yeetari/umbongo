@@ -1,6 +1,7 @@
 #include <kernel/mem/MemoryManager.hh>
 
 #include <boot/BootInfo.hh>
+#include <kernel/Dmesg.hh>
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
@@ -9,7 +10,6 @@
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
@@ -108,8 +108,7 @@ void parse_memory_map(BootInfo *boot_info) {
         free_bytes += !is_frame_set(i) ? k_frame_size : 0;
         total_bytes += k_frame_size;
     }
-    ustd::dbgln(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB,
-                (free_bytes * 100) / total_bytes);
+    dmesg(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
 }
 
 } // namespace
@@ -144,11 +143,11 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
         }
     }
     if (total_reclaimed >= 1_MiB) {
-        ustd::dbgln(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
+        dmesg(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
     } else if (total_reclaimed >= 1_KiB) {
-        ustd::dbgln(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
+        dmesg(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
     } else {
-        ustd::dbgln(" mem: Reclaimed {}B of memory", total_reclaimed);
+        dmesg(" mem: Reclaimed {}B of memory", total_reclaimed);
     }
 }
 

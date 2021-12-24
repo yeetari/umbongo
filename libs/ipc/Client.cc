@@ -4,9 +4,9 @@
 #include <core/Syscall.hh>
 #include <ipc/Message.hh>
 #include <ipc/MessageEncoder.hh>
+#include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
@@ -27,7 +27,7 @@ bool Client::connect(ustd::StringView path) {
     if (auto result = core::syscall(Syscall::connect, path.data()); !result.is_error()) {
         m_fd.emplace(static_cast<uint32>(result.value()));
     } else {
-        dbgln("Could not connect to {}: {}", path, core::error_string(result.error()));
+        log::error("Could not connect to {}: {}", path, core::error_string(result.error()));
         return false;
     }
     return true;

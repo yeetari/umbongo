@@ -1,8 +1,8 @@
 #include "Ast.hh"
 #include "Value.hh"
 
+#include <core/Print.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -47,19 +47,19 @@ ustd::String find_command(ustd::StringView name) {
 void Node::dump(usize indent) const {
     constexpr usize indent_space_count = 2;
     for (usize i = 0; i < indent * indent_space_count; i++) {
-        dbg_put_char(' ');
+        core::print(" ");
     }
 }
 
 void Command::dump(usize indent) const {
     Node::dump(indent);
-    ustd::dbgln("Command");
+    core::println("Command");
     m_node->dump(indent + 1);
 }
 
 void List::dump(usize indent) const {
     Node::dump(indent);
-    ustd::dbgln("List");
+    core::println("List");
     for (const auto &node : m_nodes) {
         node->dump(indent + 1);
     }
@@ -67,14 +67,14 @@ void List::dump(usize indent) const {
 
 void Pipe::dump(usize indent) const {
     Node::dump(indent);
-    ustd::dbgln("Pipe");
+    core::println("Pipe");
     m_lhs->dump(indent + 1);
     m_rhs->dump(indent + 1);
 }
 
 void StringLiteral::dump(usize indent) const {
     Node::dump(indent);
-    ustd::dbgln("StringLiteral({})", m_text.view());
+    core::println("StringLiteral({})", m_text.view());
 }
 
 ustd::UniquePtr<Value> Command::evaluate() const {

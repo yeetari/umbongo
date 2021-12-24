@@ -1,5 +1,6 @@
 #include <kernel/cpu/Processor.hh>
 
+#include <kernel/Dmesg.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/Syscall.hh>
 #include <kernel/acpi/ApicTable.hh>
@@ -14,7 +15,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/Log.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
@@ -243,7 +243,7 @@ void write_msr(uint32 msr, uint64 value) {
 }
 
 [[noreturn]] void unhandled_interrupt(RegisterState *regs) {
-    ustd::dbgln(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
+    dmesg(" cpu: Received unexpected interrupt {} in ring {}!", regs->int_num, regs->cs & 3u);
     ENSURE_NOT_REACHED("Unhandled interrupt!");
 }
 
@@ -309,13 +309,13 @@ void Processor::initialise() {
     if ((extended_features.ebx() & (1u << 7u)) != 0) {
         // Enable CR4.SMEP (Supervisor Memory Execute Protection). This prevents the kernel from executing user
         // accessible code.
-        ustd::dbgln(" cpu: Enabling SMEP");
+        dmesg(" cpu: Enabling SMEP");
         write_cr4(read_cr4() | (1u << 20u));
     }
     if ((extended_features.ecx() & (1u << 2u)) != 0) {
         // Enable CR4.UMIP (User-Mode Instruction Prevention). This prevents user code from executing instructions like
         // sgdt and sidt.
-        ustd::dbgln(" cpu: Enabling UMIP");
+        dmesg(" cpu: Enabling UMIP");
         write_cr4(read_cr4() | (1u << 11u));
     }
 
@@ -394,7 +394,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
         if (controller->type == 0) {
             auto *local_apic = reinterpret_cast<acpi::LocalApicController *>(controller);
             if ((local_apic->flags & 1u) == 0 && (local_apic->flags & 2u) == 0) {
-                ustd::dbgln(" cpu: CPU {} not available!", local_apic->apic_id);
+                dmesg(" cpu: CPU {} not available!", local_apic->apic_id);
                 continue;
             }
             ap_count++;
@@ -421,7 +421,7 @@ void Processor::start_aps(acpi::ApicTable *madt) {
     while (s_initialised_ap_count.load(ustd::MemoryOrder::Acquire) != ap_count) {
         asm volatile("pause");
     }
-    ustd::dbgln(" cpu: Started {} APs", ap_count);
+    dmesg(" cpu: Started {} APs", ap_count);
 }
 
 void Processor::set_apic(LocalApic *apic) {

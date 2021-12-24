@@ -50,9 +50,9 @@ add_executable(kernel
     time/Hpet.cc
     time/TimeManager.cc
     Console.cc
+    Dmesg.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
-    Log.cc
     Syscalls.cc
     UbSan.cc)
 add_library(kernel_asm OBJECT

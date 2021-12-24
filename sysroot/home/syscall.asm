@@ -1,6 +1,6 @@
 bits 64
 
-SYS_EXIT  equ 10
+SYS_EXIT  equ 11
 SYS_WRITE equ 27
 
 section .rodata

@@ -7,8 +7,8 @@
 #include <sys/types.h>
 
 #include <core/Syscall.hh>
+#include <log/Log.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 
 __BEGIN_DECLS
@@ -34,7 +34,7 @@ pid_t getpid(void) {
 }
 
 int unlink(const char *path) {
-    ustd::dbgln("unlink({})", path);
+    log::warn("TODO: Implement unlink({})", path);
     return 0;
 }
 

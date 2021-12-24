@@ -7,8 +7,7 @@
 #include <sys/cdefs.h>
 
 #include <core/Syscall.hh>
-#include <ustd/Assert.hh>
-#include <ustd/Log.hh>
+#include <log/Log.hh>
 #include <ustd/Result.hh>
 
 __BEGIN_DECLS
@@ -21,8 +20,9 @@ int fcntl(int fd, int cmd, ...) {
     if (cmd == F_GETFD || cmd == F_SETFD) {
         return 0;
     }
-    ustd::dbgln("Unknown fcntl({}, {}, {})", fd, cmd, arg);
-    ENSURE_NOT_REACHED("Unknown fcntl");
+    log::error("Unknown fcntl({}, {}, {})", fd, cmd, arg);
+    errno = EINVAL;
+    return -1;
 }
 
 int open(const char *path, int oflag, ...) {
@@ -38,8 +38,9 @@ int open(const char *path, int oflag, ...) {
     }
     flags &= ~(O_CREAT | O_TRUNC);
     if (flags != 0) {
-        ustd::dbgln("Unknown open flag bitset {:h}", flags);
-        ENSURE_NOT_REACHED();
+        log::error("Unknown open flag bitset {:h}", flags);
+        errno = EINVAL;
+        return -1;
     }
 
     auto result = core::syscall(Syscall::open, path, mode);

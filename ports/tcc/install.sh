@@ -23,7 +23,7 @@ done
     --ar=llvm-ar \
     --cc=clang \
     --extra-cflags="--sysroot=$SYSROOT -fpic -DCONFIG_TCC_STATIC -DCONFIG_TCC_SEMLOCK=0" \
-    --extra-ldflags="--sysroot=$SYSROOT -fuse-ld=lld -nostdlib -pie -lcore -lposix -lustd -Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker" \
+    --extra-ldflags="--sysroot=$SYSROOT -fuse-ld=lld -nostdlib -pie -lcore -lipc -llog -lposix -lustd -Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker" \
     --sysroot=$SYSROOT \
     --elfinterp=/bin/dynamic-linker \
     --sysincludepaths=/include

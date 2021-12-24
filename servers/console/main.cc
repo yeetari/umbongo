@@ -10,6 +10,7 @@
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
 #include <kernel/SyscallTypes.hh>
+#include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
@@ -18,6 +19,7 @@
 #include <ustd/Vector.hh>
 
 usize main(usize, const char **) {
+    log::initialise("console-server");
     core::EventLoop event_loop;
     core::File stdin(static_cast<uint32>(0));
     event_loop.watch(stdin, kernel::PollEvents::Read);

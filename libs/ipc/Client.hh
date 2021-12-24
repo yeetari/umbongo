@@ -33,6 +33,7 @@ public:
     template <typename T>
     T wait_message();
 
+    bool connected() const { return m_fd.has_value(); }
     uint32 fd() const override { return *m_fd; }
 };
 

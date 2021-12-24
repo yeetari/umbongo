@@ -27,6 +27,10 @@ void StringBuilder::append_single(const char *, const String &arg) {
     }
 }
 
+void StringBuilder::append_single(const char *, bool arg) {
+    append_single("", arg ? "true" : "false");
+}
+
 String StringBuilder::build() {
     m_buffer.push('\0');
     auto buffer = m_buffer.take_all();

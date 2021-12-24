@@ -4,9 +4,9 @@
 #include <core/Syscall.hh>
 #include <core/Timer.hh>
 #include <core/Watchable.hh>
+#include <log/Log.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -68,7 +68,7 @@ usize EventLoop::run() {
     while (true) {
         const auto timeout = next_timer_deadline();
         if (auto rc = syscall(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
-            dbgln("poll: {}", core::error_string(rc.error()));
+            log::error("poll: {}", core::error_string(rc.error()));
             return 1;
         }
         auto now = EXPECT(syscall<usize>(Syscall::gettime));

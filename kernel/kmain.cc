@@ -1,6 +1,7 @@
 #include <boot/BootInfo.hh>
 #include <kernel/Config.hh>
 #include <kernel/Console.hh>
+#include <kernel/Dmesg.hh>
 #include <kernel/Font.hh>
 #include <kernel/Port.hh>
 #include <kernel/acpi/ApicTable.hh>
@@ -28,7 +29,6 @@
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -39,6 +39,16 @@ extern void (*k_ctors_start)();
 extern void (*k_ctors_end)();
 
 usize __stack_chk_guard = 0xdeadc0de;
+
+[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
+    kernel::dmesg("\nAssertion '{}' failed at {}:{}", expr, file, line);
+    if (msg != nullptr) {
+        kernel::dmesg("=> {}", msg);
+    }
+    while (true) {
+        asm volatile("cli; hlt");
+    }
+}
 
 namespace kernel {
 
@@ -114,7 +124,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 [[noreturn]] extern "C" void __stack_chk_fail() {
     auto *rbp = static_cast<uint64 *>(__builtin_frame_address(0));
     while (rbp != nullptr && rbp[1] != 0) {
-        ustd::dbgln("{:h}", rbp[1]);
+        dmesg("{:h}", rbp[1]);
         rbp = reinterpret_cast<uint64 *>(*rbp);
     }
     ENSURE_NOT_REACHED("Stack smashing detected!");
@@ -122,24 +132,24 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
-    ustd::dbgln("core: Using font {} {}", g_font.name(), g_font.style());
+    dmesg("core: Using font {} {}", g_font.name(), g_font.style());
     if constexpr (k_kernel_qemu_debug) {
         ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
     }
     if constexpr (k_kernel_stack_protector) {
-        ustd::dbgln("core: SSP initialised with guard value {:h}", __stack_chk_guard);
+        dmesg("core: SSP initialised with guard value {:h}", __stack_chk_guard);
     }
 
-    ustd::dbgln("core: boot_info = {}", boot_info);
-    ustd::dbgln("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
-    ustd::dbgln("core: rsdp = {}", boot_info->rsdp);
+    dmesg("core: boot_info = {}", boot_info);
+    dmesg("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
+    dmesg("core: rsdp = {}", boot_info->rsdp);
 
     MemoryManager::initialise(boot_info);
     Processor::initialise();
     Processor::setup(0);
 
     // Invoke global constructors.
-    ustd::dbgln("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
+    dmesg("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
     for (void (**ctor)() = &k_ctors_start; ctor < &k_ctors_end; ctor++) {
         (*ctor)();
     }
@@ -148,13 +158,12 @@ extern "C" void kmain(BootInfo *boot_info) {
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
 
     auto *xsdt = rsdp->xsdt();
-    ustd::dbgln("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
+    dmesg("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
     ENSURE(xsdt->valid());
 
     for (auto *entry : *xsdt) {
-        ustd::dbgln("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0],
-                    entry->signature()[1], entry->signature()[2], entry->signature()[3], entry, entry->revision(),
-                    entry->valid());
+        dmesg("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
+              entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
     }
 
     auto *madt = xsdt->find<acpi::ApicTable>();
@@ -179,7 +188,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     }
 
     auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
-    ustd::dbgln("acpi: Local APIC = {}", apic);
+    dmesg("acpi: Local APIC = {}", apic);
     Processor::set_apic(apic);
 
     auto *hpet_table = xsdt->find<acpi::HpetTable>();

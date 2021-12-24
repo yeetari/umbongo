@@ -1,7 +1,7 @@
 #include "Lexer.hh"
 #include "Token.hh"
 
-#include <ustd/Log.hh>
+#include <core/Print.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -52,7 +52,7 @@ Token Lexer::next_token() {
         }
         return ustd::String::copy_raw(buf.data(), buf.size());
     }
-    ustd::printf("ush: unexpected {:c}\n", ch);
+    core::println("ush: unexpected {:c}", ch);
     return TokenKind::Eof;
 }
 

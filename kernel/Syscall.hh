@@ -12,6 +12,7 @@ namespace Syscall {
     S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
     S(create_server_socket)                                                                                            \
+    S(debug_line)                                                                                                      \
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \
     S(getcwd)                                                                                                          \
@@ -23,7 +24,6 @@ namespace Syscall {
     S(mount)                                                                                                           \
     S(open)                                                                                                            \
     S(poll)                                                                                                            \
-    S(putchar)                                                                                                         \
     S(read)                                                                                                            \
     S(read_directory)                                                                                                  \
     S(seek)                                                                                                            \

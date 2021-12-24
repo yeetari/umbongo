@@ -7,9 +7,9 @@
 #include <sys/cdefs.h>
 
 #include <core/Syscall.hh>
+#include <log/Log.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/Utility.hh>
 
@@ -190,7 +190,7 @@ char *getcwd(char *, size_t) {
 }
 
 char *getenv(const char *name) {
-    ustd::dbgln("getenv({})", name);
+    log::warn("TODO: Implement getenv({})", name);
     return nullptr;
 }
 

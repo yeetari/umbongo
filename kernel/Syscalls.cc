@@ -1,5 +1,6 @@
 #include <kernel/proc/Process.hh>
 
+#include <kernel/Dmesg.hh>
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
@@ -25,7 +26,6 @@
 #include <kernel/proc/ThreadBlocker.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
@@ -174,6 +174,11 @@ SyscallResult Process::sys_create_server_socket(uint32 backlog_limit) {
     return fd;
 }
 
+SyscallResult Process::sys_debug_line(const char *line) {
+    dmesg("[#{}]: {}", m_pid, line);
+    return 0;
+}
+
 SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
     // TODO: Which check should happen first?
     ScopedLock locker(m_lock);
@@ -190,7 +195,7 @@ SyscallResult Process::sys_dup_fd(uint32 src, uint32 dst) {
 
 SyscallResult Process::sys_exit(usize code) const {
     if (code != 0) {
-        ustd::dbgln("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
+        dmesg("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
     }
     Scheduler::yield_and_kill();
     return 0;
@@ -286,11 +291,6 @@ SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
         }
     }
     __builtin_memcpy(fds, poll_fds.data(), count * sizeof(PollFd));
-    return 0;
-}
-
-SyscallResult Process::sys_putchar(char ch) const {
-    dbg_put_char(ch);
     return 0;
 }
 

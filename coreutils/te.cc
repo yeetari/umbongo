@@ -1,8 +1,8 @@
 #include <console/Console.hh>
 #include <core/Error.hh>
 #include <core/KeyEvent.hh>
+#include <core/Print.hh>
 #include <core/Syscall.hh>
-#include <ustd/Log.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -56,11 +56,11 @@ public:
 
 Editor::Editor(uint32 screen_column_count, uint32 screen_row_count)
     : m_screen_column_count(screen_column_count), m_screen_row_count(screen_row_count) {
-    ustd::printf("\x1b[?1049h");
+    core::print("\x1b[?1049h");
 }
 
 Editor::~Editor() {
-    ustd::printf("\x1b[?1049l");
+    core::print("\x1b[?1049l");
 }
 
 bool Editor::load(ustd::String &&path) {
@@ -68,7 +68,7 @@ bool Editor::load(ustd::String &&path) {
     m_path = ustd::move(path);
     auto fd_or_error = core::syscall(Syscall::open, m_path.data(), kernel::OpenMode::Create);
     if (fd_or_error.is_error()) {
-        printf("te: {}: {}\n", m_path.view(), core::error_string(fd_or_error.error()));
+        core::println("te: {}: {}", m_path.view(), core::error_string(fd_or_error.error()));
         return false;
     }
     auto fd = fd_or_error.value();
@@ -227,7 +227,7 @@ void Editor::render() {
         m_file_y = m_cursor_y - (m_screen_row_count - 1);
     }
 
-    ustd::printf("\x1b[J");
+    core::print("\x1b[J");
     for (uint32 row = 0; row < m_screen_row_count; row++) {
         uint32 file_row = row + m_file_y;
         if (file_row >= m_lines.size()) {
@@ -239,20 +239,20 @@ void Editor::render() {
             if (file_col >= line.column_count()) {
                 break;
             }
-            put_char(line.character(file_col));
+            core::put_char(line.character(file_col));
         }
         if (row != m_screen_row_count - 1) {
-            put_char('\n');
+            core::put_char('\n');
         }
     }
-    ustd::printf("\x1b[{};{}H", m_cursor_y - m_file_y, m_cursor_x - m_file_x);
+    core::print("\x1b[{};{}H", m_cursor_y - m_file_y, m_cursor_x - m_file_x);
 }
 
 } // namespace
 
 usize main(usize argc, const char **argv) {
     if (argc != 2) {
-        ustd::printf("Usage: {} <file>\n", argv[0]);
+        core::println("Usage: {} <file>", argv[0]);
         return 0;
     }
     auto terminal_size = console::terminal_size();

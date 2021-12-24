@@ -41,7 +41,8 @@ void Client::log(log::Level level, ustd::StringView message) {
         "TRACE", "DEBUG", "INFO ", "WARN ", "ERROR",
     };
     auto time = EXPECT(core::syscall(Syscall::gettime)) / 1000000;
-    auto line = ustd::format("+{} {} [{}] {}\n", time, level_strings[static_cast<usize>(level)], m_name, message);
+    auto line = ustd::format("[{:d5 }.{}] {} [{}] {}\n", time / 1000, time % 1000,
+                             level_strings[static_cast<usize>(level)], m_name, message);
     EXPECT(m_file->write({line.data(), line.length()}));
 }
 

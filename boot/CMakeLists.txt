@@ -1,4 +1,4 @@
-add_executable(boot boot.cc ../ustd/Assert.cc ../ustd/Memory.cc)
+add_executable(boot boot.cc ../ustd/Memory.cc)
 install(TARGETS boot DESTINATION EFI/BOOT)
 set_target_properties(boot PROPERTIES OUTPUT_NAME "BOOTX64.EFI")
 target_compile_options(boot PRIVATE

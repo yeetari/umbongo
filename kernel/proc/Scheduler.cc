@@ -1,5 +1,6 @@
 #include <kernel/proc/Scheduler.hh>
 
+#include <kernel/Dmesg.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/LocalApic.hh>
@@ -12,7 +13,6 @@
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/Log.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -31,7 +31,7 @@ uint32 s_ticks = 0;
 void dump_backtrace(RegisterState *regs) {
     auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
     while (rbp != nullptr && rbp[1] != 0) {
-        ustd::dbgln("{:h}", rbp[1]);
+        dmesg("{:h}", rbp[1]);
         rbp = reinterpret_cast<uint64 *>(*rbp);
     }
 }
@@ -40,12 +40,12 @@ void handle_fault(RegisterState *regs) {
     auto *thread = Processor::current_thread();
     auto &process = thread->process();
     if ((regs->cs & 3u) == 0u) {
-        log_unlock();
-        ustd::dbgln("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
+        dmesg_unlock();
+        dmesg("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }
-    ustd::dbgln("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
+    dmesg("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
     dump_backtrace(regs);
     thread->kill();
     Scheduler::switch_next(regs);
@@ -57,12 +57,12 @@ void handle_page_fault(RegisterState *regs) {
     uint64 cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
-        log_unlock();
-        ustd::dbgln("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
+        dmesg_unlock();
+        dmesg("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
         dump_backtrace(regs);
         ENSURE_NOT_REACHED("Page fault in ring 0!");
     }
-    ustd::dbgln("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
+    dmesg("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
     dump_backtrace(regs);
     thread->kill();
     Scheduler::switch_next(regs);

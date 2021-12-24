@@ -1,11 +1,11 @@
 #include <core/Directory.hh>
 #include <core/Error.hh>
 #include <core/File.hh>
+#include <core/Print.hh>
 #include <core/Process.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
 #include <ustd/Format.hh>
-#include <ustd/Log.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringBuilder.hh>
@@ -17,7 +17,7 @@ namespace {
 void print_device(const char *name) {
     auto file_or_error = core::File::open(ustd::format("/dev/pci/{}", name).view());
     if (file_or_error.is_error()) {
-        ustd::printf("lspci: no device {}\n", name);
+        core::println("lspci: no device {}", name);
         core::exit(1);
     }
     auto file = file_or_error.disown_value();
@@ -35,7 +35,7 @@ void print_device(const char *name) {
             builder.append(" - BAR{}: {:h} ({} bytes)\n", i, bar.address, bar.size);
         }
     }
-    ustd::printf("{}", builder.build().view());
+    core::print("{}", builder.build());
 }
 
 } // namespace
@@ -49,7 +49,7 @@ usize main(usize argc, const char **argv) {
         print_device(name.data());
     });
     if (result.is_error()) {
-        ustd::printf("lscpi: {}\n", core::error_string(result.error()));
+        core::println("lscpi: {}", core::error_string(result.error()));
         return 1;
     }
     return 0;

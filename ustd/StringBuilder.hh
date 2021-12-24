@@ -15,9 +15,12 @@ class StringBuilder {
 
     template <Integral T>
     void append_single(const char *opts, T arg);
+    template <Pointer T>
+    void append_single(const char *opts, T arg);
     void append_single(const char *opts, const char *arg);
     void append_single(const char *opts, StringView arg);
     void append_single(const char *opts, const String &arg);
+    void append_single(const char *opts, bool arg);
     template <typename T>
     void append_part(const char *&fmt, const T &arg);
 
@@ -48,7 +51,7 @@ void StringBuilder::append_single(const char *opts, T arg) {
     char pad = opts[2];
     if (pad != '\0') {
         for (uint8 i = len; i < pad - '0'; i++) {
-            buf[len++] = '0';
+            buf[len++] = opts[3] != '\0' ? opts[3] : '0';
         }
     }
     if (opts[1] == 'h') {
@@ -60,6 +63,11 @@ void StringBuilder::append_single(const char *opts, T arg) {
     }
 }
 
+template <Pointer T>
+void StringBuilder::append_single(const char *, T arg) {
+    append_single(":h", reinterpret_cast<uintptr>(arg));
+}
+
 template <typename T>
 void StringBuilder::append_part(const char *&fmt, const T &arg) {
     while (*fmt != '\0' && *fmt != '{') {
@@ -69,8 +77,7 @@ void StringBuilder::append_part(const char *&fmt, const T &arg) {
         return;
     }
     Array<char, 4> opts{};
-    uint32 i = 0;
-    while (*fmt != '}') {
+    for (uint32 i = 0; *fmt != '}';) {
         ASSERT(i < opts.size());
         opts[i++] = *fmt++;
     }

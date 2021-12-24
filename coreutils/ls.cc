@@ -1,7 +1,7 @@
 #include <core/Directory.hh>
 #include <core/Error.hh>
+#include <core/Print.hh>
 #include <ustd/Algorithm.hh>
-#include <ustd/Log.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
@@ -23,12 +23,12 @@ usize main(usize argc, const char **argv) {
         names.emplace(name);
     });
     if (result.is_error()) {
-        ustd::printf("ls: {}: {}\n", path, core::error_string(result.error()));
+        core::println("ls: {}: {}", path, core::error_string(result.error()));
         return 1;
     }
     ustd::sort(names, compare_name);
     for (const auto &name : names) {
-        ustd::printf("{}\n", name.view());
+        core::println("{}", name.view());
     }
     return 0;
 }

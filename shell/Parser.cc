@@ -4,7 +4,7 @@
 #include "Lexer.hh"
 #include "Token.hh"
 
-#include <ustd/Log.hh>
+#include <core/Print.hh>
 #include <ustd/Optional.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
@@ -20,7 +20,7 @@ ustd::Optional<Token> Parser::consume(TokenKind kind) {
 Token Parser::expect(TokenKind kind) {
     Token next = m_lexer.next();
     if (next.kind() != kind) {
-        ustd::printf("ush: expected {} but got {}\n", Token::kind_string(kind), next.to_string());
+        core::println("ush: expected {} but got {}", Token::kind_string(kind), next.to_string());
         return TokenKind::Eof;
     }
     return next;
@@ -50,7 +50,7 @@ ustd::UniquePtr<ast::Node> Parser::parse_pipe() {
 ustd::UniquePtr<ast::Node> Parser::parse() {
     auto node = parse_pipe();
     if (auto token = m_lexer.next(); token.kind() != TokenKind::Eof) {
-        ustd::printf("ush: unexpected {}\n", token.to_string());
+        core::println("ush: unexpected {}", token.to_string());
     }
     return node;
 }

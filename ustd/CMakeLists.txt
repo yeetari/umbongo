@@ -1,6 +1,5 @@
 add_library(ustd
     Abi.cc
-    Assert.cc
     Memory.cc
     String.cc
     StringBuilder.cc)
