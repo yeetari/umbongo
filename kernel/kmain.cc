@@ -26,6 +26,7 @@
 #include <kernel/pci/Enumerate.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -113,7 +114,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
     MemoryManager::reclaim(boot_info);
 
-    auto init_thread = Thread::create_user();
+    auto init_thread = Thread::create_user(ThreadPriority::Normal);
     EXPECT(init_thread->exec("/bin/system-server"sv));
     Scheduler::insert_thread(ustd::move(init_thread));
     Scheduler::yield_and_kill();
@@ -198,7 +199,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely
     // start kernel threads, and so that the current stack we are using is no longer in use, meaning we can reclaim the
     // memory.
-    auto kernel_init_thread = Thread::create_kernel(&kernel_init);
+    auto kernel_init_thread = Thread::create_kernel(&kernel_init, ThreadPriority::Normal);
     kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
     kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
 

@@ -3,8 +3,8 @@
 #include <kernel/SysResult.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Scheduler.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Atomic.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
@@ -32,8 +32,8 @@ private:
     const ustd::SharedPtr<Process> m_process;
     RegisterState m_register_state{};
     ThreadState m_state{ThreadState::Alive};
+    const ThreadPriority m_priority;
     ustd::UniquePtr<ThreadBlocker> m_blocker;
-    ustd::Atomic<int16> m_cpu{-1};
     uint8 *m_kernel_stack{nullptr};
 
     Thread *m_prev{nullptr};
@@ -41,13 +41,13 @@ private:
 
 public:
     template <typename F>
-    static ustd::UniquePtr<Thread> create_kernel(F function) {
-        return create_kernel(reinterpret_cast<uintptr>(function));
+    static ustd::UniquePtr<Thread> create_kernel(F function, ThreadPriority priority) {
+        return create_kernel(reinterpret_cast<uintptr>(function), priority);
     }
-    static ustd::UniquePtr<Thread> create_kernel(uintptr entry_point);
-    static ustd::UniquePtr<Thread> create_user();
+    static ustd::UniquePtr<Thread> create_kernel(uintptr entry_point, ThreadPriority priority);
+    static ustd::UniquePtr<Thread> create_user(ThreadPriority priority);
 
-    explicit Thread(Process *process);
+    Thread(Process *process, ThreadPriority priority);
     Thread(const Thread &) = delete;
     Thread(Thread &&) = delete;
     ~Thread();
@@ -59,8 +59,10 @@ public:
     void block(Args &&...args);
     SysResult<> exec(ustd::StringView path, const ustd::Vector<ustd::String> &args = {});
     void kill();
+    void try_unblock();
 
     Process &process() const { return *m_process; }
+    ThreadPriority priority() const { return m_priority; }
     RegisterState &register_state() { return m_register_state; }
     ThreadState state() const { return m_state; }
 };

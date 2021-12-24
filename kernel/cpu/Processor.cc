@@ -11,6 +11,7 @@
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
+#include <kernel/time/TimeManager.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -329,7 +330,7 @@ void Processor::initialise() {
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 11u) | (1u << 0u));
 
     // Enable SSE.
-    // TODO: Save SSE state on context switch. Also remove `-mno-sse` from applications, and maybe the kernel.
+    // TODO(GH-12): Save SSE state on context switch. Also remove `-mno-sse` from applications.
     write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
     write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
 }
@@ -411,11 +412,11 @@ void Processor::start_aps(acpi::ApicTable *madt) {
 
     apic()->send_ipi(0, MessageType::Init, DestinationMode::Physical, Level::Assert, TriggerMode::Edge,
                      DestinationShorthand::AllExcludingSelf);
-    Scheduler::wait(10);
+    TimeManager::spin(10);
     for (uint8 i = 0; i < 2; i++) {
         apic()->send_ipi(8, MessageType::Startup, DestinationMode::Physical, Level::Assert, TriggerMode::Edge,
                          DestinationShorthand::AllExcludingSelf);
-        Scheduler::wait(1);
+        TimeManager::spin(1);
     }
 
     while (s_initialised_ap_count.load(ustd::MemoryOrder::Acquire) != ap_count) {

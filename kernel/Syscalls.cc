@@ -24,6 +24,7 @@
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Optional.hh>
@@ -127,7 +128,7 @@ SyscallResult Process::sys_create_pipe(uint32 *fds) {
 
 SyscallResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
     ScopedLock locker(m_lock);
-    auto new_thread = Thread::create_user();
+    auto new_thread = Thread::create_user(ThreadPriority::Normal);
     auto &new_process = new_thread->process();
     new_process.m_cwd = m_cwd;
     new_process.m_fds.ensure_size(m_fds.size());

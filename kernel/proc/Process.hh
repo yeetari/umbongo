@@ -5,6 +5,7 @@
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
+#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Optional.hh> // IWYU pragma: keep
 #include <ustd/Shareable.hh>
@@ -46,7 +47,7 @@ public:
     Process &operator=(const Process &) = delete;
     Process &operator=(Process &&) = delete;
 
-    ustd::UniquePtr<Thread> create_thread();
+    ustd::UniquePtr<Thread> create_thread(ThreadPriority priority);
 
     SyscallResult sys_accept(uint32 fd);
     SyscallResult sys_allocate_region(usize size, MemoryProt prot);

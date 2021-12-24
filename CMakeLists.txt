@@ -108,7 +108,7 @@ if(QEMU_EXECUTABLE)
             -machine q35
             -nodefaults
             -no-reboot
-            -smp 8)
+            -smp 4)
         add_custom_target(run
             COMMAND ${QEMU_EXECUTABLE} ${QEMU_FLAGS} $<$<BOOL:${KVM_AVAILABLE}>:-enable-kvm>
             DEPENDS install

@@ -9,8 +9,9 @@
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Thread.hh>
-#include <kernel/proc/ThreadBlocker.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
+#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/SharedPtr.hh>
@@ -21,12 +22,54 @@
 namespace kernel {
 namespace {
 
-constexpr uint16 k_scheduler_frequency = 250;
-constexpr uint8 k_timer_vector = 40;
+class PriorityQueue {
+    static constexpr uint32 k_slot_count = 1024;
+    alignas(64) ustd::Array<ustd::Atomic<Thread *>, k_slot_count> m_slots;
+    alignas(64) ustd::Atomic<uint32> m_head;
+    alignas(64) ustd::Atomic<uint32> m_tail;
 
-Thread *s_base_thread = nullptr;
-SpinLock s_scheduler_lock;
-uint32 s_ticks = 0;
+public:
+    void enqueue(Thread *thread);
+    Thread *dequeue();
+};
+
+void PriorityQueue::enqueue(Thread *thread) {
+    uint32 head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
+    auto &slot = m_slots[head % k_slot_count];
+    while (!slot.compare_exchange_temp(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
+        do {
+            asm volatile("pause");
+        } while (slot.load(ustd::MemoryOrder::Relaxed) != nullptr);
+    }
+}
+
+Thread *PriorityQueue::dequeue() {
+    uint32 tail = m_tail.load(ustd::MemoryOrder::Relaxed);
+    do {
+        if (static_cast<int32>(m_head.load(ustd::MemoryOrder::Relaxed) - tail) <= 0) {
+            return nullptr;
+        }
+    } while (!m_tail.compare_exchange(tail, tail + 1, ustd::MemoryOrder::Acquire, ustd::MemoryOrder::Relaxed));
+    auto &slot = m_slots[tail % k_slot_count];
+    while (true) {
+        Thread *thread = slot.exchange(nullptr, ustd::MemoryOrder::Release);
+        if (thread != nullptr) {
+            return thread;
+        }
+        do {
+            asm volatile("pause");
+        } while (slot.load(ustd::MemoryOrder::Relaxed) == nullptr);
+    }
+}
+
+constexpr uint8 k_timer_vector = 40;
+uint32 s_ticks_in_one_ms = 0;
+
+Thread *s_base_thread;
+SpinLock s_thread_list_lock;
+
+PriorityQueue *s_blocked_queue;
+ustd::Array<PriorityQueue *, 2> s_queues;
 
 void dump_backtrace(RegisterState *regs) {
     auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
@@ -68,12 +111,32 @@ void handle_page_fault(RegisterState *regs) {
     Scheduler::switch_next(regs);
 }
 
+Thread *pick_next() {
+    while (auto *thread = s_blocked_queue->dequeue()) {
+        s_queues[static_cast<uint32>(thread->priority())]->enqueue(thread);
+    }
+    for (auto *queue = s_queues.end(); queue-- != s_queues.begin();) {
+        while (auto *thread = (*queue)->dequeue()) {
+            thread->try_unblock();
+            if (thread->state() == ThreadState::Alive) {
+                return thread;
+            }
+            s_blocked_queue->enqueue(thread);
+        }
+    }
+    ENSURE_NOT_REACHED("Thread queue empty!");
+}
+
+uint32 time_slice_for(Thread *thread) {
+    return (static_cast<uint32>(thread->priority()) + 1u) * s_ticks_in_one_ms;
+}
+
 } // namespace
 
 extern "C" void switch_now(RegisterState *regs);
 
 ustd::SharedPtr<Process> Process::from_pid(usize pid) {
-    ScopedLock locker(s_scheduler_lock);
+    ScopedLock locker(s_thread_list_lock);
     Thread *thread = s_base_thread;
     do {
         if (thread->process().pid() == pid) {
@@ -89,17 +152,13 @@ void Scheduler::initialise() {
     Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
     Processor::apic()->set_timer_count(0xffffffff);
 
-    // Spin for 100ms and then calculate the total number of ticks occured in 100ms by the APIC timer.
-    TimeManager::spin(100);
-    s_ticks = 0xffffffff - Processor::apic()->read_timer_count();
-
-    // Calculate the number of ticks for our desired frequency.
-    s_ticks /= k_scheduler_frequency;
-    s_ticks *= 10;
+    // Spin for 1 ms and then calculate the total number of ticks occured in that time by the APIC timer.
+    TimeManager::spin(1);
+    s_ticks_in_one_ms = 0xffffffff - Processor::apic()->read_timer_count();
 
     // Initialise idle thread and process. We pass null as the entry point as when the thread first gets interrupted,
     // its state will be saved.
-    s_base_thread = Thread::create_kernel(nullptr).disown();
+    s_base_thread = Thread::create_kernel(nullptr, ThreadPriority::Idle).disown();
     s_base_thread->m_prev = s_base_thread;
     s_base_thread->m_next = s_base_thread;
     Processor::set_current_thread(s_base_thread);
@@ -110,16 +169,23 @@ void Scheduler::initialise() {
     Processor::wire_interrupt(13, &handle_fault);
     Processor::wire_interrupt(14, &handle_page_fault);
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
+
+    s_blocked_queue = new PriorityQueue;
+    for (auto &queue : s_queues) {
+        queue = new PriorityQueue;
+    }
 }
 
 void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
-    ScopedLock locker(s_scheduler_lock);
+    ScopedLock locker(s_thread_list_lock);
     auto *thread = unique_thread.disown();
-    auto *prev = s_base_thread->m_prev;
-    thread->m_prev = prev;
+    thread->m_prev = s_base_thread->m_prev;
     thread->m_next = s_base_thread;
-    s_base_thread->m_prev = thread;
-    prev->m_next = thread;
+    thread->m_prev->m_next = thread;
+    thread->m_next->m_prev = thread;
+    if (thread->priority() != ThreadPriority::Idle) {
+        s_queues[static_cast<uint32>(thread->priority())]->enqueue(thread);
+    }
 }
 
 void Scheduler::setup() {
@@ -130,13 +196,11 @@ void Scheduler::setup() {
     // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
     // depending on the process' priority.
     Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
-    Processor::apic()->set_timer_count(s_ticks);
+    Processor::apic()->set_timer_count(s_ticks_in_one_ms);
 
     // Each AP needs an idle thread created to ensure that there is always something to schedule.
-    // TODO: Better idle thread system. Currently, idle threads are scheduled normally, wasting time if there is actual
-    //       work to be done.
     if (Processor::id() != 0) {
-        auto idle_thread = Thread::create_kernel(&start);
+        auto idle_thread = Thread::create_kernel(&start, ThreadPriority::Idle);
         Processor::set_current_thread(idle_thread.obj());
         insert_thread(ustd::move(idle_thread));
     }
@@ -150,35 +214,20 @@ void Scheduler::start() {
 }
 
 void Scheduler::switch_next(RegisterState *regs) {
-    ScopedLock locker(s_scheduler_lock);
-    Processor::current_thread()->m_cpu.store(-1, ustd::MemoryOrder::Release);
+    Thread *current_thread = Processor::current_thread();
+    if (current_thread->m_state != ThreadState::Dead) {
+        s_queues[static_cast<uint32>(current_thread->priority())]->enqueue(current_thread);
+    } else {
+        delete current_thread;
+    }
 
-    auto *next_thread = Processor::current_thread();
-    do {
-        if (next_thread->m_state == ThreadState::Dead) {
-            auto *to_delete = next_thread;
-            next_thread = next_thread->m_next;
-            delete to_delete;
-        } else {
-            next_thread = next_thread->m_next;
-        }
-        ASSERT_PEDANTIC(next_thread != nullptr);
-        if (next_thread->m_state == ThreadState::Blocked) {
-            ASSERT_PEDANTIC(next_thread->m_blocker);
-            if (next_thread->m_blocker->should_unblock()) {
-                next_thread->m_blocker.clear();
-                next_thread->m_state = ThreadState::Alive;
-            }
-        }
-    } while (next_thread->m_state != ThreadState::Alive || next_thread->m_cpu.load(ustd::MemoryOrder::Acquire) != -1);
-    next_thread->m_cpu.store(Processor::id(), ustd::MemoryOrder::Release);
-    locker.unlock();
+    Thread *next_thread = pick_next();
     __builtin_memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     auto &process = *next_thread->m_process;
     if (MemoryManager::current_space() != process.m_virt_space.obj()) {
         MemoryManager::switch_space(*process.m_virt_space);
     }
-    Processor::apic()->set_timer_count(s_ticks);
+    Processor::apic()->set_timer_count(time_slice_for(next_thread));
     Processor::set_current_thread(next_thread);
     Processor::set_kernel_stack(next_thread->m_kernel_stack);
 }
@@ -189,12 +238,6 @@ void Scheduler::timer_handler(RegisterState *regs) {
     }
     __builtin_memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
     switch_next(regs);
-}
-
-void Scheduler::wait(usize millis) {
-    // TODO: Yield instead of spinning. Currently, the code that calls this function is the USB code, which is in
-    //       another thread and can potentially yield.
-    TimeManager::spin(millis);
 }
 
 void Scheduler::yield(bool save_state) {

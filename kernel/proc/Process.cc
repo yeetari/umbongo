@@ -4,6 +4,7 @@
 #include <kernel/fs/Vfs.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
 #include <kernel/proc/Thread.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -32,8 +33,8 @@ uint32 Process::allocate_fd() {
     return m_fds.size() - 1;
 }
 
-ustd::UniquePtr<Thread> Process::create_thread() {
-    return ustd::make_unique<Thread>(this);
+ustd::UniquePtr<Thread> Process::create_thread(ThreadPriority priority) {
+    return ustd::make_unique<Thread>(this, priority);
 }
 
 } // namespace kernel

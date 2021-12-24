@@ -13,6 +13,7 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/ThreadBlocker.hh>
+#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Numeric.hh>
@@ -29,6 +30,8 @@
 
 namespace kernel {
 namespace {
+
+constexpr usize k_kernel_stack_size = 64_KiB;
 
 ustd::Optional<ustd::String> interpreter_for(File &file) {
     elf::Header header{};
@@ -55,21 +58,21 @@ ustd::Optional<ustd::String> interpreter_for(File &file) {
 
 } // namespace
 
-ustd::UniquePtr<Thread> Thread::create_kernel(uintptr entry_point) {
+ustd::UniquePtr<Thread> Thread::create_kernel(uintptr entry_point, ThreadPriority priority) {
     auto *process = new Process(true, ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
-    auto thread = process->create_thread();
+    auto thread = process->create_thread(priority);
     thread->m_register_state.rip = entry_point;
     return thread;
 }
 
-ustd::UniquePtr<Thread> Thread::create_user() {
+ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
     auto *process = new Process(false, MemoryManager::kernel_space()->clone());
-    return process->create_thread();
+    return process->create_thread(priority);
 }
 
-Thread::Thread(Process *process) : m_process(process) {
+Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), m_priority(priority) {
     process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
-    m_kernel_stack = new uint8[64_KiB] + 64_KiB;
+    m_kernel_stack = new uint8[k_kernel_stack_size] + k_kernel_stack_size;
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
@@ -80,7 +83,7 @@ Thread::Thread(Process *process) : m_process(process) {
 }
 
 Thread::~Thread() {
-    delete (m_kernel_stack - 64_KiB);
+    delete (m_kernel_stack - k_kernel_stack_size);
     m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
     if (m_prev != nullptr) {
         ASSERT(m_next != nullptr);
@@ -183,6 +186,17 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 
 void Thread::kill() {
     m_state = ThreadState::Dead;
+}
+
+void Thread::try_unblock() {
+    if (m_state != ThreadState::Blocked) {
+        return;
+    }
+    ASSERT_PEDANTIC(m_blocker);
+    if (m_blocker->should_unblock()) {
+        m_blocker.clear();
+        m_state = ThreadState::Alive;
+    }
 }
 
 } // namespace kernel
