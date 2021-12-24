@@ -34,9 +34,12 @@ public:
     void store(T value, MemoryOrder order) volatile;
 };
 
-template <Integral T>
+template <typename T>
+concept IntegralOrPointer = IsIntegral<T> || IsPointer<T>;
+
+template <IntegralOrPointer T>
 class Atomic<T> {
-    T m_value{0};
+    T m_value{};
 
 public:
     Atomic() = default;
@@ -49,6 +52,14 @@ public:
     Atomic &operator=(Atomic &&) = delete;
 
     // TODO: Declare these out of line.
+    bool compare_exchange(T &expected, T desired, MemoryOrder success_order, MemoryOrder failure_order) {
+        return __atomic_compare_exchange_n(&m_value, &expected, desired, false, static_cast<int>(success_order),
+                                           static_cast<int>(failure_order));
+    }
+    bool compare_exchange_temp(T expected, T desired, MemoryOrder success_order, MemoryOrder failure_order) {
+        return __atomic_compare_exchange_n(&m_value, &expected, desired, false, static_cast<int>(success_order),
+                                           static_cast<int>(failure_order));
+    }
     T exchange(T desired, MemoryOrder order) volatile {
         return __atomic_exchange_n(&m_value, desired, static_cast<int>(order));
     }
