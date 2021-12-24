@@ -10,6 +10,9 @@ concept ConvertibleTo = IsConvertibleTo<T, U>;
 template <typename T>
 concept Integral = IsIntegral<T>;
 
+template <typename T>
+concept Pointer = IsPointer<T>;
+
 template <typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
