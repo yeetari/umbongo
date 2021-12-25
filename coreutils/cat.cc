@@ -1,33 +1,37 @@
 #include <core/Error.hh>
+#include <core/File.hh>
 #include <core/Print.hh>
 #include <core/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
+#include <ustd/Span.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 usize main(usize argc, const char **argv) {
-    // TODO: Use Core::file
-    ustd::Vector<uint32> fds;
+    ustd::Vector<core::File> files;
     for (usize i = 1; i < argc; i++) {
-        auto fd = core::syscall<uint32>(Syscall::open, argv[i], kernel::OpenMode::None);
-        if (fd.is_error()) {
-            core::println("cat: {}: {}", argv[i], core::error_string(fd.error()));
+        if (auto file = core::File::open(argv[i]); !file.is_error()) {
+            files.push(file.disown_value());
+        } else {
+            core::println("cat: {}: {}", argv[i], core::error_string(file.error()));
             return 1;
         }
-        fds.push(fd.value());
     }
-    if (fds.empty()) {
-        fds.push(0);
+    if (files.empty()) {
+        files.emplace(0u);
     }
-
-    for (uint32 fd : fds) {
+    // TODO: ustd should have some kind of MoveIterator wrapper.
+    for (auto &f : files) {
+        auto file = ustd::move(f);
         while (true) {
             // NOLINTNEXTLINE
             ustd::Array<uint8, 128_KiB> buf;
-            auto bytes_read_or_error = core::syscall(Syscall::read, fd, buf.data(), buf.size());
+            auto bytes_read_or_error = file.read(buf.span());
             if (bytes_read_or_error.is_error()) {
-                core::println("cat: failed to read from {}: {}", fd, core::error_string(bytes_read_or_error.error()));
+                core::println("cat: failed to read from {}: {}", file.fd(),
+                              core::error_string(bytes_read_or_error.error()));
                 return 1;
             }
             auto bytes_read = bytes_read_or_error.value();
@@ -44,7 +48,6 @@ usize main(usize argc, const char **argv) {
                 total_written += bytes_written_or_error.value();
             }
         }
-        EXPECT(core::syscall(Syscall::close, fd));
     }
     return 0;
 }

@@ -1,5 +1,6 @@
 #include <console/Console.hh>
 #include <core/Error.hh>
+#include <core/File.hh>
 #include <core/KeyEvent.hh>
 #include <core/Print.hh>
 #include <core/Syscall.hh>
@@ -49,7 +50,7 @@ public:
     Editor &operator=(const Editor &) = delete;
     Editor &operator=(Editor &&) = delete;
 
-    bool load(ustd::String &&path);
+    ustd::Result<void, core::SysError> load(ustd::String &&path);
     bool read_key();
     void render();
 };
@@ -63,21 +64,13 @@ Editor::~Editor() {
     core::print("\x1b[?1049l");
 }
 
-bool Editor::load(ustd::String &&path) {
-    // TODO: Use core::File.
+ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
     m_path = ustd::move(path);
-    auto fd_or_error = core::syscall(Syscall::open, m_path.data(), kernel::OpenMode::Create);
-    if (fd_or_error.is_error()) {
-        core::println("te: {}: {}", m_path.view(), core::error_string(fd_or_error.error()));
-        return false;
-    }
-    auto fd = fd_or_error.value();
-
+    auto file = TRY(core::File::open(m_path, core::OpenMode::Create));
+    auto size = TRY(file.size());
     auto *line = &m_lines.emplace();
-    auto size = EXPECT(core::syscall<usize>(Syscall::size, fd));
     for (usize i = 0; i < size; i++) {
-        char ch = 0;
-        EXPECT(core::syscall(Syscall::read, fd, &ch, 1));
+        auto ch = TRY(file.read<char>());
         if (ch == '\n') {
             line = &m_lines.emplace();
             continue;
@@ -87,8 +80,7 @@ bool Editor::load(ustd::String &&path) {
     if (m_lines.size() > 1) {
         m_lines.pop();
     }
-    EXPECT(core::syscall(Syscall::close, fd));
-    return true;
+    return {};
 }
 
 bool Editor::read_key() {
@@ -169,14 +161,11 @@ bool Editor::read_key() {
         return false;
     }
     if (event.ctrl_pressed() && event.character() == 'x') {
-        // TODO: Use core::File.
-        auto fd = EXPECT(core::syscall<uint32>(Syscall::open, m_path.data(), kernel::OpenMode::Truncate));
+        auto file = EXPECT(core::File::open(m_path, core::OpenMode::Truncate));
         for (const auto &line : m_lines) {
-            const char newline = '\n';
-            EXPECT(core::syscall(Syscall::write, fd, line.data(), line.column_count()));
-            EXPECT(core::syscall(Syscall::write, fd, &newline, 1));
+            EXPECT(file.write({line.data(), line.column_count()}));
+            EXPECT(file.write('\n'));
         }
-        EXPECT(core::syscall(Syscall::close, fd));
         return false;
     }
     if (event.ctrl_pressed()) {
@@ -257,7 +246,9 @@ usize main(usize argc, const char **argv) {
     }
     auto terminal_size = console::terminal_size();
     Editor editor(terminal_size.column_count, terminal_size.row_count);
-    if (!editor.load(argv[1])) {
+    if (auto result = editor.load(argv[1]); result.is_error()) {
+        core::print("\x1b[?1049l");
+        core::println("te: {}: {}", argv[1], core::error_string(result.error()));
         return 1;
     }
     do {
