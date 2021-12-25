@@ -4,6 +4,7 @@ set_target_properties(boot PROPERTIES OUTPUT_NAME "BOOTX64.EFI")
 target_compile_options(boot PRIVATE
     -fno-pic -fshort-wchar
     -mno-red-zone
+    -mno-sse
     -Wno-unused-command-line-argument
     -target x86_64-unknown-windows)
 target_link_options(boot PRIVATE LINKER:

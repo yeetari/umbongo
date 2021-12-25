@@ -66,9 +66,10 @@ target_compile_options(kernel PRIVATE
     $<$<BOOL:${KERNEL_STACK_PROTECTOR}>:-mstack-protector-guard=global>
     -fno-pic
     -mno-red-zone
+    -mno-sse
     # Allow non-trivial globals in the kernel.
     -Wno-exit-time-destructors
     -Wno-global-constructors)
 target_gc_sections(kernel)
-target_link_libraries(kernel PRIVATE elf kernel_asm ustd)
+target_link_libraries(kernel PRIVATE elf kernel_asm ustd-no-sse)
 target_link_options(kernel PRIVATE LINKER:-T,${CMAKE_CURRENT_SOURCE_DIR}/linker.ld,-no-pie)

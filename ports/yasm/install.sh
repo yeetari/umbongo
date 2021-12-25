@@ -24,7 +24,7 @@ for path in ../patches/*.patch; do
 done
 
 export AR=llvm-ar
-export CC="clang --sysroot=$SYSROOT -fpic -mno-sse"
+export CC="clang --sysroot=$SYSROOT -fpic"
 export LDFLAGS="-fuse-ld=lld -nostdlib -pie -lcore -lipc -llog -lposix -lustd -Xlinker -dynamic-linker -Xlinker /bin/dynamic-linker"
 export RANLIB=llvm-ranlib
 export STRIP=llvm-strip

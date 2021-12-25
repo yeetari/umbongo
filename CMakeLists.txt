@@ -23,9 +23,9 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${LINK_TIME_OPT} CACHE INTERNAL "" FORCE)
 set(CMAKE_INSTALL_MESSAGE NEVER)
 set(CMAKE_INSTALL_PREFIX sysroot)
 
-# Enable PIC and disable SSE.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -mno-sse")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic -mno-sse")
+# Enable PIC.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic")
 
 # Use C++ 20 globally.
 set(CMAKE_CXX_STANDARD 20)
