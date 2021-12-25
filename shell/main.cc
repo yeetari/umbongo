@@ -6,10 +6,10 @@
 
 #include <core/Error.hh>
 #include <core/KeyEvent.hh>
+#include <core/Pipe.hh>
 #include <core/Print.hh>
 #include <core/Process.hh>
 #include <core/Syscall.hh>
-#include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -29,7 +29,7 @@ void execute(Value &value, ustd::Vector<kernel::FdPair> &rewirings) {
                 break;
             }
             const char *dir = args.size() == 2 ? args[1] : "/home";
-            if (auto result = core::syscall(Syscall::chdir, dir); result.is_error()) {
+            if (auto result = core::chdir(dir); result.is_error()) {
                 core::println("ush: cd: {}: {}", dir, core::error_string(result.error()));
             }
             break;
@@ -37,17 +37,14 @@ void execute(Value &value, ustd::Vector<kernel::FdPair> &rewirings) {
     } else if (auto *job = value.as_or_null<Job>()) {
         job->spawn(rewirings);
         job->await_completion();
-    } else if (auto *pipe = value.as_or_null<PipeValue>()) {
-        // TODO: Use core::Pipe
-        ustd::Array<uint32, 2> pipe_fds{};
-        EXPECT(core::syscall(Syscall::create_pipe, pipe_fds.data()));
-        rewirings.push(kernel::FdPair{pipe_fds[1], 1});
-        execute(pipe->lhs(), rewirings);
-        EXPECT(core::syscall(Syscall::close, pipe_fds[1]));
+    } else if (auto *pipe_value = value.as_or_null<PipeValue>()) {
+        auto pipe = EXPECT(core::create_pipe(), "Failed to create pipe");
+        rewirings.push({pipe.write_fd(), 1});
+        execute(pipe_value->lhs(), rewirings);
+        pipe.close_write();
         rewirings.pop();
-        rewirings.push(kernel::FdPair{pipe_fds[0], 0});
-        execute(pipe->rhs(), rewirings);
-        EXPECT(core::syscall(Syscall::close, pipe_fds[0]));
+        rewirings.push({pipe.read_fd(), 0});
+        execute(pipe_value->rhs(), rewirings);
     }
 }
 
@@ -57,7 +54,7 @@ void Job::await_completion() const {
     if (m_pid == 0) {
         return;
     }
-    EXPECT(core::syscall(Syscall::wait_pid, m_pid));
+    EXPECT(core::wait_pid(m_pid));
 }
 
 void Job::spawn(const ustd::Vector<kernel::FdPair> &copy_fds) {

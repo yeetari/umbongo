@@ -2,8 +2,7 @@
 
 #include <core/KeyEvent.hh>
 #include <core/Print.hh>
-#include <core/Syscall.hh>
-#include <ustd/Result.hh>
+#include <core/Process.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -41,9 +40,7 @@ void LineEditor::goto_end() {
 
 void LineEditor::begin_line() {
     core::print("\x1b[38;2;179;179;255m");
-    auto cwd_length = EXPECT(core::syscall<usize>(Syscall::getcwd, nullptr));
-    ustd::String cwd(cwd_length);
-    EXPECT(core::syscall(Syscall::getcwd, cwd.data()));
+    auto cwd = core::cwd();
     ustd::StringView cwd_view = cwd.view();
     if (cwd.length() >= 5) {
         ustd::StringView start(cwd.data(), 5);
