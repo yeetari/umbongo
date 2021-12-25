@@ -8,6 +8,7 @@ add_library(core
     Pipe.cc
     Process.cc
     start.cc
+    Time.cc
     Timer.cc)
 install(TARGETS core DESTINATION lib)
 target_gc_sections(core)

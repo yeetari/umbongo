@@ -1,8 +1,8 @@
 #pragma once
 
 #include <core/Error.hh>
-#include <core/Process.hh>
 #include <core/Syscall.hh>
+#include <core/Time.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>

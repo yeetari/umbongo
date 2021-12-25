@@ -11,7 +11,7 @@
 
 #include <core/Error.hh>
 #include <core/File.hh>
-#include <core/Process.hh>
+#include <core/Time.hh>
 #include <kernel/SyscallTypes.hh>
 #include <log/Log.hh>
 #include <mmio/Mmio.hh>

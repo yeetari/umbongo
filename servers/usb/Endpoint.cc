@@ -8,7 +8,7 @@
 #include "TrbRing.hh"
 
 #include <core/Error.hh>
-#include <core/Process.hh>
+#include <core/Time.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>

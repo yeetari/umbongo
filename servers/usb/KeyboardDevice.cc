@@ -10,6 +10,7 @@
 #include <core/KeyEvent.hh>
 #include <core/Pipe.hh>
 #include <core/Syscall.hh>
+#include <core/Time.hh>
 #include <core/Timer.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
@@ -78,7 +79,7 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
         if (m_last_code == 0u || !key_already_pressed(m_last_code)) {
             return;
         }
-        if (EXPECT(core::syscall(Syscall::gettime)) - m_last_time < 400000000u) {
+        if (core::time() - m_last_time < 400000000u) {
             return;
         }
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
@@ -121,7 +122,7 @@ void KeyboardDevice::poll() {
             m_modifiers[0] || m_modifiers[4],
         };
         m_last_code = key;
-        m_last_time = EXPECT(core::syscall(Syscall::gettime));
+        m_last_time = core::time();
         EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
     }
     __builtin_memcpy(m_cmp_buffer.data(), m_dma_buffer, 8);

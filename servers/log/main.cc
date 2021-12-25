@@ -1,6 +1,7 @@
 #include <core/EventLoop.hh>
 #include <core/File.hh>
 #include <core/Syscall.hh>
+#include <core/Time.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
@@ -40,8 +41,8 @@ void Client::log(log::Level level, ustd::StringView message) {
     constexpr ustd::Array level_strings{
         "TRACE", "DEBUG", "INFO ", "WARN ", "ERROR",
     };
-    auto time = EXPECT(core::syscall(Syscall::gettime)) / 1000000;
-    auto line = ustd::format("[{:d5 }.{}] {} [{}] {}\n", time / 1000, time % 1000,
+    auto time = core::time() / 1000000u;
+    auto line = ustd::format("[{:d5 }.{}] {} [{}] {}\n", time / 1000u, time % 1000u,
                              level_strings[static_cast<usize>(level)], m_name, message);
     EXPECT(m_file->write({line.data(), line.length()}));
 }

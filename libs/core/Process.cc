@@ -34,8 +34,5 @@ ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<cons
     ENSURE_NOT_REACHED();
 }
 
-void sleep(usize ns) {
-    EXPECT(syscall(Syscall::poll, nullptr, 0, ns));
-}
 
 } // namespace core
