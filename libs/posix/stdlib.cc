@@ -6,11 +6,11 @@
 #include <stddef.h>
 #include <sys/cdefs.h>
 
-#include <core/Syscall.hh>
+#include <core/Process.hh>
 #include <log/Log.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Result.hh>
+#include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
 namespace {
@@ -59,8 +59,7 @@ void abort() {
 }
 
 void exit(int status) {
-    EXPECT(core::syscall(Syscall::exit, status));
-    ENSURE_NOT_REACHED();
+    core::exit(static_cast<usize>(status));
 }
 
 void *malloc(size_t size) {
