@@ -85,6 +85,9 @@ usize main(usize, const char **) {
                 }
             }
             if (auto line = editor.handle_key_event(event); !line.empty()) {
+                if (line == "\n") {
+                    break;
+                }
                 Lexer lexer(line);
                 Parser parser(lexer);
                 auto node = parser.parse();

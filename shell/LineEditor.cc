@@ -66,7 +66,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
         auto line = ustd::String::copy_raw(m_buffer.data(), m_buffer.size());
         core::put_char('\n');
         if (line.empty()) {
-            return {};
+            return "\n";
         }
         m_buffer.clear();
         m_cursor_pos = 0;
