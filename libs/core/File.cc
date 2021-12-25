@@ -51,6 +51,10 @@ ustd::Result<void, SysError> File::rebind(uint32 fd) {
     return {};
 }
 
+ustd::Result<usize, SysError> File::size() {
+    return TRY(syscall(Syscall::size, *m_fd));
+}
+
 ustd::Result<usize, SysError> File::write(ustd::Span<const void> data) {
     return TRY(syscall(Syscall::write, *m_fd, data.data(), data.size()));
 }

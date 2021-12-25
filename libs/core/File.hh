@@ -39,12 +39,15 @@ public:
     ustd::Result<usize, SysError> read(ustd::Span<void> data);
     ustd::Result<usize, SysError> read(ustd::Span<void> data, usize offset);
     ustd::Result<void, SysError> rebind(uint32 fd);
+    ustd::Result<usize, SysError> size();
     ustd::Result<usize, SysError> write(ustd::Span<const void> data);
 
     template <typename T>
     ustd::Result<T *, SysError> mmap();
     template <typename T>
     ustd::Result<T, SysError> read();
+    template <typename T>
+    ustd::Result<usize, SysError> write(const T &data);
 
     uint32 fd() const override { return *m_fd; }
 };
@@ -59,6 +62,11 @@ ustd::Result<T, SysError> File::read() {
     T ret{};
     TRY(read({&ret, sizeof(T)}));
     return ret;
+}
+
+template <typename T>
+ustd::Result<usize, SysError> File::write(const T &data) {
+    return TRY(write({&data, sizeof(T)}));
 }
 
 } // namespace core

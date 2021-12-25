@@ -5,10 +5,16 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Result.hh>
+#include <ustd/String.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
 namespace core {
+
+ustd::Result<void, SysError> chdir(const char *path) {
+    TRY(syscall(Syscall::chdir, path));
+    return {};
+}
 
 ustd::Result<usize, SysError> create_process(const char *path) {
     ustd::Array<const char *, 2> argv{path, nullptr};
@@ -34,5 +40,20 @@ ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<cons
     ENSURE_NOT_REACHED();
 }
 
+ustd::String cwd() {
+    auto cwd_length = EXPECT(syscall(Syscall::getcwd, nullptr));
+    ustd::String cwd(cwd_length);
+    EXPECT(syscall(Syscall::getcwd, cwd.data()));
+    return cwd;
+}
+
+usize pid() {
+    return EXPECT(syscall(Syscall::getpid));
+}
+
+ustd::Result<void, SysError> wait_pid(usize pid) {
+    TRY(syscall(Syscall::wait_pid, pid));
+    return {};
+}
 
 } // namespace core
