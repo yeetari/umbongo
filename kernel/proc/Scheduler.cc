@@ -223,6 +223,7 @@ void Scheduler::switch_next(RegisterState *regs) {
 
     Thread *next_thread = pick_next();
     __builtin_memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
+    asm volatile("xrstor %0" ::"m"(*next_thread->m_simd_region), "a"(0xffffffffu), "d"(0xffffffffu));
     auto &process = *next_thread->m_process;
     if (MemoryManager::current_space() != process.m_virt_space.obj()) {
         MemoryManager::switch_space(*process.m_virt_space);
@@ -236,7 +237,9 @@ void Scheduler::timer_handler(RegisterState *regs) {
     if (Processor::id() == 0) {
         TimeManager::update();
     }
-    __builtin_memcpy(&Processor::current_thread()->m_register_state, regs, sizeof(RegisterState));
+    auto *thread = Processor::current_thread();
+    __builtin_memcpy(&thread->m_register_state, regs, sizeof(RegisterState));
+    asm volatile("xsave %0" : "=m"(*thread->m_simd_region) : "a"(0xffffffffu), "d"(0xffffffffu));
     switch_next(regs);
 }
 

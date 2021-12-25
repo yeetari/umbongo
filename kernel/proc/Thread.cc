@@ -5,6 +5,7 @@
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/InterruptDisabler.hh>
+#include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/Vfs.hh>
@@ -16,6 +17,7 @@
 #include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
+#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -73,6 +75,8 @@ ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
 Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), m_priority(priority) {
     process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
     m_kernel_stack = new uint8[k_kernel_stack_size] + k_kernel_stack_size;
+    m_simd_region = new (ustd::align_val_t(64)) uint8[Processor::simd_region_size()];
+    __builtin_memcpy(m_simd_region, Processor::simd_default_region(), Processor::simd_region_size());
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
@@ -83,7 +87,8 @@ Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), 
 }
 
 Thread::~Thread() {
-    delete (m_kernel_stack - k_kernel_stack_size);
+    delete[](m_kernel_stack - k_kernel_stack_size);
+    operator delete[](m_simd_region, ustd::align_val_t(64));
     m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
     if (m_prev != nullptr) {
         ASSERT(m_next != nullptr);

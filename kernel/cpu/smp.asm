@@ -39,6 +39,12 @@ bits 32
 
 bits 64
 .long:
+    xor ecx, ecx
+    mov eax, [AP_ABS(.xcr)]
+    mov rdx, [AP_ABS(.xcr)]
+    shr rdx, 32
+    xsetbv
+
     mov eax, 1
     lock xadd [AP_ABS(.id)], eax
     xor rbp, rbp
@@ -50,6 +56,7 @@ bits 64
 .cr0: dq 0
 .cr3: dq 0
 .cr4: dq 0
+.xcr: dq 0
 .efer: dq 0
 .id: dd 0
 
@@ -81,6 +88,11 @@ ap_prepare:
     mov [AP_ABS(ap_bootstrap.cr3)], rax
     mov rax, cr4
     mov [AP_ABS(ap_bootstrap.cr4)], rax
+
+    xor ecx, ecx
+    xgetbv
+    or rax, rdx
+    mov [AP_ABS(ap_bootstrap.xcr)], rax
 
     mov rcx, 0xc0000080
     rdmsr

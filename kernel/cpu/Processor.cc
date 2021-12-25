@@ -16,6 +16,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
+#include <ustd/Memory.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
@@ -199,6 +200,8 @@ ustd::Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCAL
 
 LocalApic *s_apic = nullptr;
 ustd::Atomic<uint8> s_initialised_ap_count = 0;
+uint8 *s_simd_default_region = nullptr;
+uint32 s_simd_region_size = 0;
 
 uint64 read_cr0() {
     uint64 cr0 = 0;
@@ -218,6 +221,12 @@ void write_cr0(uint64 cr0) {
 
 void write_cr4(uint64 cr4) {
     asm volatile("mov %0, %%cr4" : : "r"(cr4));
+}
+
+void write_xcr(uint64 value) {
+    const uint64 rax = value & 0xffffffffu;
+    const uint64 rdx = (value >> 32u) & 0xffffffffu;
+    asm volatile("xsetbv" : : "a"(rax), "d"(rdx), "c"(0));
 }
 
 uint64 read_gs(uint64 offset) {
@@ -329,10 +338,25 @@ void Processor::initialise() {
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 11u) | (1u << 0u));
 
-    // Enable SSE.
-    // TODO(GH-12): Save SSE state on context switch. Also remove `-mno-sse` from applications.
+    CpuId sse_cpu_id(1);
+    ENSURE((sse_cpu_id.edx() & (1u << 25u)) != 0, "SSE1 not available!");
+    ENSURE((sse_cpu_id.edx() & (1u << 26u)) != 0, "SSE2 not available!");
+    ENSURE((sse_cpu_id.ecx() & (1u << 26u)) != 0, "xsave/xrstor not available!");
+
+    // Enable SSE instructions.
     write_cr0((read_cr0() & ~(1u << 2u)) | (1u << 1u));
-    write_cr4(read_cr4() | (1u << 10u) | (1u << 9u));
+    write_cr4(read_cr4() | (1u << 18u) | (1u << 10u) | (1u << 9u));
+
+    // TODO: Use xsaveopt if available.
+    uint64 xcr = 0b11u;
+    if ((sse_cpu_id.ecx() & (1u << 28u)) != 0) {
+        // AVX available.
+        xcr |= 1u << 2u;
+    }
+    write_xcr(xcr);
+    s_simd_region_size = CpuId(0xd).ecx();
+    s_simd_default_region = new (ustd::align_val_t(64)) uint8[s_simd_region_size];
+    asm volatile("xsave %0" : "=m"(*s_simd_default_region) : "a"(0xffffffffu), "d"(0xffffffffu));
 }
 
 void Processor::setup(uint8 id) {
@@ -471,6 +495,16 @@ Thread *Processor::current_thread() {
 
 uint8 Processor::id() {
     return static_cast<uint8>(read_gs(__builtin_offsetof(LocalStorage, id)));
+}
+
+uint8 *Processor::simd_default_region() {
+    ASSERT(s_simd_default_region != nullptr);
+    return s_simd_default_region;
+}
+
+uint32 Processor::simd_region_size() {
+    ASSERT(s_simd_region_size != 0u);
+    return s_simd_region_size;
 }
 
 } // namespace kernel

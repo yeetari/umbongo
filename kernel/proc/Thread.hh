@@ -35,6 +35,7 @@ private:
     const ThreadPriority m_priority;
     ustd::UniquePtr<ThreadBlocker> m_blocker;
     uint8 *m_kernel_stack{nullptr};
+    uint8 *m_simd_region{nullptr};
 
     Thread *m_prev{nullptr};
     Thread *m_next{nullptr};

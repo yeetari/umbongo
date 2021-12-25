@@ -32,6 +32,8 @@ struct Processor {
     static VirtSpace *current_space();
     static Thread *current_thread();
     static uint8 id();
+    static uint8 *simd_default_region();
+    static uint32 simd_region_size();
 };
 
 } // namespace kernel
