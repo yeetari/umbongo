@@ -67,6 +67,7 @@ uint32 s_ticks_in_one_ms = 0;
 
 Thread *s_base_thread;
 SpinLock s_thread_list_lock;
+ustd::Atomic<bool> s_time_being_updated;
 
 PriorityQueue *s_blocked_queue;
 ustd::Array<PriorityQueue *, 2> s_queues;
@@ -234,8 +235,10 @@ void Scheduler::switch_next(RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
-    if (Processor::id() == 0) {
+    if (!s_time_being_updated.load(ustd::MemoryOrder::Acquire)) {
+        s_time_being_updated.store(true, ustd::MemoryOrder::Release);
         TimeManager::update();
+        s_time_being_updated.store(false, ustd::MemoryOrder::Release);
     }
     auto *thread = Processor::current_thread();
     __builtin_memcpy(&thread->m_register_state, regs, sizeof(RegisterState));
