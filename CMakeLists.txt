@@ -95,6 +95,9 @@ if(QEMU_EXECUTABLE)
         NAMES OVMF.fd OVMF_CODE.fd
         PATHS ${CMAKE_SOURCE_DIR} /usr/share/ovmf /usr/share/edk2-ovmf)
     if(OVMF_BINARY)
+        include(ProcessorCount)
+        ProcessorCount(CORE_COUNT)
+        math(EXPR CORE_COUNT "${CORE_COUNT} / 4")
         set(QEMU_FLAGS ${QEMU_FLAGS}
             -bios ${OVMF_BINARY}
             -cpu host
@@ -108,7 +111,7 @@ if(QEMU_EXECUTABLE)
             -machine q35
             -nodefaults
             -no-reboot
-            -smp 4)
+            -smp ${CORE_COUNT})
         add_custom_target(run
             COMMAND ${QEMU_EXECUTABLE} ${QEMU_FLAGS} $<$<BOOL:${KVM_AVAILABLE}>:-enable-kvm>
             DEPENDS install
