@@ -119,11 +119,11 @@ void MemoryManager::initialise(BootInfo *boot_info) {
     set_frame(0x8000 / k_frame_size);
     Heap::initialise();
 
-    // Create the kernel virtual space and identity map physical memory up to 512GiB. Using 1GiB pages means this only
-    // takes 4KiB of page structures to do.
-    // TODO: Mark as global pages.
+    // Create the kernel virtual space and identity map physical memory up to 512 GiB. Using 1 GiB pages means this only
+    // takes 4 KiB of page structures to do.
+    constexpr auto access = RegionAccess::Writable | RegionAccess::Executable | RegionAccess::Global;
     s_data.kernel_space = new VirtSpace;
-    s_data.kernel_space->create_region(0, 512_GiB, RegionAccess::Writable | RegionAccess::Executable, 0);
+    s_data.kernel_space->create_region(0, 512_GiB, access, 0);
 
     // Leak a ref for the kernel space to ensure it never gets deleted by a kernel process being destroyed.
     s_data.kernel_space->leak_ref();

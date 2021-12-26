@@ -27,6 +27,9 @@ PageFlags page_flags(RegionAccess access) {
     if ((access & RegionAccess::Uncacheable) == RegionAccess::Uncacheable) {
         flags |= PageFlags::CacheDisable;
     }
+    if ((access & RegionAccess::Global) == RegionAccess::Global) {
+        flags |= PageFlags::Global;
+    }
     return flags;
 }
 

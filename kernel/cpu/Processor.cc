@@ -314,6 +314,9 @@ void Processor::initialise() {
     // Enable CR0.WP (Write Protect). This prevents the kernel from writing to read only pages.
     write_cr0(read_cr0() | (1u << 16u));
 
+    // Enable CR4.PGE (Page-Global Enable). This enables support for global pages.
+    write_cr4(read_cr4() | (1u << 7u));
+
     // Enable some hardware protection features, if available.
     CpuId extended_features(0x7);
     if ((extended_features.ebx() & (1u << 7u)) != 0) {

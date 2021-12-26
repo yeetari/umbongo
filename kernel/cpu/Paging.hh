@@ -14,6 +14,7 @@ enum class PageFlags : usize {
     WriteThrough = 1ul << 3ul,
     CacheDisable = 1ul << 4ul,
     Large = 1ul << 7ul,
+    Global = 1ul << 8ul,
     NoExecute = 1ul << 63ul,
 };
 
