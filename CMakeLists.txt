@@ -97,7 +97,7 @@ if(QEMU_EXECUTABLE)
     if(OVMF_BINARY)
         set(QEMU_FLAGS ${QEMU_FLAGS}
             -bios ${OVMF_BINARY}
-            -cpu max
+            -cpu host
             -debugcon stdio
             -device qemu-xhci
             -device usb-kbd
