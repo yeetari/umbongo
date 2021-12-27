@@ -24,8 +24,7 @@ class Client final : public ipc::Client {
     ustd::String m_name;
 
 public:
-    Client(uint32 fd) : ipc::Client(fd) {}
-
+    using ipc::Client::Client;
     void initialise(core::File &file, ustd::StringView name);
     void log(log::Level level, ustd::StringView message);
 };
@@ -42,7 +41,7 @@ void Client::log(log::Level level, ustd::StringView message) {
         "TRACE", "DEBUG", "INFO ", "WARN ", "ERROR",
     };
     auto time = core::time() / 1000000u;
-    auto line = ustd::format("[{:d5 }.{}] {} [{}] {}\n", time / 1000u, time % 1000u,
+    auto line = ustd::format("[{:d5 }.{:d3}] {} [{}] {}\n", time / 1000u, time % 1000u,
                              level_strings[static_cast<usize>(level)], m_name, message);
     EXPECT(m_file->write({line.data(), line.length()}));
 }
