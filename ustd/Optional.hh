@@ -43,6 +43,7 @@ public:
     constexpr void clear();
     template <typename... Args>
     constexpr T &emplace(Args &&...args);
+    constexpr T value_or(T fallback) { return m_present ? *obj() : fallback; }
 
     constexpr explicit operator bool() const noexcept { return m_present; }
     constexpr bool has_value() const noexcept { return m_present; }
