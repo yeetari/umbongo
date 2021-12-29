@@ -8,6 +8,7 @@
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Result.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 

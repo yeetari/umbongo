@@ -3,8 +3,8 @@
 #include <core/File.hh>
 #include <core/Syscall.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {

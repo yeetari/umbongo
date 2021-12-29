@@ -4,7 +4,7 @@
 #include <log/Log.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh>
-#include <ustd/Result.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 usize main(usize argc, const char **argv) {

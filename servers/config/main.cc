@@ -7,10 +7,10 @@
 #include <log/Log.hh>
 #include <ustd/Format.hh>
 #include <ustd/Optional.hh>
-#include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>

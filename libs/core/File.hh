@@ -7,6 +7,7 @@
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

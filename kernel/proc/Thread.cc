@@ -25,6 +25,7 @@
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>

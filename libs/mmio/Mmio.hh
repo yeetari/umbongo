@@ -5,6 +5,7 @@
 #include <core/Time.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Result.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 namespace mmio {

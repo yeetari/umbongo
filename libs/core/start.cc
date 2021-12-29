@@ -2,9 +2,9 @@
 #include <log/Level.hh>
 #include <log/Log.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringBuilder.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 usize main(usize argc, const char **argv);

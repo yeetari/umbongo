@@ -3,8 +3,8 @@
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/File.hh>
-#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {

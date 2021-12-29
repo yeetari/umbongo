@@ -8,6 +8,7 @@
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>

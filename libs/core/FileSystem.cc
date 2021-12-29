@@ -4,6 +4,7 @@
 #include <core/Syscall.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 
 namespace core {
 

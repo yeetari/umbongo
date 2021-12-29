@@ -11,9 +11,9 @@
 #include <ustd/Format.hh>
 #include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
-#include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 

@@ -4,6 +4,7 @@
 #include <core/Pipe.hh>
 #include <core/Process.hh>
 #include <ustd/Result.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 usize main(usize, const char **) {

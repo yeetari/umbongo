@@ -10,6 +10,7 @@
 #include <ustd/String.hh>
 #include <ustd/StringBuilder.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 namespace {

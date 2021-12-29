@@ -5,6 +5,7 @@
 #include <core/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 namespace core {

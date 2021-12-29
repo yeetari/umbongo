@@ -17,6 +17,7 @@
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>

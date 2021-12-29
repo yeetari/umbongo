@@ -8,10 +8,10 @@
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh> // IWYU pragma: keep
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>

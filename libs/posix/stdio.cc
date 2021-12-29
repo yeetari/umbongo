@@ -17,6 +17,7 @@
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
 struct FILE {
