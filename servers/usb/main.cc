@@ -1,6 +1,7 @@
 #include "Error.hh"
 #include "HostController.hh"
 
+#include <config/Config.hh>
 #include <core/Directory.hh>
 #include <core/Error.hh>
 #include <core/EventLoop.hh>
@@ -35,6 +36,8 @@ ustd::Vector<HostController> find_host_controllers(core::EventLoop &event_loop) 
 usize main(usize, const char **) {
     log::initialise("usb-server");
     core::EventLoop event_loop;
+    config::listen(event_loop);
+    config::read("usb-server");
     auto host_controllers = find_host_controllers(event_loop);
     for (auto &host_controller : host_controllers) {
         if (auto result = host_controller.enable(); result.is_error()) {

@@ -22,6 +22,7 @@ class KeyboardDevice final : public Device {
     ustd::Array<uint8, 8> m_cmp_buffer{};
     ustd::Array<bool, 8> m_modifiers{};
     ustd::UniquePtr<core::Timer> m_repeat_timer;
+    usize m_repeat_delay{400};
     uint8 m_last_code{0};
     usize m_last_time{0};
 

@@ -7,6 +7,7 @@
 #include "Error.hh"
 #include "TrbRing.hh"
 
+#include <config/Config.hh>
 #include <core/KeyEvent.hh>
 #include <core/Pipe.hh>
 #include <core/Syscall.hh>
@@ -14,7 +15,11 @@
 #include <core/Timer.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
+#include <ustd/Numeric.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Result.hh>
+#include <ustd/StringCast.hh>
+#include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
@@ -79,7 +84,7 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
         if (m_last_code == 0u || !key_already_pressed(m_last_code)) {
             return;
         }
-        if (core::time() - m_last_time < 400000000u) {
+        if (core::time() - m_last_time < m_repeat_delay * 1000000u) {
             return;
         }
         const auto &table = m_modifiers[1] ? s_scancode_table_shift : s_scancode_table;
@@ -90,6 +95,14 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
             m_modifiers[0] || m_modifiers[4],
         };
         EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
+    });
+
+    config::watch("usb-server", "keyboard.repeat_delay", [this](ustd::StringView value) {
+        m_repeat_delay = ustd::cast<usize>(value).value_or(400);
+    });
+    config::watch("usb-server", "keyboard.repeat_rate", [this](ustd::StringView value) {
+        const auto repeat_rate = ustd::max(ustd::cast<usize>(value).value_or(25), 1ul);
+        m_repeat_timer->set_period(1_Hz / repeat_rate);
     });
     return {};
 }
