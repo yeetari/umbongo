@@ -22,9 +22,9 @@ add_executable(kernel
     acpi/Table.cc
     cpu/LocalApic.cc
     cpu/Processor.cc
-    devices/DevFs.cc
-    devices/Device.cc
-    devices/FramebufferDevice.cc
+    dev/DevFs.cc
+    dev/Device.cc
+    dev/FramebufferDevice.cc
     fs/FileHandle.cc
     fs/Inode.cc
     fs/InodeFile.cc

@@ -2,7 +2,7 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/devices/Device.hh>
+#include <kernel/dev/Device.hh>
 #include <ustd/Array.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>

@@ -1,7 +1,7 @@
-#include <kernel/devices/DevFs.hh>
+#include <kernel/dev/DevFs.hh>
 
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
-#include <kernel/devices/Device.hh>
+#include <kernel/dev/Device.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>

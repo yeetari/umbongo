@@ -3,7 +3,7 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/devices/Device.hh>
+#include <kernel/dev/Device.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>

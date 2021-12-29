@@ -13,8 +13,8 @@
 #include <kernel/acpi/Table.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/devices/DevFs.hh>
-#include <kernel/devices/FramebufferDevice.hh>
+#include <kernel/dev/DevFs.hh>
+#include <kernel/dev/FramebufferDevice.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>

@@ -2,7 +2,7 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/devices/Device.hh>
+#include <kernel/dev/Device.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {

@@ -1,4 +1,4 @@
-#include <kernel/devices/FramebufferDevice.hh>
+#include <kernel/dev/FramebufferDevice.hh>
 
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>

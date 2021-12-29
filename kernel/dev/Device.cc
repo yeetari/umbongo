@@ -1,6 +1,6 @@
-#include <kernel/devices/Device.hh>
+#include <kernel/dev/Device.hh>
 
-#include <kernel/devices/DevFs.hh>
+#include <kernel/dev/DevFs.hh>
 #include <ustd/String.hh>
 #include <ustd/Utility.hh>
 
