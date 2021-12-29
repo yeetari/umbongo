@@ -9,6 +9,7 @@
 usize main(usize, const char **) {
     EXPECT(core::mount("/run", "ram"), "Failed to mount /run");
     EXPECT(core::create_process("/bin/log-server"), "Failed to start /bin/log-server");
+    EXPECT(core::create_process("/bin/config-server"), "Failed to start /bin/config-server");
     auto pipe = EXPECT(core::create_pipe(), "Failed to create stdio pipe");
     EXPECT(pipe.rebind_read(0), "Failed to bind stdin pipe end");
     EXPECT(core::create_process("/bin/console-server"), "Failed to start /bin/console-server");
