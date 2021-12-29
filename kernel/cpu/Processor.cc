@@ -404,7 +404,7 @@ void Processor::setup(uint8 id) {
     // Write the syscall entry point to the LSTAR MSR. Also set the CPU to clear rflags when a syscall occurs. The
     // interrupted rflags will be preserved in r11 by the CPU.
     write_msr(k_msr_lstar, reinterpret_cast<uintptr>(&syscall_stub));
-    write_msr(k_msr_sfmask, ~0x2u);
+    write_msr(k_msr_sfmask, 0x257fd5u);
 }
 
 void Processor::start_aps(acpi::ApicTable *madt) {
