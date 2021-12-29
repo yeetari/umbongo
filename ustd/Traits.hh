@@ -84,6 +84,9 @@ template <typename T, typename U>
 inline constexpr bool IsSame = detail::IsSameCheck<T, U>::value;
 
 template <typename T>
+inline constexpr bool IsSigned = T(-1) < T(0);
+
+template <typename T>
 concept IsTriviallyCopyable = __is_trivially_copyable(T);
 template <typename T>
 concept IsTriviallyDestructible = __is_trivially_destructible(T);

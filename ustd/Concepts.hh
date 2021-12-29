@@ -17,6 +17,12 @@ template <typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
 template <typename T>
+concept SignedIntegral = IsIntegral<T> && IsSigned<T>;
+
+template <typename T>
 concept TriviallyCopyable = IsTriviallyCopyable<T>;
+
+template <typename T>
+concept UnsignedIntegral = IsIntegral<T> && !IsSigned<T>;
 
 } // namespace ustd
