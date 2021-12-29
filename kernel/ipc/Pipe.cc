@@ -39,13 +39,13 @@ void Pipe::detach(AttachDirection direction) {
     }
 }
 
-bool Pipe::can_read() {
+bool Pipe::read_would_block(usize) {
     ScopedLock locker(m_lock);
-    return m_writer_count == 0 || !m_buffer.empty();
+    return m_writer_count != 0 && m_buffer.empty();
 }
 
-bool Pipe::can_write() {
-    return !m_buffer.full();
+bool Pipe::write_would_block(usize) {
+    return m_buffer.full();
 }
 
 SysResult<usize> Pipe::read(ustd::Span<void> data, usize) {

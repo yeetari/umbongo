@@ -16,7 +16,7 @@
 namespace kernel {
 
 bool AcceptBlocker::should_unblock() {
-    return m_server->can_accept();
+    return !m_server->accept_would_block();
 }
 
 bool ConnectBlocker::should_unblock() {
@@ -38,11 +38,11 @@ bool PollBlocker::should_unblock() {
     ScopedLock locker(m_lock);
     for (const auto &poll_fd : m_fds) {
         // TODO: Bounds checking.
-        auto &file = m_process.file_handle(poll_fd.fd).file();
-        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && file.can_read()) {
+        auto &handle = m_process.file_handle(poll_fd.fd);
+        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && !handle.read_would_block()) {
             return true;
         }
-        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && file.can_write()) {
+        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && !handle.write_would_block()) {
             return true;
         }
     }
@@ -50,7 +50,7 @@ bool PollBlocker::should_unblock() {
 }
 
 bool ReadBlocker::should_unblock() {
-    return !m_file->valid() || m_file->can_read();
+    return !m_file->valid() || !m_file->read_would_block(m_offset);
 }
 
 WaitBlocker::WaitBlocker(usize pid) : m_process(Process::from_pid(pid)) {}
@@ -60,7 +60,7 @@ bool WaitBlocker::should_unblock() {
 }
 
 bool WriteBlocker::should_unblock() {
-    return !m_file->valid() || m_file->can_write();
+    return !m_file->valid() || !m_file->write_would_block(m_offset);
 }
 
 } // namespace kernel

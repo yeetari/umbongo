@@ -24,6 +24,8 @@ public:
     FileHandle &operator=(const FileHandle &) = delete;
     FileHandle &operator=(FileHandle &&) = delete;
 
+    bool read_would_block() const;
+    bool write_would_block() const;
     SyscallResult ioctl(IoctlRequest request, void *arg) const;
     uintptr mmap(VirtSpace &virt_space) const;
     SysResult<usize> read(void *data, usize size);
@@ -32,6 +34,7 @@ public:
     bool valid() const;
 
     File &file() const { return *m_file; }
+    usize offset() const { return m_offset; }
 };
 
 } // namespace kernel

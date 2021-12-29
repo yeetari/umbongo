@@ -61,9 +61,10 @@ public:
 
 class ReadBlocker : public ThreadBlocker {
     ustd::SharedPtr<File> m_file;
+    usize m_offset;
 
 public:
-    explicit ReadBlocker(File &file) : m_file(&file) {}
+    ReadBlocker(File &file, usize offset) : m_file(&file), m_offset(offset) {}
 
     bool should_unblock() override;
 };
@@ -79,9 +80,10 @@ public:
 
 class WriteBlocker : public ThreadBlocker {
     ustd::SharedPtr<File> m_file;
+    usize m_offset;
 
 public:
-    explicit WriteBlocker(File &file) : m_file(&file) {}
+    WriteBlocker(File &file, usize offset) : m_file(&file), m_offset(offset) {}
 
     bool should_unblock() override;
 };

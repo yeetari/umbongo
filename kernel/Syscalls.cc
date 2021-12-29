@@ -49,7 +49,7 @@ SyscallResult Process::sys_accept(uint32 fd) {
         return SysError::Invalid;
     }
     auto &server = static_cast<ServerSocket &>(file);
-    if (!server.can_accept()) {
+    if (server.accept_would_block()) {
         Processor::current_thread()->block<AcceptBlocker>(ustd::SharedPtr<ServerSocket>(&server));
     }
     auto accepted = server.accept();
@@ -282,12 +282,12 @@ SyscallResult Process::sys_poll(PollFd *fds, usize count, ssize timeout) {
     Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {
         // TODO: Bounds checking.
-        auto &file = m_fds[poll_fd.fd]->file();
+        auto &handle = m_fds[poll_fd.fd];
         poll_fd.revents = static_cast<PollEvents>(0);
-        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && file.can_read()) {
+        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && !handle->read_would_block()) {
             poll_fd.revents |= PollEvents::Read;
         }
-        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && file.can_write()) {
+        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && !handle->write_would_block()) {
             poll_fd.revents |= PollEvents::Write;
         }
     }
@@ -305,9 +305,8 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
         handle.clear();
         return SysError::BrokenHandle;
     }
-    auto &file = handle->file();
-    if (!file.can_read()) {
-        Processor::current_thread()->block<ReadBlocker>(file);
+    if (handle->read_would_block()) {
+        Processor::current_thread()->block<ReadBlocker>(handle->file(), handle->offset());
     }
     return TRY(handle->read(data, size));
 }
@@ -416,9 +415,8 @@ SyscallResult Process::sys_write(uint32 fd, void *data, usize size) {
         handle.clear();
         return SysError::BrokenHandle;
     }
-    auto &file = handle->file();
-    if (!file.can_write()) {
-        Processor::current_thread()->block<WriteBlocker>(file);
+    if (handle->write_would_block()) {
+        Processor::current_thread()->block<WriteBlocker>(handle->file(), handle->offset());
     }
     return TRY(handle->write(data, size));
 }

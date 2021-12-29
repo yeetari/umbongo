@@ -28,8 +28,8 @@ public:
 
     void attach(AttachDirection) override;
     void detach(AttachDirection) override;
-    bool can_read() override;
-    bool can_write() override;
+    bool read_would_block(usize offset) override;
+    bool write_would_block(usize offset) override;
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };

@@ -20,6 +20,14 @@ FileHandle::~FileHandle() {
     }
 }
 
+bool FileHandle::read_would_block() const {
+    return m_file->read_would_block(m_offset);
+}
+
+bool FileHandle::write_would_block() const {
+    return m_file->write_would_block(m_offset);
+}
+
 SyscallResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
     return m_file->ioctl(request, arg);
 }

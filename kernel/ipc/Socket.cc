@@ -14,12 +14,12 @@ Socket::Socket(DoubleBuffer *read_buffer, DoubleBuffer *write_buffer)
 
 Socket::~Socket() = default;
 
-bool Socket::can_read() {
-    return m_read_buffer->ref_count() != 2 || !m_read_buffer->empty();
+bool Socket::read_would_block(usize) {
+    return m_read_buffer->ref_count() == 2 && m_read_buffer->empty();
 }
 
-bool Socket::can_write() {
-    return m_write_buffer->ref_count() != 2 || !m_write_buffer->full();
+bool Socket::write_would_block(usize) {
+    return m_write_buffer->ref_count() == 2 && m_write_buffer->full();
 }
 
 SysResult<usize> Socket::read(ustd::Span<void> data, usize) {

@@ -24,17 +24,17 @@ ustd::SharedPtr<Socket> ServerSocket::accept() {
     return ustd::make_shared<Socket>(client->write_buffer(), client->read_buffer());
 }
 
-bool ServerSocket::can_accept() const {
+bool ServerSocket::accept_would_block() const {
     ScopedLock locker(m_lock);
-    return !m_connection_queue.empty();
+    return m_connection_queue.empty();
 }
 
-bool ServerSocket::can_read() {
-    return can_accept();
+bool ServerSocket::read_would_block(usize) {
+    return accept_would_block();
 }
 
-bool ServerSocket::can_write() {
-    return true;
+bool ServerSocket::write_would_block(usize) {
+    return false;
 }
 
 SysResult<> ServerSocket::queue_connection_from(ustd::SharedPtr<Socket> socket) {

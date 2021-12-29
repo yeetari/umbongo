@@ -42,8 +42,8 @@ class Function final : public Device {
 public:
     Function(uintptr segment_base, uint16 segment, uint8 bus, uint8 device, uint8 function);
 
-    bool can_read() override { return true; }
-    bool can_write() override { return m_interrupt_pending; }
+    bool read_would_block(usize) override { return false; }
+    bool write_would_block(usize) override { return !m_interrupt_pending; }
     SyscallResult ioctl(IoctlRequest request, void *arg) override;
     uintptr mmap(VirtSpace &virt_space) override;
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
