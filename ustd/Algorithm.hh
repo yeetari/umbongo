@@ -2,6 +2,7 @@
 
 #include <ustd/Concepts.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Traits.hh>
 #include <ustd/Utility.hh>
 
@@ -50,6 +51,17 @@ constexpr void fill_n(It it, usize size, T value) {
     for (usize i = 0; i < size; i++) {
         *it++ = static_cast<RemoveRef<decltype(*it)>>(value);
     }
+}
+
+// TODO: Concept constraints.
+template <typename Container, typename T>
+constexpr ustd::Optional<usize> index_of(const Container &container, const T &value) {
+    for (usize i = 0; i < container.size(); i++) {
+        if (container[i] == value) {
+            return i;
+        }
+    }
+    return {};
 }
 
 template <Container Container, typename GreaterThan, typename SizeType = decltype(declval<Container>().size())>
