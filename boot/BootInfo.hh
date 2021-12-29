@@ -23,6 +23,9 @@ struct RamFsEntry {
 };
 
 struct BootInfo {
+    // Dmesg ring buffer memory.
+    void *dmesg_area;
+
     // ACPI RSDP.
     void *rsdp;
 

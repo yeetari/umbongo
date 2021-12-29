@@ -4,6 +4,8 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Numeric.hh>
+#include <ustd/RingBuffer.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
@@ -225,6 +227,14 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
               "Failed to allocate memory for kernel stack!")
     ENSURE(kernel_stack != 0, "Failed to allocate memory for kernel stack!");
 
+    // Allocate dmesg ring buffer memory.
+    const auto dmesg_area_page_count = ustd::round_up(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB) / 4_KiB;
+    uintptr dmesg_area = 0;
+    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::Reserved,
+                                                dmesg_area_page_count, &dmesg_area),
+              "Failed to allocate memory for kernel dmesg area!")
+    ENSURE(dmesg_area != 0, "Failed to allocate memory for kernel dmesg area!");
+
     // Find ACPI RSDP.
     void *rsdp = nullptr;
     s_st->con_out->output_string(s_st->con_out, L"Finding ACPI RSDP...\r\n");
@@ -327,6 +337,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Fill out boot info.
     BootInfo boot_info{
+        .dmesg_area = reinterpret_cast<void *>(dmesg_area),
         .rsdp = rsdp,
         .width = gop->mode->info->width,
         .height = gop->mode->info->height,
