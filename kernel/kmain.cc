@@ -14,6 +14,7 @@
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/dev/DevFs.hh>
+#include <kernel/dev/DmesgDevice.hh>
 #include <kernel/dev/FramebufferDevice.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -102,6 +103,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
     // Create and mount the device filesystem.
     DevFs::initialise();
+    DmesgDevice::initialise();
 
     auto *mcfg = xsdt->find<acpi::PciTable>();
     ENSURE(mcfg != nullptr && mcfg->valid());
@@ -133,6 +135,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
+    DmesgDevice::early_initialise(boot_info);
     dmesg("core: Using font {} {}", g_font.name(), g_font.style());
     if constexpr (k_kernel_qemu_debug) {
         ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");

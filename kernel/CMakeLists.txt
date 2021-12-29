@@ -24,6 +24,7 @@ add_executable(kernel
     cpu/Processor.cc
     dev/DevFs.cc
     dev/Device.cc
+    dev/DmesgDevice.cc
     dev/FramebufferDevice.cc
     fs/FileHandle.cc
     fs/Inode.cc
