@@ -29,6 +29,7 @@ public:
     bool has_expired(usize now) const { return now > m_fire_time; }
     void reload(usize now) { m_fire_time = now + m_period; }
     void set_on_fire(ustd::Function<void()> on_fire) { m_on_fire = ustd::move(on_fire); }
+    void set_period(usize period) { m_period = period; }
 
     usize period() const { return m_period; }
 };
