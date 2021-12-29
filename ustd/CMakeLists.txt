@@ -2,7 +2,8 @@ set(SOURCES
     Abi.cc
     Memory.cc
     String.cc
-    StringBuilder.cc)
+    StringBuilder.cc
+    StringView.cc)
 
 add_library(ustd ${SOURCES})
 install(TARGETS ustd DESTINATION lib)
