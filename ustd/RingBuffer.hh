@@ -16,6 +16,9 @@ public:
     T dequeue();
 
     bool empty() const { return m_size == 0; }
+    usize head() const { return m_head; }
+    usize size() const { return m_size; }
+    const T &operator[](usize index) const { return m_data[index]; }
 };
 
 template <typename T, usize Capacity>
