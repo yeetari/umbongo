@@ -2,6 +2,7 @@
 #include "Framebuffer.hh"
 #include "Terminal.hh"
 
+#include <config/Config.hh>
 #include <console/IpcMessages.hh>
 #include <core/EventLoop.hh>
 #include <core/File.hh>
@@ -12,8 +13,11 @@
 #include <kernel/SyscallTypes.hh>
 #include <log/Log.hh>
 #include <ustd/Array.hh>
+#include <ustd/Numeric.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
+#include <ustd/StringCast.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
@@ -24,6 +28,9 @@ usize main(usize, const char **) {
     core::File stdin(static_cast<uint32>(0));
     event_loop.watch(stdin, kernel::PollEvents::Read);
 
+    config::listen(event_loop);
+    config::read("console-server");
+
     Framebuffer framebuffer("/dev/fb"sv);
     Terminal default_terminal(framebuffer);
     Terminal alternate_terminal(framebuffer);
@@ -33,6 +40,11 @@ usize main(usize, const char **) {
     core::Timer vsync_timer(event_loop, 60_Hz);
     vsync_timer.set_on_fire([&framebuffer] {
         framebuffer.swap_buffers();
+    });
+
+    config::watch("console-server", "refresh_rate", [&vsync_timer](ustd::StringView value) {
+        const auto refresh_rate = ustd::max(ustd::cast<usize>(value).value_or(60), 1ul);
+        vsync_timer.set_period(1_Hz / refresh_rate);
     });
 
     EscapeParser escape_parser(default_terminal, alternate_terminal);
