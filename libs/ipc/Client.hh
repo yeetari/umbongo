@@ -2,6 +2,7 @@
 
 #include <core/Watchable.hh>
 #include <ustd/Array.hh>
+#include <ustd/Function.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
@@ -11,14 +12,19 @@
 namespace ipc {
 
 class Message;
+class MessageDecoder;
 
 class Client : public core::Watchable {
     ustd::Optional<uint32> m_fd;
+    ustd::Function<void()> m_on_disconnect{};
+    ustd::Function<bool(MessageDecoder &)> m_on_message{};
 
 public:
-    explicit Client(ustd::Optional<uint32> fd = {}) : m_fd(ustd::move(fd)) {}
+    explicit Client(ustd::Optional<uint32> fd = {});
     Client(const Client &) = delete;
-    Client(Client &&other) noexcept : m_fd(ustd::move(other.m_fd)) {}
+    Client(Client &&other) noexcept
+        : m_fd(ustd::move(other.m_fd)), m_on_disconnect(ustd::move(other.m_on_disconnect)),
+          m_on_message(ustd::move(other.m_on_message)) {}
     ~Client() override;
 
     Client &operator=(const Client &) = delete;
@@ -32,6 +38,9 @@ public:
     void send_message(Args &&...args);
     template <typename T>
     T wait_message();
+
+    void set_on_disconnect(ustd::Function<void()> on_disconnect) { m_on_disconnect = ustd::move(on_disconnect); }
+    void set_on_message(ustd::Function<bool(MessageDecoder &)> on_message) { m_on_message = ustd::move(on_message); }
 
     bool connected() const { return m_fd.has_value(); }
     uint32 fd() const override { return *m_fd; }

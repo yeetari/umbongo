@@ -50,20 +50,22 @@ usize main(usize, const char **) {
     auto file = EXPECT(core::File::open("/log", core::OpenMode::Create | core::OpenMode::Truncate));
     core::EventLoop event_loop;
     ipc::Server<Client> server(event_loop, "/run/log"sv);
-    server.set_on_read([&](Client &client, ipc::MessageDecoder &decoder) {
+    server.set_on_message([&](Client &client, ipc::MessageDecoder &decoder) {
         using namespace log;
         switch (decoder.decode<MessageKind>()) {
         case MessageKind::Initialise: {
             auto name = decoder.decode<ustd::StringView>();
             client.initialise(file, name);
-            break;
+            return true;
         }
         case MessageKind::Log: {
             auto level = decoder.decode<Level>();
             auto message = decoder.decode<ustd::StringView>();
             client.log(level, message);
-            break;
+            return true;
         }
+        default:
+            return false;
         }
     });
     return event_loop.run();

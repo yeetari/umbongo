@@ -62,15 +62,14 @@ usize main(usize, const char **) {
     });
 
     ipc::Server<ipc::Client> server(event_loop, "/run/console"sv);
-    server.set_on_read([terminal](ipc::Client &client, ipc::MessageDecoder &decoder) {
+    server.set_on_message([terminal](ipc::Client &client, ipc::MessageDecoder &decoder) {
         using namespace console;
         switch (decoder.decode<MessageKind>()) {
         case MessageKind::GetTerminalSize:
             client.send_message<GetTerminalSizeRespone>(terminal->column_count(), terminal->row_count());
-            break;
+            return true;
         default:
-            // TODO: Disconnect client.
-            break;
+            return false;
         }
     });
     return event_loop.run();
