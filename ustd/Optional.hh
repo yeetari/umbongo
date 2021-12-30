@@ -19,26 +19,11 @@ public:
     constexpr Optional(const T &value) : m_present(true) { new (m_data.data()) T(value); }  // NOLINT
     constexpr Optional(T &&value) : m_present(true) { new (m_data.data()) T(move(value)); } // NOLINT
     constexpr Optional(const Optional &) = delete;
-    constexpr Optional(Optional &&other) noexcept requires(IsMoveConstructible<T>) : m_present(other.m_present) {
-        if (other) {
-            new (m_data.data()) T(move(*other));
-            other.clear();
-        }
-    }
+    constexpr Optional(Optional &&) noexcept requires(IsMoveConstructible<T>);
     constexpr ~Optional() { clear(); }
 
-    Optional &operator=(const Optional &) = delete;
-    Optional &operator=(Optional &&other) noexcept {
-        if (this != &other) {
-            clear();
-            m_present = other.m_present;
-            if (other) {
-                new (m_data.data()) T(move(*other));
-                other.clear();
-            }
-        }
-        return *this;
-    }
+    constexpr Optional &operator=(const Optional &) = delete;
+    constexpr Optional &operator=(Optional &&) noexcept;
 
     constexpr void clear();
     constexpr T disown_value();
@@ -70,6 +55,73 @@ public:
     }
     constexpr T *obj() { return reinterpret_cast<T *>(m_data.data()); }
 };
+
+template <typename T>
+class Optional<T &> {
+    class RefWrapper {
+        T *m_ptr;
+
+    public:
+        RefWrapper(T &ptr) : m_ptr(&ptr) {}
+        operator T &() { return *m_ptr; }
+    };
+
+    T *m_obj{nullptr};
+
+public:
+    constexpr Optional() = default;
+    constexpr Optional(T &obj) : m_obj(&obj) {}
+    constexpr Optional(const Optional &) = delete;
+    constexpr Optional(Optional &&) = delete;
+    constexpr ~Optional() = default;
+
+    constexpr Optional &operator=(const Optional &) = delete;
+    constexpr Optional &operator=(Optional &&) = delete;
+
+    constexpr RefWrapper disown_value() { return operator*(); }
+    constexpr explicit operator bool() const noexcept { return m_obj != nullptr; }
+    constexpr bool has_value() const noexcept { return m_obj != nullptr; }
+
+    constexpr T &operator*() {
+        ASSERT(m_obj != nullptr);
+        return *m_obj;
+    }
+    constexpr T *operator->() {
+        ASSERT(m_obj != nullptr);
+        return m_obj;
+    }
+    constexpr const T &operator*() const {
+        ASSERT(m_obj != nullptr);
+        return *m_obj;
+    }
+    constexpr const T *operator->() const {
+        ASSERT(m_obj != nullptr);
+        return m_obj;
+    }
+    constexpr T *obj() { return m_obj; }
+};
+
+template <typename T>
+constexpr Optional<T>::Optional(Optional &&other) noexcept requires(IsMoveConstructible<T>)
+    : m_present(other.m_present) {
+    if (other) {
+        new (m_data.data()) T(move(*other));
+        other.clear();
+    }
+}
+
+template <typename T>
+constexpr Optional<T> &Optional<T>::operator=(Optional &&other) noexcept {
+    if (this != &other) {
+        clear();
+        m_present = other.m_present;
+        if (other) {
+            new (m_data.data()) T(move(*other));
+            other.clear();
+        }
+    }
+    return *this;
+}
 
 template <typename T>
 constexpr void Optional<T>::clear() {
