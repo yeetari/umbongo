@@ -41,7 +41,7 @@ void LineEditor::goto_end() {
 void LineEditor::begin_line() {
     core::print("\x1b[38;2;179;179;255m");
     auto cwd = core::cwd();
-    ustd::StringView cwd_view = cwd.view();
+    ustd::StringView cwd_view = cwd;
     if (cwd.length() >= 5) {
         ustd::StringView start(cwd.data(), 5);
         if (start == "/home") {
@@ -72,7 +72,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
         m_cursor_pos = 0;
         m_history.push(ustd::move(line));
         m_history_pos = m_history.size();
-        return m_history.last().view();
+        return m_history.last();
     }
     if (event.ctrl_pressed()) {
         switch (event.character()) {

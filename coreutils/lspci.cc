@@ -16,7 +16,7 @@
 namespace {
 
 void print_device(const char *name) {
-    auto file_or_error = core::File::open(ustd::format("/dev/pci/{}", name).view());
+    auto file_or_error = core::File::open(ustd::format("/dev/pci/{}", name));
     if (file_or_error.is_error()) {
         core::println("lspci: no device {}", name);
         core::exit(1);

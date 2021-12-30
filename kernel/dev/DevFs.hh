@@ -33,7 +33,7 @@ public:
     usize size() override;
     void truncate() override {}
     usize write(ustd::Span<const void> data, usize offset) override;
-    ustd::StringView name() const override { return m_name.view(); }
+    ustd::StringView name() const override { return m_name; }
 };
 
 class DevFsDirectoryInode final : public Inode {
@@ -53,7 +53,7 @@ public:
     usize size() override;
     void truncate() override {}
     usize write(ustd::Span<const void> data, usize offset) override;
-    ustd::StringView name() const override { return m_name.view(); }
+    ustd::StringView name() const override { return m_name; }
 };
 
 class DevFs final : public FileSystem {

@@ -74,7 +74,7 @@ void Pipe::dump(usize indent) const {
 
 void StringLiteral::dump(usize indent) const {
     Node::dump(indent);
-    core::println("StringLiteral({})", m_text.view());
+    core::println("StringLiteral({})", m_text);
 }
 
 ustd::UniquePtr<Value> Command::evaluate() const {

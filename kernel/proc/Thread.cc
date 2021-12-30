@@ -119,7 +119,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     }
     auto executable = file;
     if (!interpreter_path->empty()) {
-        auto interpreter = TRY(Vfs::open(interpreter_path->view(), OpenMode::None, m_process->m_cwd));
+        auto interpreter = TRY(Vfs::open(*interpreter_path, OpenMode::None, m_process->m_cwd));
         executable = ustd::move(interpreter);
     }
 
@@ -172,7 +172,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         push_arg(path);
     }
     for (const auto &arg : args) {
-        push_arg(arg.view());
+        push_arg(arg);
     }
 
     m_register_state.rsp -= sizeof(uintptr);

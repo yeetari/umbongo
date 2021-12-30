@@ -28,7 +28,7 @@ usize main(usize argc, const char **argv) {
     }
     ustd::sort(names, compare_name);
     for (const auto &name : names) {
-        core::println("{}", name.view());
+        core::println("{}", name);
     }
     return 0;
 }

@@ -160,7 +160,7 @@ SyscallResult Process::sys_create_process(const char *path, const char **argv, F
     }
 
     ustd::String copied_path(path);
-    if (auto rc = new_thread->exec(copied_path.view(), args); rc.is_error()) {
+    if (auto rc = new_thread->exec(copied_path, args); rc.is_error()) {
         return rc.error();
     }
     Scheduler::insert_thread(ustd::move(new_thread));

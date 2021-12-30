@@ -63,7 +63,7 @@ public:
         encoder.encode(MessageKind::ListAllResponse);
         encoder.encode(m_list.size());
         for (const auto &elem : m_list) {
-            encoder.encode(elem.view());
+            encoder.encode(elem);
         }
     }
 
@@ -100,7 +100,7 @@ public:
 
     void encode(ipc::MessageEncoder &encoder) const override {
         encoder.encode(MessageKind::LookupResponse);
-        encoder.encode(m_value.view());
+        encoder.encode(m_value);
         encoder.encode(m_present);
     }
 

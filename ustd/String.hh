@@ -32,9 +32,6 @@ public:
     const char *end() const { return m_data + m_length; }
     operator StringView() const { return {m_data, m_length}; }
 
-    // TODO: Remove in favour of implicit casting.
-    StringView view() const { return {m_data, m_length}; }
-
     bool empty() const { return m_length == 0; }
     char *data() { return m_data; }
     const char *data() const { return m_data; }

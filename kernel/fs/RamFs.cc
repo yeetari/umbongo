@@ -43,7 +43,7 @@ Inode *RamFsInode::lookup(ustd::StringView name) {
     }
     ScopedLock locker(m_lock);
     for (auto &child : m_children) {
-        if (name == child->m_name.view()) {
+        if (name == child->m_name) {
             return child.obj();
         }
     }

@@ -21,7 +21,7 @@ public:
 
     void disconnect();
     bool valid() override { return m_connected; }
-    ustd::StringView path() const { return m_path.view(); }
+    ustd::StringView path() const { return m_path; }
 };
 
 } // namespace kernel

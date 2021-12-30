@@ -76,7 +76,8 @@ Domain::Domain(ustd::StringView name) : m_name(name) {
 ustd::Optional<ustd::StringView> Domain::lookup(ustd::StringView key) const {
     for (const auto &pair : m_key_values) {
         if (pair.key == key) {
-            return pair.value.view();
+            // TODO: template <typename U> Optional constructor.
+            return static_cast<ustd::StringView>(pair.value);
         }
     }
     return {};

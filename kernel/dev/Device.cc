@@ -7,7 +7,7 @@
 namespace kernel {
 
 Device::Device(ustd::String &&path) : m_path(ustd::move(path)) {
-    DevFs::notify_attach(this, m_path.view());
+    DevFs::notify_attach(this, m_path);
 }
 
 void Device::disconnect() {
