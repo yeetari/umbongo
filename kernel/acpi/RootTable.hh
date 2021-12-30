@@ -2,6 +2,7 @@
 
 #include <kernel/acpi/Table.hh>
 #include <ustd/Algorithm.hh>
+#include <ustd/Optional.hh>
 #include <ustd/Types.hh>
 
 namespace kernel::acpi {
@@ -22,7 +23,7 @@ public:
     RootTableIterator end() const;
 
     template <typename T>
-    T *find() const;
+    ustd::Optional<T *> find() const;
 
     Table *entry(usize index) const;
     usize entry_count() const;
@@ -58,13 +59,13 @@ inline RootTableIterator RootTable::end() const {
 }
 
 template <typename T>
-T *RootTable::find() const {
+ustd::Optional<T *> RootTable::find() const {
     for (auto *table : *this) {
-        if (ustd::equal(table->signature(), T::k_signature)) {
+        if (ustd::equal(table->signature(), T::k_signature) && table->valid()) {
             return static_cast<T *>(table);
         }
     }
-    return nullptr;
+    return {};
 }
 
 } // namespace kernel::acpi

@@ -10,6 +10,8 @@
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Memory.hh>
+#include <ustd/Optional.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -49,14 +51,14 @@ const char *trigger_mode_str(InterruptTriggerMode trigger_mode) {
     }
 }
 
-IoApic *io_apic_for_gsi(uint32 gsi) {
+ustd::Optional<IoApic &> io_apic_for_gsi(uint32 gsi) {
     for (usize i = 0; i < s_io_apic_count; i++) {
         auto &io_apic = s_io_apics[i];
         if (gsi >= io_apic.gsi_base() && gsi < io_apic.gsi_base() + io_apic.redirection_entry_count()) {
-            return &io_apic;
+            return io_apic;
         }
     }
-    return nullptr;
+    return {};
 }
 
 } // namespace
@@ -103,9 +105,8 @@ void InterruptManager::wire_interrupt(uint32 irq, uint8 vector) {
             trigger_mode = override.trigger_mode;
         }
     }
-    auto *io_apic = io_apic_for_gsi(irq);
-    ENSURE(io_apic != nullptr);
-    io_apic->set_redirection_entry(irq, vector, polarity, trigger_mode);
+    IoApic &io_apic = EXPECT(io_apic_for_gsi(irq));
+    io_apic.set_redirection_entry(irq, vector, polarity, trigger_mode);
 }
 
 } // namespace kernel

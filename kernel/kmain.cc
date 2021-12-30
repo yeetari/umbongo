@@ -83,7 +83,7 @@ InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
 }
 
 void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
-    auto *madt = xsdt->find<acpi::ApicTable>();
+    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     Processor::start_aps(madt);
 
     // Setup in-memory file system.
@@ -105,8 +105,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     DevFs::initialise();
     DmesgDevice::initialise();
 
-    auto *mcfg = xsdt->find<acpi::PciTable>();
-    ENSURE(mcfg != nullptr && mcfg->valid());
+    auto *mcfg = EXPECT(xsdt->find<acpi::PciTable>());
     pci::enumerate(mcfg);
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
@@ -170,8 +169,7 @@ extern "C" void kmain(BootInfo *boot_info) {
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
     }
 
-    auto *madt = xsdt->find<acpi::ApicTable>();
-    ENSURE(madt != nullptr && madt->valid());
+    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     if ((madt->flags() & 1u) != 0) {
         InterruptManager::mask_pic();
     }
@@ -195,8 +193,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     dmesg("acpi: Local APIC = {}", apic);
     Processor::set_apic(apic);
 
-    auto *hpet_table = xsdt->find<acpi::HpetTable>();
-    ENSURE(hpet_table != nullptr && hpet_table->valid());
+    auto *hpet_table = EXPECT(xsdt->find<acpi::HpetTable>());
     TimeManager::initialise(hpet_table);
 
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely

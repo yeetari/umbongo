@@ -8,6 +8,7 @@
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
+#include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh> // IWYU pragma: keep
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
@@ -38,13 +39,13 @@ struct VfsData {
 } *s_data = nullptr;
 // clang-format on
 
-Mount *find_mount(Inode *host) {
+ustd::Optional<Mount &> find_mount(Inode *host) {
     for (auto &mount : s_data->mounts) {
         if (mount.host() == host) {
-            return &mount;
+            return mount;
         }
     }
-    return nullptr;
+    return {};
 }
 
 Inode *resolve_path(ustd::StringView path, Inode *base, Inode **out_parent = nullptr,
@@ -90,7 +91,7 @@ Inode *resolve_path(ustd::StringView path, Inode *base, Inode **out_parent = nul
                     *out_parent = nullptr;
                 }
             }
-        } else if (auto *mount = find_mount(current)) {
+        } else if (auto mount = find_mount(current)) {
             current = mount->fs().root_inode();
         }
     }
