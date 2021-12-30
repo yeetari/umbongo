@@ -19,10 +19,10 @@ public:
     FramebufferDevice(uintptr base, uint32 width, uint32 height, uint64 pitch)
         : Device("fb"), m_base(base), m_width(width), m_height(height), m_pitch(pitch) {}
 
-    bool read_would_block(usize) override { return false; }
-    bool write_would_block(usize) override { return false; }
+    bool read_would_block(usize) const override { return false; }
+    bool write_would_block(usize) const override { return false; }
     SyscallResult ioctl(IoctlRequest request, void *arg) override;
-    uintptr mmap(VirtSpace &virt_space) override;
+    uintptr mmap(VirtSpace &virt_space) const override;
 };
 
 } // namespace kernel

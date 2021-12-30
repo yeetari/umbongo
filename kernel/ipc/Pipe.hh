@@ -13,7 +13,7 @@ class Pipe final : public File {
     DoubleBuffer m_buffer;
     uint32 m_reader_count{0};
     uint32 m_writer_count{0};
-    SpinLock m_lock;
+    mutable SpinLock m_lock;
 
 public:
     Pipe();
@@ -28,8 +28,8 @@ public:
 
     void attach(AttachDirection) override;
     void detach(AttachDirection) override;
-    bool read_would_block(usize offset) override;
-    bool write_would_block(usize offset) override;
+    bool read_would_block(usize offset) const override;
+    bool write_would_block(usize offset) const override;
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 };

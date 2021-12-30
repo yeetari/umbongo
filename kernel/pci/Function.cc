@@ -158,7 +158,7 @@ SyscallResult Function::ioctl(IoctlRequest request, void *) {
     }
 }
 
-uintptr Function::mmap(VirtSpace &virt_space) {
+uintptr Function::mmap(VirtSpace &virt_space) const {
     constexpr auto access = RegionAccess::Writable | RegionAccess::UserAccessible | RegionAccess::Uncacheable;
     const auto &bar = m_bars[0];
     auto &region = virt_space.allocate_region(bar.size, access, bar.address);

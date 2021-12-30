@@ -16,7 +16,7 @@ class Inode {
     ustd::SharedPtr<File> m_anonymous_file;
 
 protected:
-    virtual ustd::SharedPtr<File> open_impl() = 0;
+    virtual SysResult<ustd::SharedPtr<File>> open_impl();
 
 public:
     Inode(InodeType type, Inode *parent) : m_parent(parent), m_type(type) {}
@@ -30,14 +30,14 @@ public:
     void bind_anonymous_file(ustd::SharedPtr<File> anonymous_file);
     SysResult<ustd::SharedPtr<File>> open();
 
-    virtual Inode *child(usize index) = 0;
-    virtual Inode *create(ustd::StringView name, InodeType type) = 0;
-    virtual Inode *lookup(ustd::StringView name) = 0;
-    virtual usize read(ustd::Span<void> data, usize offset) = 0;
-    virtual void remove(ustd::StringView name) = 0;
-    virtual usize size() = 0;
-    virtual void truncate() = 0;
-    virtual usize write(ustd::Span<const void> data, usize offset) = 0;
+    virtual SysResult<Inode *> child(usize index) const;
+    virtual SysResult<Inode *> create(ustd::StringView name, InodeType type);
+    virtual Inode *lookup(ustd::StringView name);
+    virtual usize read(ustd::Span<void> data, usize offset) const;
+    virtual SysResult<> remove(ustd::StringView name);
+    virtual usize size() const = 0;
+    virtual SysResult<> truncate();
+    virtual usize write(ustd::Span<const void> data, usize offset);
 
     virtual ustd::StringView name() const = 0;
     Inode *parent() const { return m_parent; }

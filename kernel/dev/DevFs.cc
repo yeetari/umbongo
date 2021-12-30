@@ -1,6 +1,8 @@
 #include <kernel/dev/DevFs.hh>
 
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/SysError.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/dev/Device.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
@@ -11,7 +13,6 @@
 #include <ustd/Numeric.hh> // IWYU pragma: keep
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
-#include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
@@ -50,7 +51,8 @@ void DevFs::attach_device(Device *device, ustd::StringView path) {
 }
 
 void DevFs::detach_device(Device *device) {
-    m_root_inode->remove(device->path());
+    // TODO: Should be Vfs::delete for full path resolution.
+    EXPECT(m_root_inode->remove(device->path()));
 }
 
 void DevFs::mount(Inode *parent, Inode *host) {
@@ -58,45 +60,15 @@ void DevFs::mount(Inode *parent, Inode *host) {
     m_root_inode.emplace(parent, host->name());
 }
 
-Inode *DevFsInode::child(usize) {
-    ENSURE_NOT_REACHED();
-}
-
-Inode *DevFsInode::create(ustd::StringView, InodeType) {
-    ENSURE_NOT_REACHED();
-}
-
-Inode *DevFsInode::lookup(ustd::StringView) {
-    ENSURE_NOT_REACHED();
-}
-
-ustd::SharedPtr<File> DevFsInode::open_impl() {
-    ENSURE_NOT_REACHED();
-}
-
-usize DevFsInode::read(ustd::Span<void>, usize) {
-    ENSURE_NOT_REACHED();
-}
-
-void DevFsInode::remove(ustd::StringView) {
-    ENSURE_NOT_REACHED();
-}
-
-usize DevFsInode::size() {
-    return 0;
-}
-
-usize DevFsInode::write(ustd::Span<const void>, usize) {
-    ENSURE_NOT_REACHED();
-}
-
-Inode *DevFsDirectoryInode::child(usize index) {
-    ASSERT(index < ustd::Limits<uint32>::max());
+SysResult<Inode *> DevFsDirectoryInode::child(usize index) const {
+    if (index >= ustd::Limits<uint32>::max()) {
+        return SysError::Invalid;
+    }
     ScopedLock locker(m_lock);
     return m_children[static_cast<uint32>(index)].obj();
 }
 
-Inode *DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
+SysResult<Inode *> DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     ScopedLock locker(m_lock);
     switch (type) {
     case InodeType::AnonymousFile:
@@ -104,7 +76,7 @@ Inode *DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     case InodeType::Directory:
         return m_children.emplace(new DevFsDirectoryInode(this, name)).obj();
     default:
-        ENSURE_NOT_REACHED();
+        return SysError::Invalid;
     }
 }
 
@@ -116,39 +88,28 @@ Inode *DevFsDirectoryInode::lookup(ustd::StringView name) {
         return parent();
     }
     ScopedLock locker(m_lock);
-    for (auto &child : m_children) {
-        if (name == child->name()) {
+    for (const auto &child : m_children) {
+        if (child->name() == name) {
             return child.obj();
         }
     }
     return nullptr;
 }
 
-ustd::SharedPtr<File> DevFsDirectoryInode::open_impl() {
-    ENSURE_NOT_REACHED();
-}
-
-usize DevFsDirectoryInode::read(ustd::Span<void>, usize) {
-    ENSURE_NOT_REACHED();
-}
-
-void DevFsDirectoryInode::remove(ustd::StringView name) {
+SysResult<> DevFsDirectoryInode::remove(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (uint32 i = 0; i < m_children.size(); i++) {
-        if (name == m_children[i]->name()) {
+        if (m_children[i]->name() == name) {
             m_children.remove(i);
-            return;
+            return {};
         }
     }
+    return SysError::NonExistent;
 }
 
-usize DevFsDirectoryInode::size() {
+usize DevFsDirectoryInode::size() const {
     ScopedLock locker(m_lock);
     return m_children.size();
-}
-
-usize DevFsDirectoryInode::write(ustd::Span<const void>, usize) {
-    ENSURE_NOT_REACHED();
 }
 
 } // namespace kernel

@@ -31,16 +31,15 @@ public:
     virtual bool is_server_socket() const { return false; }
     virtual bool is_socket() const { return false; }
 
-    // TODO: Const some of these?
     virtual void attach(AttachDirection) {}
     virtual void detach(AttachDirection) {}
-    virtual bool read_would_block(usize offset) = 0;
-    virtual bool write_would_block(usize offset) = 0;
+    virtual bool read_would_block(usize offset) const = 0;
+    virtual bool write_would_block(usize offset) const = 0;
     virtual SyscallResult ioctl(IoctlRequest, void *) { return SysError::Invalid; }
-    virtual uintptr mmap(VirtSpace &) { return 0; }
+    virtual uintptr mmap(VirtSpace &) const { return 0; }
     virtual SysResult<usize> read(ustd::Span<void> data, usize offset = 0) = 0;
     virtual SysResult<usize> write(ustd::Span<const void> data, usize offset = 0) = 0;
-    virtual bool valid() { return true; }
+    virtual bool valid() const { return true; }
 };
 
 } // namespace kernel

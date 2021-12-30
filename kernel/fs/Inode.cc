@@ -6,9 +6,16 @@
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
 #include <ustd/SharedPtr.hh>
+#include <ustd/Span.hh>
+#include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
 namespace kernel {
+
+SysResult<ustd::SharedPtr<File>> Inode::open_impl() {
+    return SysError::Invalid;
+}
 
 void Inode::bind_anonymous_file(ustd::SharedPtr<File> anonymous_file) {
     ASSERT(!m_anonymous_file);
@@ -23,6 +30,34 @@ SysResult<ustd::SharedPtr<File>> Inode::open() {
         return m_anonymous_file;
     }
     return open_impl();
+}
+
+SysResult<Inode *> Inode::child(usize) const {
+    return SysError::NotDirectory;
+}
+
+SysResult<Inode *> Inode::create(ustd::StringView, InodeType) {
+    return SysError::NotDirectory;
+}
+
+Inode *Inode::lookup(ustd::StringView) {
+    ENSURE_NOT_REACHED();
+}
+
+usize Inode::read(ustd::Span<void>, usize) const {
+    ENSURE_NOT_REACHED();
+}
+
+SysResult<> Inode::remove(ustd::StringView) {
+    return SysError::NotDirectory;
+}
+
+SysResult<> Inode::truncate() {
+    return SysError::Invalid;
+}
+
+usize Inode::write(ustd::Span<const void>, usize) {
+    ENSURE_NOT_REACHED();
 }
 
 } // namespace kernel

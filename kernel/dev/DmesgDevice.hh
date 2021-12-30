@@ -17,8 +17,8 @@ public:
 
     DmesgDevice() : Device("klog") {}
 
-    bool read_would_block(usize) override { return false; }
-    bool write_would_block(usize) override { return false; }
+    bool read_would_block(usize) const override { return false; }
+    bool write_would_block(usize) const override { return false; }
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
 };
 

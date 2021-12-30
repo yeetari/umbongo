@@ -152,7 +152,7 @@ SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode,
         return SysError::NonExistent;
     }
     if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
-        inode->truncate();
+        TRY(inode->truncate());
     }
     return TRY(inode->open());
 }
@@ -169,10 +169,7 @@ SysResult<Inode *> Vfs::open_directory(ustd::StringView path, Inode *base) {
 }
 
 Inode *Vfs::root_inode() {
-    if (s_data == nullptr) {
-        return nullptr;
-    }
-    return s_data->root_inode;
+    return s_data != nullptr ? s_data->root_inode : nullptr;
 }
 
 } // namespace kernel

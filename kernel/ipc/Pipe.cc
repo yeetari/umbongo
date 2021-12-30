@@ -39,12 +39,12 @@ void Pipe::detach(AttachDirection direction) {
     }
 }
 
-bool Pipe::read_would_block(usize) {
+bool Pipe::read_would_block(usize) const {
     ScopedLock locker(m_lock);
     return m_writer_count != 0 && m_buffer.empty();
 }
 
-bool Pipe::write_would_block(usize) {
+bool Pipe::write_would_block(usize) const {
     return m_buffer.full();
 }
 

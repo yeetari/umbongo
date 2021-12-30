@@ -20,7 +20,7 @@ public:
     SysResult<usize> write(ustd::Span<const void>, usize) override { return 0u; }
 
     void disconnect();
-    bool valid() override { return m_connected; }
+    bool valid() const override { return m_connected; }
     ustd::StringView path() const { return m_path; }
 };
 

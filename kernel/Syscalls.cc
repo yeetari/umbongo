@@ -318,14 +318,14 @@ SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     if (data == nullptr) {
         usize byte_count = 0;
         for (usize i = 0; i < directory->size(); i++) {
-            auto *child = directory->child(i);
+            auto *child = TRY(directory->child(i));
             byte_count += child->name().length() + 1;
         }
         return byte_count;
     }
     usize byte_offset = 0;
     for (usize i = 0; i < directory->size(); i++) {
-        auto *child = directory->child(i);
+        auto *child = TRY(directory->child(i));
         __builtin_memcpy(data + byte_offset, child->name().data(), child->name().length());
         data[byte_offset + child->name().length()] = '\0';
         byte_offset += child->name().length() + 1;

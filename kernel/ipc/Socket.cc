@@ -14,11 +14,11 @@ Socket::Socket(DoubleBuffer *read_buffer, DoubleBuffer *write_buffer)
 
 Socket::~Socket() = default;
 
-bool Socket::read_would_block(usize) {
+bool Socket::read_would_block(usize) const {
     return m_read_buffer->ref_count() == 2 && m_read_buffer->empty();
 }
 
-bool Socket::write_would_block(usize) {
+bool Socket::write_would_block(usize) const {
     return m_write_buffer->ref_count() == 2 && m_write_buffer->full();
 }
 

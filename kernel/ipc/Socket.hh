@@ -25,8 +25,8 @@ public:
 
     bool is_socket() const override { return true; }
 
-    bool read_would_block(usize offset) override;
-    bool write_would_block(usize offset) override;
+    bool read_would_block(usize offset) const override;
+    bool write_would_block(usize offset) const override;
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 

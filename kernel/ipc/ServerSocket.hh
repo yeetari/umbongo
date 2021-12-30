@@ -29,8 +29,8 @@ public:
 
     ustd::SharedPtr<Socket> accept();
     bool accept_would_block() const;
-    bool read_would_block(usize) override;
-    bool write_would_block(usize) override;
+    bool read_would_block(usize) const override;
+    bool write_would_block(usize) const override;
     SysResult<> queue_connection_from(ustd::SharedPtr<Socket> socket);
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;

@@ -29,11 +29,11 @@ bool ServerSocket::accept_would_block() const {
     return m_connection_queue.empty();
 }
 
-bool ServerSocket::read_would_block(usize) {
+bool ServerSocket::read_would_block(usize) const {
     return accept_would_block();
 }
 
-bool ServerSocket::write_would_block(usize) {
+bool ServerSocket::write_would_block(usize) const {
     return false;
 }
 

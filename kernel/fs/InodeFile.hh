@@ -17,8 +17,8 @@ public:
 
     bool is_inode_file() const override { return true; }
 
-    bool read_would_block(usize) override { return false; }
-    bool write_would_block(usize) override { return false; }
+    bool read_would_block(usize) const override { return false; }
+    bool write_would_block(usize) const override { return false; }
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 

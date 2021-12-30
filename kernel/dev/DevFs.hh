@@ -1,13 +1,14 @@
 #pragma once
 
 #include <kernel/SpinLock.hh>
+#include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/Optional.hh>
-#include <ustd/SharedPtr.hh>
-#include <ustd/Span.hh> // IWYU pragma: keep
+#include <ustd/SharedPtr.hh> // IWYU pragma: keep
+#include <ustd/Span.hh>      // IWYU pragma: keep
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
@@ -24,15 +25,7 @@ class DevFsInode final : public Inode {
 public:
     DevFsInode(Inode *parent, ustd::StringView name) : Inode(InodeType::AnonymousFile, parent), m_name(name) {}
 
-    Inode *child(usize index) override;
-    Inode *create(ustd::StringView name, InodeType type) override;
-    Inode *lookup(ustd::StringView name) override;
-    ustd::SharedPtr<File> open_impl() override;
-    usize read(ustd::Span<void> data, usize offset) override;
-    void remove(ustd::StringView name) override;
-    usize size() override;
-    void truncate() override {}
-    usize write(ustd::Span<const void> data, usize offset) override;
+    usize size() const override { return 0; }
     ustd::StringView name() const override { return m_name; }
 };
 
@@ -44,15 +37,11 @@ class DevFsDirectoryInode final : public Inode {
 public:
     DevFsDirectoryInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
 
-    Inode *child(usize index) override;
-    Inode *create(ustd::StringView name, InodeType type) override;
+    SysResult<Inode *> child(usize index) const override;
+    SysResult<Inode *> create(ustd::StringView name, InodeType type) override;
     Inode *lookup(ustd::StringView name) override;
-    ustd::SharedPtr<File> open_impl() override;
-    usize read(ustd::Span<void> data, usize offset) override;
-    void remove(ustd::StringView name) override;
-    usize size() override;
-    void truncate() override {}
-    usize write(ustd::Span<const void> data, usize offset) override;
+    SysResult<> remove(ustd::StringView name) override;
+    usize size() const override;
     ustd::StringView name() const override { return m_name; }
 };
 
