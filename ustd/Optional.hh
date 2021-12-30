@@ -41,9 +41,13 @@ public:
     }
 
     constexpr void clear();
+    constexpr T disown_value();
     template <typename... Args>
     constexpr T &emplace(Args &&...args);
-    constexpr T value_or(T fallback) { return m_present ? *obj() : fallback; }
+    template <typename U>
+    constexpr T value_or(U &&fallback) const &;
+    template <typename U>
+    constexpr T value_or(U &&fallback) &&;
 
     constexpr explicit operator bool() const noexcept { return m_present; }
     constexpr bool has_value() const noexcept { return m_present; }
@@ -78,12 +82,31 @@ constexpr void Optional<T>::clear() {
 }
 
 template <typename T>
+constexpr T Optional<T>::disown_value() {
+    auto disowned_value = move(operator*());
+    clear();
+    return disowned_value;
+}
+
+template <typename T>
 template <typename... Args>
 constexpr T &Optional<T>::emplace(Args &&...args) {
     clear();
     new (m_data.data()) T(forward<Args>(args)...);
     m_present = true;
     return operator*();
+}
+
+template <typename T>
+template <typename U>
+constexpr T Optional<T>::value_or(U &&fallback) const & {
+    return m_present ? **this : static_cast<T>(forward<U>(fallback));
+}
+
+template <typename T>
+template <typename U>
+constexpr T Optional<T>::value_or(U &&fallback) && {
+    return m_present ? move(disown_value()) : static_cast<T>(forward<U>(fallback));
 }
 
 } // namespace ustd

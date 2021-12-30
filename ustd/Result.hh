@@ -88,6 +88,7 @@ public:
         return !m_is_error && *reinterpret_cast<const T *>(m_value.data()) == value;
     }
 
+    bool has_value() const { return !m_is_error; }
     bool is_error() const { return m_is_error; }
     E error() const {
         ASSERT(m_is_error);
@@ -121,6 +122,7 @@ public:
     Result &operator=(const Result &) = delete;
     Result &operator=(Result &&) = delete;
 
+    bool has_value() const { return !m_is_error; }
     bool is_error() const { return m_is_error; }
     E error() const {
         ASSERT(m_is_error);
