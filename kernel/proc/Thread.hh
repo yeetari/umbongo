@@ -59,6 +59,7 @@ public:
     template <typename T, typename... Args>
     void block(Args &&...args);
     SysResult<> exec(ustd::StringView path, const ustd::Vector<ustd::String> &args = {});
+    void handle_fault(RegisterState *regs);
     void kill();
     void try_unblock();
 

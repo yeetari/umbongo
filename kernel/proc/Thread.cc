@@ -1,6 +1,7 @@
 #include <kernel/proc/Thread.hh>
 
 #include <elf/Elf.hh>
+#include <kernel/Dmesg.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
@@ -13,6 +14,7 @@
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <kernel/proc/Process.hh>
+#include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/ThreadBlocker.hh>
 #include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
@@ -35,6 +37,17 @@ namespace kernel {
 namespace {
 
 constexpr usize k_kernel_stack_size = 64_KiB;
+
+void dump_backtrace([[maybe_unused]] RegisterState *regs) {
+    // TODO(GH-9): Backtrace generation is unsafe.
+#ifndef ASSERTIONS
+    auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
+    while (rbp != nullptr && rbp[1] != 0) {
+        dmesg("{:h}", rbp[1]);
+        rbp = reinterpret_cast<uint64 *>(*rbp);
+    }
+#endif
+}
 
 ustd::Optional<ustd::String> interpreter_for(File &file) {
     elf::Header header{};
@@ -188,6 +201,21 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     // Allocate some space for heap storage.
     m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     return {};
+}
+
+void Thread::handle_fault(RegisterState *regs) {
+    uint64 cr2 = 0;
+    asm volatile("mov %%cr2, %0" : "=r"(cr2));
+    if ((regs->cs & 3u) == 0u) {
+        dmesg_unlock();
+    }
+    dmesg("[#{}]: Fault {} caused by instruction at {:h}! (cr2={:h})", m_process->pid(), regs->int_num, regs->rip, cr2);
+    if ((regs->cs & 3u) == 0u) {
+        ENSURE_NOT_REACHED("Fault in ring 0!");
+    }
+    dump_backtrace(regs);
+    kill();
+    Scheduler::switch_next(regs);
 }
 
 void Thread::kill() {

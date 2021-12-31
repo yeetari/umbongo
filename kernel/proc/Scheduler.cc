@@ -1,6 +1,5 @@
 #include <kernel/proc/Scheduler.hh>
 
-#include <kernel/Dmesg.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/LocalApic.hh>
@@ -72,46 +71,6 @@ ustd::Atomic<bool> s_time_being_updated;
 PriorityQueue *s_blocked_queue;
 ustd::Array<PriorityQueue *, 2> s_queues;
 
-void dump_backtrace(RegisterState *regs) {
-    auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
-    while (rbp != nullptr && rbp[1] != 0) {
-        dmesg("{:h}", rbp[1]);
-        rbp = reinterpret_cast<uint64 *>(*rbp);
-    }
-}
-
-void handle_fault(RegisterState *regs) {
-    auto *thread = Processor::current_thread();
-    auto &process = thread->process();
-    if ((regs->cs & 3u) == 0u) {
-        dmesg_unlock();
-        dmesg("Fault {} caused by instruction at {:h}!", regs->int_num, regs->rip);
-        dump_backtrace(regs);
-        ENSURE_NOT_REACHED("Fault in ring 0!");
-    }
-    dmesg("[#{}]: Fault {} caused by instruction at {:h}!", process.pid(), regs->int_num, regs->rip);
-    dump_backtrace(regs);
-    thread->kill();
-    Scheduler::switch_next(regs);
-}
-
-void handle_page_fault(RegisterState *regs) {
-    auto *thread = Processor::current_thread();
-    auto &process = thread->process();
-    uint64 cr2 = 0;
-    asm volatile("mov %%cr2, %0" : "=r"(cr2));
-    if ((regs->cs & 3u) == 0u) {
-        dmesg_unlock();
-        dmesg("Page fault at {:h} caused by instruction at {:h}!", cr2, regs->rip);
-        dump_backtrace(regs);
-        ENSURE_NOT_REACHED("Page fault in ring 0!");
-    }
-    dmesg("[#{}]: Page fault at {:h} caused by instruction at {:h}!", process.pid(), cr2, regs->rip);
-    dump_backtrace(regs);
-    thread->kill();
-    Scheduler::switch_next(regs);
-}
-
 Thread *pick_next() {
     while (auto *thread = s_blocked_queue->dequeue()) {
         s_queues[static_cast<uint32>(thread->priority())]->enqueue(thread);
@@ -165,10 +124,17 @@ void Scheduler::initialise() {
     Processor::set_current_thread(s_base_thread);
 
     // Wire various interrupts for fault handling and timing.
-    Processor::wire_interrupt(0, &handle_fault);
-    Processor::wire_interrupt(6, &handle_fault);
-    Processor::wire_interrupt(13, &handle_fault);
-    Processor::wire_interrupt(14, &handle_page_fault);
+    auto handle_fault = +[](RegisterState *regs) {
+        auto *thread = Processor::current_thread();
+        if (thread == nullptr) {
+            ENSURE_NOT_REACHED("Early fault in ring 0!");
+        }
+        thread->handle_fault(regs);
+    };
+    Processor::wire_interrupt(0, handle_fault);
+    Processor::wire_interrupt(6, handle_fault);
+    Processor::wire_interrupt(13, handle_fault);
+    Processor::wire_interrupt(14, handle_fault);
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
 
     s_blocked_queue = new PriorityQueue;
