@@ -1,5 +1,6 @@
 #include <kernel/fs/Inode.hh>
 
+#include <kernel/ScopedLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
@@ -18,12 +19,14 @@ SysResult<ustd::SharedPtr<File>> Inode::open_impl() {
 }
 
 void Inode::bind_anonymous_file(ustd::SharedPtr<File> anonymous_file) {
+    ScopedLock locker(m_anonymous_file_lock);
     ASSERT(!m_anonymous_file);
     m_anonymous_file = ustd::move(anonymous_file);
 }
 
 SysResult<ustd::SharedPtr<File>> Inode::open() {
     if (m_type == InodeType::AnonymousFile) {
+        ScopedLock locker(m_anonymous_file_lock);
         if (!m_anonymous_file) {
             return SysError::Invalid;
         }

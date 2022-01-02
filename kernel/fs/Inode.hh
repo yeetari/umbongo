@@ -1,5 +1,6 @@
 #pragma once
 
+#include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/InodeType.hh>
@@ -14,6 +15,7 @@ class Inode {
     Inode *const m_parent;
     const InodeType m_type;
     ustd::SharedPtr<File> m_anonymous_file;
+    mutable SpinLock m_anonymous_file_lock;
 
 protected:
     virtual SysResult<ustd::SharedPtr<File>> open_impl();
