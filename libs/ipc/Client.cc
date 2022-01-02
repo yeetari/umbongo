@@ -2,6 +2,7 @@
 
 #include <core/Error.hh>
 #include <core/Syscall.hh>
+#include <core/Time.hh>
 #include <ipc/Message.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/MessageEncoder.hh>
@@ -57,13 +58,22 @@ Client::~Client() {
 }
 
 bool Client::connect(ustd::StringView path) {
-    if (auto result = core::syscall(Syscall::connect, path.data()); !result.is_error()) {
-        m_fd.emplace(static_cast<uint32>(result.value()));
-    } else {
+    // TODO: Retries are only a temporary fix. system-server should have proper dependencies/socket takeover.
+    for (usize tries = 100; tries != 0; tries--) {
+        auto result = core::syscall(Syscall::connect, path.data());
+        if (result.is_error() && result.error() == core::SysError::NonExistent) {
+            core::sleep(2000000ul);
+            continue;
+        }
+        if (!result.is_error()) {
+            m_fd.emplace(static_cast<uint32>(result.value()));
+            return true;
+        }
         log::error("Could not connect to {}: {}", path, core::error_string(result.error()));
         return false;
     }
-    return true;
+    log::error("Could not connect to {}: timed out", path);
+    return false;
 }
 
 void Client::send_message(const Message &message) {
