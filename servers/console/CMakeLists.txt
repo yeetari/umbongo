@@ -1,7 +1,7 @@
 # Generate font at build time.
 add_custom_command(OUTPUT Font.cc
-    COMMAND ${CMAKE_BINARY_DIR}/tools/font-generator ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc ${KERNEL_FONT_SIZE}
-    DEPENDS font-generator)
+    COMMAND ${CMAKE_BINARY_DIR}/tools/mkfont ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc ${KERNEL_FONT_SIZE}
+    DEPENDS mkfont)
 
 add_executable(console-server
     EscapeParser.cc

@@ -11,8 +11,8 @@ file(GENERATE OUTPUT Config.hh INPUT ${CMAKE_CURRENT_BINARY_DIR}/Config.hh)
 
 # Generate font at build time.
 add_custom_command(OUTPUT Font.cc
-    COMMAND ${CMAKE_BINARY_DIR}/tools/font-generator ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc ${KERNEL_FONT_SIZE}
-    DEPENDS font-generator)
+    COMMAND ${CMAKE_BINARY_DIR}/tools/mkfont ${KERNEL_FONT} ${CMAKE_CURRENT_BINARY_DIR}/Font.cc ${KERNEL_FONT_SIZE}
+    DEPENDS mkfont)
 
 # Kernel target.
 add_executable(kernel
