@@ -40,7 +40,7 @@ struct [[gnu::packed]] EventRingSegment {
 
 HostController::HostController(ustd::StringView name, core::EventLoop &event_loop, core::File &&file)
     : m_name(name), m_event_loop(event_loop), m_file(ustd::move(file)) {}
-HostController::HostController(HostController &&) noexcept = default;
+HostController::HostController(HostController &&) = default;
 HostController::~HostController() = default;
 
 ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::enable() {

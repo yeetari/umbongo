@@ -217,7 +217,7 @@ void *operator new[](usize size, ustd::align_val_t align) {
     return operator new(size, align);
 }
 
-void operator delete(void *ptr) noexcept {
+void operator delete(void *ptr) {
     if (ptr == nullptr) {
         return;
     }
@@ -225,11 +225,11 @@ void operator delete(void *ptr) noexcept {
     deallocate(ptr);
 }
 
-void operator delete[](void *ptr) noexcept {
+void operator delete[](void *ptr) {
     return operator delete(ptr);
 }
 
-void operator delete(void *ptr, ustd::align_val_t) noexcept {
+void operator delete(void *ptr, ustd::align_val_t) {
     if (ptr == nullptr) {
         return;
     }
@@ -237,6 +237,6 @@ void operator delete(void *ptr, ustd::align_val_t) noexcept {
     deallocate(reinterpret_cast<uint8 *>(ptr) - (reinterpret_cast<const ptrdiff *>(ptr))[-1]);
 }
 
-void operator delete[](void *ptr, ustd::align_val_t align) noexcept {
+void operator delete[](void *ptr, ustd::align_val_t align) {
     return operator delete(ptr, align);
 }

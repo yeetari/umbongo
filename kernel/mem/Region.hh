@@ -28,7 +28,7 @@ class Region {
 public:
     Region(uintptr base, usize size, RegionAccess access, bool free, ustd::Optional<uintptr> phys_base);
     Region(const Region &) = default;
-    Region(Region &&) noexcept = default;
+    Region(Region &&) = default;
     ~Region() = default;
 
     Region &operator=(const Region &) = delete;

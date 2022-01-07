@@ -15,11 +15,11 @@ class Function<R(Args...)> { // NOLINT
     struct CallableBase {
         CallableBase() = default;
         CallableBase(const CallableBase &) = default;
-        CallableBase(CallableBase &&) noexcept = default;
+        CallableBase(CallableBase &&) = default;
         virtual ~CallableBase() = default;
 
         CallableBase &operator=(const CallableBase &) = default;
-        CallableBase &operator=(CallableBase &&) noexcept = default;
+        CallableBase &operator=(CallableBase &&) = default;
 
         virtual R call(Args...) = 0;
         virtual void move_to(void *) = 0;
@@ -76,18 +76,18 @@ public:
         set_callable(forward<F>(callable));
     }
     Function(const Function &) = delete;
-    Function(Function &&) noexcept;
+    Function(Function &&);
     ~Function();
 
     Function &operator=(const Function &) = delete;
-    Function &operator=(Function &&) noexcept;
+    Function &operator=(Function &&);
 
     explicit operator bool() const { return m_state != State::Null; }
     R operator()(Args... args) const { return callable()->call(forward<Args>(args)...); }
 };
 
 template <typename R, typename... Args> // NOLINT
-Function<R(Args...)>::Function(Function &&other) noexcept {
+Function<R(Args...)>::Function(Function &&other) {
     *this = move(other);
 }
 
@@ -101,7 +101,7 @@ Function<R(Args...)>::~Function() {
 }
 
 template <typename R, typename... Args>
-Function<R(Args...)> &Function<R(Args...)>::operator=(Function &&other) noexcept {
+Function<R(Args...)> &Function<R(Args...)>::operator=(Function &&other) {
     if (this != &other) {
         if (m_state == State::Inline) {
             callable()->~CallableBase();

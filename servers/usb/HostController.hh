@@ -76,7 +76,7 @@ class HostController {
 public:
     HostController(ustd::StringView name, core::EventLoop &event_loop, core::File &&file);
     HostController(const HostController &) = delete;
-    HostController(HostController &&) noexcept;
+    HostController(HostController &&);
     ~HostController();
 
     HostController &operator=(const HostController &) = delete;

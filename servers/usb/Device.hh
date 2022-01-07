@@ -38,7 +38,7 @@ private:
 public:
     Device(HostController &controller, uint8 slot_id);
     Device(const Device &) = delete;
-    Device(Device &&other) noexcept;
+    Device(Device &&other);
     virtual ~Device();
 
     Device &operator=(const Device &) = delete;

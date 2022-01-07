@@ -22,7 +22,7 @@ class Client : public core::Watchable {
 public:
     explicit Client(ustd::Optional<uint32> fd = {});
     Client(const Client &) = delete;
-    Client(Client &&other) noexcept
+    Client(Client &&other)
         : m_fd(ustd::move(other.m_fd)), m_on_disconnect(ustd::move(other.m_on_disconnect)),
           m_on_message(ustd::move(other.m_on_message)) {}
     ~Client() override;

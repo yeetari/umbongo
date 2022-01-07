@@ -23,13 +23,13 @@ public:
     template <typename... Args>
     explicit Vector(SizeType size, Args &&...args);
     Vector(const Vector &);
-    Vector(Vector &&other) noexcept
+    Vector(Vector &&other)
         : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0u)),
           m_size(exchange(other.m_size, 0u)) {}
     ~Vector();
 
     Vector &operator=(const Vector &) = delete;
-    Vector &operator=(Vector &&) noexcept;
+    Vector &operator=(Vector &&);
 
     void clear();
     void ensure_capacity(SizeType capacity);
@@ -100,7 +100,7 @@ Vector<T, SizeType>::~Vector() {
 }
 
 template <typename T, typename SizeType>
-Vector<T, SizeType> &Vector<T, SizeType>::operator=(Vector &&other) noexcept {
+Vector<T, SizeType> &Vector<T, SizeType>::operator=(Vector &&other) {
     if (this != &other) {
         clear();
         m_data = exchange(other.m_data, nullptr);

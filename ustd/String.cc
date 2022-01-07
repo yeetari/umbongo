@@ -29,7 +29,7 @@ String::~String() {
     delete[] m_data;
 }
 
-String &String::operator=(String &&other) noexcept {
+String &String::operator=(String &&other) {
     m_data = ustd::exchange(other.m_data, nullptr);
     m_length = ustd::exchange(other.m_length, 0ul);
     return *this;

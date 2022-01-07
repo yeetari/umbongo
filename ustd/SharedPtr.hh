@@ -20,16 +20,16 @@ public:
     SharedPtr(const SharedPtr &other) : SharedPtr(other.m_obj) {}
     template <typename U>
     SharedPtr(const SharedPtr<U> &other) : SharedPtr(other.m_obj) {}
-    SharedPtr(SharedPtr &&other) noexcept : m_obj(other.disown()) {}
+    SharedPtr(SharedPtr &&other) : m_obj(other.disown()) {}
     template <typename U>
-    SharedPtr(SharedPtr<U> &&other) noexcept : m_obj(other.disown()) {}
+    SharedPtr(SharedPtr<U> &&other) : m_obj(other.disown()) {}
     ~SharedPtr();
 
     SharedPtr &operator=(const SharedPtr &) = delete;
-    SharedPtr &operator=(SharedPtr &&) noexcept;
+    SharedPtr &operator=(SharedPtr &&);
 
-    explicit operator bool() const noexcept { return m_obj != nullptr; }
-    bool has_value() const noexcept { return m_obj != nullptr; }
+    explicit operator bool() const { return m_obj != nullptr; }
+    bool has_value() const { return m_obj != nullptr; }
 
     T &operator*() const {
         ASSERT(m_obj != nullptr);
@@ -59,7 +59,7 @@ SharedPtr<T>::~SharedPtr() {
 }
 
 template <typename T>
-SharedPtr<T> &SharedPtr<T>::operator=(SharedPtr &&other) noexcept {
+SharedPtr<T> &SharedPtr<T>::operator=(SharedPtr &&other) {
     SharedPtr ptr(move(other));
     swap(m_obj, ptr.m_obj);
     ASSERT(m_obj != nullptr);

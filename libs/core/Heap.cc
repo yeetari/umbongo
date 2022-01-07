@@ -30,5 +30,5 @@ void *operator new[](usize size, ustd::align_val_t align) {
     return operator new(size, align);
 }
 
-void operator delete(void *) noexcept {}
-void operator delete[](void *) noexcept {}
+void operator delete(void *) {}
+void operator delete[](void *) {}

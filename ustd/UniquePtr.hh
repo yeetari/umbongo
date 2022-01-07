@@ -13,20 +13,20 @@ public:
     constexpr UniquePtr() = default;
     explicit UniquePtr(T *obj) : m_obj(obj) {}
     UniquePtr(const UniquePtr &) = delete;
-    UniquePtr(UniquePtr &&other) noexcept : m_obj(other.disown()) {}
+    UniquePtr(UniquePtr &&other) : m_obj(other.disown()) {}
     template <typename U>
-    UniquePtr(UniquePtr<U> &&other) noexcept : m_obj(other.disown()) {}
+    UniquePtr(UniquePtr<U> &&other) : m_obj(other.disown()) {}
     ~UniquePtr() { delete m_obj; }
 
     UniquePtr &operator=(const UniquePtr &) = delete;
-    UniquePtr &operator=(UniquePtr &&) noexcept;
+    UniquePtr &operator=(UniquePtr &&);
 
     void clear();
     template <typename U = T, typename... Args>
     U &emplace(Args &&...args);
 
-    explicit operator bool() const noexcept { return m_obj != nullptr; }
-    bool has_value() const noexcept { return m_obj != nullptr; }
+    explicit operator bool() const { return m_obj != nullptr; }
+    bool has_value() const { return m_obj != nullptr; }
 
     T &operator*() const {
         ASSERT(m_obj != nullptr);
@@ -42,7 +42,7 @@ public:
 };
 
 template <typename T>
-UniquePtr<T> &UniquePtr<T>::operator=(UniquePtr &&other) noexcept {
+UniquePtr<T> &UniquePtr<T>::operator=(UniquePtr &&other) {
     UniquePtr ptr(move(other));
     swap(m_obj, ptr.m_obj);
     ASSERT(m_obj != nullptr);

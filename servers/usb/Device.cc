@@ -24,7 +24,7 @@
 #include <ustd/Vector.hh>
 
 Device::Device(HostController &controller, uint8 slot_id) : m_controller(controller), m_slot_id(slot_id) {}
-Device::Device(Device &&other) noexcept : m_controller(other.m_controller), m_slot_id(other.m_slot_id) {
+Device::Device(Device &&other) : m_controller(other.m_controller), m_slot_id(other.m_slot_id) {
     m_context = ustd::exchange(other.m_context, nullptr);
     m_control_endpoint = ustd::exchange(other.m_control_endpoint, nullptr);
     m_endpoints = ustd::move(other.m_endpoints);

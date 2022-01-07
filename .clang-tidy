@@ -103,7 +103,6 @@ Checks: >
   performance-implicit-conversion-in-loop,
   performance-move-constructor-init,
   performance-no-automatic-move,
-  performance-noexcept-move-constructor,
   performance-trivially-destructible,
   performance-unnecessary-copy-initialization,
   performance-unnecessary-value-param,

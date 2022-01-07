@@ -45,17 +45,17 @@ template <typename T>
 T declval();
 
 template <typename T>
-constexpr T &&forward(RemoveRef<T> &arg) noexcept {
+constexpr T &&forward(RemoveRef<T> &arg) {
     return static_cast<T &&>(arg);
 }
 
 template <typename T>
-constexpr T &&forward(RemoveRef<T> &&arg) noexcept {
+constexpr T &&forward(RemoveRef<T> &&arg) {
     return static_cast<T &&>(arg);
 }
 
 template <typename T>
-constexpr RemoveRef<T> &&move(T &&arg) noexcept {
+constexpr RemoveRef<T> &&move(T &&arg) {
     return static_cast<RemoveRef<T> &&>(arg);
 }
 

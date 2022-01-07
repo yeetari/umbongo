@@ -19,11 +19,11 @@ public:
     constexpr Optional(const T &value) : m_present(true) { new (m_data.data()) T(value); }  // NOLINT
     constexpr Optional(T &&value) : m_present(true) { new (m_data.data()) T(move(value)); } // NOLINT
     constexpr Optional(const Optional &) = delete;
-    constexpr Optional(Optional &&) noexcept requires(IsMoveConstructible<T>);
+    constexpr Optional(Optional &&) requires(IsMoveConstructible<T>);
     constexpr ~Optional() { clear(); }
 
     constexpr Optional &operator=(const Optional &) = delete;
-    constexpr Optional &operator=(Optional &&) noexcept;
+    constexpr Optional &operator=(Optional &&);
 
     constexpr void clear();
     constexpr T disown_value();
@@ -34,8 +34,8 @@ public:
     template <typename U>
     constexpr T value_or(U &&fallback) &&;
 
-    constexpr explicit operator bool() const noexcept { return m_present; }
-    constexpr bool has_value() const noexcept { return m_present; }
+    constexpr explicit operator bool() const { return m_present; }
+    constexpr bool has_value() const { return m_present; }
 
     constexpr T &operator*() {
         ASSERT(m_present);
@@ -79,8 +79,8 @@ public:
     constexpr Optional &operator=(Optional &&) = delete;
 
     constexpr RefWrapper disown_value() { return operator*(); }
-    constexpr explicit operator bool() const noexcept { return m_obj != nullptr; }
-    constexpr bool has_value() const noexcept { return m_obj != nullptr; }
+    constexpr explicit operator bool() const { return m_obj != nullptr; }
+    constexpr bool has_value() const { return m_obj != nullptr; }
 
     constexpr T &operator*() {
         ASSERT(m_obj != nullptr);
@@ -102,8 +102,7 @@ public:
 };
 
 template <typename T>
-constexpr Optional<T>::Optional(Optional &&other) noexcept requires(IsMoveConstructible<T>)
-    : m_present(other.m_present) {
+constexpr Optional<T>::Optional(Optional &&other) requires(IsMoveConstructible<T>) : m_present(other.m_present) {
     if (other) {
         new (m_data.data()) T(move(*other));
         other.clear();
@@ -111,7 +110,7 @@ constexpr Optional<T>::Optional(Optional &&other) noexcept requires(IsMoveConstr
 }
 
 template <typename T>
-constexpr Optional<T> &Optional<T>::operator=(Optional &&other) noexcept {
+constexpr Optional<T> &Optional<T>::operator=(Optional &&other) {
     if (this != &other) {
         clear();
         m_present = other.m_present;

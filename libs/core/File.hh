@@ -24,11 +24,11 @@ public:
     File() = default;
     explicit File(uint32 fd) : m_fd(fd) {}
     File(const File &) = delete;
-    File(File &&other) noexcept : m_fd(ustd::move(other.m_fd)) {}
+    File(File &&other) : m_fd(ustd::move(other.m_fd)) {}
     ~File() override;
 
     File &operator=(const File &) = delete;
-    File &operator=(File &&other) noexcept {
+    File &operator=(File &&other) {
         close();
         m_fd = ustd::move(other.m_fd);
         return *this;

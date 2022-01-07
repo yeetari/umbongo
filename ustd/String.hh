@@ -19,12 +19,12 @@ public:
     explicit String(usize length);
     explicit String(StringView view) : String(copy_raw(view.data(), view.length())) {}
     String(const String &other) : String(copy_raw(other.m_data, other.m_length)) {}
-    String(String &&other) noexcept : m_data(exchange(other.m_data, nullptr)), m_length(exchange(other.m_length, 0u)) {}
+    String(String &&other) : m_data(exchange(other.m_data, nullptr)), m_length(exchange(other.m_length, 0u)) {}
     ~String();
 
     // TODO: Implement these.
     String &operator=(const String &) = delete;
-    String &operator=(String &&) noexcept;
+    String &operator=(String &&);
 
     char operator[](usize index) const;
 
