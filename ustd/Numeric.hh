@@ -1,11 +1,12 @@
 #pragma once
 
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace ustd {
 
 template <typename T>
-struct Limits {};
+struct Limits;
 
 template <>
 struct Limits<bool> {
@@ -62,21 +63,27 @@ struct Limits<uint64> {
 };
 
 template <typename T>
-constexpr const T &max(const T &a, const T &b) {
-    return a < b ? b : a;
-}
-
-template <typename T>
-constexpr const T &min(const T &a, const T &b) {
+constexpr T min(T a, T b) {
     return b < a ? b : a;
 }
 
-constexpr usize round_down(usize roundee, usize roundend) {
-    return roundee & ~(roundend - 1);
+template <typename T>
+constexpr T max(T a, T b) {
+    return a < b ? b : a;
 }
 
-constexpr usize round_up(usize roundee, usize roundend) {
-    return (roundee + roundend - 1) & ~(roundend - 1);
+template <typename T, typename U>
+constexpr T align_up(T value, U alignment) {
+    static_assert(sizeof(T) >= sizeof(U));
+    ASSERT((T(alignment) & T(alignment - 1)) == 0, "Alignment not a power of two");
+    return (value + T(alignment) - 1) & ~(T(alignment) - 1);
+}
+
+template <typename T, typename U>
+constexpr T align_down(T value, U alignment) {
+    static_assert(sizeof(T) >= sizeof(U));
+    ASSERT((T(alignment) & T(alignment - 1)) == 0, "Alignment not a power of two");
+    return value & ~(T(alignment) - 1);
 }
 
 } // namespace ustd

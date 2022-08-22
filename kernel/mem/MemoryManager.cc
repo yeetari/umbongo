@@ -30,7 +30,7 @@ struct MemoryManagerData {
 SpinLock s_lock;
 
 ustd::Optional<uintptr> find_first_fit_region(BootInfo *boot_info, usize size) {
-    const usize page_count = ustd::round_up(size, k_frame_size) / k_frame_size;
+    const usize page_count = ustd::align_up(size, k_frame_size) / k_frame_size;
     for (usize i = boot_info->map_entry_count; i > 0; i--) {
         auto &entry = boot_info->map[i];
         if (entry.type != MemoryType::Reserved && entry.page_count >= page_count) {
@@ -97,7 +97,7 @@ void parse_memory_map(BootInfo *boot_info) {
 
     // Remark the memory for the frame bitset itself as reserved.
     set_frame(0);
-    for (usize i = 0; i < ustd::round_up(bucket_count * sizeof(usize), k_frame_size) / k_frame_size; i++) {
+    for (usize i = 0; i < ustd::align_up(bucket_count * sizeof(usize), k_frame_size) / k_frame_size; i++) {
         set_frame(*bitset_location / k_frame_size + i);
     }
 
@@ -182,7 +182,7 @@ bool MemoryManager::is_frame_free(uintptr frame) {
 
 void *MemoryManager::alloc_contiguous(usize size) {
     ScopedLock locker(s_lock);
-    const usize frame_count = ustd::round_up(size, k_frame_size) / k_frame_size;
+    const usize frame_count = ustd::align_up(size, k_frame_size) / k_frame_size;
     for (usize i = 0; i < s_data.frame_count; i += frame_count) {
         bool found_space = true;
         for (usize j = i; j < i + frame_count; j++) {
@@ -209,7 +209,7 @@ void MemoryManager::free_contiguous(void *ptr, usize size) {
     const auto first_frame = reinterpret_cast<uintptr>(ptr);
     ASSERT(first_frame % k_frame_size == 0);
     const auto first_frame_index = first_frame / k_frame_size;
-    const usize frame_count = ustd::round_up(size, k_frame_size) / k_frame_size;
+    const usize frame_count = ustd::align_up(size, k_frame_size) / k_frame_size;
     for (usize i = first_frame_index; i < first_frame_index + frame_count; i++) {
         ASSERT(is_frame_set(i));
         clear_frame(i);

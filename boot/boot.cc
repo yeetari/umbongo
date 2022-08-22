@@ -228,7 +228,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     ENSURE(kernel_stack != 0, "Failed to allocate memory for kernel stack!");
 
     // Allocate dmesg ring buffer memory.
-    const auto dmesg_area_page_count = ustd::round_up(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB) / 4_KiB;
+    const auto dmesg_area_page_count = ustd::align_up(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB) / 4_KiB;
     uintptr dmesg_area = 0;
     EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::Reserved,
                                                 dmesg_area_page_count, &dmesg_area),
