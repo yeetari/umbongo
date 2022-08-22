@@ -53,7 +53,7 @@ struct ErrorUnion : ErrorUnionImpl<0, Es...> {
 
     template <typename E>
     static constexpr bool contains() {
-        return (IsSame<E, Es> || ...);
+        return (is_same<E, Es> || ...);
     }
 };
 
@@ -134,7 +134,7 @@ public:
 
 template <typename T, typename E>
 Result<T, E>::~Result() {
-    if constexpr (!IsTriviallyDestructible<T>) {
+    if constexpr (!is_trivially_destructible<T>) {
         if (!m_is_error) {
             reinterpret_cast<T *>(m_value.data())->~T();
         }

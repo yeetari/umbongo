@@ -17,12 +17,12 @@ concept Container = requires(const T &container) {
 };
 // clang-format on
 
-template <Container Container, typename T = RemoveRef<decltype(*declval<Container>().data())>>
+template <Container Container, typename T = remove_ref<decltype(*declval<Container>().data())>>
 constexpr bool equal(const Container &a, const Container &b) {
     if (a.size() != b.size()) {
         return false;
     }
-    if constexpr (IsTriviallyCopyable<T>) {
+    if constexpr (is_trivially_copyable<T>) {
         return __builtin_memcmp(a.data(), b.data(), b.size_bytes()) == 0;
     }
     for (usize i = 0; i < a.size(); i++) {
@@ -35,7 +35,7 @@ constexpr bool equal(const Container &a, const Container &b) {
 
 template <Container Container, typename T>
 constexpr void fill(Container &container, const T &value) {
-    if constexpr (IsTriviallyCopyable<T>) {
+    if constexpr (is_trivially_copyable<T>) {
         for (auto *elem = container.data(); elem < container.data() + container.size(); elem++) {
             *elem = value;
         }
@@ -49,7 +49,7 @@ constexpr void fill(Container &container, const T &value) {
 template <typename It, typename T>
 constexpr void fill_n(It it, usize size, T value) {
     for (usize i = 0; i < size; i++) {
-        *it++ = static_cast<RemoveRef<decltype(*it)>>(value);
+        *it++ = static_cast<remove_ref<decltype(*it)>>(value);
     }
 }
 

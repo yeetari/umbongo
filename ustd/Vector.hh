@@ -43,7 +43,7 @@ public:
     T &emplace_at(SizeType index, Args &&...args);
     void push(const T &elem);
     void push(T &&elem);
-    Conditional<IsTriviallyCopyable<T>, T, void> pop();
+    conditional<is_trivially_copyable<T>, T, void> pop();
     void remove(SizeType index);
     T take(SizeType index);
 
@@ -84,7 +84,7 @@ template <typename T, typename SizeType>
 Vector<T, SizeType>::Vector(const Vector &other) {
     ensure_capacity(other.size());
     m_size = other.size();
-    if constexpr (!IsTriviallyCopyable<T>) {
+    if constexpr (!is_trivially_copyable<T>) {
         for (auto *data = m_data; const auto &elem : other) {
             new (data++) T(elem);
         }
@@ -112,7 +112,7 @@ Vector<T, SizeType> &Vector<T, SizeType>::operator=(Vector &&other) {
 
 template <typename T, typename SizeType>
 void Vector<T, SizeType>::clear() {
-    if constexpr (!IsTriviallyDestructible<T>) {
+    if constexpr (!is_trivially_destructible<T>) {
         for (auto *elem = end(); elem != begin();) {
             (--elem)->~T();
         }
@@ -134,7 +134,7 @@ void Vector<T, SizeType>::ensure_size(SizeType size, Args &&...args) {
         return;
     }
     ensure_capacity(size);
-    if constexpr (!IsTriviallyCopyable<T> || sizeof...(Args) != 0) {
+    if constexpr (!is_trivially_copyable<T> || sizeof...(Args) != 0) {
         for (SizeType i = m_size; i < size; i++) {
             new (begin() + i) T(forward<Args>(args)...);
         }
@@ -148,7 +148,7 @@ template <typename T, typename SizeType>
 void Vector<T, SizeType>::reallocate(SizeType capacity) {
     ASSERT(capacity >= m_size);
     T *new_data = reinterpret_cast<T *>(new uint8[capacity * sizeof(T)]);
-    if constexpr (!IsTriviallyCopyable<T>) {
+    if constexpr (!is_trivially_copyable<T>) {
         for (auto *data = new_data; auto &elem : *this) {
             new (data++) T(move(elem));
         }
@@ -196,7 +196,7 @@ T &Vector<T, SizeType>::emplace_at(SizeType index, Args &&...args) {
 template <typename T, typename SizeType>
 void Vector<T, SizeType>::push(const T &elem) {
     ensure_capacity(m_size + 1);
-    if constexpr (IsTriviallyCopyable<T>) {
+    if constexpr (is_trivially_copyable<T>) {
         __builtin_memcpy(end(), &elem, sizeof(T));
     } else {
         new (end()) T(elem);
@@ -212,14 +212,14 @@ void Vector<T, SizeType>::push(T &&elem) {
 }
 
 template <typename T, typename SizeType>
-Conditional<IsTriviallyCopyable<T>, T, void> Vector<T, SizeType>::pop() {
+conditional<is_trivially_copyable<T>, T, void> Vector<T, SizeType>::pop() {
     ASSERT(!empty());
     m_size--;
     auto *elem = end();
-    if constexpr (IsTriviallyCopyable<T>) {
+    if constexpr (is_trivially_copyable<T>) {
         return *elem;
     }
-    if constexpr (!IsTriviallyDestructible<T>) {
+    if constexpr (!is_trivially_destructible<T>) {
         elem->~T();
     }
 }
@@ -227,11 +227,11 @@ Conditional<IsTriviallyCopyable<T>, T, void> Vector<T, SizeType>::pop() {
 template <typename T, typename SizeType>
 void Vector<T, SizeType>::remove(SizeType index) {
     ASSERT(index < m_size);
-    if constexpr (!IsTriviallyDestructible<T>) {
+    if constexpr (!is_trivially_destructible<T>) {
         begin()[index].~T();
     }
     m_size--;
-    if constexpr (IsTriviallyCopyable<T>) {
+    if constexpr (is_trivially_copyable<T>) {
         __builtin_memcpy(begin() + index, begin() + index + 1, (m_size - index) * sizeof(T));
         return;
     }

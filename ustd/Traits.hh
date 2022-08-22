@@ -71,36 +71,36 @@ struct IsSameCheck<T, T> : public TrueType {};
 } // namespace detail
 
 template <bool B, typename T, typename F>
-using Conditional = typename detail::Conditional<B, T, F>::type;
+using conditional = typename detail::Conditional<B, T, F>::type;
 
 template <typename T, typename U>
-inline constexpr bool IsConvertibleTo = detail::IsSameCheck<T, U>::value || requires(T obj) {
+inline constexpr bool is_convertible_to = detail::IsSameCheck<T, U>::value || requires(T obj) {
     static_cast<U>(obj);
 };
 
 template <typename T>
-inline constexpr bool IsConst = detail::IsConstCheck<T>::value;
+inline constexpr bool is_const = detail::IsConstCheck<T>::value;
 
 template <typename T>
-inline constexpr bool IsIntegral = detail::IsIntegralCheck<RemoveQual<T>>::value;
+inline constexpr bool is_integral = detail::IsIntegralCheck<remove_cv<T>>::value;
 
 template <typename T>
-inline constexpr bool IsMoveConstructible = requires(T &&t) {
+inline constexpr bool is_move_constructible = requires(T &&t) {
     new T(move(t));
 };
 
 template <typename T>
-inline constexpr bool IsPointer = detail::IsPointerCheck<RemoveQual<T>>::value;
+inline constexpr bool is_pointer = detail::IsPointerCheck<remove_cv<T>>::value;
 
 template <typename T, typename U>
-inline constexpr bool IsSame = detail::IsSameCheck<T, U>::value;
+inline constexpr bool is_same = detail::IsSameCheck<T, U>::value;
 
 template <typename T>
-inline constexpr bool IsSigned = T(-1) < T(0);
+inline constexpr bool is_signed = T(-1) < T(0);
 
 template <typename T>
-concept IsTriviallyCopyable = __is_trivially_copyable(T);
+concept is_trivially_copyable = __is_trivially_copyable(T);
 template <typename T>
-concept IsTriviallyDestructible = __is_trivially_destructible(T);
+concept is_trivially_destructible = __is_trivially_destructible(T);
 
 } // namespace ustd

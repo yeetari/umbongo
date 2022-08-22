@@ -5,24 +5,24 @@
 namespace ustd {
 
 template <typename T, typename U>
-concept ConvertibleTo = IsConvertibleTo<T, U>;
+concept ConvertibleTo = is_convertible_to<T, U>;
 
 template <typename T>
-concept Integral = IsIntegral<T>;
+concept Integral = is_integral<T>;
 
 template <typename T>
-concept Pointer = IsPointer<T>;
+concept Pointer = is_pointer<T>;
 
 template <typename T, typename U>
-concept SameAs = IsSame<T, U>;
+concept SameAs = is_same<T, U>;
 
 template <typename T>
-concept SignedIntegral = IsIntegral<T> && IsSigned<T>;
+concept SignedIntegral = is_integral<T> && is_signed<T>;
 
 template <typename T>
-concept TriviallyCopyable = IsTriviallyCopyable<T>;
+concept TriviallyCopyable = is_trivially_copyable<T>;
 
 template <typename T>
-concept UnsignedIntegral = IsIntegral<T> && !IsSigned<T>;
+concept UnsignedIntegral = is_integral<T> && !is_signed<T>;
 
 } // namespace ustd

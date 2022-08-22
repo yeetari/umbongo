@@ -35,7 +35,7 @@ public:
 };
 
 template <typename T>
-concept IntegralOrPointer = IsIntegral<T> || IsPointer<T>;
+concept IntegralOrPointer = is_integral<T> || is_pointer<T>;
 
 template <IntegralOrPointer T>
 class Atomic<T> {

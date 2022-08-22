@@ -19,7 +19,7 @@ public:
     constexpr Optional(const T &value) : m_present(true) { new (m_data.data()) T(value); }
     constexpr Optional(T &&value) : m_present(true) { new (m_data.data()) T(move(value)); }
     constexpr Optional(const Optional &) = delete;
-    constexpr Optional(Optional &&) requires(IsMoveConstructible<T>);
+    constexpr Optional(Optional &&) requires(is_move_constructible<T>);
     constexpr ~Optional() { clear(); }
 
     constexpr Optional &operator=(const Optional &) = delete;
@@ -78,7 +78,7 @@ public:
 };
 
 template <typename T>
-constexpr Optional<T>::Optional(Optional &&other) requires(IsMoveConstructible<T>) : m_present(other.m_present) {
+constexpr Optional<T>::Optional(Optional &&other) requires(is_move_constructible<T>) : m_present(other.m_present) {
     if (other) {
         new (m_data.data()) T(move(*other));
         other.clear();
@@ -100,7 +100,7 @@ constexpr Optional<T> &Optional<T>::operator=(Optional &&other) {
 
 template <typename T>
 constexpr void Optional<T>::clear() {
-    if constexpr (!IsTriviallyDestructible<T>) {
+    if constexpr (!is_trivially_destructible<T>) {
         if (m_present) {
             operator*().~T();
         }

@@ -12,8 +12,8 @@ class Span {
     T *m_data{nullptr};
     usize m_size{0};
 
-    static constexpr bool is_void = IsSame<RemoveQual<T>, void>;
-    using no_void_t = Conditional<is_void, char, T>;
+    static constexpr bool is_void = is_same<remove_cv<T>, void>;
+    using no_void_t = conditional<is_void, char, T>;
 
 public:
     constexpr Span() = default;
@@ -23,7 +23,7 @@ public:
     constexpr Span<U> as() const;
 
     // Allow implicit conversion of `Span<T>` to `Span<void>`.
-    constexpr operator Span<void>() const requires(!IsConst<T>) { return {data(), size_bytes()}; }
+    constexpr operator Span<void>() const requires(!is_const<T>) { return {data(), size_bytes()}; }
     constexpr operator Span<const void>() const { return {data(), size_bytes()}; }
 
     constexpr T *begin() const { return m_data; }

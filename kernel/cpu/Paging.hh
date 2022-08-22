@@ -53,7 +53,7 @@ public:
     PageLevel(const PageLevel &) = delete;
     PageLevel(PageLevel &&) = delete;
     ~PageLevel() {
-        if constexpr (!ustd::IsSame<Entry, uintptr>) {
+        if constexpr (!ustd::is_same<Entry, uintptr>) {
             for (auto &entry : m_entries) {
                 if (!entry.empty() && (entry.flags() & PageFlags::Large) != PageFlags::Large) {
                     delete entry.entry();
