@@ -3,6 +3,7 @@
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
+#include <kernel/fs/InodeId.hh>
 #include <kernel/fs/InodeType.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -12,16 +13,14 @@
 namespace kernel {
 
 class Inode {
-    Inode *const m_parent;
+    const InodeId m_id;
+    const InodeId m_parent;
     const InodeType m_type;
     ustd::SharedPtr<File> m_anonymous_file;
     mutable SpinLock m_anonymous_file_lock;
 
-protected:
-    virtual SysResult<ustd::SharedPtr<File>> open_impl();
-
 public:
-    Inode(InodeType type, Inode *parent) : m_parent(parent), m_type(type) {}
+    Inode(InodeId id, InodeId parent, InodeType type) : m_id(id), m_parent(parent), m_type(type) {}
     Inode(const Inode &) = delete;
     Inode(Inode &&) = delete;
     virtual ~Inode() = default;
@@ -32,9 +31,9 @@ public:
     void bind_anonymous_file(ustd::SharedPtr<File> anonymous_file);
     SysResult<ustd::SharedPtr<File>> open();
 
-    virtual SysResult<Inode *> child(usize index) const;
-    virtual SysResult<Inode *> create(ustd::StringView name, InodeType type);
-    virtual Inode *lookup(ustd::StringView name);
+    virtual SysResult<InodeId> child(usize index) const;
+    virtual SysResult<InodeId> create(ustd::StringView name, InodeType type);
+    virtual InodeId lookup(ustd::StringView name);
     virtual usize read(ustd::Span<void> data, usize offset) const;
     virtual SysResult<> remove(ustd::StringView name);
     virtual usize size() const = 0;
@@ -42,7 +41,8 @@ public:
     virtual usize write(ustd::Span<const void> data, usize offset);
 
     virtual ustd::StringView name() const = 0;
-    Inode *parent() const { return m_parent; }
+    const InodeId &id() const { return m_id; }
+    const InodeId &parent() const { return m_parent; }
     InodeType type() const { return m_type; }
 };
 

@@ -7,6 +7,7 @@
 #include "Error.hh"
 #include "KeyboardDevice.hh"
 #include "Port.hh"
+#include "StorageDevice.hh"
 #include "TrbRing.hh"
 
 #include <core/Error.hh>
@@ -194,12 +195,13 @@ void HostController::handle_interrupt() {
             usize trb_index = (event.data - EXPECT(transfer_ring.physical_base())) / sizeof(RawTrb);
             auto &transfer = transfer_ring[trb_index];
             if (transfer.type == TrbType::Normal) {
-                transfer.cycle = !transfer.cycle;
-                if (trb_index < 255u) {
-                    if (auto &link = transfer_ring[trb_index + 1]; link.type == TrbType::Link) {
-                        link.cycle = !link.cycle;
-                    }
-                }
+                transfer.status |= 1u << 31u;
+//                transfer.cycle = !transfer.cycle;
+//                if (trb_index < 255u) {
+//                    if (auto &link = transfer_ring[trb_index + 1]; link.type == TrbType::Link) {
+//                        link.cycle = !link.cycle;
+//                    }
+//                }
                 device.poll();
             }
             if (transfer.type == TrbType::StatusStage) {
@@ -325,25 +327,39 @@ HostController::handle_port_status_change(const RawTrb &event) {
         return DeviceError::NoDriverAvailable;
     }
 
-    TRY(device.walk_configuration([](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
+    ustd::UniquePtr<Device> found_device;
+    TRY(device.walk_configuration([&](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
         if (type == DescriptorType::Interface) {
             auto *interface_descriptor = static_cast<InterfaceDescriptor *>(descriptor);
             log::info("Found interface {:x2}:{:x2}:{:x2}", interface_descriptor->iclass,
                       interface_descriptor->isubclass, interface_descriptor->iprotocol);
-            if (interface_descriptor->iclass != 3u || interface_descriptor->isubclass != 1u ||
-                interface_descriptor->iprotocol != 1u) {
-                return DeviceError::NoDriverAvailable;
+            if (found_device) {
+                return {};
+            }
+            if (interface_descriptor->iclass == 0x03 && interface_descriptor->isubclass == 0x01 &&
+                interface_descriptor->iprotocol == 0x01) {
+                found_device = ustd::make_unique<KeyboardDevice>(ustd::move(device));
+                return {};
+            }
+            if (interface_descriptor->iclass == 0x08 && interface_descriptor->isubclass == 0x06 &&
+                interface_descriptor->iprotocol == 0x50) {
+                found_device = ustd::make_unique<StorageDevice>(ustd::move(device));
+                return {};
             }
         }
         return {};
     }));
 
+    if (!found_device) {
+        return DeviceError::NoDriverAvailable;
+    }
+
     // We have an available driver, so we can deactivate the device cleanup guard and effectively "promote" the device
     // to its derived driver class.
+    // TODO: Handle enable failure better.
     destroy_guard.disarm();
-    auto moved_device = ustd::move(device);
-    auto &keyboard_device = device_ptr.emplace<KeyboardDevice>(ustd::move(moved_device));
-    TRY(keyboard_device.enable(m_event_loop));
+    device_ptr = ustd::move(found_device);
+    TRY(device_ptr->enable(m_event_loop));
     return {};
 }
 

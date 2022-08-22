@@ -59,7 +59,6 @@ Checks: >
   google-build-explicit-make-pair,
   google-build-namespaces,
   google-readability-casting,
-  google-runtime-int,
   google-runtime-operator,
   hicpp-signed-bitwise,
   llvm-include-order,

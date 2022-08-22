@@ -2,6 +2,8 @@
 
 #include <ustd/Types.hh>
 
+#ifndef USTD_NO_MEMORY
+
 namespace std {
 
 enum class align_val_t : usize {};
@@ -21,3 +23,5 @@ inline void *operator new(usize, void *ptr) {
 inline void *operator new[](usize, void *ptr) {
     return ptr;
 }
+
+#endif

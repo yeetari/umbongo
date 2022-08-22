@@ -2,18 +2,17 @@
 
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
+#include <kernel/fs/InodeId.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
 namespace kernel {
 
-class Inode;
-
 class InodeFile final : public File {
-    Inode *const m_inode;
+    const InodeId m_inode;
 
 public:
-    explicit InodeFile(Inode *inode) : m_inode(inode) {}
+    explicit InodeFile(const InodeId &inode) : m_inode(inode) {}
 
     bool is_inode_file() const override { return true; }
 
@@ -22,7 +21,7 @@ public:
     SysResult<usize> read(ustd::Span<void> data, usize offset) override;
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 
-    Inode *inode() const { return m_inode; }
+    const InodeId &inode() const { return m_inode; }
 };
 
 } // namespace kernel

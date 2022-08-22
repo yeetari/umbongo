@@ -23,9 +23,9 @@ class RamFsInode final : public Inode {
     mutable SpinLock m_lock;
 
 public:
-    RamFsInode(InodeType type, Inode *parent, ustd::StringView name) : Inode(type, parent), m_name(name) {}
+    RamFsInode(const InodeId &id, const InodeId &parent, InodeType type, ustd::StringView name)
+        : Inode(id, parent, type), m_name(name) {}
 
-    SysResult<ustd::SharedPtr<File>> open_impl() override;
     usize read(ustd::Span<void> data, usize offset) const override;
     usize size() const override;
     SysResult<> truncate() override;
@@ -35,26 +35,30 @@ public:
 
 class RamFsDirectoryInode final : public Inode {
     ustd::String m_name;
-    ustd::Vector<ustd::UniquePtr<Inode>> m_children;
+    ustd::Vector<InodeId> m_children;
     mutable SpinLock m_lock;
 
 public:
-    RamFsDirectoryInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
+    RamFsDirectoryInode(const InodeId &id, const InodeId &parent, ustd::StringView name)
+        : Inode(id, parent, InodeType::Directory), m_name(name) {}
 
-    SysResult<Inode *> child(usize index) const override;
-    SysResult<Inode *> create(ustd::StringView name, InodeType type) override;
-    Inode *lookup(ustd::StringView name) override;
+    SysResult<InodeId> child(usize index) const override;
+    SysResult<InodeId> create(ustd::StringView name, InodeType type) override;
+    InodeId lookup(ustd::StringView name) override;
     SysResult<> remove(ustd::StringView name) override;
     usize size() const override;
     ustd::StringView name() const override { return m_name; }
 };
 
 class RamFs final : public FileSystem {
-    ustd::Optional<RamFsDirectoryInode> m_root_inode;
+    friend RamFsDirectoryInode;
+
+private:
+    ustd::LargeVector<ustd::UniquePtr<Inode>> m_inodes;
 
 public:
-    void mount(Inode *parent, Inode *host) override;
-    Inode *root_inode() override { return m_root_inode.obj(); }
+    void mount(const InodeId &parent, const InodeId &host) override;
+    Inode *inode(const InodeId &id) override;
 };
 
 } // namespace kernel

@@ -5,7 +5,7 @@
 #include <core/Directory.hh>
 #include <core/Error.hh>
 #include <core/EventLoop.hh>
-#include <core/File.hh>
+#include <core/Syscall.hh>
 #include <kernel/SyscallTypes.hh>
 #include <log/Log.hh>
 #include <ustd/Format.hh>

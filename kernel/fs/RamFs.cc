@@ -17,15 +17,17 @@
 #include <ustd/UniquePtr.hh>
 #include <ustd/Vector.hh>
 
+#include <kernel/Dmesg.hh>
+
 namespace kernel {
 
-void RamFs::mount(Inode *parent, Inode *host) {
-    ASSERT(!m_root_inode);
-    m_root_inode.emplace(parent, host != nullptr ? host->name() : "/"sv);
+void RamFs::mount(const InodeId &parent, const InodeId &host) {
+    ASSERT(m_inodes.empty());
+    m_inodes.emplace(new RamFsDirectoryInode(parent, root_inode(), !host.is_null() ? host->name() : "/"));
 }
 
-SysResult<ustd::SharedPtr<File>> RamFsInode::open_impl() {
-    return ustd::make_shared<InodeFile>(this);
+Inode *RamFs::inode(const InodeId &id) {
+    return m_inodes[id.index()].obj();
 }
 
 usize RamFsInode::read(ustd::Span<void> data, usize offset) const {
@@ -61,30 +63,37 @@ usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
     return size;
 }
 
-SysResult<Inode *> RamFsDirectoryInode::child(usize index) const {
+SysResult<InodeId> RamFsDirectoryInode::child(usize index) const {
     if (index >= ustd::Limits<uint32>::max()) {
         return SysError::Invalid;
     }
     ScopedLock locker(m_lock);
-    return m_children[static_cast<uint32>(index)].obj();
+    return m_children[static_cast<uint32>(index)];
 }
 
-SysResult<Inode *> RamFsDirectoryInode::create(ustd::StringView name, InodeType type) {
+SysResult<InodeId> RamFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     ScopedLock locker(m_lock);
+    auto &inodes = static_cast<RamFs &>(id().fs()).m_inodes;
     switch (type) {
     case InodeType::AnonymousFile:
-    case InodeType::RegularFile:
-        return m_children.emplace(new RamFsInode(type, this, name)).obj();
-    case InodeType::Directory:
-        return m_children.emplace(new RamFsDirectoryInode(this, name)).obj();
+    case InodeType::RegularFile: {
+        InodeId child_id(id().fs(), inodes.size());
+        inodes.emplace(new RamFsInode(child_id, id(), type, name));
+        return m_children.emplace(child_id);
+    }
+    case InodeType::Directory: {
+        InodeId child_id(id().fs(), inodes.size());
+        inodes.emplace(new RamFsDirectoryInode(child_id, id(), name));
+        return m_children.emplace(child_id);
+    }
     default:
         return SysError::Invalid;
     }
 }
 
-Inode *RamFsDirectoryInode::lookup(ustd::StringView name) {
+InodeId RamFsDirectoryInode::lookup(ustd::StringView name) {
     if (name == ".") {
-        return this;
+        return id();
     }
     if (name == "..") {
         return parent();
@@ -92,10 +101,10 @@ Inode *RamFsDirectoryInode::lookup(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (const auto &child : m_children) {
         if (child->name() == name) {
-            return child.obj();
+            return child;
         }
     }
-    return nullptr;
+    return {};
 }
 
 SysResult<> RamFsDirectoryInode::remove(ustd::StringView name) {

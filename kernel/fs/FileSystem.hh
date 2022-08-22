@@ -1,5 +1,7 @@
 #pragma once
 
+#include <kernel/fs/InodeId.hh>
+
 namespace kernel {
 
 class Inode;
@@ -14,8 +16,9 @@ public:
     FileSystem &operator=(const FileSystem &) = delete;
     FileSystem &operator=(FileSystem &&) = delete;
 
-    virtual void mount(Inode *parent, Inode *host) = 0;
-    virtual Inode *root_inode() = 0;
+    virtual void mount(const InodeId &parent, const InodeId &host) = 0;
+    virtual Inode *inode(const InodeId &id) = 0;
+    InodeId root_inode() { return {*this, 0}; }
 };
 
 } // namespace kernel

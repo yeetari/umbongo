@@ -22,6 +22,7 @@ Endpoint::~Endpoint() = default;
 ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(EndpointType type, uint16 packet_size) {
     auto &context = m_device.endpoint_context(m_id);
     m_transfer_ring = TRY(TrbRing::create(true));
+    m_transfer_ring->operator[](255).event_on_completion = true;
     context.endpoint_type = type;
     context.max_packet_size = packet_size;
     context.tr_dequeue_pointer = EXPECT(m_transfer_ring->physical_base()) | 1u;
@@ -95,6 +96,25 @@ ustd::Result<void, DeviceError> Endpoint::send_control(ControlTransfer transfer,
         // TODO: Better solution for this.
         m_device.m_controller.handle_interrupt();
         core::sleep(1000000ul);
+    }
+    return {};
+}
+
+ustd::Result<void, DeviceError> Endpoint::transfer_bulk(ustd::Span<void> data) {
+    auto &trb = m_transfer_ring->enqueue({
+        .data = EXPECT(mmio::virt_to_phys(data.data())),
+        .status = static_cast<uint32>(data.size()),
+        .event_on_completion = true,
+        .type = TrbType::Normal,
+    });
+    m_device.ring_doorbell(m_id);
+    for (usize timeout = 1000; (mmio::read(trb.status) & (1u << 31u)) != (1u << 31u); timeout--) {
+        if (timeout == 0) {
+            return DeviceError::TransferTimedOut;
+        }
+        // TODO: Better solution for this.
+        m_device.m_controller.handle_interrupt();
+        core::sleep(100000ul);
     }
     return {};
 }

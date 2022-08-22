@@ -17,13 +17,15 @@
 
 namespace kernel {
 
+class DevFs;
 class Device;
 
 class DevFsInode final : public Inode {
     ustd::String m_name;
 
 public:
-    DevFsInode(Inode *parent, ustd::StringView name) : Inode(InodeType::AnonymousFile, parent), m_name(name) {}
+    DevFsInode(const InodeId &id, const InodeId &parent, ustd::StringView name)
+        : Inode(id, parent, InodeType::AnonymousFile), m_name(name) {}
 
     usize size() const override { return 0; }
     ustd::StringView name() const override { return m_name; }
@@ -31,22 +33,26 @@ public:
 
 class DevFsDirectoryInode final : public Inode {
     ustd::String m_name;
-    ustd::Vector<ustd::UniquePtr<Inode>> m_children;
+    ustd::Vector<InodeId> m_children;
     mutable SpinLock m_lock;
 
 public:
-    DevFsDirectoryInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
+    DevFsDirectoryInode(const InodeId &id, const InodeId &parent, ustd::StringView name)
+        : Inode(id, parent, InodeType::Directory), m_name(name) {}
 
-    SysResult<Inode *> child(usize index) const override;
-    SysResult<Inode *> create(ustd::StringView name, InodeType type) override;
-    Inode *lookup(ustd::StringView name) override;
+    SysResult<InodeId> child(usize index) const override;
+    SysResult<InodeId> create(ustd::StringView name, InodeType type) override;
+    InodeId lookup(ustd::StringView name) override;
     SysResult<> remove(ustd::StringView name) override;
     usize size() const override;
     ustd::StringView name() const override { return m_name; }
 };
 
 class DevFs final : public FileSystem {
-    ustd::Optional<DevFsDirectoryInode> m_root_inode;
+    friend DevFsDirectoryInode;
+
+private:
+    ustd::LargeVector<ustd::UniquePtr<Inode>> m_inodes;
 
 public:
     static void initialise();
@@ -55,8 +61,8 @@ public:
 
     void attach_device(Device *device, ustd::StringView path);
     void detach_device(Device *device);
-    void mount(Inode *parent, Inode *host) override;
-    Inode *root_inode() override { return m_root_inode.obj(); }
+    void mount(const InodeId &parent, const InodeId &host) override;
+    Inode *inode(const InodeId &id) override;
 };
 
 } // namespace kernel

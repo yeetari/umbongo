@@ -12,6 +12,7 @@ namespace Syscall {
     S(create_pipe)                                                                                                     \
     S(create_process)                                                                                                  \
     S(create_server_socket)                                                                                            \
+    S(create_user_fs)                                                                                                  \
     S(debug_line)                                                                                                      \
     S(dup_fd)                                                                                                          \
     S(exit)                                                                                                            \

@@ -108,7 +108,7 @@ void parse_memory_map(BootInfo *boot_info) {
         free_bytes += !is_frame_set(i) ? k_frame_size : 0;
         total_bytes += k_frame_size;
     }
-    dmesg(" mem: {}MiB/{}MiB free ({}%)", free_bytes / 1_MiB, total_bytes / 1_MiB, (free_bytes * 100) / total_bytes);
+    dmesg(" mem: {:s}/{:s} free ({}%)", free_bytes, total_bytes, (free_bytes * 100) / total_bytes);
 }
 
 } // namespace
@@ -142,13 +142,7 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
             total_reclaimed += k_frame_size;
         }
     }
-    if (total_reclaimed >= 1_MiB) {
-        dmesg(" mem: Reclaimed {}MiB of memory", total_reclaimed / 1_MiB);
-    } else if (total_reclaimed >= 1_KiB) {
-        dmesg(" mem: Reclaimed {}KiB of memory", total_reclaimed / 1_KiB);
-    } else {
-        dmesg(" mem: Reclaimed {}B of memory", total_reclaimed);
-    }
+    dmesg(" mem: Reclaimed {:s} of memory", total_reclaimed);
 }
 
 void MemoryManager::switch_space(VirtSpace &virt_space) {

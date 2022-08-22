@@ -73,6 +73,7 @@ if(BUILD_WARNINGS)
         -Wno-zero-length-array)
 endif()
 
+# TODO: This is now broken.
 find_program(MCOPY_EXECUTABLE mcopy)
 find_program(MFORMAT_EXECUTABLE mformat)
 if(MCOPY_EXECUTABLE AND MFORMAT_EXECUTABLE)
@@ -104,10 +105,11 @@ if(QEMU_EXECUTABLE)
             -debugcon stdio
             -device qemu-xhci
             -device usb-kbd
-            -device usb-storage,drive=esp
+            -device usb-storage,drive=root
             -device virtio-vga,xres=1920,yres=1080
             -display sdl
-            -drive file=fat:rw:${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX},format=raw,id=esp,if=none
+            -drive file=fat:rw:${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX},format=raw,if=virtio
+            -drive file=root.img,format=raw,id=root,if=none
             -machine q35
             -nodefaults
             -no-reboot

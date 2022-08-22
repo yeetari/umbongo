@@ -56,6 +56,7 @@ public:
     ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> setup(EndpointType type, uint16 packet_size);
     ustd::Result<void, DeviceError> send_control(ControlTransfer transfer, TransferType transfer_type,
                                                  ustd::Span<void> data = {});
+    ustd::Result<void, DeviceError> transfer_bulk(ustd::Span<void> data);
     void set_interval(uint8 interval);
 
     uint32 id() const { return m_id; }

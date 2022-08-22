@@ -26,9 +26,30 @@ void dmesg_single(const char *opts, T arg) {
         dmesg_put_char(static_cast<char>(arg));
         return;
     }
-    const usize base = opts[1] == 'h' || opts[1] == 'x' ? 16 : 10;
-    ustd::Array<char, 20> buf{};
+    ustd::Array<char, 24> buf{};
     uint8 len = 0;
+    if (opts[1] == 's') {
+        buf[len++] = 'B';
+        if (static_cast<usize>(arg) >= 1_TiB) {
+            arg /= 1_TiB;
+            buf[len++] = 'i';
+            buf[len++] = 'T';
+        } else if (static_cast<usize>(arg) >= 1_GiB) {
+            arg /= 1_GiB;
+            buf[len++] = 'i';
+            buf[len++] = 'G';
+        } else if (static_cast<usize>(arg) >= 1_MiB) {
+            arg /= 1_MiB;
+            buf[len++] = 'i';
+            buf[len++] = 'M';
+        } else if (static_cast<usize>(arg) >= 1_KiB) {
+            arg /= 1_KiB;
+            buf[len++] = 'i';
+            buf[len++] = 'K';
+        }
+        buf[len++] = ' ';
+    }
+    const usize base = opts[1] == 'h' || opts[1] == 'x' ? 16 : 10;
     do {
         const char digit = static_cast<char>(static_cast<usize>(arg) % base);
         buf[len++] = (digit < 10 ? '0' + digit : 'a' + digit - 10);

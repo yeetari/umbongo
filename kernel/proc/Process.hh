@@ -4,6 +4,7 @@
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/FileHandle.hh>
+#include <kernel/fs/InodeId.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
 #include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Atomic.hh>
@@ -16,7 +17,6 @@
 
 namespace kernel {
 
-class Inode;
 struct Scheduler;
 class Thread;
 
@@ -27,7 +27,7 @@ class Process : public ustd::Shareable<Process> {
 private:
     const usize m_pid;
     const bool m_is_kernel;
-    Inode *m_cwd;
+    InodeId m_cwd;
     ustd::SharedPtr<VirtSpace> m_virt_space;
     ustd::Vector<ustd::Optional<FileHandle>> m_fds;
     ustd::Atomic<usize> m_thread_count{0};
@@ -58,6 +58,7 @@ public:
     SyscallResult sys_create_pipe(uint32 *fds);
     SyscallResult sys_create_process(const char *path, const char **argv, FdPair *copy_fds);
     SyscallResult sys_create_server_socket(uint32 backlog_limit);
+    SyscallResult sys_create_user_fs(const char *path);
     SyscallResult sys_debug_line(const char *line);
     SyscallResult sys_dup_fd(uint32 src, uint32 dst);
     SyscallResult sys_exit(usize code) const;

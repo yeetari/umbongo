@@ -5,6 +5,7 @@ add_executable(usb-server
     KeyboardDevice.cc
     main.cc
     Port.cc
+    StorageDevice.cc
     TrbRing.cc)
 install(TARGETS usb-server DESTINATION bin)
 target_gc_sections(usb-server)

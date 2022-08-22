@@ -17,11 +17,11 @@ public:
 
     template <typename U>
     constexpr Span<U> as() {
-        return {static_cast<U *>(m_data), m_size};
+        return {reinterpret_cast<U *>(m_data), m_size};
     }
     template <typename U>
     constexpr Span<const U> as() const {
-        return {static_cast<const U *>(m_data), m_size};
+        return {reinterpret_cast<const U *>(m_data), m_size};
     }
 
     // Allow implicit conversion of `Span<T>` to `Span<void>`.

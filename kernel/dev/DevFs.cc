@@ -30,9 +30,9 @@ DevFs *s_instance = nullptr;
 void DevFs::initialise() {
     auto dev_fs = ustd::make_unique<DevFs>();
     s_instance = dev_fs.obj();
-    EXPECT(Vfs::mkdir("/dev", nullptr));
-    EXPECT(Vfs::mount("/dev", ustd::move(dev_fs)));
-    EXPECT(Vfs::mkdir("/dev/pci", nullptr));
+    EXPECT(Vfs::mkdir("/dev"));
+    EXPECT(Vfs::mount("/dev", ustd::move(dev_fs).disown()));
+    EXPECT(Vfs::mkdir("/dev/pci"));
 }
 
 void DevFs::notify_attach(Device *device, ustd::StringView path) {
@@ -46,43 +46,54 @@ void DevFs::notify_detach(Device *device) {
 }
 
 void DevFs::attach_device(Device *device, ustd::StringView path) {
-    auto *inode = EXPECT(Vfs::create(path, m_root_inode.obj(), InodeType::AnonymousFile));
+    auto inode = EXPECT(Vfs::create(path, root_inode(), InodeType::AnonymousFile));
     inode->bind_anonymous_file(ustd::SharedPtr<Device>(device));
 }
 
 void DevFs::detach_device(Device *device) {
     // TODO: Should be Vfs::delete for full path resolution.
-    EXPECT(m_root_inode->remove(device->path()));
+    EXPECT(root_inode()->remove(device->path()));
 }
 
-void DevFs::mount(Inode *parent, Inode *host) {
-    ASSERT(!m_root_inode);
-    m_root_inode.emplace(parent, host->name());
+void DevFs::mount(const InodeId &parent, const InodeId &host) {
+    ASSERT(m_inodes.empty());
+    m_inodes.emplace(new DevFsDirectoryInode(parent, root_inode(), host->name()));
 }
 
-SysResult<Inode *> DevFsDirectoryInode::child(usize index) const {
+Inode *DevFs::inode(const InodeId &id) {
+    return m_inodes[id.index()].obj();
+}
+
+SysResult<InodeId> DevFsDirectoryInode::child(usize index) const {
     if (index >= ustd::Limits<uint32>::max()) {
         return SysError::Invalid;
     }
     ScopedLock locker(m_lock);
-    return m_children[static_cast<uint32>(index)].obj();
+    return m_children[static_cast<uint32>(index)];
 }
 
-SysResult<Inode *> DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
+SysResult<InodeId> DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
     ScopedLock locker(m_lock);
+    auto &inodes = static_cast<DevFs &>(id().fs()).m_inodes;
     switch (type) {
-    case InodeType::AnonymousFile:
-        return m_children.emplace(new DevFsInode(this, name)).obj();
-    case InodeType::Directory:
-        return m_children.emplace(new DevFsDirectoryInode(this, name)).obj();
+    case InodeType::AnonymousFile: {
+        InodeId child_id(id().fs(), inodes.size());
+        inodes.emplace(new DevFsInode(child_id, id(), name));
+        return m_children.emplace(child_id);
+    }
+    case InodeType::Directory: {
+        InodeId child_id(id().fs(), inodes.size());
+        inodes.emplace(new DevFsDirectoryInode(child_id, id(), name));
+        return m_children.emplace(child_id);
+    }
     default:
         return SysError::Invalid;
     }
 }
 
-Inode *DevFsDirectoryInode::lookup(ustd::StringView name) {
+InodeId DevFsDirectoryInode::lookup(ustd::StringView name) {
     if (name == ".") {
-        return this;
+        return id();
     }
     if (name == "..") {
         return parent();
@@ -90,10 +101,10 @@ Inode *DevFsDirectoryInode::lookup(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (const auto &child : m_children) {
         if (child->name() == name) {
-            return child.obj();
+            return child;
         }
     }
-    return nullptr;
+    return {};
 }
 
 SysResult<> DevFsDirectoryInode::remove(ustd::StringView name) {

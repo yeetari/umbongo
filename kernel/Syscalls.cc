@@ -13,6 +13,7 @@
 #include <kernel/fs/InodeFile.hh>
 #include <kernel/fs/InodeType.hh>
 #include <kernel/fs/RamFs.hh>
+#include <kernel/fs/UserFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/ipc/DoubleBuffer.hh>
 #include <kernel/ipc/Pipe.hh>
@@ -76,7 +77,7 @@ SyscallResult Process::sys_allocate_region(usize size, MemoryProt prot) {
 }
 
 SyscallResult Process::sys_bind(uint32 fd, const char *path) {
-    auto *inode = TRY(Vfs::create(path, m_cwd, InodeType::AnonymousFile));
+    auto inode = TRY(Vfs::create(path, m_cwd, InodeType::AnonymousFile));
     ScopedLock locker(m_lock);
     inode->bind_anonymous_file(ustd::SharedPtr<File>(&m_fds[fd]->file()));
     return fd;
@@ -176,6 +177,19 @@ SyscallResult Process::sys_create_server_socket(uint32 backlog_limit) {
     return fd;
 }
 
+SyscallResult Process::sys_create_user_fs(const char *path) {
+    ScopedLock locker(m_lock);
+    auto user_fs = ustd::make_shared<UserFs>();
+    user_fs->leak_ref();
+
+    EXPECT(Vfs::mkdir(path, m_cwd));
+    EXPECT(Vfs::mount(path, user_fs.obj()));
+
+    uint32 fd = allocate_fd();
+    m_fds[fd].emplace(user_fs);
+    return fd;
+}
+
 SyscallResult Process::sys_debug_line(const char *line) {
     dmesg("[#{}]: {}", m_pid, line);
     return 0;
@@ -205,8 +219,8 @@ SyscallResult Process::sys_exit(usize code) const {
 
 SyscallResult Process::sys_getcwd(char *path) const {
     ScopedLock locker(m_lock);
-    ustd::Vector<Inode *> inodes;
-    for (auto *inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
+    ustd::Vector<InodeId> inodes;
+    for (auto inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
         inodes.push(inode);
     }
     // TODO: Would be nice to have some kind of ustd::reverse_iterator(inodes) function.
@@ -264,7 +278,7 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) const 
     } else {
         return SysError::Invalid;
     }
-    return Vfs::mount(target, ustd::move(fs));
+    return Vfs::mount(target, ustd::move(fs).disown());
 }
 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
@@ -314,18 +328,18 @@ SyscallResult Process::sys_read(uint32 fd, void *data, usize size) {
 
 SyscallResult Process::sys_read_directory(const char *path, uint8 *data) {
     ScopedLock locker(m_lock);
-    auto *directory = TRY(Vfs::open_directory(path, m_cwd));
+    auto directory = TRY(Vfs::open_directory(path, m_cwd));
     if (data == nullptr) {
         usize byte_count = 0;
         for (usize i = 0; i < directory->size(); i++) {
-            auto *child = TRY(directory->child(i));
+            auto child = TRY(directory->child(i));
             byte_count += child->name().length() + 1;
         }
         return byte_count;
     }
     usize byte_offset = 0;
     for (usize i = 0; i < directory->size(); i++) {
-        auto *child = TRY(directory->child(i));
+        auto child = TRY(directory->child(i));
         __builtin_memcpy(data + byte_offset, child->name().data(), child->name().length());
         data[byte_offset + child->name().length()] = '\0';
         byte_offset += child->name().length() + 1;

@@ -9,7 +9,8 @@ add_library(core
     Process.cc
     start.cc
     Time.cc
-    Timer.cc)
+    Timer.cc
+    UserFs.cc)
 install(TARGETS core DESTINATION lib)
 target_gc_sections(core)
 target_link_libraries(core PUBLIC log ustd)

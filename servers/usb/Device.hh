@@ -11,6 +11,12 @@
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 #include <ustd/Vector.hh>
 
+namespace core {
+
+class EventLoop;
+
+} // namespace core
+
 class Endpoint;
 struct EndpointContext;
 class HostController;
@@ -44,6 +50,7 @@ public:
     Device &operator=(const Device &) = delete;
     Device &operator=(Device &&) = delete;
 
+    virtual ustd::Result<void, DeviceError> enable(core::EventLoop &) { return {}; }
     virtual void poll() {}
 
     Endpoint &create_endpoint(uint32 address);

@@ -37,6 +37,6 @@ public:
     KeyboardDevice &operator=(const KeyboardDevice &) = delete;
     KeyboardDevice &operator=(KeyboardDevice &&) = delete;
 
-    ustd::Result<void, DeviceError> enable(core::EventLoop &event_loop);
+    ustd::Result<void, DeviceError> enable(core::EventLoop &event_loop) override;
     void poll() override;
 };

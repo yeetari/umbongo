@@ -30,6 +30,7 @@ add_executable(kernel
     fs/Inode.cc
     fs/InodeFile.cc
     fs/RamFs.cc
+    fs/UserFs.cc
     fs/Vfs.cc
     intr/InterruptManager.cc
     intr/IoApic.cc
