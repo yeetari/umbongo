@@ -1,6 +1,4 @@
-# TODO: Can we enable pointer arithmetic, global variables and no assembler warnings and only disable them for
-#       bootloader and kernel?
-# TODO: cppcoreguidelines-pro-type-vararg is only disabled because it gives warnings for the __atomic builtins.
+# TODO: Enable more warnings.
 ---
 Checks: >
   bugprone-argument-comment,
@@ -58,7 +56,6 @@ Checks: >
   cppcoreguidelines-special-member-functions,
   google-build-explicit-make-pair,
   google-build-namespaces,
-  google-readability-casting,
   google-runtime-int,
   google-runtime-operator,
   hicpp-signed-bitwise,
