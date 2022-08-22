@@ -4,66 +4,32 @@ jobs:
   clang-tidy:
     name: Clang Tidy
     runs-on: ubuntu-latest
-    container: ubuntu:21.04
+    container: ubuntu:22.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
     steps:
+      - name: Update package lists
+        run: apt update -qq
       - name: Install tools
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt update -qq
-          apt install -y \
-            clang \
-            cmake \
-            clang-tidy \
-            libstdc++-11-dev \
-            lld \
-            nasm \
-            parallel
+        run: >-
+          apt install -y
+          clang
+          cmake
+          clang-tidy
+          lld
+          nasm
+          parallel
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Configure CMake
-        run: |
-          cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - name: Run clang-tidy
         run: |
           find . \
             -name '*.cc' \
-            -and -not -name 'FontGenerator.cc' \
+            -and -not -name 'mkfont.cc' \
             -print0 |
           parallel -0 \
-            clang-tidy -p build --header-filter=.* --quiet {} |
+            clang-tidy -p build --header-filter=.* --quiet {} 2>/dev/null |
           tee output
-          if [ -s output ]; then exit 1; fi
-
-  cppcheck:
-    name: Cppcheck
-    runs-on: ubuntu-latest
-    container: ubuntu:21.04
-    steps:
-      - name: Install tools
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt update -qq
-          apt install -y \
-            clang \
-            cmake \
-            cppcheck \
-            libstdc++-11-dev \
-            lld \
-            nasm
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Configure CMake
-        run: |
-          cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-      - name: Run cppcheck
-        run: |
-          cppcheck \
-            --project=build/compile_commands.json \
-            --suppress=*:*freetype\* \
-            --suppress=*:*Vector.hh \
-            --suppress=danglingTempReference \
-            --suppress=preprocessorErrorDirective \
-            --suppress=va_list_usedBeforeStarted \
-            --quiet \
-            2>&1 | tee output
           if [ -s output ]; then exit 1; fi
