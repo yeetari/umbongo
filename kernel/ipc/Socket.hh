@@ -31,8 +31,8 @@ public:
     SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
 
     bool connected() const;
-    DoubleBuffer *read_buffer() const { return m_read_buffer.obj(); }
-    DoubleBuffer *write_buffer() const { return m_write_buffer.obj(); }
+    DoubleBuffer *read_buffer() const { return m_read_buffer.ptr(); }
+    DoubleBuffer *write_buffer() const { return m_write_buffer.ptr(); }
 };
 
 } // namespace kernel

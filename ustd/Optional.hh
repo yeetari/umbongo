@@ -16,8 +16,8 @@ class Optional {
 
 public:
     constexpr Optional() = default;
-    constexpr Optional(const T &value) : m_present(true) { new (m_data.data()) T(value); }  // NOLINT
-    constexpr Optional(T &&value) : m_present(true) { new (m_data.data()) T(move(value)); } // NOLINT
+    constexpr Optional(const T &value) : m_present(true) { new (m_data.data()) T(value); }
+    constexpr Optional(T &&value) : m_present(true) { new (m_data.data()) T(move(value)); }
     constexpr Optional(const Optional &) = delete;
     constexpr Optional(Optional &&) requires(IsMoveConstructible<T>);
     constexpr ~Optional() { clear(); }
@@ -37,23 +37,11 @@ public:
     constexpr explicit operator bool() const { return m_present; }
     constexpr bool has_value() const { return m_present; }
 
-    constexpr T &operator*() {
-        ASSERT(m_present);
-        return *reinterpret_cast<T *>(m_data.data());
-    }
-    constexpr T *operator->() {
-        ASSERT(m_present);
-        return reinterpret_cast<T *>(m_data.data());
-    }
-    constexpr const T &operator*() const {
-        ASSERT(m_present);
-        return *reinterpret_cast<const T *>(m_data.data());
-    }
-    constexpr const T *operator->() const {
-        ASSERT(m_present);
-        return reinterpret_cast<const T *>(m_data.data());
-    }
-    constexpr T *obj() { return reinterpret_cast<T *>(m_data.data()); }
+    constexpr T &operator*();
+    constexpr T *operator->();
+    constexpr const T &operator*() const;
+    constexpr const T *operator->() const;
+    constexpr T *ptr() { return reinterpret_cast<T *>(m_data.data()); }
 };
 
 template <typename T>
@@ -66,11 +54,11 @@ class Optional<T &> {
         operator T &() { return *m_ptr; }
     };
 
-    T *m_obj{nullptr};
+    T *m_ptr{nullptr};
 
 public:
     constexpr Optional() = default;
-    constexpr Optional(T &obj) : m_obj(&obj) {}
+    constexpr Optional(T &ref) : m_ptr(&ref) {}
     constexpr Optional(const Optional &) = delete;
     constexpr Optional(Optional &&) = delete;
     constexpr ~Optional() = default;
@@ -79,26 +67,14 @@ public:
     constexpr Optional &operator=(Optional &&) = delete;
 
     constexpr RefWrapper disown_value() { return operator*(); }
-    constexpr explicit operator bool() const { return m_obj != nullptr; }
-    constexpr bool has_value() const { return m_obj != nullptr; }
+    constexpr explicit operator bool() const { return m_ptr != nullptr; }
+    constexpr bool has_value() const { return m_ptr != nullptr; }
 
-    constexpr T &operator*() {
-        ASSERT(m_obj != nullptr);
-        return *m_obj;
-    }
-    constexpr T *operator->() {
-        ASSERT(m_obj != nullptr);
-        return m_obj;
-    }
-    constexpr const T &operator*() const {
-        ASSERT(m_obj != nullptr);
-        return *m_obj;
-    }
-    constexpr const T *operator->() const {
-        ASSERT(m_obj != nullptr);
-        return m_obj;
-    }
-    constexpr T *obj() { return m_obj; }
+    constexpr T &operator*();
+    constexpr T *operator->();
+    constexpr const T &operator*() const;
+    constexpr const T *operator->() const;
+    constexpr T *ptr() { return m_ptr; }
 };
 
 template <typename T>
@@ -158,6 +134,54 @@ template <typename T>
 template <typename U>
 constexpr T Optional<T>::value_or(U &&fallback) && {
     return m_present ? move(disown_value()) : static_cast<T>(forward<U>(fallback));
+}
+
+template <typename T>
+constexpr T &Optional<T>::operator*() {
+    ASSERT(m_present);
+    return *reinterpret_cast<T *>(m_data.data());
+}
+
+template <typename T>
+constexpr T *Optional<T>::operator->() {
+    ASSERT(m_present);
+    return reinterpret_cast<T *>(m_data.data());
+}
+
+template <typename T>
+constexpr const T &Optional<T>::operator*() const {
+    ASSERT(m_present);
+    return *reinterpret_cast<const T *>(m_data.data());
+}
+
+template <typename T>
+constexpr const T *Optional<T>::operator->() const {
+    ASSERT(m_present);
+    return reinterpret_cast<const T *>(m_data.data());
+}
+
+template <typename T>
+constexpr T &Optional<T &>::operator*() {
+    ASSERT(m_ptr != nullptr);
+    return *m_ptr;
+}
+
+template <typename T>
+constexpr T *Optional<T &>::operator->() {
+    ASSERT(m_ptr != nullptr);
+    return m_ptr;
+}
+
+template <typename T>
+constexpr const T &Optional<T &>::operator*() const {
+    ASSERT(m_ptr != nullptr);
+    return *m_ptr;
+}
+
+template <typename T>
+constexpr const T *Optional<T &>::operator->() const {
+    ASSERT(m_ptr != nullptr);
+    return m_ptr;
 }
 
 } // namespace ustd

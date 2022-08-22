@@ -66,7 +66,7 @@ SysResult<Inode *> RamFsDirectoryInode::child(usize index) const {
         return SysError::Invalid;
     }
     ScopedLock locker(m_lock);
-    return m_children[static_cast<uint32>(index)].obj();
+    return m_children[static_cast<uint32>(index)].ptr();
 }
 
 SysResult<Inode *> RamFsDirectoryInode::create(ustd::StringView name, InodeType type) {
@@ -74,9 +74,9 @@ SysResult<Inode *> RamFsDirectoryInode::create(ustd::StringView name, InodeType 
     switch (type) {
     case InodeType::AnonymousFile:
     case InodeType::RegularFile:
-        return m_children.emplace(new RamFsInode(type, this, name)).obj();
+        return m_children.emplace(new RamFsInode(type, this, name)).ptr();
     case InodeType::Directory:
-        return m_children.emplace(new RamFsDirectoryInode(this, name)).obj();
+        return m_children.emplace(new RamFsDirectoryInode(this, name)).ptr();
     default:
         return SysError::Invalid;
     }
@@ -92,7 +92,7 @@ Inode *RamFsDirectoryInode::lookup(ustd::StringView name) {
     ScopedLock locker(m_lock);
     for (const auto &child : m_children) {
         if (child->name() == name) {
-            return child.obj();
+            return child.ptr();
         }
     }
     return nullptr;

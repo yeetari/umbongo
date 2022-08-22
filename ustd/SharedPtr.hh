@@ -12,58 +12,78 @@ class SharedPtr {
     friend class SharedPtr;
 
 private:
-    T *m_obj{nullptr};
+    T *m_ptr{nullptr};
 
 public:
     constexpr SharedPtr() = default;
-    explicit SharedPtr(T *obj);
-    SharedPtr(const SharedPtr &other) : SharedPtr(other.m_obj) {}
+    explicit SharedPtr(T *ptr);
+    SharedPtr(const SharedPtr &other) : SharedPtr(other.m_ptr) {}
     template <typename U>
-    SharedPtr(const SharedPtr<U> &other) : SharedPtr(other.m_obj) {}
-    SharedPtr(SharedPtr &&other) : m_obj(other.disown()) {}
+    SharedPtr(const SharedPtr<U> &other) : SharedPtr(other.m_ptr) {}
+    SharedPtr(SharedPtr &&other) : m_ptr(other.disown()) {}
     template <typename U>
-    SharedPtr(SharedPtr<U> &&other) : m_obj(other.disown()) {}
+    SharedPtr(SharedPtr<U> &&other) : m_ptr(other.disown()) {}
     ~SharedPtr();
 
     SharedPtr &operator=(const SharedPtr &) = delete;
     SharedPtr &operator=(SharedPtr &&);
 
-    explicit operator bool() const { return m_obj != nullptr; }
-    bool has_value() const { return m_obj != nullptr; }
+    void clear();
+    T *disown();
 
-    T &operator*() const {
-        ASSERT(m_obj != nullptr);
-        return *m_obj;
-    }
-    T *operator->() const {
-        ASSERT(m_obj != nullptr);
-        return m_obj;
-    }
+    explicit operator bool() const { return m_ptr != nullptr; }
+    bool has_value() const { return m_ptr != nullptr; }
 
-    T *disown() { return exchange(m_obj, nullptr); }
-    T *obj() const { return m_obj; }
+    T &operator*() const;
+    T *operator->() const;
+    T *ptr() const { return m_ptr; }
 };
 
 template <typename T>
-SharedPtr<T>::SharedPtr(T *obj) : m_obj(obj) {
-    if (obj != nullptr) {
-        obj->add_ref();
+SharedPtr<T>::SharedPtr(T *ptr) : m_ptr(ptr) {
+    if (ptr != nullptr) {
+        ptr->add_ref();
     }
 }
 
 template <typename T>
 SharedPtr<T>::~SharedPtr() {
-    if (m_obj != nullptr) {
-        m_obj->sub_ref();
+    if (m_ptr != nullptr) {
+        m_ptr->sub_ref();
     }
 }
 
 template <typename T>
 SharedPtr<T> &SharedPtr<T>::operator=(SharedPtr &&other) {
-    SharedPtr ptr(move(other));
-    swap(m_obj, ptr.m_obj);
-    ASSERT(m_obj != nullptr);
+    SharedPtr moved(move(other));
+    swap(m_ptr, moved.m_ptr);
+    ASSERT(m_ptr != nullptr);
     return *this;
+}
+
+template <typename T>
+void SharedPtr<T>::clear() {
+    if (m_ptr != nullptr) {
+        m_ptr->sub_ref();
+    }
+    m_ptr = nullptr;
+}
+
+template <typename T>
+T *SharedPtr<T>::disown() {
+    return exchange(m_ptr, nullptr);
+}
+
+template <typename T>
+T &SharedPtr<T>::operator*() const {
+    ASSERT(m_ptr != nullptr);
+    return *m_ptr;
+}
+
+template <typename T>
+T *SharedPtr<T>::operator->() const {
+    ASSERT(m_ptr != nullptr);
+    return m_ptr;
 }
 
 template <typename T, typename... Args>

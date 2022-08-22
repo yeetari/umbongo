@@ -19,20 +19,15 @@ struct Array {
     constexpr const T *begin() const { return data(); }
     constexpr const T *end() const { return data() + size(); }
 
-    constexpr T &operator[](usize index) {
-        ASSERT(index < N);
-        return begin()[index];
-    }
-    constexpr const T &operator[](usize index) const {
-        ASSERT(index < N);
-        return begin()[index];
-    }
+    constexpr T &operator[](usize index);
+    constexpr const T &operator[](usize index) const;
 
     constexpr T &first() { return begin()[0]; }
     constexpr const T &first() const { return begin()[0]; }
     constexpr T &last() { return end()[-1]; }
     constexpr const T &last() const { return end()[-1]; }
 
+    constexpr bool empty() const { return N == 0; }
     constexpr T *data() { return static_cast<T *>(m_data); }
     constexpr const T *data() const { return static_cast<const T *>(m_data); }
     constexpr usize size() const { return N; }
@@ -41,5 +36,17 @@ struct Array {
 
 template <typename T, typename... Args>
 Array(T, Args...) -> Array<T, sizeof...(Args) + 1>;
+
+template <typename T, usize N>
+constexpr T &Array<T, N>::operator[](usize index) {
+    ASSERT(index < N);
+    return begin()[index];
+}
+
+template <typename T, usize N>
+constexpr const T &Array<T, N>::operator[](usize index) const {
+    ASSERT(index < N);
+    return begin()[index];
+}
 
 } // namespace ustd

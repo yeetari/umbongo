@@ -153,7 +153,7 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
 
 void MemoryManager::switch_space(VirtSpace &virt_space) {
     Processor::set_current_space(&virt_space);
-    Processor::write_cr3(virt_space.m_pml4.obj());
+    Processor::write_cr3(virt_space.m_pml4.ptr());
 }
 
 uintptr MemoryManager::alloc_frame() {

@@ -56,7 +56,7 @@ public:
     void attach_device(Device *device, ustd::StringView path);
     void detach_device(Device *device);
     void mount(Inode *parent, Inode *host) override;
-    Inode *root_inode() override { return m_root_inode.obj(); }
+    Inode *root_inode() override { return m_root_inode.ptr(); }
 };
 
 } // namespace kernel

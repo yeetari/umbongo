@@ -27,6 +27,15 @@ struct Conditional<false, T, F> {
 };
 
 template <typename>
+struct IsConstCheck {
+    static constexpr bool value = false;
+};
+template <typename T>
+struct IsConstCheck<const T> {
+    static constexpr bool value = true;
+};
+
+template <typename>
 struct IsIntegralCheck : public FalseType {};
 template <>
 struct IsIntegralCheck<bool> : public TrueType {};
@@ -49,7 +58,7 @@ struct IsIntegralCheck<uint32> : public TrueType {};
 template <>
 struct IsIntegralCheck<uint64> : public TrueType {};
 
-template <typename T>
+template <typename>
 struct IsPointerCheck : public FalseType {};
 template <typename T>
 struct IsPointerCheck<T *> : public TrueType {};
@@ -68,6 +77,9 @@ template <typename T, typename U>
 inline constexpr bool IsConvertibleTo = detail::IsSameCheck<T, U>::value || requires(T obj) {
     static_cast<U>(obj);
 };
+
+template <typename T>
+inline constexpr bool IsConst = detail::IsConstCheck<T>::value;
 
 template <typename T>
 inline constexpr bool IsIntegral = detail::IsIntegralCheck<RemoveQual<T>>::value;

@@ -168,7 +168,7 @@ void Scheduler::setup() {
     // Each AP needs an idle thread created to ensure that there is always something to schedule.
     if (Processor::id() != 0) {
         auto idle_thread = Thread::create_kernel(&start, ThreadPriority::Idle);
-        Processor::set_current_thread(idle_thread.obj());
+        Processor::set_current_thread(idle_thread.ptr());
         insert_thread(ustd::move(idle_thread));
     }
 }
@@ -192,7 +192,7 @@ void Scheduler::switch_next(RegisterState *regs) {
     __builtin_memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
     asm volatile("xrstor %0" ::"m"(*next_thread->m_simd_region), "a"(0xffffffffu), "d"(0xffffffffu));
     auto &process = *next_thread->m_process;
-    if (MemoryManager::current_space() != process.m_virt_space.obj()) {
+    if (MemoryManager::current_space() != process.m_virt_space.ptr()) {
         MemoryManager::switch_space(*process.m_virt_space);
     }
     Processor::apic()->set_timer_count(time_slice_for(next_thread));

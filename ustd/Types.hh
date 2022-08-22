@@ -13,22 +13,22 @@ using uint64 = __UINT64_TYPE__;
 using uintptr = __UINTPTR_TYPE__;
 using usize = __SIZE_TYPE__;
 
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE: Must used unsigned long long here.
 constexpr usize operator"" _KiB(unsigned long long num) {
     return num * 0x400;
 }
 
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE: Must used unsigned long long here.
 constexpr usize operator"" _MiB(unsigned long long num) {
     return num * 0x100000;
 }
 
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE: Must used unsigned long long here.
 constexpr usize operator"" _GiB(unsigned long long num) {
     return num * 0x40000000;
 }
 
-// NOLINTNEXTLINE
+// NOLINTNEXTLINE: Must used unsigned long long here.
 constexpr usize operator"" _TiB(unsigned long long num) {
     return num * 0x10000000000;
 }
