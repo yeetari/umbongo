@@ -311,6 +311,15 @@ void Processor::initialise() {
     asm volatile("lidt %0" : : "m"(*idt));
     ustd::fill(s_interrupt_table, &unhandled_interrupt);
 
+    // Print CPU vendor.
+    CpuId vendor_cpu_id(0);
+    dmesg(
+        " cpu: Vendor '{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}{:c}'", (vendor_cpu_id.ebx() >> 0u) & 0xffu,
+        (vendor_cpu_id.ebx() >> 8u) & 0xffu, (vendor_cpu_id.ebx() >> 16u) & 0xffu, (vendor_cpu_id.ebx() >> 24u) & 0xffu,
+        (vendor_cpu_id.edx() >> 0u) & 0xffu, (vendor_cpu_id.edx() >> 8u) & 0xffu, (vendor_cpu_id.edx() >> 16u) & 0xffu,
+        (vendor_cpu_id.edx() >> 24u) & 0xffu, (vendor_cpu_id.ecx() >> 0u) & 0xffu, (vendor_cpu_id.ecx() >> 8u) & 0xffu,
+        (vendor_cpu_id.ecx() >> 16u) & 0xffu, (vendor_cpu_id.ecx() >> 24u) & 0xffu);
+
     // Enable CR0.WP (Write Protect). This prevents the kernel from writing to read only pages.
     write_cr0(read_cr0() | (1u << 16u));
 
