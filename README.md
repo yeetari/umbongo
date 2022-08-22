@@ -17,7 +17,7 @@ running in a VM respectively.
 
 #### Gentoo
 
-    emerge \
+    emerge -n \
       app-emulation/qemu \
       dev-lang/nasm \
       dev-util/cmake \
