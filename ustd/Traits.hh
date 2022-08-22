@@ -99,8 +99,9 @@ template <typename T>
 inline constexpr bool is_signed = T(-1) < T(0);
 
 template <typename T>
-concept is_trivially_copyable = __is_trivially_copyable(T);
+inline constexpr bool is_trivially_copyable = __is_trivially_copyable(T);
+
 template <typename T>
-concept is_trivially_destructible = __is_trivially_destructible(T);
+inline constexpr bool is_trivially_destructible = __is_trivially_destructible(T);
 
 } // namespace ustd
