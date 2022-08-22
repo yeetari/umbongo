@@ -66,12 +66,12 @@ class [[nodiscard]] Result {
         E m_error;
         alignas(T) Array<uint8, sizeof(T)> m_value;
     };
-    bool m_is_error;
+    bool m_is_error{true};
 
 public:
-    Result(E error) : m_error(error), m_is_error(true) {}
+    Result(E error) : m_error(error) {}
     template <typename F>
-    Result(F error) requires ErrorUnionContains<E, F> : m_error(error), m_is_error(true) {}
+    Result(F error) requires ErrorUnionContains<E, F> : m_error(error) {}
     template <ConvertibleTo<T> U>
     Result(U &&value) : m_is_error(false) {
         new (m_value.data()) T(forward<U>(value));
