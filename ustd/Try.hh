@@ -4,7 +4,7 @@
 #define EXPECT(expr, ...)                                                                                              \
     ({                                                                                                                 \
         auto _result_expect = (expr);                                                                                  \
-        ENSURE(_result_expect.has_value(), ##__VA_ARGS__);                                                             \
+        ENSURE(_result_expect.has_value() __VA_OPT__(, ) __VA_ARGS__);                                                 \
         _result_expect.disown_value();                                                                                 \
     })
 
