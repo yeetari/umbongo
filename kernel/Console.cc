@@ -31,11 +31,7 @@ void Console::initialise(BootInfo *boot_info) {
     s_framebuffer_height = boot_info->height;
 
     // Clear screen.
-    for (uint32_t y = 0; y < s_framebuffer_height; y++) {
-        for (uint32_t x = 0; x < s_framebuffer_width; x++) {
-            set_absolute_pixel(x, y, 0);
-        }
-    }
+    __builtin_memset(reinterpret_cast<uint32_t *>(s_framebuffer_base), 0, s_bytes_per_scan_line * s_framebuffer_height);
 }
 
 void Console::put_char(char ch) {
