@@ -187,16 +187,11 @@ struct [[gnu::packed]] SyscallFrame {
     uint64_t rax;
 };
 
-// For some reason the clang global constructor warning thinks the syscall table requires global constructors, even
-// though it doesn't.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wglobal-constructors"
 ustd::Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 using SyscallHandler = SyscallResult (Process::*)(uint64_t, uint64_t, uint64_t);
 #define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
-ustd::Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
+const ustd::Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
 #undef ENUMERATE_SYSCALL
-#pragma clang diagnostic pop
 
 LocalApic *s_apic = nullptr;
 ustd::Atomic<uint8_t> s_initialised_ap_count = 0;
