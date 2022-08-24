@@ -60,7 +60,7 @@ Domain::Domain(ustd::StringView name) : m_name(name) {
         if (line.empty() || line[0] == '#') {
             continue;
         }
-        usize equal_index = 0;
+        size_t equal_index = 0;
         for (auto ch : line) {
             if (ch == '=') {
                 break;
@@ -108,7 +108,7 @@ void Domain::watch(ipc::Client &client) {
 
 } // namespace
 
-usize main(usize, const char **) {
+size_t main(size_t, const char **) {
     log::initialise("config-server");
     ustd::Vector<Domain> domains;
     core::EventLoop event_loop;
@@ -173,7 +173,7 @@ usize main(usize, const char **) {
             return true;
         }
         default:
-            log::warn("Received unknown message {}", static_cast<usize>(message_kind));
+            log::warn("Received unknown message {}", static_cast<size_t>(message_kind));
             return false;
         }
     });

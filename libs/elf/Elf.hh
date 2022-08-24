@@ -6,27 +6,27 @@
 namespace elf {
 
 struct Header {
-    ustd::Array<uint8, 4> magic;
-    ustd::Array<uint8, 12> ident;
-    uint16 type;
-    uint16 machine;
-    uint32 version;
-    uintptr entry;
-    usize ph_off;
-    usize sh_off;
-    uint32 flags;
-    uint16 header_size;
-    uint16 ph_size;
-    uint16 ph_count;
+    ustd::Array<uint8_t, 4> magic;
+    ustd::Array<uint8_t, 12> ident;
+    uint16_t type;
+    uint16_t machine;
+    uint32_t version;
+    uintptr_t entry;
+    size_t ph_off;
+    size_t sh_off;
+    uint32_t flags;
+    uint16_t header_size;
+    uint16_t ph_size;
+    uint16_t ph_count;
 };
 
-enum class SegmentType : uint32 {
+enum class SegmentType : uint32_t {
     Load = 1,
     Dynamic = 2,
     Interp = 3,
 };
 
-enum class SegmentFlags : uint32 {
+enum class SegmentFlags : uint32_t {
     Executable = 1u << 0u,
     Writable = 1u << 1u,
     Readable = 1u << 2u,
@@ -35,15 +35,15 @@ enum class SegmentFlags : uint32 {
 struct ProgramHeader {
     SegmentType type;
     SegmentFlags flags;
-    usize offset;
-    uintptr vaddr;
-    uintptr paddr;
-    uint64 filesz;
-    uint64 memsz;
-    uint64 align;
+    size_t offset;
+    uintptr_t vaddr;
+    uintptr_t paddr;
+    uint64_t filesz;
+    uint64_t memsz;
+    uint64_t align;
 };
 
-enum class DynamicType : int64 {
+enum class DynamicType : int64_t {
     Null = 0,
     Hash = 4,
     StrTab = 5,
@@ -62,22 +62,22 @@ enum class DynamicType : int64 {
 
 struct DynamicEntry {
     DynamicType type;
-    uint64 value;
+    uint64_t value;
 };
 
-enum class RelocationType : uint32 {
+enum class RelocationType : uint32_t {
     None = 0,
     Relative = 8,
 };
 
 struct Rela {
-    usize offset;
-    uint64 info;
-    ssize addend;
+    size_t offset;
+    uint64_t info;
+    ssize_t addend;
 };
 
 inline constexpr SegmentFlags operator&(SegmentFlags a, SegmentFlags b) {
-    return static_cast<SegmentFlags>(static_cast<uint32>(a) & static_cast<uint32>(b));
+    return static_cast<SegmentFlags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
 }
 
 } // namespace elf

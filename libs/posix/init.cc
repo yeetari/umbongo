@@ -12,7 +12,7 @@ int main(int argc, char **argv);
 
 __END_DECLS
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     __stdio_init();
-    return static_cast<usize>(main(static_cast<int>(argc), const_cast<char **>(argv)));
+    return static_cast<size_t>(main(static_cast<int>(argc), const_cast<char **>(argv)));
 }

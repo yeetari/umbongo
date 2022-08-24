@@ -79,7 +79,7 @@ align 8
 .stacks:
 ap_bootstrap_end:
 
-; uintptr *ap_prepare(void)
+; uintptr_t *ap_prepare(void)
 global ap_prepare
 ap_prepare:
     mov rax, cr0

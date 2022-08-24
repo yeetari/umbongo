@@ -51,20 +51,20 @@ class PollBlocker : public ThreadBlocker {
     const ustd::LargeVector<PollFd> &m_fds;
     SpinLock &m_lock;
     Process &m_process;
-    ustd::Optional<usize> m_deadline;
+    ustd::Optional<size_t> m_deadline;
 
 public:
-    PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout);
+    PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize_t timeout);
 
     bool should_unblock() override;
 };
 
 class ReadBlocker : public ThreadBlocker {
     ustd::SharedPtr<File> m_file;
-    usize m_offset;
+    size_t m_offset;
 
 public:
-    ReadBlocker(File &file, usize offset) : m_file(&file), m_offset(offset) {}
+    ReadBlocker(File &file, size_t offset) : m_file(&file), m_offset(offset) {}
 
     bool should_unblock() override;
 };
@@ -73,17 +73,17 @@ class WaitBlocker final : public ThreadBlocker {
     ustd::SharedPtr<Process> m_process;
 
 public:
-    explicit WaitBlocker(usize pid);
+    explicit WaitBlocker(size_t pid);
 
     bool should_unblock() override;
 };
 
 class WriteBlocker : public ThreadBlocker {
     ustd::SharedPtr<File> m_file;
-    usize m_offset;
+    size_t m_offset;
 
 public:
-    WriteBlocker(File &file, usize offset) : m_file(&file), m_offset(offset) {}
+    WriteBlocker(File &file, size_t offset) : m_file(&file), m_offset(offset) {}
 
     bool should_unblock() override;
 };

@@ -15,12 +15,12 @@ class Message;
 class MessageDecoder;
 
 class Client : public core::Watchable {
-    ustd::Optional<uint32> m_fd;
+    ustd::Optional<uint32_t> m_fd;
     ustd::Function<void()> m_on_disconnect{};
     ustd::Function<bool(MessageDecoder &)> m_on_message{};
 
 public:
-    explicit Client(ustd::Optional<uint32> fd = {});
+    explicit Client(ustd::Optional<uint32_t> fd = {});
     Client(const Client &) = delete;
     Client(Client &&other)
         : m_fd(ustd::move(other.m_fd)), m_on_disconnect(ustd::move(other.m_on_disconnect)),
@@ -32,7 +32,7 @@ public:
 
     bool connect(ustd::StringView path);
     void send_message(const Message &message);
-    usize wait_message(ustd::Span<uint8> buffer);
+    size_t wait_message(ustd::Span<uint8_t> buffer);
 
     template <typename T, typename... Args>
     void send_message(Args &&...args);
@@ -43,7 +43,7 @@ public:
     void set_on_message(ustd::Function<bool(MessageDecoder &)> on_message) { m_on_message = ustd::move(on_message); }
 
     bool connected() const { return m_fd.has_value(); }
-    uint32 fd() const override { return *m_fd; }
+    uint32_t fd() const override { return *m_fd; }
 };
 
 template <typename T, typename... Args>
@@ -54,8 +54,8 @@ void Client::send_message(Args &&...args) {
 template <typename T>
 T Client::wait_message() {
     // NOLINTNEXTLINE
-    ustd::Array<uint8, 8_KiB> buffer;
-    usize bytes_read = wait_message(buffer.span());
+    ustd::Array<uint8_t, 8_KiB> buffer;
+    size_t bytes_read = wait_message(buffer.span());
     return T::decode({buffer.data(), bytes_read});
 }
 

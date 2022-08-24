@@ -17,7 +17,7 @@ void LineEditor::clear() {
 }
 
 void LineEditor::clear_line() {
-    for (uint32 i = 0; i < m_cursor_pos; i++) {
+    for (uint32_t i = 0; i < m_cursor_pos; i++) {
         m_buffer.remove(m_cursor_pos - i - 1);
         core::put_char('\b');
     }
@@ -25,14 +25,14 @@ void LineEditor::clear_line() {
 }
 
 void LineEditor::goto_start() {
-    for (uint32 i = 0; i < m_cursor_pos; i++) {
+    for (uint32_t i = 0; i < m_cursor_pos; i++) {
         core::print("\x1b[D");
     }
     m_cursor_pos = 0;
 }
 
 void LineEditor::goto_end() {
-    for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
+    for (uint32_t i = m_cursor_pos; i < m_buffer.size(); i++) {
         core::print("\x1b[C");
     }
     m_cursor_pos = m_buffer.size();
@@ -96,7 +96,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
             }
             m_cursor_pos++;
             core::print("\x1b[C");
-            for (uint32 i = m_cursor_pos; i < m_buffer.size(); i++) {
+            for (uint32_t i = m_cursor_pos; i < m_buffer.size(); i++) {
                 m_cursor_pos++;
                 core::print("\x1b[C");
                 if (m_cursor_pos == m_buffer.size() || m_buffer[m_cursor_pos] == ' ') {
@@ -110,7 +110,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
             }
             m_cursor_pos--;
             core::print("\x1b[D");
-            for (uint32 i = m_cursor_pos; i > 0; i--) {
+            for (uint32_t i = m_cursor_pos; i > 0; i--) {
                 m_cursor_pos--;
                 core::print("\x1b[D");
                 if (m_buffer[m_cursor_pos] == ' ') {
@@ -169,7 +169,7 @@ ustd::StringView LineEditor::handle_key_event(core::KeyEvent event) {
         return {};
     }
     m_buffer.ensure_size(m_buffer.size() + 1);
-    for (uint32 i = m_buffer.size() - m_cursor_pos - 1; i > 0; i--) {
+    for (uint32_t i = m_buffer.size() - m_cursor_pos - 1; i > 0; i--) {
         m_buffer[m_cursor_pos + i] = m_buffer[m_cursor_pos + i - 1];
     }
     m_buffer[m_cursor_pos++] = event.character();

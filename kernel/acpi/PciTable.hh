@@ -9,33 +9,33 @@ namespace kernel::acpi {
 class PciTableIterator;
 
 struct [[gnu::packed]] PciSegment {
-    uint64 base;
-    uint16 num;
-    uint8 start_bus;
-    uint8 end_bus;
-    uint32 : 32;
+    uint64_t base;
+    uint16_t num;
+    uint8_t start_bus;
+    uint8_t end_bus;
+    uint32_t : 32;
 };
 
 class [[gnu::packed]] PciTable : public Table {
-    uint64 : 64;
+    uint64_t : 64;
     ustd::Array<PciSegment, 0> m_segments;
 
 public:
-    static constexpr ustd::Array<uint8, 4> k_signature{'M', 'C', 'F', 'G'};
+    static constexpr ustd::Array<uint8_t, 4> k_signature{'M', 'C', 'F', 'G'};
 
     PciTableIterator begin() const;
     PciTableIterator end() const;
 
-    const PciSegment *segment(usize index) const;
-    usize segment_count() const;
+    const PciSegment *segment(size_t index) const;
+    size_t segment_count() const;
 };
 
 class PciTableIterator {
     const PciTable *const m_table;
-    usize m_index;
+    size_t m_index;
 
 public:
-    constexpr PciTableIterator(const PciTable *table, usize index) : m_table(table), m_index(index) {}
+    constexpr PciTableIterator(const PciTable *table, size_t index) : m_table(table), m_index(index) {}
 
     constexpr PciTableIterator &operator++() {
         m_index++;

@@ -15,16 +15,16 @@
 namespace kernel {
 namespace {
 
-usize s_pid_counter = 0;
+size_t s_pid_counter = 0;
 
 } // namespace
 
 Process::Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space)
     : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()), m_virt_space(ustd::move(virt_space)) {}
 
-uint32 Process::allocate_fd() {
+uint32_t Process::allocate_fd() {
     // TODO: Limits/error handling. Allocating 2^32 fds would overflow the vector.
-    for (uint32 i = 0; i < m_fds.size(); i++) {
+    for (uint32_t i = 0; i < m_fds.size(); i++) {
         if (!m_fds[i]) {
             return i;
         }

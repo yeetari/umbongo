@@ -9,21 +9,21 @@ namespace kernel::acpi {
 
 // High Precision Event Timer Table (IA-PC HPET specification 1.0a section 3.2.4)
 class [[gnu::packed]] HpetTable : public Table {
-    uint8 m_hardware_revision;
-    uint8 m_comparator_count : 5;
-    uint8 m_counter_size : 1;
-    usize : 1;
+    uint8_t m_hardware_revision;
+    uint8_t m_comparator_count : 5;
+    uint8_t m_counter_size : 1;
+    size_t : 1;
     bool m_legacy_replacement_capable : 1;
-    uint16 m_pci_vendor_id;
+    uint16_t m_pci_vendor_id;
     GenericAddress m_base_address;
-    uint8 m_number;
-    uint16 m_minimum_tick;
-    uint8 m_page_protection;
+    uint8_t m_number;
+    uint16_t m_minimum_tick;
+    uint8_t m_page_protection;
 
 public:
-    static constexpr ustd::Array<uint8, 4> k_signature{'H', 'P', 'E', 'T'};
+    static constexpr ustd::Array<uint8_t, 4> k_signature{'H', 'P', 'E', 'T'};
 
-    uint8 comparator_count() const { return m_comparator_count; }
+    uint8_t comparator_count() const { return m_comparator_count; }
     const GenericAddress &base_address() const { return m_base_address; }
 };
 

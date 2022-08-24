@@ -12,7 +12,7 @@
 
 namespace ustd {
 
-template <typename T, typename SizeType = uint32>
+template <typename T, typename SizeType = uint32_t>
 class Vector {
     T *m_data{nullptr};
     SizeType m_capacity{0};
@@ -72,7 +72,7 @@ public:
 };
 
 template <typename T>
-using LargeVector = Vector<T, usize>;
+using LargeVector = Vector<T, size_t>;
 
 template <typename T, typename SizeType>
 template <typename... Args>
@@ -96,7 +96,7 @@ Vector<T, SizeType>::Vector(const Vector &other) {
 template <typename T, typename SizeType>
 Vector<T, SizeType>::~Vector() {
     clear();
-    delete[] reinterpret_cast<uint8 *>(m_data);
+    delete[] reinterpret_cast<uint8_t *>(m_data);
 }
 
 template <typename T, typename SizeType>
@@ -147,7 +147,7 @@ void Vector<T, SizeType>::ensure_size(SizeType size, Args &&...args) {
 template <typename T, typename SizeType>
 void Vector<T, SizeType>::reallocate(SizeType capacity) {
     ASSERT(capacity >= m_size);
-    T *new_data = reinterpret_cast<T *>(new uint8[capacity * sizeof(T)]);
+    T *new_data = reinterpret_cast<T *>(new uint8_t[capacity * sizeof(T)]);
     if constexpr (!is_trivially_copyable<T>) {
         for (auto *data = new_data; auto &elem : *this) {
             new (data++) T(move(elem));
@@ -158,7 +158,7 @@ void Vector<T, SizeType>::reallocate(SizeType capacity) {
     } else {
         __builtin_memcpy(new_data, m_data, size_bytes());
     }
-    delete[] reinterpret_cast<uint8 *>(m_data);
+    delete[] reinterpret_cast<uint8_t *>(m_data);
     m_data = new_data;
     m_capacity = capacity;
 }

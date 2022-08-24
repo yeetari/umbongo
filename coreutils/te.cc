@@ -20,30 +20,30 @@ class Line {
 
 public:
     void put_char(char ch) { m_chars.push(ch); }
-    void put_char(char ch, uint32 index) {
+    void put_char(char ch, uint32_t index) {
         // TODO: Use Vector::insert(index, elem) when available.
         m_chars.emplace_at(index, ch);
     }
-    void del_char(uint32 index) { m_chars.remove(index); }
+    void del_char(uint32_t index) { m_chars.remove(index); }
 
-    char character(uint32 index) const { return m_chars[index]; }
-    uint32 column_count() const { return m_chars.size(); }
+    char character(uint32_t index) const { return m_chars[index]; }
+    uint32_t column_count() const { return m_chars.size(); }
     const char *data() const { return m_chars.data(); }
 };
 
 class Editor {
-    const uint32 m_screen_column_count;
-    const uint32 m_screen_row_count;
+    const uint32_t m_screen_column_count;
+    const uint32_t m_screen_row_count;
     ustd::String m_path;
     ustd::Vector<Line> m_lines;
-    uint32 m_cursor_x{0};
-    uint32 m_cursor_y{0};
-    uint32 m_file_x{0};
-    uint32 m_file_y{0};
-    ustd::Optional<uint32> m_saved_cursor_x;
+    uint32_t m_cursor_x{0};
+    uint32_t m_cursor_y{0};
+    uint32_t m_file_x{0};
+    uint32_t m_file_y{0};
+    ustd::Optional<uint32_t> m_saved_cursor_x;
 
 public:
-    Editor(uint32 screen_column_count, uint32 screen_row_count);
+    Editor(uint32_t screen_column_count, uint32_t screen_row_count);
     Editor(const Editor &) = delete;
     Editor(Editor &&) = delete;
     ~Editor();
@@ -56,7 +56,7 @@ public:
     void render();
 };
 
-Editor::Editor(uint32 screen_column_count, uint32 screen_row_count)
+Editor::Editor(uint32_t screen_column_count, uint32_t screen_row_count)
     : m_screen_column_count(screen_column_count), m_screen_row_count(screen_row_count) {
     core::print("\x1b[?1049h");
 }
@@ -70,7 +70,7 @@ ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
     auto file = TRY(core::File::open(m_path, core::OpenMode::Create));
     auto size = TRY(file.size());
     auto *line = &m_lines.emplace();
-    for (usize i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         auto ch = TRY(file.read<char>());
         if (ch == '\n') {
             line = &m_lines.emplace();
@@ -87,7 +87,7 @@ ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
 bool Editor::read_key() {
     // TODO: Global stdin file to .read<KeyEvent>() from.
     core::KeyEvent event;
-    EXPECT(core::syscall<ssize>(Syscall::read, 0, &event, sizeof(core::KeyEvent)));
+    EXPECT(core::syscall<ssize_t>(Syscall::read, 0, &event, sizeof(core::KeyEvent)));
     if (event.code() >= 0x4f && event.code() <= 0x52) {
         if (event.ctrl_pressed()) {
             return true;
@@ -178,7 +178,7 @@ bool Editor::read_key() {
             line.del_char(--m_cursor_x);
         } else if (m_cursor_y > 0) {
             m_cursor_x = m_lines[m_cursor_y - 1].column_count();
-            for (uint32 i = 0; i < line.column_count(); i++) {
+            for (uint32_t i = 0; i < line.column_count(); i++) {
                 m_lines[m_cursor_y - 1].put_char(line.character(i));
             }
             m_lines.remove(m_cursor_y--);
@@ -188,10 +188,10 @@ bool Editor::read_key() {
     if (event.character() == '\n') {
         m_lines.emplace_at(m_cursor_y++);
         if (m_cursor_x > 0) {
-            for (uint32 i = 0; i < m_cursor_x; i++) {
+            for (uint32_t i = 0; i < m_cursor_x; i++) {
                 m_lines[m_cursor_y - 1].put_char(m_lines[m_cursor_y].character(i));
             }
-            for (uint32 i = 0; i < m_cursor_x; i++) {
+            for (uint32_t i = 0; i < m_cursor_x; i++) {
                 m_lines[m_cursor_y].del_char(0);
             }
         }
@@ -218,14 +218,14 @@ void Editor::render() {
     }
 
     core::print("\x1b[J");
-    for (uint32 row = 0; row < m_screen_row_count; row++) {
-        uint32 file_row = row + m_file_y;
+    for (uint32_t row = 0; row < m_screen_row_count; row++) {
+        uint32_t file_row = row + m_file_y;
         if (file_row >= m_lines.size()) {
             break;
         }
         const auto &line = m_lines[file_row];
-        for (uint32 col = 0; col < m_screen_column_count - 1; col++) {
-            uint32 file_col = col + m_file_x;
+        for (uint32_t col = 0; col < m_screen_column_count - 1; col++) {
+            uint32_t file_col = col + m_file_x;
             if (file_col >= line.column_count()) {
                 break;
             }
@@ -240,7 +240,7 @@ void Editor::render() {
 
 } // namespace
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     if (argc != 2) {
         core::println("Usage: {} <file>", argv[0]);
         return 0;

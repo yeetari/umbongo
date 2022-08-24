@@ -19,17 +19,17 @@ namespace kernel {
 
 class RamFsInode final : public Inode {
     ustd::String m_name;
-    ustd::LargeVector<uint8> m_data;
+    ustd::LargeVector<uint8_t> m_data;
     mutable SpinLock m_lock;
 
 public:
     RamFsInode(InodeType type, Inode *parent, ustd::StringView name) : Inode(type, parent), m_name(name) {}
 
     SysResult<ustd::SharedPtr<File>> open_impl() override;
-    usize read(ustd::Span<void> data, usize offset) const override;
-    usize size() const override;
+    size_t read(ustd::Span<void> data, size_t offset) const override;
+    size_t size() const override;
     SysResult<> truncate() override;
-    usize write(ustd::Span<const void> data, usize offset) override;
+    size_t write(ustd::Span<const void> data, size_t offset) override;
     ustd::StringView name() const override { return m_name; }
 };
 
@@ -41,11 +41,11 @@ class RamFsDirectoryInode final : public Inode {
 public:
     RamFsDirectoryInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
 
-    SysResult<Inode *> child(usize index) const override;
+    SysResult<Inode *> child(size_t index) const override;
     SysResult<Inode *> create(ustd::StringView name, InodeType type) override;
     Inode *lookup(ustd::StringView name) override;
     SysResult<> remove(ustd::StringView name) override;
-    usize size() const override;
+    size_t size() const override;
     ustd::StringView name() const override { return m_name; }
 };
 

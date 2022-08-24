@@ -2,7 +2,6 @@
 
 #include <bits/error.hh>
 #include <errno.h>
-#include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -10,6 +9,7 @@
 #include <log/Log.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Result.hh>
+#include <ustd/Types.hh>
 
 __BEGIN_DECLS
 

@@ -7,7 +7,7 @@
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
-usize main(usize, const char **) {
+size_t main(size_t, const char **) {
     EXPECT(core::mount("/run", "ram"), "Failed to mount /run");
     EXPECT(core::create_process("/bin/log-server"), "Failed to start /bin/log-server");
     EXPECT(core::create_process("/bin/config-server"), "Failed to start /bin/config-server");

@@ -7,13 +7,13 @@
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     auto file = EXPECT(core::File::open(argv[0]));
     auto header = EXPECT(file.read<elf::Header>());
 
-    uintptr region_base = ustd::Limits<uintptr>::max();
-    uintptr region_end = 0;
-    for (uint16 i = 0; i < header.ph_count; i++) {
+    uintptr_t region_base = ustd::Limits<uintptr_t>::max();
+    uintptr_t region_end = 0;
+    for (uint16_t i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         EXPECT(file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i));
         if (phdr.type == elf::SegmentType::Load) {
@@ -24,11 +24,11 @@ usize main(usize argc, const char **argv) {
     }
 
     // TODO: Don't always allocate writable + executable.
-    auto base_offset = EXPECT(core::syscall<uintptr>(Syscall::allocate_region, region_end - region_base,
-                                                     kernel::MemoryProt::Write | kernel::MemoryProt::Exec));
-    usize dynamic_entry_count = 0;
-    usize dynamic_table_offset = 0;
-    for (uint16 i = 0; i < header.ph_count; i++) {
+    auto base_offset = EXPECT(core::syscall<uintptr_t>(Syscall::allocate_region, region_end - region_base,
+                                                       kernel::MemoryProt::Write | kernel::MemoryProt::Exec));
+    size_t dynamic_entry_count = 0;
+    size_t dynamic_table_offset = 0;
+    for (uint16_t i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         EXPECT(file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i));
         if (phdr.type == elf::SegmentType::Dynamic) {
@@ -42,10 +42,10 @@ usize main(usize argc, const char **argv) {
         }
     }
 
-    usize relocation_entry_size = 0;
-    usize relocation_table_offset = 0;
-    usize relocation_table_size = 0;
-    for (usize i = 0; i < dynamic_entry_count; i++) {
+    size_t relocation_entry_size = 0;
+    size_t relocation_table_offset = 0;
+    size_t relocation_table_size = 0;
+    for (size_t i = 0; i < dynamic_entry_count; i++) {
         elf::DynamicEntry entry{};
         EXPECT(file.read({&entry, sizeof(elf::DynamicEntry)}, dynamic_table_offset + sizeof(elf::DynamicEntry) * i));
         switch (entry.type) {
@@ -70,7 +70,7 @@ usize main(usize argc, const char **argv) {
             relocation_entry_size = entry.value;
             break;
         default:
-            log::error("Unknown dynamic entry type {} in program {}", static_cast<int64>(entry.type), argv[0]);
+            log::error("Unknown dynamic entry type {} in program {}", static_cast<int64_t>(entry.type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
@@ -80,26 +80,26 @@ usize main(usize argc, const char **argv) {
         ASSERT(relocation_table_size != 0);
         ASSERT(relocation_table_size % relocation_entry_size == 0);
     }
-    usize relocation_entry_count = relocation_entry_size != 0 ? relocation_table_size / relocation_entry_size : 0;
-    for (usize i = 0; i < relocation_entry_count; i++) {
+    size_t relocation_entry_count = relocation_entry_size != 0 ? relocation_table_size / relocation_entry_size : 0;
+    for (size_t i = 0; i < relocation_entry_count; i++) {
         elf::Rela rela{};
         EXPECT(file.read({&rela, sizeof(elf::Rela)}, relocation_table_offset + relocation_entry_size * i));
 
-        auto *ptr = reinterpret_cast<usize *>(base_offset + rela.offset);
+        auto *ptr = reinterpret_cast<size_t *>(base_offset + rela.offset);
         auto type = static_cast<elf::RelocationType>(rela.info & 0xffffffffu);
         switch (type) {
         case elf::RelocationType::None:
             break;
         case elf::RelocationType::Relative:
-            *ptr = static_cast<usize>(static_cast<ssize>(base_offset) + rela.addend);
+            *ptr = static_cast<size_t>(static_cast<ssize_t>(base_offset) + rela.addend);
             break;
         default:
-            log::error("Unknown relocation type {} in program {}", static_cast<uint32>(type), argv[0]);
+            log::error("Unknown relocation type {} in program {}", static_cast<uint32_t>(type), argv[0]);
             ENSURE_NOT_REACHED();
         }
     }
 
-    const uintptr entry_point = base_offset + header.entry;
-    reinterpret_cast<void (*)(usize, const char **)>(entry_point)(argc - 1, &argv[1]);
+    const uintptr_t entry_point = base_offset + header.entry;
+    reinterpret_cast<void (*)(size_t, const char **)>(entry_point)(argc - 1, &argv[1]);
     ENSURE_NOT_REACHED();
 }

@@ -25,7 +25,7 @@ constexpr bool equal(const Container &a, const Container &b) {
     if constexpr (is_trivially_copyable<T>) {
         return __builtin_memcmp(a.data(), b.data(), b.size_bytes()) == 0;
     }
-    for (usize i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
         if (a[i] != b[i]) {
             return false;
         }
@@ -47,16 +47,16 @@ constexpr void fill(Container &container, const T &value) {
 }
 
 template <typename It, typename T>
-constexpr void fill_n(It it, usize size, T value) {
-    for (usize i = 0; i < size; i++) {
+constexpr void fill_n(It it, size_t size, T value) {
+    for (size_t i = 0; i < size; i++) {
         *it++ = static_cast<remove_ref<decltype(*it)>>(value);
     }
 }
 
 // TODO: Concept constraints.
 template <typename Container, typename T>
-constexpr ustd::Optional<usize> index_of(const Container &container, const T &value) {
-    for (usize i = 0; i < container.size(); i++) {
+constexpr ustd::Optional<size_t> index_of(const Container &container, const T &value) {
+    for (size_t i = 0; i < container.size(); i++) {
         if (container[i] == value) {
             return i;
         }

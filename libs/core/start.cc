@@ -7,7 +7,7 @@
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
-usize main(usize argc, const char **argv);
+size_t main(size_t argc, const char **argv);
 
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
     // TODO: Avoid allocating memory here.
@@ -23,7 +23,7 @@ usize main(usize argc, const char **argv);
     }
 }
 
-extern "C" void _start(usize argc, const char **argv) {
+extern "C" void _start(size_t argc, const char **argv) {
     asm volatile("andq $~15, %rsp");
     EXPECT(core::syscall(Syscall::exit, main(argc, argv)));
 }

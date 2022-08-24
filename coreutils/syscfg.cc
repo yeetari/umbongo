@@ -6,7 +6,7 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     if ((argc != 1 && argc != 2) || (argc == 2 && ustd::StringView(argv[1]) == "--help")) {
         core::println("Usage: {} [key][=value]", argv[0]);
         return 0;

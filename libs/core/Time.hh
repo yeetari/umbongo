@@ -4,7 +4,7 @@
 
 namespace core {
 
-void sleep(usize ns);
-usize time();
+void sleep(size_t ns);
+size_t time();
 
 } // namespace core

@@ -31,9 +31,9 @@
 namespace {
 
 struct [[gnu::packed]] EventRingSegment {
-    uint64 base;
-    uint32 trb_count;
-    uint32 : 32;
+    uint64_t base;
+    uint32_t trb_count;
+    uint32_t : 32;
 };
 
 } // namespace
@@ -47,12 +47,12 @@ ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::
     TRY(m_file.ioctl(kernel::IoctlRequest::PciEnableDevice));
     auto *cap_regs = TRY(m_file.mmap<CapRegs>());
 
-    const auto op_base = reinterpret_cast<uintptr>(cap_regs) + mmio::read(cap_regs->cap_length);
-    const auto rt_base = reinterpret_cast<uintptr>(cap_regs) + mmio::read(cap_regs->runtime_offset);
-    const auto db_base = reinterpret_cast<uintptr>(cap_regs) + mmio::read(cap_regs->doorbell_offset);
-    ENSURE(op_base % sizeof(uint32) == 0);
+    const auto op_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->cap_length);
+    const auto rt_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->runtime_offset);
+    const auto db_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->doorbell_offset);
+    ENSURE(op_base % sizeof(uint32_t) == 0);
     ENSURE(rt_base % 32 == 0);
-    ENSURE(db_base % sizeof(uint32) == 0);
+    ENSURE(db_base % sizeof(uint32_t) == 0);
     m_op_regs = reinterpret_cast<OpRegs *>(op_base);
     m_run_regs = reinterpret_cast<RunRegs *>(rt_base);
     m_doorbell_array = reinterpret_cast<DoorbellArray *>(db_base);
@@ -93,17 +93,17 @@ ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::
     mmio::write(m_op_regs->config, config | slot_count);
 
     // Allocate the device context base address array. `+ 1` for the scratchpad.
-    m_context_table = TRY(mmio::alloc_dma_array<uintptr>(slot_count + 1));
+    m_context_table = TRY(mmio::alloc_dma_array<uintptr_t>(slot_count + 1));
     m_devices.ensure_size(slot_count);
     mmio::write(m_op_regs->dcbaap, EXPECT(mmio::virt_to_phys(m_context_table)));
 
     // Allocate the scratchpad buffers.
     const auto hcs_params2 = mmio::read(cap_regs->hcs_params2);
-    uint32 scratch_buffer_count = ((hcs_params2 >> 27u) & 0x1fu) | ((hcs_params2 >> 16u) & 0x3e0u);
-    auto *scratchpad_buffer_array = TRY(mmio::alloc_dma_array<uintptr>(scratch_buffer_count));
+    uint32_t scratch_buffer_count = ((hcs_params2 >> 27u) & 0x1fu) | ((hcs_params2 >> 16u) & 0x3e0u);
+    auto *scratchpad_buffer_array = TRY(mmio::alloc_dma_array<uintptr_t>(scratch_buffer_count));
     m_context_table[0] = EXPECT(mmio::virt_to_phys(scratchpad_buffer_array));
-    for (uint32 i = 0; i < scratch_buffer_count; i++) {
-        auto *scratchpad_buffer = TRY(mmio::alloc_dma_array<uint8>(4_KiB));
+    for (uint32_t i = 0; i < scratch_buffer_count; i++) {
+        auto *scratchpad_buffer = TRY(mmio::alloc_dma_array<uint8_t>(4_KiB));
         scratchpad_buffer_array[i] = EXPECT(mmio::virt_to_phys(scratchpad_buffer));
     }
 
@@ -122,22 +122,22 @@ ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::
     mmio::write(m_run_regs->erst_base, EXPECT(mmio::virt_to_phys(segment_table)));
 
     const auto port_count = (mmio::read(cap_regs->hcs_params1) >> 24u) & 0xffu;
-    m_ports.ensure_size(port_count, nullptr, static_cast<uint8>(0u));
+    m_ports.ensure_size(port_count, nullptr, static_cast<uint8_t>(0u));
 
     // Initialise port array by reading extended capabilities.
     // TODO: Tidy this up.
-    uint16 xecp = (mmio::read(cap_regs->hcc_params1) >> 16u) & 0xffffu;
-    uint32 ext_cap = 0;
+    uint16_t xecp = (mmio::read(cap_regs->hcc_params1) >> 16u) & 0xffffu;
+    uint32_t ext_cap = 0;
     do {
-        ext_cap = mmio::read(reinterpret_cast<const uint32 *>(cap_regs)[xecp]);
+        ext_cap = mmio::read(reinterpret_cast<const uint32_t *>(cap_regs)[xecp]);
         if ((ext_cap & 0xffu) != 2u) {
             continue;
         }
-        auto protcol_info = mmio::read(reinterpret_cast<const uint32 *>(cap_regs)[xecp + 2]);
-        uint8 protocol_port_start = (protcol_info >> 0u) & 0xffu;
-        uint8 protocol_port_count = (protcol_info >> 8u) & 0xffu;
-        for (uint8 i = protocol_port_start; i < (protocol_port_start + protocol_port_count); i++) {
-            auto *portsc = reinterpret_cast<uint32 *>(op_base + 0x400 + (i - 1) * 0x10);
+        auto protcol_info = mmio::read(reinterpret_cast<const uint32_t *>(cap_regs)[xecp + 2]);
+        uint8_t protocol_port_start = (protcol_info >> 0u) & 0xffu;
+        uint8_t protocol_port_count = (protcol_info >> 8u) & 0xffu;
+        for (uint8_t i = protocol_port_start; i < (protocol_port_start + protocol_port_count); i++) {
+            auto *portsc = reinterpret_cast<uint32_t *>(op_base + 0x400 + (i - 1) * 0x10);
             m_ports[i - 1] = Port(portsc, i);
         }
         xecp += (ext_cap >> 8u) & 0xffu;
@@ -181,9 +181,9 @@ void HostController::handle_interrupt() {
     bool had_any_event = false;
     for (auto &event : m_event_ring->dequeue()) {
         had_any_event = true;
-        const uint8 completion_code = (event.status >> 24u) & 0xffu;
+        const uint8_t completion_code = (event.status >> 24u) & 0xffu;
         if (completion_code != 1u) {
-            log::warn("Received event {} with completion code {}", static_cast<uint8>(event.type), completion_code);
+            log::warn("Received event {} with completion code {}", static_cast<uint8_t>(event.type), completion_code);
             continue;
         }
         switch (event.type) {
@@ -191,7 +191,7 @@ void HostController::handle_interrupt() {
             // TODO: Cache physical base.
             auto &device = *m_devices[event.slot_id - 1u];
             auto &transfer_ring = device.endpoint_ring(event.endpoint_id - 1u);
-            usize trb_index = (event.data - EXPECT(transfer_ring.physical_base())) / sizeof(RawTrb);
+            size_t trb_index = (event.data - EXPECT(transfer_ring.physical_base())) / sizeof(RawTrb);
             auto &transfer = transfer_ring[trb_index];
             if (transfer.type == TrbType::Normal) {
                 transfer.cycle = !transfer.cycle;
@@ -209,7 +209,7 @@ void HostController::handle_interrupt() {
         }
         case TrbType::CommandCompletionEvent: {
             // TODO: Cache physical base.
-            usize command_index = (event.data - EXPECT(m_command_ring->physical_base())) / sizeof(RawTrb);
+            size_t command_index = (event.data - EXPECT(m_command_ring->physical_base())) / sizeof(RawTrb);
             auto &command = (*m_command_ring)[command_index];
             command.slot_id = event.slot_id;
             command.status = event.status;
@@ -217,7 +217,7 @@ void HostController::handle_interrupt() {
             break;
         }
         case TrbType::PortStatusChangeEvent: {
-            const uint8 port_id = (event.data >> 24u) & 0xffu;
+            const uint8_t port_id = (event.data >> 24u) & 0xffu;
             if (auto result = handle_port_status_change(event); result.is_error()) {
                 auto error = result.error();
                 if (auto device_error = error.as<DeviceError>()) {
@@ -229,12 +229,12 @@ void HostController::handle_interrupt() {
             break;
         }
         default:
-            log::warn("Received unrecognised event {}", static_cast<uint8>(event.type));
+            log::warn("Received unrecognised event {}", static_cast<uint8_t>(event.type));
             break;
         }
     }
 
-    uint64 dptr = mmio::read(m_run_regs->erst_dptr);
+    uint64_t dptr = mmio::read(m_run_regs->erst_dptr);
     if (auto new_dptr = EXPECT(m_event_ring->physical_head()); (dptr & ~0xfu) != (new_dptr & ~0xfu)) {
         if (!had_any_event) {
             log::warn("Updated dptr without dequeuing an event");
@@ -249,7 +249,7 @@ void HostController::handle_interrupt() {
 
 ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, core::SysError>>
 HostController::handle_port_status_change(const RawTrb &event) {
-    const uint8 port_id = (event.data >> 24u) & 0xffu;
+    const uint8_t port_id = (event.data >> 24u) & 0xffu;
     if (port_id == 0 || port_id > m_ports.size()) {
         return HostError::InvalidPortId;
     }
@@ -300,7 +300,7 @@ HostController::handle_port_status_change(const RawTrb &event) {
         return DeviceError::UnexpectedState;
     }
 
-    ustd::Array<uint8, 8> partial_descriptor{};
+    ustd::Array<uint8_t, 8> partial_descriptor{};
     TRY(device.read_descriptor(partial_descriptor.span()));
 
     TRY(send_command({
@@ -317,7 +317,7 @@ HostController::handle_port_status_change(const RawTrb &event) {
         return DeviceError::InvalidDescriptor;
     }
 
-    ustd::Vector<uint8> descriptor_bytes(descriptor_length);
+    ustd::Vector<uint8_t> descriptor_bytes(descriptor_length);
     TRY(device.read_descriptor(descriptor_bytes.span()));
     auto *descriptor = reinterpret_cast<DeviceDescriptor *>(descriptor_bytes.data());
     log::info("Found device {:x4}:{:x4}", descriptor->vendor_id, descriptor->product_id);
@@ -347,7 +347,7 @@ HostController::handle_port_status_change(const RawTrb &event) {
     return {};
 }
 
-void HostController::ring_doorbell(uint32 slot, uint32 endpoint) {
+void HostController::ring_doorbell(uint32_t slot, uint32_t endpoint) {
     mmio::write(m_doorbell_array->doorbell[slot], endpoint);
     mmio::read(m_doorbell_array->doorbell[slot]);
 }
@@ -356,7 +356,7 @@ ustd::Result<RawTrb, HostError> HostController::send_command(const RawTrb &comma
     // TODO: Correct timeout.
     auto &enqueued = m_command_ring->enqueue(command);
     ring_doorbell(0, 0);
-    for (usize timeout = 1000; (mmio::read(enqueued.status) & (1u << 31u)) != (1u << 31u); timeout--) {
+    for (size_t timeout = 1000; (mmio::read(enqueued.status) & (1u << 31u)) != (1u << 31u); timeout--) {
         if (timeout == 0) {
             return HostError::CommandTimedOut;
         }

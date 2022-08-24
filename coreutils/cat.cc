@@ -9,9 +9,9 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     ustd::Vector<core::File> files;
-    for (usize i = 1; i < argc; i++) {
+    for (size_t i = 1; i < argc; i++) {
         if (auto file = core::File::open(argv[i]); !file.is_error()) {
             files.push(file.disown_value());
         } else {
@@ -27,7 +27,7 @@ usize main(usize argc, const char **argv) {
         auto file = ustd::move(f);
         while (true) {
             // NOLINTNEXTLINE
-            ustd::Array<uint8, 128_KiB> buf;
+            ustd::Array<uint8_t, 128_KiB> buf;
             auto bytes_read_or_error = file.read(buf.span());
             if (bytes_read_or_error.is_error()) {
                 core::println("cat: failed to read from {}: {}", file.fd(),
@@ -38,7 +38,7 @@ usize main(usize argc, const char **argv) {
             if (bytes_read == 0) {
                 break;
             }
-            for (usize total_written = 0; total_written < bytes_read;) {
+            for (size_t total_written = 0; total_written < bytes_read;) {
                 auto bytes_written_or_error =
                     core::syscall(Syscall::write, 1, buf.data() + total_written, bytes_read - total_written);
                 if (bytes_written_or_error.is_error()) {

@@ -8,11 +8,11 @@ namespace {
 
 struct SourceLocation {
     const char *file_name;
-    uint32 line;
-    uint32 column;
+    uint32_t line;
+    uint32_t column;
 };
 
-enum class TypeKind : uint16 {
+enum class TypeKind : uint16_t {
     Integer = 0,
     Float = 1,
     Unknown = 0xffff,
@@ -20,12 +20,12 @@ enum class TypeKind : uint16 {
 
 class TypeDescriptor {
     TypeKind m_kind;
-    uint16 m_info;
+    uint16_t m_info;
     ustd::Array<char, 1> m_name;
 
 public:
     // NOLINTNEXTLINE
-    uint32 bit_width() const {
+    uint32_t bit_width() const {
         if (m_kind == TypeKind::Integer) {
             // NOLINTNEXTLINE
             return 1u << (m_info >> 1u);
@@ -33,14 +33,14 @@ public:
         if (m_kind == TypeKind::Float) {
             return m_info;
         }
-        return ustd::Limits<uint32>::max();
+        return ustd::Limits<uint32_t>::max();
     }
     bool is_signed() const { return (m_info & 1u) == 1u; }
     TypeKind kind() const { return m_kind; }
     ustd::StringView name() const { return m_name.data(); }
 };
 
-using ValueHandle = uintptr;
+using ValueHandle = uintptr_t;
 
 class Value {
     const TypeDescriptor &m_type;
@@ -69,7 +69,7 @@ struct ImplicitConversionData {
 
 struct InvalidBuiltinData {
     SourceLocation location;
-    uint8 kind;
+    uint8_t kind;
 };
 
 struct InvalidValueData {
@@ -99,8 +99,8 @@ struct ShiftOutOfBoundsData {
 struct TypeMismatchData {
     SourceLocation location;
     const TypeDescriptor &type;
-    uint8 log_alignment;
-    uint8 type_check_kind;
+    uint8_t log_alignment;
+    uint8_t type_check_kind;
 };
 
 struct UnreachableData {
@@ -215,7 +215,7 @@ extern "C" void __ubsan_handle_sub_overflow(OverflowData *data, ValueHandle lhs,
 }
 
 extern "C" void __ubsan_handle_type_mismatch_v1(TypeMismatchData *data, ValueHandle pointer) {
-    uintptr alignment = static_cast<uintptr>(1u) << data->log_alignment;
+    uintptr_t alignment = static_cast<uintptr_t>(1u) << data->log_alignment;
     constexpr ustd::Array kinds{
         "load of"sv,
         "store to"sv,

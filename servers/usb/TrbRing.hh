@@ -8,7 +8,7 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
-enum class TrbType : uint8 {
+enum class TrbType : uint8_t {
     // Transfers.
     Normal = 1,
     SetupStage = 2,
@@ -32,8 +32,8 @@ enum class TrbType : uint8 {
 };
 
 struct [[gnu::packed]] RawTrb {
-    uint64 data;
-    uint32 status;
+    uint64_t data;
+    uint32_t status;
     bool cycle : 1;
     bool evaluate_next : 1;
     bool : 1;
@@ -41,32 +41,32 @@ struct [[gnu::packed]] RawTrb {
     bool chain : 1;
     bool event_on_completion : 1;
     bool immediate_data : 1;
-    usize : 2;
+    size_t : 2;
     bool block : 1; // Block Event Interrupt or Block Set Address Request
     TrbType type : 6;
     union {
         // For AddressDeviceCmd, DisableSlotCmd, CommandCompletionEvent and TransferEvent.
         struct [[gnu::packed]] {
-            usize endpoint_id : 5; // Only for TransferEvent
-            usize : 3;
-            uint8 slot_id;
+            size_t endpoint_id : 5; // Only for TransferEvent
+            size_t : 3;
+            uint8_t slot_id;
         };
         // For SetupStage control transfer.
         struct {
             TransferType transfer_type : 2;
-            usize : 14;
+            size_t : 14;
         };
         // For DataStage and StatusStage control transfers.
         struct {
             bool read : 1;
-            usize : 15;
+            size_t : 15;
         };
     };
 };
 
 class TrbRing {
     RawTrb *const m_ring;
-    usize m_index{0};
+    size_t m_index{0};
     bool m_cycle_state{true};
 
 public:
@@ -77,7 +77,7 @@ public:
 
     ustd::Span<RawTrb> dequeue();
     RawTrb &enqueue(const RawTrb &trb);
-    ustd::Result<uintptr, core::SysError> physical_base() const;
-    ustd::Result<uintptr, core::SysError> physical_head() const;
-    RawTrb &operator[](usize index) const;
+    ustd::Result<uintptr_t, core::SysError> physical_base() const;
+    ustd::Result<uintptr_t, core::SysError> physical_head() const;
+    RawTrb &operator[](size_t index) const;
 };

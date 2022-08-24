@@ -15,51 +15,51 @@ struct Limits<bool> {
 };
 
 template <>
-struct Limits<int8> {
-    static constexpr int8 min() { return -__INT8_MAX__ - 1; }
-    static constexpr int8 max() { return __INT8_MAX__; }
+struct Limits<int8_t> {
+    static constexpr int8_t min() { return -__INT8_MAX__ - 1; }
+    static constexpr int8_t max() { return __INT8_MAX__; }
 };
 
 template <>
-struct Limits<int16> {
-    static constexpr int16 min() { return -__INT16_MAX__ - 1; }
-    static constexpr int16 max() { return __INT16_MAX__; }
+struct Limits<int16_t> {
+    static constexpr int16_t min() { return -__INT16_MAX__ - 1; }
+    static constexpr int16_t max() { return __INT16_MAX__; }
 };
 
 template <>
-struct Limits<int32> {
-    static constexpr int32 min() { return -__INT32_MAX__ - 1; }
-    static constexpr int32 max() { return __INT32_MAX__; }
+struct Limits<int32_t> {
+    static constexpr int32_t min() { return -__INT32_MAX__ - 1; }
+    static constexpr int32_t max() { return __INT32_MAX__; }
 };
 
 template <>
-struct Limits<int64> {
-    static constexpr int64 min() { return -__INT64_MAX__ - 1; }
-    static constexpr int64 max() { return __INT64_MAX__; }
+struct Limits<int64_t> {
+    static constexpr int64_t min() { return -__INT64_MAX__ - 1; }
+    static constexpr int64_t max() { return __INT64_MAX__; }
 };
 
 template <>
-struct Limits<uint8> {
-    static constexpr uint8 min() { return 0; }
-    static constexpr uint8 max() { return __UINT8_MAX__; }
+struct Limits<uint8_t> {
+    static constexpr uint8_t min() { return 0; }
+    static constexpr uint8_t max() { return __UINT8_MAX__; }
 };
 
 template <>
-struct Limits<uint16> {
-    static constexpr uint16 min() { return 0; }
-    static constexpr uint16 max() { return __UINT16_MAX__; }
+struct Limits<uint16_t> {
+    static constexpr uint16_t min() { return 0; }
+    static constexpr uint16_t max() { return __UINT16_MAX__; }
 };
 
 template <>
-struct Limits<uint32> {
-    static constexpr uint32 min() { return 0; }
-    static constexpr uint32 max() { return __UINT32_MAX__; }
+struct Limits<uint32_t> {
+    static constexpr uint32_t min() { return 0; }
+    static constexpr uint32_t max() { return __UINT32_MAX__; }
 };
 
 template <>
-struct Limits<uint64> {
-    static constexpr uint64 min() { return 0; }
-    static constexpr uint64 max() { return __UINT64_MAX__; }
+struct Limits<uint64_t> {
+    static constexpr uint64_t min() { return 0; }
+    static constexpr uint64_t max() { return __UINT64_MAX__; }
 };
 
 template <typename T>

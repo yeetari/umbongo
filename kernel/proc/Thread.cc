@@ -36,15 +36,15 @@
 namespace kernel {
 namespace {
 
-constexpr usize k_kernel_stack_size = 64_KiB;
+constexpr size_t k_kernel_stack_size = 64_KiB;
 
 void dump_backtrace([[maybe_unused]] RegisterState *regs) {
     // TODO(GH-9): Backtrace generation is unsafe.
 #ifndef ASSERTIONS
-    auto *rbp = reinterpret_cast<uint64 *>(regs->rbp);
+    auto *rbp = reinterpret_cast<uint64_t *>(regs->rbp);
     while (rbp != nullptr && rbp[1] != 0) {
         dmesg("{:h}", rbp[1]);
-        rbp = reinterpret_cast<uint64 *>(*rbp);
+        rbp = reinterpret_cast<uint64_t *>(*rbp);
     }
 #endif
 }
@@ -54,7 +54,7 @@ ustd::Optional<ustd::String> interpreter_for(File &file) {
     if (file.read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
         return {};
     }
-    for (uint16 i = 0; i < header.ph_count; i++) {
+    for (uint16_t i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         if (file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i) !=
             sizeof(elf::ProgramHeader)) {
@@ -74,7 +74,7 @@ ustd::Optional<ustd::String> interpreter_for(File &file) {
 
 } // namespace
 
-ustd::UniquePtr<Thread> Thread::create_kernel(uintptr entry_point, ThreadPriority priority) {
+ustd::UniquePtr<Thread> Thread::create_kernel(uintptr_t entry_point, ThreadPriority priority) {
     auto *process = new Process(true, ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
     auto thread = process->create_thread(priority);
     thread->m_register_state.rip = entry_point;
@@ -88,15 +88,15 @@ ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
 
 Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), m_priority(priority) {
     process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
-    m_kernel_stack = new uint8[k_kernel_stack_size] + k_kernel_stack_size;
-    m_simd_region = new (ustd::align_val_t(64)) uint8[Processor::simd_region_size()];
+    m_kernel_stack = new uint8_t[k_kernel_stack_size] + k_kernel_stack_size;
+    m_simd_region = new (ustd::align_val_t(64)) uint8_t[Processor::simd_region_size()];
     __builtin_memcpy(m_simd_region, Processor::simd_default_region(), Processor::simd_region_size());
     m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
     if (process->m_is_kernel) {
         // A kernel process doesn't use syscalls, so we can use m_kernel_stack.
-        m_register_state.rsp = reinterpret_cast<uintptr>(m_kernel_stack);
+        m_register_state.rsp = reinterpret_cast<uintptr_t>(m_kernel_stack);
     }
 }
 
@@ -140,7 +140,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     if (executable->read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
         return SysError::NoExec;
     }
-    for (uint16 i = 0; i < header.ph_count; i++) {
+    for (uint16_t i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         if (executable->read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i) !=
                 sizeof(elf::ProgramHeader) ||
@@ -163,7 +163,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
             m_register_state.rip = region.base() + header.entry - (phdr.vaddr & ~4095u);
         }
 
-        usize copy_offset = phdr.vaddr & 0xfffu;
+        size_t copy_offset = phdr.vaddr & 0xfffu;
         if (copy_offset + phdr.memsz > region.size()) {
             return SysError::NoExec;
         }
@@ -174,9 +174,9 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     }
 
     // Setup user stack.
-    ustd::Vector<uintptr> argv;
+    ustd::Vector<uintptr_t> argv;
     auto push_arg = [&](ustd::StringView arg) {
-        m_register_state.rsp -= ustd::align_up(arg.length() + 1, sizeof(usize));
+        m_register_state.rsp -= ustd::align_up(arg.length() + 1, sizeof(size_t));
         __builtin_memcpy(reinterpret_cast<void *>(m_register_state.rsp), arg.data(), arg.length());
         *(reinterpret_cast<char *>(m_register_state.rsp) + arg.length()) = '\0';
         argv.push(m_register_state.rsp);
@@ -188,11 +188,11 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         push_arg(arg);
     }
 
-    m_register_state.rsp -= sizeof(uintptr);
-    *reinterpret_cast<uintptr *>(m_register_state.rsp) = 0;
-    for (uint32 i = 0; i < argv.size(); i++) {
-        m_register_state.rsp -= sizeof(uintptr);
-        *reinterpret_cast<uintptr *>(m_register_state.rsp) = argv[argv.size() - i - 1];
+    m_register_state.rsp -= sizeof(uintptr_t);
+    *reinterpret_cast<uintptr_t *>(m_register_state.rsp) = 0;
+    for (uint32_t i = 0; i < argv.size(); i++) {
+        m_register_state.rsp -= sizeof(uintptr_t);
+        *reinterpret_cast<uintptr_t *>(m_register_state.rsp) = argv[argv.size() - i - 1];
     }
 
     m_register_state.rdi = argv.size();          // argc
@@ -204,7 +204,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 }
 
 void Thread::handle_fault(RegisterState *regs) {
-    uint64 cr2 = 0;
+    uint64_t cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
     if ((regs->cs & 3u) == 0u) {
         dmesg_unlock();

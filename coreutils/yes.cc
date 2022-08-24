@@ -1,9 +1,9 @@
 #include <core/Print.hh>
 #include <ustd/Types.hh>
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     while (true) {
-        for (usize i = 1; i < argc; i++) {
+        for (size_t i = 1; i < argc; i++) {
             core::print("{} ", argv[i]);
         }
         if (argc == 1) {

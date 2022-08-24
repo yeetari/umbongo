@@ -35,7 +35,7 @@ SysResult<ustd::SharedPtr<File>> Inode::open() {
     return open_impl();
 }
 
-SysResult<Inode *> Inode::child(usize) const {
+SysResult<Inode *> Inode::child(size_t) const {
     return SysError::NotDirectory;
 }
 
@@ -47,7 +47,7 @@ Inode *Inode::lookup(ustd::StringView) {
     ENSURE_NOT_REACHED();
 }
 
-usize Inode::read(ustd::Span<void>, usize) const {
+size_t Inode::read(ustd::Span<void>, size_t) const {
     ENSURE_NOT_REACHED();
 }
 
@@ -59,7 +59,7 @@ SysResult<> Inode::truncate() {
     return SysError::Invalid;
 }
 
-usize Inode::write(ustd::Span<const void>, usize) {
+size_t Inode::write(ustd::Span<const void>, size_t) {
     ENSURE_NOT_REACHED();
 }
 

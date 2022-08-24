@@ -11,7 +11,7 @@
 namespace kernel {
 namespace {
 
-constexpr usize k_buffer_size = 64_KiB;
+constexpr size_t k_buffer_size = 64_KiB;
 
 } // namespace
 
@@ -39,20 +39,20 @@ void Pipe::detach(AttachDirection direction) {
     }
 }
 
-bool Pipe::read_would_block(usize) const {
+bool Pipe::read_would_block(size_t) const {
     ScopedLock locker(m_lock);
     return m_writer_count != 0 && m_buffer.empty();
 }
 
-bool Pipe::write_would_block(usize) const {
+bool Pipe::write_would_block(size_t) const {
     return m_buffer.full();
 }
 
-SysResult<usize> Pipe::read(ustd::Span<void> data, usize) {
+SysResult<size_t> Pipe::read(ustd::Span<void> data, size_t) {
     return m_buffer.read(data);
 }
 
-SysResult<usize> Pipe::write(ustd::Span<const void> data, usize) {
+SysResult<size_t> Pipe::write(ustd::Span<const void> data, size_t) {
     return m_buffer.write(data);
 }
 

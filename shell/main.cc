@@ -70,7 +70,7 @@ void Job::spawn(const ustd::Vector<kernel::FdPair> &copy_fds) {
     m_pid = result.value();
 }
 
-usize main(usize, const char **) {
+size_t main(size_t, const char **) {
     LineEditor editor("# "sv);
     while (true) {
         editor.begin_line();

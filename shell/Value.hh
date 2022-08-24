@@ -56,7 +56,7 @@ public:
 class Job : public Value {
     const ustd::String m_command;
     const ustd::Vector<const char *> m_args;
-    usize m_pid{0};
+    size_t m_pid{0};
 
 public:
     static constexpr auto k_kind = ValueKind::Job;

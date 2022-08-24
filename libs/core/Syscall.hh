@@ -8,9 +8,9 @@
 
 namespace core {
 
-template <typename R = usize>
+template <typename R = size_t>
 inline ustd::Result<R, SysError> syscall(Syscall::Number number) {
-    ssize result; // NOLINT
+    ssize_t result; // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number) : "rcx", "r11", "memory");
     if (result < 0) {
         return static_cast<SysError>(result);
@@ -18,9 +18,9 @@ inline ustd::Result<R, SysError> syscall(Syscall::Number number) {
     return R(result);
 }
 
-template <typename R = usize, typename T>
+template <typename R = size_t, typename T>
 inline ustd::Result<R, SysError> syscall(Syscall::Number number, const T &rdi) {
-    ssize result;                                                                            // NOLINT
+    ssize_t result;                                                                          // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number), "D"(rdi) : "rcx", "r11", "memory"); // NOLINT
     if (result < 0) {
         return static_cast<SysError>(result);
@@ -28,9 +28,9 @@ inline ustd::Result<R, SysError> syscall(Syscall::Number number, const T &rdi) {
     return R(result);
 }
 
-template <typename R = usize, typename T, typename U>
+template <typename R = size_t, typename T, typename U>
 inline ustd::Result<R, SysError> syscall(Syscall::Number number, const T &rdi, const U &rsi) {
-    ssize result;                                                                                      // NOLINT
+    ssize_t result;                                                                                    // NOLINT
     asm volatile("syscall" : "=a"(result) : "a"(number), "D"(rdi), "S"(rsi) : "rcx", "r11", "memory"); // NOLINT
     if (result < 0) {
         return static_cast<SysError>(result);
@@ -38,9 +38,9 @@ inline ustd::Result<R, SysError> syscall(Syscall::Number number, const T &rdi, c
     return R(result);
 }
 
-template <typename R = usize, typename T, typename U, typename V>
+template <typename R = size_t, typename T, typename U, typename V>
 inline ustd::Result<R, SysError> syscall(Syscall::Number number, const T &rdi, const U &rsi, const V &rdx) {
-    ssize result; // NOLINT
+    ssize_t result; // NOLINT
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(number), "D"(rdi), "S"(rsi), "d"(rdx)

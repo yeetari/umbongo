@@ -10,7 +10,7 @@ namespace kernel {
 namespace {
 
 Hpet *s_hpet;
-uint64 s_ns_since_boot = 0;
+uint64_t s_ns_since_boot = 0;
 
 } // namespace
 
@@ -25,7 +25,7 @@ void TimeManager::initialise(acpi::HpetTable *hpet_table) {
     s_hpet->enable();
 }
 
-void TimeManager::spin(uint64 millis) {
+void TimeManager::spin(uint64_t millis) {
     s_hpet->spin(millis);
 }
 
@@ -33,7 +33,7 @@ void TimeManager::update() {
     s_ns_since_boot += s_hpet->update_time();
 }
 
-uint64 TimeManager::ns_since_boot() {
+uint64_t TimeManager::ns_since_boot() {
     return s_ns_since_boot;
 }
 

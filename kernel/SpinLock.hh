@@ -5,7 +5,7 @@
 namespace kernel {
 
 class SpinLock {
-    uint64 m_flags{0};
+    uint64_t m_flags{0};
     ustd::Atomic<bool> m_locked{false};
 
 public:

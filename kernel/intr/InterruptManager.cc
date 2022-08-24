@@ -19,8 +19,8 @@ namespace kernel {
 namespace {
 
 struct Override {
-    uint8 isa;
-    uint32 gsi;
+    uint8_t isa;
+    uint32_t gsi;
     InterruptPolarity polarity;
     InterruptTriggerMode trigger_mode;
 };
@@ -29,9 +29,9 @@ struct Override {
 ustd::Array<IoApic, 4> s_io_apics;
 ustd::Array<Override, 8> s_overrides;
 ustd::Array<ustd::Function<void()>, 256> s_custom_handlers;
-uint8 s_current_vector = 70;
-uint8 s_io_apic_count = 0;
-uint8 s_override_count = 0;
+uint8_t s_current_vector = 70;
+uint8_t s_io_apic_count = 0;
+uint8_t s_override_count = 0;
 
 const char *polarity_str(InterruptPolarity polarity) {
     switch (polarity) {
@@ -51,8 +51,8 @@ const char *trigger_mode_str(InterruptTriggerMode trigger_mode) {
     }
 }
 
-ustd::Optional<IoApic &> io_apic_for_gsi(uint32 gsi) {
-    for (usize i = 0; i < s_io_apic_count; i++) {
+ustd::Optional<IoApic &> io_apic_for_gsi(uint32_t gsi) {
+    for (size_t i = 0; i < s_io_apic_count; i++) {
         auto &io_apic = s_io_apics[i];
         if (gsi >= io_apic.gsi_base() && gsi < io_apic.gsi_base() + io_apic.redirection_entry_count()) {
             return io_apic;
@@ -64,8 +64,8 @@ ustd::Optional<IoApic &> io_apic_for_gsi(uint32 gsi) {
 } // namespace
 
 // TODO: Proper allocator.
-uint8 InterruptManager::allocate(ustd::Function<void()> &&handler) {
-    uint8 vector = s_current_vector++;
+uint8_t InterruptManager::allocate(ustd::Function<void()> &&handler) {
+    uint8_t vector = s_current_vector++;
     s_custom_handlers[vector] = ustd::move(handler);
     Processor::wire_interrupt(vector, [](RegisterState *regs) {
         s_custom_handlers[regs->int_num]();
@@ -75,18 +75,18 @@ uint8 InterruptManager::allocate(ustd::Function<void()> &&handler) {
 
 void InterruptManager::mask_pic() {
     dmesg("intr: Found legacy PIC, masking");
-    port_write<uint8>(0x21, 0xff);
-    port_write<uint8>(0xa1, 0xff);
+    port_write<uint8_t>(0x21, 0xff);
+    port_write<uint8_t>(0xa1, 0xff);
 }
 
-void InterruptManager::register_io_apic(uint32 base, uint32 gsi_base) {
+void InterruptManager::register_io_apic(uint32_t base, uint32_t gsi_base) {
     ENSURE(s_io_apic_count < s_io_apics.size());
-    auto *io_apic = new (&s_io_apics[s_io_apic_count++]) IoApic(reinterpret_cast<volatile uint32 *>(base), gsi_base);
+    auto *io_apic = new (&s_io_apics[s_io_apic_count++]) IoApic(reinterpret_cast<volatile uint32_t *>(base), gsi_base);
     dmesg("intr: Found IO APIC {} at {} controlling interrupts {} to {}", io_apic->id(), io_apic->base(), gsi_base,
           gsi_base + io_apic->redirection_entry_count());
 }
 
-void InterruptManager::register_override(uint8 isa, uint32 gsi, InterruptPolarity polarity,
+void InterruptManager::register_override(uint8_t isa, uint32_t gsi, InterruptPolarity polarity,
                                          InterruptTriggerMode trigger_mode) {
     ENSURE(s_override_count < s_overrides.size());
     dmesg("intr: Redirecting ISA {} to GSI {} ({}, {})", isa, gsi, polarity_str(polarity),
@@ -94,10 +94,10 @@ void InterruptManager::register_override(uint8 isa, uint32 gsi, InterruptPolarit
     s_overrides[s_override_count++] = {isa, gsi, polarity, trigger_mode};
 }
 
-void InterruptManager::wire_interrupt(uint32 irq, uint8 vector) {
+void InterruptManager::wire_interrupt(uint32_t irq, uint8_t vector) {
     InterruptPolarity polarity = InterruptPolarity::ActiveHigh;
     InterruptTriggerMode trigger_mode = InterruptTriggerMode::EdgeTriggered;
-    for (usize i = 0; i < s_override_count; i++) {
+    for (size_t i = 0; i < s_override_count; i++) {
         auto &override = s_overrides[i];
         if (override.isa == irq) {
             irq = override.gsi;

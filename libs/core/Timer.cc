@@ -5,7 +5,7 @@
 
 namespace core {
 
-Timer::Timer(EventLoop &event_loop, usize period) : m_event_loop(event_loop), m_period(period) {
+Timer::Timer(EventLoop &event_loop, size_t period) : m_event_loop(event_loop), m_period(period) {
     event_loop.register_timer(*this);
 }
 

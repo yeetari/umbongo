@@ -4,7 +4,7 @@
 
 namespace kernel {
 
-enum class SysError : ssize {
+enum class SysError : ssize_t {
     BadFd = -1,
     NonExistent = -2,
     BrokenHandle = -3,

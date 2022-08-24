@@ -5,7 +5,7 @@
 namespace kernel {
 
 class InterruptDisabler {
-    uint64 m_flags{0};
+    uint64_t m_flags{0};
 
 public:
     InterruptDisabler() {

@@ -13,7 +13,7 @@ class VirtSpace;
 class FileHandle {
     ustd::SharedPtr<File> m_file;
     AttachDirection m_direction;
-    usize m_offset{0};
+    size_t m_offset{0};
 
 public:
     explicit FileHandle(const ustd::SharedPtr<File> &file, AttachDirection direction = AttachDirection::ReadWrite);
@@ -27,14 +27,14 @@ public:
     bool read_would_block() const;
     bool write_would_block() const;
     SyscallResult ioctl(IoctlRequest request, void *arg) const;
-    uintptr mmap(VirtSpace &virt_space) const;
-    SysResult<usize> read(void *data, usize size);
-    usize seek(usize offset, SeekMode mode);
-    SysResult<usize> write(void *data, usize size);
+    uintptr_t mmap(VirtSpace &virt_space) const;
+    SysResult<size_t> read(void *data, size_t size);
+    size_t seek(size_t offset, SeekMode mode);
+    SysResult<size_t> write(void *data, size_t size);
     bool valid() const;
 
     File &file() const { return *m_file; }
-    usize offset() const { return m_offset; }
+    size_t offset() const { return m_offset; }
 };
 
 } // namespace kernel

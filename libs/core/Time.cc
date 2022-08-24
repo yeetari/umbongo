@@ -6,11 +6,11 @@
 
 namespace core {
 
-void sleep(usize ns) {
+void sleep(size_t ns) {
     EXPECT(syscall(Syscall::poll, nullptr, 0, ns));
 }
 
-usize time() {
+size_t time() {
     return EXPECT(syscall(Syscall::gettime));
 }
 

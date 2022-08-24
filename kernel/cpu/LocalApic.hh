@@ -38,10 +38,10 @@ enum class DestinationShorthand {
 
 class LocalApic {
     template <typename T>
-    T read(usize reg) const;
+    T read(size_t reg) const;
 
     template <typename T>
-    void write(usize reg, T val);
+    void write(size_t reg, T val);
 
 public:
     enum class TimerMode {
@@ -53,16 +53,16 @@ public:
 
     void enable();
     void send_eoi();
-    void send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
-                  DestinationShorthand shorthand, uint8 destination);
-    void send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+    void send_ipi(uint8_t vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+                  DestinationShorthand shorthand, uint8_t destination);
+    void send_ipi(uint8_t vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
                   DestinationShorthand shorthand);
-    void send_ipi(uint8 vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
-                  uint8 destination);
-    void set_timer(TimerMode mode, uint8 vector);
-    void set_timer_count(uint32 count);
+    void send_ipi(uint8_t vector, MessageType type, DestinationMode mode, Level level, TriggerMode trigger_mode,
+                  uint8_t destination);
+    void set_timer(TimerMode mode, uint8_t vector);
+    void set_timer_count(uint32_t count);
 
-    uint32 read_timer_count() const;
+    uint32_t read_timer_count() const;
 };
 
 } // namespace kernel

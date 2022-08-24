@@ -16,13 +16,13 @@ namespace core {
 using OpenMode = kernel::OpenMode;
 
 class File : public Watchable {
-    ustd::Optional<uint32> m_fd;
+    ustd::Optional<uint32_t> m_fd;
 
 public:
     static ustd::Result<File, SysError> open(ustd::StringView path, OpenMode mode = OpenMode::None);
 
     File() = default;
-    explicit File(uint32 fd) : m_fd(fd) {}
+    explicit File(uint32_t fd) : m_fd(fd) {}
     File(const File &) = delete;
     File(File &&other) : m_fd(ustd::move(other.m_fd)) {}
     ~File() override;
@@ -35,22 +35,22 @@ public:
     }
 
     void close();
-    ustd::Result<usize, SysError> ioctl(kernel::IoctlRequest request, void *arg = nullptr);
-    ustd::Result<uintptr, SysError> mmap();
-    ustd::Result<usize, SysError> read(ustd::Span<void> data);
-    ustd::Result<usize, SysError> read(ustd::Span<void> data, usize offset);
-    ustd::Result<void, SysError> rebind(uint32 fd);
-    ustd::Result<usize, SysError> size();
-    ustd::Result<usize, SysError> write(ustd::Span<const void> data);
+    ustd::Result<size_t, SysError> ioctl(kernel::IoctlRequest request, void *arg = nullptr);
+    ustd::Result<uintptr_t, SysError> mmap();
+    ustd::Result<size_t, SysError> read(ustd::Span<void> data);
+    ustd::Result<size_t, SysError> read(ustd::Span<void> data, size_t offset);
+    ustd::Result<void, SysError> rebind(uint32_t fd);
+    ustd::Result<size_t, SysError> size();
+    ustd::Result<size_t, SysError> write(ustd::Span<const void> data);
 
     template <typename T>
     ustd::Result<T *, SysError> mmap();
     template <typename T>
     ustd::Result<T, SysError> read();
     template <typename T>
-    ustd::Result<usize, SysError> write(const T &data);
+    ustd::Result<size_t, SysError> write(const T &data);
 
-    uint32 fd() const override { return *m_fd; }
+    uint32_t fd() const override { return *m_fd; }
 };
 
 template <typename T>
@@ -66,7 +66,7 @@ ustd::Result<T, SysError> File::read() {
 }
 
 template <typename T>
-ustd::Result<usize, SysError> File::write(const T &data) {
+ustd::Result<size_t, SysError> File::write(const T &data) {
     return TRY(write({&data, sizeof(T)}));
 }
 

@@ -10,14 +10,14 @@
 namespace core {
 
 ustd::Result<void, SysError> chdir(const char *path);
-ustd::Result<usize, SysError> create_process(const char *path);
-ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<const char *> argv);
-ustd::Result<usize, SysError> create_process(const char *path, ustd::Vector<const char *> argv,
-                                             ustd::Vector<kernel::FdPair> copy_fds);
-[[noreturn]] void exit(usize code);
+ustd::Result<size_t, SysError> create_process(const char *path);
+ustd::Result<size_t, SysError> create_process(const char *path, ustd::Vector<const char *> argv);
+ustd::Result<size_t, SysError> create_process(const char *path, ustd::Vector<const char *> argv,
+                                              ustd::Vector<kernel::FdPair> copy_fds);
+[[noreturn]] void exit(size_t code);
 
 ustd::String cwd();
-usize pid();
-ustd::Result<void, SysError> wait_pid(usize pid);
+size_t pid();
+ustd::Result<void, SysError> wait_pid(size_t pid);
 
 } // namespace core

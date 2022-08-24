@@ -26,7 +26,7 @@ public:
     void set_on_read_ready(ustd::Function<void()> on_read_ready) { m_on_read_ready = ustd::move(on_read_ready); }
     void set_on_write_ready(ustd::Function<void()> on_write_ready) { m_on_write_ready = ustd::move(on_write_ready); }
 
-    virtual uint32 fd() const = 0;
+    virtual uint32_t fd() const = 0;
 };
 
 } // namespace core

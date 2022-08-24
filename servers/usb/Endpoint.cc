@@ -16,10 +16,11 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 
-Endpoint::Endpoint(const Device &device, uint32 id) : m_device(device), m_id(id) {}
+Endpoint::Endpoint(const Device &device, uint32_t id) : m_device(device), m_id(id) {}
 Endpoint::~Endpoint() = default;
 
-ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(EndpointType type, uint16 packet_size) {
+ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(EndpointType type,
+                                                                                uint16_t packet_size) {
     auto &context = m_device.endpoint_context(m_id);
     m_transfer_ring = TRY(TrbRing::create(true));
     context.endpoint_type = type;
@@ -57,13 +58,13 @@ ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(
 
 ustd::Result<void, DeviceError> Endpoint::send_control(ControlTransfer transfer, TransferType transfer_type,
                                                        ustd::Span<void> data) {
-    transfer.length = static_cast<uint16>(data.size());
+    transfer.length = static_cast<uint16_t>(data.size());
 
     // Control transfer is 8 bytes and can therefore fit directly into the data field of the setup TRB via the immediate
     // data flag.
     m_transfer_ring->enqueue({
-        .data = __builtin_bit_cast(uint64, transfer),
-        .status = sizeof(uint64),
+        .data = __builtin_bit_cast(uint64_t, transfer),
+        .status = sizeof(uint64_t),
         .immediate_data = true,
         .type = TrbType::SetupStage,
         .transfer_type = transfer_type,
@@ -88,7 +89,7 @@ ustd::Result<void, DeviceError> Endpoint::send_control(ControlTransfer transfer,
         .type = TrbType::EventData,
     });
     m_device.ring_doorbell(m_id);
-    for (usize timeout = 100; (mmio::read(status_trb.status) & (1u << 31u)) != (1u << 31u); timeout--) {
+    for (size_t timeout = 100; (mmio::read(status_trb.status) & (1u << 31u)) != (1u << 31u); timeout--) {
         if (timeout == 0) {
             return DeviceError::TransferTimedOut;
         }
@@ -99,10 +100,10 @@ ustd::Result<void, DeviceError> Endpoint::send_control(ControlTransfer transfer,
     return {};
 }
 
-void Endpoint::set_interval(uint8 interval) {
+void Endpoint::set_interval(uint8_t interval) {
     auto &context = m_device.endpoint_context(m_id);
     context.interval = 7u;
-    for (uint8 i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; i++) {
         if ((interval & (0x80u >> i)) != 0u) {
             context.interval = 7u - i;
             break;

@@ -32,14 +32,14 @@ public:
     void bind_anonymous_file(ustd::SharedPtr<File> anonymous_file);
     SysResult<ustd::SharedPtr<File>> open();
 
-    virtual SysResult<Inode *> child(usize index) const;
+    virtual SysResult<Inode *> child(size_t index) const;
     virtual SysResult<Inode *> create(ustd::StringView name, InodeType type);
     virtual Inode *lookup(ustd::StringView name);
-    virtual usize read(ustd::Span<void> data, usize offset) const;
+    virtual size_t read(ustd::Span<void> data, size_t offset) const;
     virtual SysResult<> remove(ustd::StringView name);
-    virtual usize size() const = 0;
+    virtual size_t size() const = 0;
     virtual SysResult<> truncate();
-    virtual usize write(ustd::Span<const void> data, usize offset);
+    virtual size_t write(ustd::Span<const void> data, size_t offset);
 
     virtual ustd::StringView name() const = 0;
     Inode *parent() const { return m_parent; }

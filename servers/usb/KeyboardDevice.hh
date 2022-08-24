@@ -17,16 +17,16 @@ class Timer;
 } // namespace core
 
 class KeyboardDevice final : public Device {
-    uint8 *m_dma_buffer{nullptr};
+    uint8_t *m_dma_buffer{nullptr};
     core::Pipe m_pipe;
-    ustd::Array<uint8, 8> m_cmp_buffer{};
+    ustd::Array<uint8_t, 8> m_cmp_buffer{};
     ustd::Array<bool, 8> m_modifiers{};
     ustd::UniquePtr<core::Timer> m_repeat_timer;
-    usize m_repeat_delay{400};
-    uint8 m_last_code{0};
-    usize m_last_time{0};
+    size_t m_repeat_delay{400};
+    uint8_t m_last_code{0};
+    size_t m_last_time{0};
 
-    bool key_already_pressed(uint8 key) const;
+    bool key_already_pressed(uint8_t key) const;
 
 public:
     explicit KeyboardDevice(Device &&device);

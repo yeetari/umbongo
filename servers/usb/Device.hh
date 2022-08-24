@@ -22,21 +22,21 @@ class Device {
 
 private:
     HostController &m_controller;
-    const uint8 m_slot_id;
+    const uint8_t m_slot_id;
 
     void *m_context{nullptr};
     Endpoint *m_control_endpoint{nullptr};
     ustd::Vector<ustd::UniquePtr<Endpoint>> m_endpoints;
 
-    uint8 *m_configuration{nullptr};
-    uint16 m_configuration_length{0};
+    uint8_t *m_configuration{nullptr};
+    uint16_t m_configuration_length{0};
 
-    EndpointContext &endpoint_context(uint32 endpoint_id) const;
+    EndpointContext &endpoint_context(uint32_t endpoint_id) const;
     ustd::Result<void, DeviceError> read_configuration();
-    void ring_doorbell(uint32 endpoint_id) const;
+    void ring_doorbell(uint32_t endpoint_id) const;
 
 public:
-    Device(HostController &controller, uint8 slot_id);
+    Device(HostController &controller, uint8_t slot_id);
     Device(const Device &) = delete;
     Device(Device &&other);
     virtual ~Device();
@@ -46,13 +46,13 @@ public:
 
     virtual void poll() {}
 
-    Endpoint &create_endpoint(uint32 address);
+    Endpoint &create_endpoint(uint32_t address);
     ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> setup(const Port &port);
-    ustd::Result<void, DeviceError> read_descriptor(ustd::Span<uint8> descriptor);
-    ustd::Result<void, DeviceError> set_configuration(uint8 config_value);
+    ustd::Result<void, DeviceError> read_descriptor(ustd::Span<uint8_t> descriptor);
+    ustd::Result<void, DeviceError> set_configuration(uint8_t config_value);
     ustd::Result<void, DeviceError>
     walk_configuration(ustd::Function<ustd::Result<void, DeviceError>(void *, DescriptorType)> callback);
 
-    TrbRing &endpoint_ring(uint32 endpoint_id) const;
+    TrbRing &endpoint_ring(uint32_t endpoint_id) const;
     SlotState slot_state() const;
 };

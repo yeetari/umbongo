@@ -14,8 +14,8 @@
 
 namespace core {
 
-uint32 EventLoop::index_of(Timer *timer) {
-    for (uint32 i = 0; i < m_timers.size(); i++) {
+uint32_t EventLoop::index_of(Timer *timer) {
+    for (uint32_t i = 0; i < m_timers.size(); i++) {
         if (m_timers[i] == timer) {
             return i;
         }
@@ -23,8 +23,8 @@ uint32 EventLoop::index_of(Timer *timer) {
     ENSURE_NOT_REACHED();
 }
 
-uint32 EventLoop::index_of(Watchable *watchable) {
-    for (uint32 i = 0; i < m_watchables.size(); i++) {
+uint32_t EventLoop::index_of(Watchable *watchable) {
+    for (uint32_t i = 0; i < m_watchables.size(); i++) {
         if (m_watchables[i] == watchable) {
             return i;
         }
@@ -32,10 +32,10 @@ uint32 EventLoop::index_of(Watchable *watchable) {
     ENSURE_NOT_REACHED();
 }
 
-ssize EventLoop::next_timer_deadline() {
-    ssize deadline = -1;
+ssize_t EventLoop::next_timer_deadline() {
+    ssize_t deadline = -1;
     for (auto *timer : m_timers) {
-        const auto period = static_cast<ssize>(timer->period());
+        const auto period = static_cast<ssize_t>(timer->period());
         if (deadline == -1 || period < deadline) {
             deadline = period;
         }
@@ -60,19 +60,19 @@ void EventLoop::watch(Watchable &watchable, kernel::PollEvents events) {
 }
 
 void EventLoop::unwatch(Watchable &watchable) {
-    uint32 index = index_of(&watchable);
+    uint32_t index = index_of(&watchable);
     m_poll_fds.remove(index);
     m_watchables.remove(index);
 }
 
-usize EventLoop::run() {
+size_t EventLoop::run() {
     while (true) {
         const auto timeout = next_timer_deadline();
         if (auto rc = syscall(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
             log::error("poll: {}", core::error_string(rc.error()));
             return 1;
         }
-        auto now = EXPECT(syscall<usize>(Syscall::gettime));
+        auto now = EXPECT(syscall<size_t>(Syscall::gettime));
         for (auto *timer : m_timers) {
             if (!timer->has_expired(now)) {
                 continue;
@@ -82,7 +82,7 @@ usize EventLoop::run() {
             }
             timer->reload(now);
         }
-        for (uint32 i = m_poll_fds.size(); i > 0; i--) {
+        for (uint32_t i = m_poll_fds.size(); i > 0; i--) {
             auto &poll_fd = m_poll_fds[i - 1];
             auto *watchable = m_watchables[i - 1];
             ASSERT(poll_fd.fd == watchable->fd());

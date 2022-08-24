@@ -9,8 +9,8 @@
 
 Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {
     EXPECT(m_file.ioctl(kernel::IoctlRequest::FramebufferGetInfo, &m_info));
-    m_back_buffer = EXPECT(core::syscall<uint32 *>(Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
-    m_front_buffer = EXPECT(m_file.mmap<uint32>());
+    m_back_buffer = EXPECT(core::syscall<uint32_t *>(Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
+    m_front_buffer = EXPECT(m_file.mmap<uint32_t>());
 }
 
 void Framebuffer::clear() {
@@ -18,14 +18,14 @@ void Framebuffer::clear() {
     m_dirty = true;
 }
 
-void Framebuffer::clear_region(uint32 x, uint32 y, uint32 width, uint32 height) {
-    for (uint32 y1 = y; y1 < y + height; y1++) {
-        __builtin_memset(&m_back_buffer[y1 * m_info.width + x], 0, width * sizeof(uint32));
+void Framebuffer::clear_region(uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
+    for (uint32_t y1 = y; y1 < y + height; y1++) {
+        __builtin_memset(&m_back_buffer[y1 * m_info.width + x], 0, width * sizeof(uint32_t));
     }
     m_dirty = true;
 }
 
-void Framebuffer::set(uint32 x, uint32 y, uint32 colour) {
+void Framebuffer::set(uint32_t x, uint32_t y, uint32_t colour) {
     ASSERT_PEDANTIC(x < m_info.width);
     ASSERT_PEDANTIC(y < m_info.height);
     m_back_buffer[y * m_info.width + x] = colour;

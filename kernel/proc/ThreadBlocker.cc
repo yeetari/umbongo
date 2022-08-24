@@ -23,10 +23,10 @@ bool ConnectBlocker::should_unblock() {
     return m_socket->connected();
 }
 
-PollBlocker::PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize timeout)
+PollBlocker::PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize_t timeout)
     : m_fds(fds), m_lock(lock), m_process(process) {
     if (timeout > 0) {
-        m_deadline.emplace(TimeManager::ns_since_boot() + static_cast<usize>(timeout));
+        m_deadline.emplace(TimeManager::ns_since_boot() + static_cast<size_t>(timeout));
     }
 }
 
@@ -53,7 +53,7 @@ bool ReadBlocker::should_unblock() {
     return !m_file->valid() || !m_file->read_would_block(m_offset);
 }
 
-WaitBlocker::WaitBlocker(usize pid) : m_process(Process::from_pid(pid)) {}
+WaitBlocker::WaitBlocker(size_t pid) : m_process(Process::from_pid(pid)) {}
 
 bool WaitBlocker::should_unblock() {
     return !m_process || m_process->thread_count() == 0;

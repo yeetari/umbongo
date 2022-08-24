@@ -6,27 +6,28 @@
 namespace kernel {
 
 class IoApic {
-    volatile uint32 *const m_base{nullptr};
-    const uint32 m_gsi_base{0};
-    uint8 m_id{0};
-    uint32 m_redirection_entry_count{0};
+    volatile uint32_t *const m_base{nullptr};
+    const uint32_t m_gsi_base{0};
+    uint8_t m_id{0};
+    uint32_t m_redirection_entry_count{0};
 
     template <typename T>
-    T read(uint32 reg);
+    T read(uint32_t reg);
 
     template <typename T>
-    void write(uint32 reg, T val);
+    void write(uint32_t reg, T val);
 
 public:
     constexpr IoApic() = default;
-    IoApic(volatile uint32 *base, uint32 gsi_base);
+    IoApic(volatile uint32_t *base, uint32_t gsi_base);
 
-    void set_redirection_entry(uint32 gsi, uint8 vector, InterruptPolarity polarity, InterruptTriggerMode trigger_mode);
+    void set_redirection_entry(uint32_t gsi, uint8_t vector, InterruptPolarity polarity,
+                               InterruptTriggerMode trigger_mode);
 
-    volatile uint32 *base() const { return m_base; }
-    uint32 gsi_base() const { return m_gsi_base; }
-    uint8 id() const { return m_id; }
-    uint32 redirection_entry_count() const { return m_redirection_entry_count; }
+    volatile uint32_t *base() const { return m_base; }
+    uint32_t gsi_base() const { return m_gsi_base; }
+    uint8_t id() const { return m_id; }
+    uint32_t redirection_entry_count() const { return m_redirection_entry_count; }
 };
 
 } // namespace kernel

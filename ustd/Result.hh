@@ -12,15 +12,15 @@ namespace ustd {
 
 class ErrorUnionBase {
 private:
-    usize m_type;
-    usize m_error;
+    size_t m_type;
+    size_t m_error;
 
 public:
     ErrorUnionBase() = default;
-    ErrorUnionBase(usize type, usize error) : m_type(type), m_error(error) {}
+    ErrorUnionBase(size_t type, size_t error) : m_type(type), m_error(error) {}
 
-    usize error() const { return m_error; }
-    usize type() const { return m_type; }
+    size_t error() const { return m_error; }
+    size_t type() const { return m_type; }
 };
 
 template <unsigned N, typename... Es>
@@ -35,7 +35,7 @@ template <unsigned N, typename E, typename... Es>
 struct ErrorUnionImpl<N, E, Es...> : ErrorUnionImpl<N + 1, Es...> {
     using ErrorUnionImpl<N + 1, Es...>::ErrorUnionImpl;
 
-    ErrorUnionImpl(E error) : ErrorUnionImpl<N + 1, Es...>(N, static_cast<usize>(error)) {}
+    ErrorUnionImpl(E error) : ErrorUnionImpl<N + 1, Es...>(N, static_cast<size_t>(error)) {}
 
     template <SameAs<E>>
     Optional<E> as() const {
@@ -64,7 +64,7 @@ template <typename T, typename E>
 class [[nodiscard]] Result {
     union {
         E m_error;
-        alignas(T) Array<uint8, sizeof(T)> m_value;
+        alignas(T) Array<uint8_t, sizeof(T)> m_value;
     };
     bool m_is_error{true};
 

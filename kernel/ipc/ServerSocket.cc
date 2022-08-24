@@ -12,7 +12,7 @@
 
 namespace kernel {
 
-ServerSocket::ServerSocket(uint32 backlog_limit) {
+ServerSocket::ServerSocket(uint32_t backlog_limit) {
     m_connection_queue.ensure_capacity(backlog_limit);
 }
 
@@ -29,11 +29,11 @@ bool ServerSocket::accept_would_block() const {
     return m_connection_queue.empty();
 }
 
-bool ServerSocket::read_would_block(usize) const {
+bool ServerSocket::read_would_block(size_t) const {
     return accept_would_block();
 }
 
-bool ServerSocket::write_would_block(usize) const {
+bool ServerSocket::write_would_block(size_t) const {
     return false;
 }
 
@@ -46,11 +46,11 @@ SysResult<> ServerSocket::queue_connection_from(ustd::SharedPtr<Socket> socket) 
     return {};
 }
 
-SysResult<usize> ServerSocket::read(ustd::Span<void>, usize) {
+SysResult<size_t> ServerSocket::read(ustd::Span<void>, size_t) {
     return SysError::Invalid;
 }
 
-SysResult<usize> ServerSocket::write(ustd::Span<const void>, usize) {
+SysResult<size_t> ServerSocket::write(ustd::Span<const void>, size_t) {
     return SysError::Invalid;
 }
 

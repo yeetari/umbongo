@@ -10,14 +10,14 @@ enum class MemoryType {
 
 struct MemoryMapEntry {
     MemoryType type;
-    uintptr base;
-    uint64 page_count;
+    uintptr_t base;
+    uint64_t page_count;
 };
 
 struct RamFsEntry {
     const char *name{nullptr};
-    const uint8 *data{nullptr};
-    usize data_size{0};
+    const uint8_t *data{nullptr};
+    size_t data_size{0};
     bool is_directory{false};
     RamFsEntry *next{nullptr};
 };
@@ -30,14 +30,14 @@ struct BootInfo {
     void *rsdp;
 
     // Framebuffer info.
-    uint32 width;
-    uint32 height;
-    uint32 pixels_per_scan_line;
-    uintptr framebuffer_base;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pixels_per_scan_line;
+    uintptr_t framebuffer_base;
 
     // Memory map info.
     MemoryMapEntry *map;
-    usize map_entry_count;
+    size_t map_entry_count;
 
     // RamFS.
     RamFsEntry *ram_fs;

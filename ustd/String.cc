@@ -6,13 +6,13 @@
 
 namespace ustd {
 
-String String::copy_raw(const char *data, usize length) {
+String String::copy_raw(const char *data, size_t length) {
     String string(length);
     __builtin_memcpy(string.m_data, data, length);
     return string;
 }
 
-String String::move_raw(char *data, usize length) {
+String String::move_raw(char *data, size_t length) {
     ASSERT(data[length] == '\0');
     String string;
     string.m_data = data;
@@ -20,7 +20,7 @@ String String::move_raw(char *data, usize length) {
     return string;
 }
 
-String::String(usize length) : m_length(length) {
+String::String(size_t length) : m_length(length) {
     m_data = new char[length + 1];
     m_data[length] = '\0';
 }
@@ -35,7 +35,7 @@ String &String::operator=(String &&other) {
     return *this;
 }
 
-char String::operator[](usize index) const {
+char String::operator[](size_t index) const {
     ASSERT(index < m_length);
     return m_data[index];
 }

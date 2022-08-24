@@ -6,23 +6,23 @@
 
 namespace kernel {
 
-enum class PhysicalPageSize : uint8 {
+enum class PhysicalPageSize : uint8_t {
     Normal,
     Large,
     Huge,
 };
 
 class PhysicalPage : public ustd::Shareable<PhysicalPage> {
-    uintptr m_phys{0};
+    uintptr_t m_phys{0};
 
 public:
     static ustd::SharedPtr<PhysicalPage> allocate(PhysicalPageSize size);
-    static ustd::SharedPtr<PhysicalPage> create(uintptr phys, PhysicalPageSize size);
+    static ustd::SharedPtr<PhysicalPage> create(uintptr_t phys, PhysicalPageSize size);
 
     // Maximum physical address size permitted in AMD64 is 52-bits, meaning we can use safely use 8 for the size enum
     // and allocated flag.
-    PhysicalPage(uintptr phys, PhysicalPageSize size, bool allocated)
-        : m_phys(phys | (static_cast<uint64>(size) << 56u) | (allocated ? (1ul << 63u) : 0u)) {}
+    PhysicalPage(uintptr_t phys, PhysicalPageSize size, bool allocated)
+        : m_phys(phys | (static_cast<uint64_t>(size) << 56u) | (allocated ? (1ul << 63u) : 0u)) {}
     PhysicalPage(const PhysicalPage &) = delete;
     PhysicalPage(PhysicalPage &&) = delete;
     ~PhysicalPage();
@@ -30,7 +30,7 @@ public:
     PhysicalPage &operator=(const PhysicalPage &) = delete;
     PhysicalPage &operator=(PhysicalPage &&) = delete;
 
-    uintptr phys() const { return m_phys & 0xfffffffffffffful; }
+    uintptr_t phys() const { return m_phys & 0xfffffffffffffful; }
     PhysicalPageSize size() const { return static_cast<PhysicalPageSize>((m_phys >> 56u) & 0xfu); }
     bool allocated() const { return (m_phys & (1ul << 63u)) == (1ul << 63u); }
 };

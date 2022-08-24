@@ -36,8 +36,8 @@ class Function<R(Args...)> { // NOLINT
         void move_to(void *dst) override { new (dst) Callable{move(m_callable)}; }
     };
 
-    static constexpr usize k_inline_capacity = sizeof(void *) * 2;
-    alignas(max(alignof(CallableBase), alignof(CallableBase *))) uint8 m_storage[k_inline_capacity]; // NOLINT
+    static constexpr size_t k_inline_capacity = sizeof(void *) * 2;
+    alignas(max(alignof(CallableBase), alignof(CallableBase *))) uint8_t m_storage[k_inline_capacity]; // NOLINT
     enum class State {
         Null,
         Inline,

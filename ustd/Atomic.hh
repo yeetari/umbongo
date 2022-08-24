@@ -76,7 +76,7 @@ public:
 
 template <typename T>
 T Atomic<T>::exchange(T desired, MemoryOrder order) volatile {
-    alignas(T) Array<uint8, sizeof(T)> buf;
+    alignas(T) Array<uint8_t, sizeof(T)> buf;
     auto *ret = reinterpret_cast<T *>(buf.data());
     __atomic_exchange(&m_value, &desired, ret, static_cast<int>(order));
     return *ret;
@@ -84,7 +84,7 @@ T Atomic<T>::exchange(T desired, MemoryOrder order) volatile {
 
 template <typename T>
 T Atomic<T>::load(MemoryOrder order) const volatile {
-    alignas(T) Array<uint8, sizeof(T)> buf;
+    alignas(T) Array<uint8_t, sizeof(T)> buf;
     auto *ret = reinterpret_cast<T *>(buf.data());
     __atomic_load(&m_value, ret, static_cast<int>(order));
     return *ret;

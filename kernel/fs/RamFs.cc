@@ -28,12 +28,12 @@ SysResult<ustd::SharedPtr<File>> RamFsInode::open_impl() {
     return ustd::make_shared<InodeFile>(this);
 }
 
-usize RamFsInode::read(ustd::Span<void> data, usize offset) const {
+size_t RamFsInode::read(ustd::Span<void> data, size_t offset) const {
     ScopedLock locker(m_lock);
     if (offset >= m_data.size()) {
         return 0;
     }
-    usize size = data.size();
+    size_t size = data.size();
     if (size > m_data.size() - offset) {
         size = m_data.size() - offset;
     }
@@ -41,7 +41,7 @@ usize RamFsInode::read(ustd::Span<void> data, usize offset) const {
     return size;
 }
 
-usize RamFsInode::size() const {
+size_t RamFsInode::size() const {
     ScopedLock locker(m_lock);
     return m_data.size();
 }
@@ -53,20 +53,20 @@ SysResult<> RamFsInode::truncate() {
     return {};
 }
 
-usize RamFsInode::write(ustd::Span<const void> data, usize offset) {
+size_t RamFsInode::write(ustd::Span<const void> data, size_t offset) {
     ScopedLock locker(m_lock);
-    usize size = data.size();
+    size_t size = data.size();
     m_data.ensure_size(offset + size);
     __builtin_memcpy(m_data.data() + offset, data.data(), size);
     return size;
 }
 
-SysResult<Inode *> RamFsDirectoryInode::child(usize index) const {
-    if (index >= ustd::Limits<uint32>::max()) {
+SysResult<Inode *> RamFsDirectoryInode::child(size_t index) const {
+    if (index >= ustd::Limits<uint32_t>::max()) {
         return SysError::Invalid;
     }
     ScopedLock locker(m_lock);
-    return m_children[static_cast<uint32>(index)].ptr();
+    return m_children[static_cast<uint32_t>(index)].ptr();
 }
 
 SysResult<Inode *> RamFsDirectoryInode::create(ustd::StringView name, InodeType type) {
@@ -100,7 +100,7 @@ Inode *RamFsDirectoryInode::lookup(ustd::StringView name) {
 
 SysResult<> RamFsDirectoryInode::remove(ustd::StringView name) {
     ScopedLock locker(m_lock);
-    for (uint32 i = 0; i < m_children.size(); i++) {
+    for (uint32_t i = 0; i < m_children.size(); i++) {
         if (m_children[i]->name() == name) {
             m_children.remove(i);
             return {};
@@ -109,7 +109,7 @@ SysResult<> RamFsDirectoryInode::remove(ustd::StringView name) {
     return SysError::NonExistent;
 }
 
-usize RamFsDirectoryInode::size() const {
+size_t RamFsDirectoryInode::size() const {
     ScopedLock locker(m_lock);
     return m_children.size();
 }

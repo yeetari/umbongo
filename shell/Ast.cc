@@ -44,20 +44,20 @@ ustd::String find_command(ustd::StringView name) {
 
 } // namespace
 
-void Node::dump(usize indent) const {
-    constexpr usize indent_space_count = 2;
-    for (usize i = 0; i < indent * indent_space_count; i++) {
+void Node::dump(size_t indent) const {
+    constexpr size_t indent_space_count = 2;
+    for (size_t i = 0; i < indent * indent_space_count; i++) {
         core::print(" ");
     }
 }
 
-void Command::dump(usize indent) const {
+void Command::dump(size_t indent) const {
     Node::dump(indent);
     core::println("Command");
     m_node->dump(indent + 1);
 }
 
-void List::dump(usize indent) const {
+void List::dump(size_t indent) const {
     Node::dump(indent);
     core::println("List");
     for (const auto &node : m_nodes) {
@@ -65,14 +65,14 @@ void List::dump(usize indent) const {
     }
 }
 
-void Pipe::dump(usize indent) const {
+void Pipe::dump(size_t indent) const {
     Node::dump(indent);
     core::println("Pipe");
     m_lhs->dump(indent + 1);
     m_rhs->dump(indent + 1);
 }
 
-void StringLiteral::dump(usize indent) const {
+void StringLiteral::dump(size_t indent) const {
     Node::dump(indent);
     core::println("StringLiteral({})", m_text);
 }

@@ -42,21 +42,21 @@ struct IsIntegralCheck<bool> : public TrueType {};
 template <>
 struct IsIntegralCheck<char> : public TrueType {};
 template <>
-struct IsIntegralCheck<int8> : public TrueType {};
+struct IsIntegralCheck<int8_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<int16> : public TrueType {};
+struct IsIntegralCheck<int16_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<int32> : public TrueType {};
+struct IsIntegralCheck<int32_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<int64> : public TrueType {};
+struct IsIntegralCheck<int64_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<uint8> : public TrueType {};
+struct IsIntegralCheck<uint8_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<uint16> : public TrueType {};
+struct IsIntegralCheck<uint16_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<uint32> : public TrueType {};
+struct IsIntegralCheck<uint32_t> : public TrueType {};
 template <>
-struct IsIntegralCheck<uint64> : public TrueType {};
+struct IsIntegralCheck<uint64_t> : public TrueType {};
 
 template <typename>
 struct IsPointerCheck : public FalseType {};

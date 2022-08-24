@@ -10,14 +10,14 @@ namespace ustd {
 template <typename T>
 class Span {
     T *m_data{nullptr};
-    usize m_size{0};
+    size_t m_size{0};
 
     static constexpr bool is_void = is_same<remove_cv<T>, void>;
     using no_void_t = conditional<is_void, char, T>;
 
 public:
     constexpr Span() = default;
-    constexpr Span(T *data, usize size) : m_data(data), m_size(size) {}
+    constexpr Span(T *data, size_t size) : m_data(data), m_size(size) {}
 
     template <typename U>
     constexpr Span<U> as() const;
@@ -30,11 +30,11 @@ public:
     constexpr T *end() const { return m_data + m_size; }
 
     template <typename U = no_void_t>
-    constexpr U &operator[](usize index) const requires(!is_void);
+    constexpr U &operator[](size_t index) const requires(!is_void);
     constexpr bool empty() const { return m_size == 0; }
     constexpr T *data() const { return m_data; }
-    constexpr usize size() const { return m_size; }
-    constexpr usize size_bytes() const { return m_size * sizeof(T); }
+    constexpr size_t size() const { return m_size; }
+    constexpr size_t size_bytes() const { return m_size * sizeof(T); }
 };
 
 template <typename T>
@@ -45,7 +45,7 @@ constexpr Span<U> Span<T>::as() const {
 
 template <typename T>
 template <typename U>
-constexpr U &Span<T>::operator[](usize index) const requires(!is_void) {
+constexpr U &Span<T>::operator[](size_t index) const requires(!is_void) {
     return begin()[index];
 }
 

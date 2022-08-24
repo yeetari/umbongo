@@ -18,10 +18,10 @@ public:
 
     void close_read() { m_read_end.close(); }
     void close_write() { m_write_end.close(); }
-    ustd::Result<void, SysError> rebind_read(uint32 fd);
-    ustd::Result<void, SysError> rebind_write(uint32 fd);
-    uint32 read_fd() const { return m_read_end.fd(); }
-    uint32 write_fd() const { return m_write_end.fd(); }
+    ustd::Result<void, SysError> rebind_read(uint32_t fd);
+    ustd::Result<void, SysError> rebind_write(uint32_t fd);
+    uint32_t read_fd() const { return m_read_end.fd(); }
+    uint32_t write_fd() const { return m_write_end.fd(); }
 };
 
 ustd::Result<Pipe, SysError> create_pipe();

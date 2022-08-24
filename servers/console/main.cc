@@ -22,10 +22,10 @@
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
-usize main(usize, const char **) {
+size_t main(size_t, const char **) {
     log::initialise("console-server");
     core::EventLoop event_loop;
-    core::File stdin(static_cast<uint32>(0));
+    core::File stdin(static_cast<uint32_t>(0));
     event_loop.watch(stdin, kernel::PollEvents::Read);
 
     config::listen(event_loop);
@@ -43,7 +43,7 @@ usize main(usize, const char **) {
     });
 
     config::watch("console-server", "refresh_rate", [&vsync_timer](ustd::StringView value) {
-        const auto refresh_rate = ustd::max(ustd::cast<usize>(value).value_or(60), 1ul);
+        const auto refresh_rate = ustd::max(ustd::cast<size_t>(value).value_or(60), 1ul);
         vsync_timer.set_period(1_Hz / refresh_rate);
     });
 
@@ -53,7 +53,7 @@ usize main(usize, const char **) {
         ustd::Array<char, 8_KiB> buffer;
         auto bytes_read = EXPECT(stdin.read(buffer.span()));
         terminal->clear_cursor();
-        for (usize i = 0; i < bytes_read; i++) {
+        for (size_t i = 0; i < bytes_read; i++) {
             char ch = buffer[i];
             if (escape_parser.parse(ch, terminal)) {
                 continue;

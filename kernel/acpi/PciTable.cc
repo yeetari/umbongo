@@ -7,13 +7,13 @@
 
 namespace kernel::acpi {
 
-const PciSegment *PciTable::segment(usize index) const {
+const PciSegment *PciTable::segment(size_t index) const {
     ASSERT(index < segment_count());
     return &m_segments.data()[index];
 }
 
-usize PciTable::segment_count() const {
-    return (length() - sizeof(Table) - sizeof(uint64)) / sizeof(PciSegment);
+size_t PciTable::segment_count() const {
+    return (length() - sizeof(Table) - sizeof(uint64_t)) / sizeof(PciSegment);
 }
 
 } // namespace kernel::acpi

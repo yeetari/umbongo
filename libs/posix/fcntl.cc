@@ -3,12 +3,12 @@
 #include <bits/error.hh>
 #include <errno.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <sys/cdefs.h>
 
 #include <core/Syscall.hh>
 #include <log/Log.hh>
 #include <ustd/Result.hh>
+#include <ustd/Types.hh>
 
 __BEGIN_DECLS
 

@@ -2,8 +2,6 @@
 
 #include <bits/error.hh>
 #include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <sys/cdefs.h>
 
@@ -331,7 +329,7 @@ size_t FILE::write(const void *data, size_t size) {
 __BEGIN_DECLS
 
 FILE *fopen(const char *path, const char *mode) {
-    auto fd = core::syscall<uint32>(Syscall::open, path, parse_mode(mode));
+    auto fd = core::syscall<uint32_t>(Syscall::open, path, parse_mode(mode));
     if (fd.is_error()) {
         return nullptr;
     }

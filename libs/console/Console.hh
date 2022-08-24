@@ -5,8 +5,8 @@
 namespace console {
 
 struct TerminalSize {
-    uint32 column_count;
-    uint32 row_count;
+    uint32_t column_count;
+    uint32_t row_count;
 };
 
 TerminalSize terminal_size();

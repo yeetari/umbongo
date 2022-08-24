@@ -12,6 +12,6 @@ bool Port::reset() const {
     return mmio::wait_timeout(*m_portsc, (1u << 21u) | (1u << 4u), 1u << 21u, 500);
 }
 
-uint8 Port::speed() const {
+uint8_t Port::speed() const {
     return (mmio::read(*m_portsc) >> 10u) & 0xfu;
 }

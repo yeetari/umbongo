@@ -27,7 +27,7 @@ void DmesgDevice::put_char(char ch) {
     s_buffer->enqueue(ch);
 }
 
-SysResult<usize> DmesgDevice::read(ustd::Span<void> data, usize offset) {
+SysResult<size_t> DmesgDevice::read(ustd::Span<void> data, size_t offset) {
     const auto size = ustd::min(data.size(), s_buffer->size() - offset);
     __builtin_memcpy(data.data(), &(*s_buffer)[offset], size);
     return size;

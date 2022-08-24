@@ -35,11 +35,11 @@ ustd::Array k_error_list{
 }
 
 ustd::StringView error_string(SysError error) {
-    ssize num = -static_cast<ssize>(error);
-    if (num < 0 || static_cast<usize>(num) >= k_error_list.size()) {
+    ssize_t num = -static_cast<ssize_t>(error);
+    if (num < 0 || static_cast<size_t>(num) >= k_error_list.size()) {
         return "unknown error"sv;
     }
-    return k_error_list[static_cast<usize>(num)];
+    return k_error_list[static_cast<size_t>(num)];
 }
 
 } // namespace core

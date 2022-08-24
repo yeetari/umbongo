@@ -13,12 +13,12 @@ struct MemoryManager {
     static void reclaim(BootInfo *boot_info);
     static void switch_space(VirtSpace &virt_space);
 
-    static uintptr alloc_frame();
-    static void free_frame(uintptr frame);
-    static bool is_frame_free(uintptr frame);
+    static uintptr_t alloc_frame();
+    static void free_frame(uintptr_t frame);
+    static bool is_frame_free(uintptr_t frame);
 
-    static void *alloc_contiguous(usize size);
-    static void free_contiguous(void *ptr, usize size);
+    static void *alloc_contiguous(size_t size);
+    static void free_contiguous(void *ptr, size_t size);
 
     static VirtSpace *current_space();
     static VirtSpace *kernel_space();

@@ -11,29 +11,29 @@ class ApicTableIterator;
 
 // Multiple APIC Description Table (ACPI specification 6.4 section 5.2.8)
 class [[gnu::packed]] ApicTable : public Table {
-    uint32 m_local_apic;
-    uint32 m_flags;
+    uint32_t m_local_apic;
+    uint32_t m_flags;
     ustd::Array<InterruptController, 0> m_controllers;
 
 public:
-    static constexpr ustd::Array<uint8, 4> k_signature{'A', 'P', 'I', 'C'};
+    static constexpr ustd::Array<uint8_t, 4> k_signature{'A', 'P', 'I', 'C'};
 
     ApicTableIterator begin() const;
     ApicTableIterator end() const;
 
-    InterruptController *controller(usize index) const;
-    usize controller_count() const;
+    InterruptController *controller(size_t index) const;
+    size_t controller_count() const;
 
     void *local_apic() const { return reinterpret_cast<void *>(m_local_apic); }
-    uint32 flags() const { return m_flags; }
+    uint32_t flags() const { return m_flags; }
 };
 
 class ApicTableIterator {
     const ApicTable *const m_table;
-    usize m_index;
+    size_t m_index;
 
 public:
-    constexpr ApicTableIterator(const ApicTable *table, usize index) : m_table(table), m_index(index) {}
+    constexpr ApicTableIterator(const ApicTable *table, size_t index) : m_table(table), m_index(index) {}
 
     constexpr ApicTableIterator &operator++() {
         m_index++;

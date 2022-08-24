@@ -35,14 +35,14 @@ PageFlags page_flags(RegionAccess access) {
 
 } // namespace
 
-Region::Region(uintptr base, usize size, RegionAccess access, bool free, ustd::Optional<uintptr> phys_base)
+Region::Region(uintptr_t base, size_t size, RegionAccess access, bool free, ustd::Optional<uintptr_t> phys_base)
     : m_base(base), m_size(size), m_access(access), m_free(free) {
     if (free) {
         return;
     }
     if (!phys_base) {
         do {
-            const usize map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
+            const size_t map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
             const auto page_size = map_size == 1_GiB   ? PhysicalPageSize::Huge
                                    : map_size == 2_MiB ? PhysicalPageSize::Large
                                                        : PhysicalPageSize::Normal;
@@ -51,9 +51,9 @@ Region::Region(uintptr base, usize size, RegionAccess access, bool free, ustd::O
         } while (size != 0);
         return;
     }
-    uintptr phys = *phys_base;
+    uintptr_t phys = *phys_base;
     do {
-        const usize map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
+        const size_t map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
         const auto page_size = map_size == 1_GiB   ? PhysicalPageSize::Huge
                                : map_size == 2_MiB ? PhysicalPageSize::Large
                                                    : PhysicalPageSize::Normal;
@@ -65,7 +65,7 @@ Region::Region(uintptr base, usize size, RegionAccess access, bool free, ustd::O
 
 void Region::map(VirtSpace *virt_space) const {
     const auto flags = page_flags(m_access);
-    for (uintptr virt = m_base; const auto &physical_page : m_physical_pages) {
+    for (uintptr_t virt = m_base; const auto &physical_page : m_physical_pages) {
         switch (physical_page->size()) {
         case PhysicalPageSize::Normal:
             virt_space->map_4KiB(virt, physical_page->phys(), flags);
@@ -84,7 +84,7 @@ void Region::map(VirtSpace *virt_space) const {
 
     InterruptDisabler disabler;
     if (MemoryManager::current_space() == virt_space) {
-        for (uintptr virt = m_base; virt < m_base + m_size; virt += 4_KiB) {
+        for (uintptr_t virt = m_base; virt < m_base + m_size; virt += 4_KiB) {
             asm volatile("invlpg (%0)" : : "r"(virt) : "memory");
         }
     }

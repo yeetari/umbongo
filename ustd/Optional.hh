@@ -11,7 +11,7 @@ namespace ustd {
 
 template <typename T>
 class Optional {
-    alignas(T) Array<uint8, sizeof(T)> m_data{};
+    alignas(T) Array<uint8_t, sizeof(T)> m_data{};
     bool m_present{false};
 
 public:

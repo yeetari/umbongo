@@ -10,18 +10,18 @@
 namespace ipc {
 
 class MessageEncoder {
-    const ustd::Span<uint8> m_buffer;
-    uint8 *m_ptr;
-    usize m_size{0};
+    const ustd::Span<uint8_t> m_buffer;
+    uint8_t *m_ptr;
+    size_t m_size{0};
 
 public:
-    explicit MessageEncoder(ustd::Span<uint8> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
+    explicit MessageEncoder(ustd::Span<uint8_t> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
 
     template <ustd::TriviallyCopyable T>
     void encode(const T &obj);
     void encode(ustd::StringView view);
 
-    usize size() const { return m_size; }
+    size_t size() const { return m_size; }
 };
 
 template <ustd::TriviallyCopyable T>

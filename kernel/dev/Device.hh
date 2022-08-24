@@ -16,8 +16,8 @@ class Device : public File {
 public:
     explicit Device(ustd::String &&path);
 
-    SysResult<usize> read(ustd::Span<void>, usize) override { return 0u; }
-    SysResult<usize> write(ustd::Span<const void>, usize) override { return 0u; }
+    SysResult<size_t> read(ustd::Span<void>, size_t) override { return 0u; }
+    SysResult<size_t> write(ustd::Span<const void>, size_t) override { return 0u; }
 
     void disconnect();
     bool valid() const override { return m_connected; }

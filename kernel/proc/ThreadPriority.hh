@@ -4,7 +4,7 @@
 
 namespace kernel {
 
-enum class ThreadPriority : uint32 {
+enum class ThreadPriority : uint32_t {
     Idle = 0,
     Normal = 1,
 };

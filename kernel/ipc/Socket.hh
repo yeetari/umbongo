@@ -25,10 +25,10 @@ public:
 
     bool is_socket() const override { return true; }
 
-    bool read_would_block(usize offset) const override;
-    bool write_would_block(usize offset) const override;
-    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
-    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
+    bool read_would_block(size_t offset) const override;
+    bool write_would_block(size_t offset) const override;
+    SysResult<size_t> read(ustd::Span<void> data, size_t offset) override;
+    SysResult<size_t> write(ustd::Span<const void> data, size_t offset) override;
 
     bool connected() const;
     DoubleBuffer *read_buffer() const { return m_read_buffer.ptr(); }

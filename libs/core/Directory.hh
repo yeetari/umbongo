@@ -8,6 +8,7 @@
 
 namespace core {
 
-ustd::Result<usize, SysError> iterate_directory(ustd::StringView path, ustd::Function<void(ustd::StringView)> callback);
+ustd::Result<size_t, SysError> iterate_directory(ustd::StringView path,
+                                                 ustd::Function<void(ustd::StringView)> callback);
 
 } // namespace core

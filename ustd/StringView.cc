@@ -5,11 +5,11 @@
 
 namespace ustd {
 
-StringView StringView::substr(usize begin) const {
+StringView StringView::substr(size_t begin) const {
     return substr(begin, length());
 }
 
-StringView StringView::substr(usize begin, usize end) const {
+StringView StringView::substr(size_t begin, size_t end) const {
     ASSERT(begin + (end - begin) <= size());
     return {data() + begin, end - begin};
 }
@@ -22,7 +22,7 @@ bool StringView::operator==(const char *string) const {
         return false;
     }
     const char *ch = string;
-    for (usize i = 0; i < length(); i++) {
+    for (size_t i = 0; i < length(); i++) {
         if (*ch == '\0' || data()[i] != *(ch++)) {
             return false;
         }

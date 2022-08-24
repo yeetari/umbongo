@@ -7,7 +7,7 @@
 
 namespace kernel {
 
-enum class PageFlags : usize {
+enum class PageFlags : size_t {
     Present = 1ul << 0ul,
     Writable = 1ul << 1ul,
     User = 1ul << 2ul,
@@ -19,11 +19,11 @@ enum class PageFlags : usize {
 };
 
 inline constexpr PageFlags operator&(PageFlags a, PageFlags b) {
-    return static_cast<PageFlags>(static_cast<usize>(a) & static_cast<usize>(b));
+    return static_cast<PageFlags>(static_cast<size_t>(a) & static_cast<size_t>(b));
 }
 
 inline constexpr PageFlags operator|(PageFlags a, PageFlags b) {
-    return static_cast<PageFlags>(static_cast<usize>(a) | static_cast<usize>(b));
+    return static_cast<PageFlags>(static_cast<size_t>(a) | static_cast<size_t>(b));
 }
 
 inline constexpr PageFlags &operator|=(PageFlags &a, PageFlags b) {
@@ -32,12 +32,12 @@ inline constexpr PageFlags &operator|=(PageFlags &a, PageFlags b) {
 
 template <typename Entry>
 class [[gnu::packed]] PageLevelEntry {
-    uintptr m_raw{0};
+    uintptr_t m_raw{0};
 
 public:
     constexpr PageLevelEntry() = default;
-    constexpr PageLevelEntry(uintptr entry, PageFlags flags)
-        : m_raw((entry & 0xfffffffffffffu) | static_cast<usize>(flags | PageFlags::Present)) {}
+    constexpr PageLevelEntry(uintptr_t entry, PageFlags flags)
+        : m_raw((entry & 0xfffffffffffffu) | static_cast<size_t>(flags | PageFlags::Present)) {}
 
     bool empty() const { return m_raw == 0; }
     Entry *entry() const { return reinterpret_cast<Entry *>(m_raw & 0xffffffffff000ul); }
@@ -53,7 +53,7 @@ public:
     PageLevel(const PageLevel &) = delete;
     PageLevel(PageLevel &&) = delete;
     ~PageLevel() {
-        if constexpr (!ustd::is_same<Entry, uintptr>) {
+        if constexpr (!ustd::is_same<Entry, uintptr_t>) {
             for (auto &entry : m_entries) {
                 if (!entry.empty() && (entry.flags() & PageFlags::Large) != PageFlags::Large) {
                     delete entry.entry();
@@ -65,18 +65,18 @@ public:
     PageLevel &operator=(const PageLevel &) = delete;
     PageLevel &operator=(PageLevel &&) = delete;
 
-    void set(usize index, uintptr phys, PageFlags flags = static_cast<PageFlags>(0)) {
+    void set(size_t index, uintptr_t phys, PageFlags flags = static_cast<PageFlags>(0)) {
         ASSERT(index < 512);
         ASSERT(m_entries[index].empty());
         m_entries[index] = PageLevelEntry<Entry>(phys, flags);
     }
 
-    Entry *ensure(usize index) {
+    Entry *ensure(size_t index) {
         ASSERT(index < 512);
         ASSERT((m_entries[index].flags() & PageFlags::Large) != PageFlags::Large);
         if (m_entries[index].empty()) {
             // Top level page structures have all access bits set.
-            set(index, reinterpret_cast<uintptr>(new Entry), PageFlags::Writable | PageFlags::User);
+            set(index, reinterpret_cast<uintptr_t>(new Entry), PageFlags::Writable | PageFlags::User);
         }
         return m_entries[index].entry();
     }
@@ -86,7 +86,7 @@ public:
     }
 };
 
-using Page = uintptr;                                   // PTE
+using Page = uintptr_t;                                 // PTE
 using PageTable = PageLevel<Page>;                      // PDE
 using PageDirectory = PageLevel<PageTable>;             // PDPE
 using PageDirectoryPtrTable = PageLevel<PageDirectory>; // PML4E

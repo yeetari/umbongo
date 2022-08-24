@@ -18,7 +18,7 @@ ustd::Result<T *, core::SysError> alloc_dma() {
 }
 
 template <typename T>
-ustd::Result<T *, core::SysError> alloc_dma_array(usize size) {
+ustd::Result<T *, core::SysError> alloc_dma_array(size_t size) {
     if (size == 0) {
         return nullptr;
     }
@@ -39,7 +39,7 @@ void write(const volatile T &addr, T value) {
 }
 
 template <typename T>
-bool wait_timeout(const volatile T &value, T mask, T desired, usize timeout) {
+bool wait_timeout(const volatile T &value, T mask, T desired, size_t timeout) {
     for (; (value & mask) != desired; timeout--) {
         if (timeout == 0) {
             return false;
@@ -49,7 +49,7 @@ bool wait_timeout(const volatile T &value, T mask, T desired, usize timeout) {
     return true;
 }
 
-inline ustd::Result<uintptr, core::SysError> virt_to_phys(const void *virt) {
+inline ustd::Result<uintptr_t, core::SysError> virt_to_phys(const void *virt) {
     return virt != nullptr ? TRY(core::syscall(Syscall::virt_to_phys, virt)) : 0ul;
 }
 

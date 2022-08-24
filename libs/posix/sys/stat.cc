@@ -6,6 +6,7 @@
 #include <core/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Try.hh>
+#include <ustd/Types.hh>
 
 __BEGIN_DECLS
 

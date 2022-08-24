@@ -1,34 +1,34 @@
 #pragma once
 
-using int8 = __INT8_TYPE__;
-using int16 = __INT16_TYPE__;
-using int32 = __INT32_TYPE__;
-using int64 = __INT64_TYPE__;
-using ptrdiff = __PTRDIFF_TYPE__;
-using ssize = __INTPTR_TYPE__;
-using uint8 = __UINT8_TYPE__;
-using uint16 = __UINT16_TYPE__;
-using uint32 = __UINT32_TYPE__;
-using uint64 = __UINT64_TYPE__;
-using uintptr = __UINTPTR_TYPE__;
-using usize = __SIZE_TYPE__;
+using int8_t = __INT8_TYPE__;
+using int16_t = __INT16_TYPE__;
+using int32_t = __INT32_TYPE__;
+using int64_t = __INT64_TYPE__;
+using ptrdiff_t = __PTRDIFF_TYPE__;
+using ssize_t = __INTPTR_TYPE__;
+using uint8_t = __UINT8_TYPE__;
+using uint16_t = __UINT16_TYPE__;
+using uint32_t = __UINT32_TYPE__;
+using uint64_t = __UINT64_TYPE__;
+using uintptr_t = __UINTPTR_TYPE__;
+using size_t = __SIZE_TYPE__;
 
 // NOLINTNEXTLINE: Must used unsigned long long here.
-constexpr usize operator"" _KiB(unsigned long long num) {
+constexpr size_t operator"" _KiB(unsigned long long num) {
     return num * 0x400;
 }
 
 // NOLINTNEXTLINE: Must used unsigned long long here.
-constexpr usize operator"" _MiB(unsigned long long num) {
+constexpr size_t operator"" _MiB(unsigned long long num) {
     return num * 0x100000;
 }
 
 // NOLINTNEXTLINE: Must used unsigned long long here.
-constexpr usize operator"" _GiB(unsigned long long num) {
+constexpr size_t operator"" _GiB(unsigned long long num) {
     return num * 0x40000000;
 }
 
 // NOLINTNEXTLINE: Must used unsigned long long here.
-constexpr usize operator"" _TiB(unsigned long long num) {
+constexpr size_t operator"" _TiB(unsigned long long num) {
     return num * 0x10000000000;
 }

@@ -34,7 +34,7 @@ ustd::Vector<HostController> find_host_controllers(core::EventLoop &event_loop) 
 
 } // namespace
 
-usize main(usize, const char **) {
+size_t main(size_t, const char **) {
     log::initialise("usb-server");
     core::EventLoop event_loop;
     config::listen(event_loop);

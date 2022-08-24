@@ -11,7 +11,7 @@
 
 namespace {
 
-constexpr usize k_ring_length = 256;
+constexpr size_t k_ring_length = 256;
 
 } // namespace
 
@@ -32,8 +32,8 @@ TrbRing::TrbRing(RawTrb *ring, bool insert_link) : m_ring(ring) {
 }
 
 ustd::Span<RawTrb> TrbRing::dequeue() {
-    const usize start_index = m_index;
-    usize length = 0;
+    const size_t start_index = m_index;
+    size_t length = 0;
     for (; static_cast<bool>(m_ring[m_index].cycle) == m_cycle_state; length++) {
         m_index++;
         if (m_index >= k_ring_length) {
@@ -58,15 +58,15 @@ RawTrb &TrbRing::enqueue(const RawTrb &trb) {
     return enqueued;
 }
 
-ustd::Result<uintptr, core::SysError> TrbRing::physical_base() const {
+ustd::Result<uintptr_t, core::SysError> TrbRing::physical_base() const {
     return TRY(mmio::virt_to_phys(m_ring));
 }
 
-ustd::Result<uintptr, core::SysError> TrbRing::physical_head() const {
+ustd::Result<uintptr_t, core::SysError> TrbRing::physical_head() const {
     return TRY(mmio::virt_to_phys(&m_ring[m_index]));
 }
 
-RawTrb &TrbRing::operator[](usize index) const {
+RawTrb &TrbRing::operator[](size_t index) const {
     ASSERT(index < k_ring_length);
     return m_ring[index];
 }

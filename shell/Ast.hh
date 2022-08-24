@@ -20,7 +20,7 @@ public:
     Node &operator=(const Node &) = delete;
     Node &operator=(Node &&) = delete;
 
-    virtual void dump(usize indent) const;
+    virtual void dump(size_t indent) const;
     virtual ustd::UniquePtr<Value> evaluate() const = 0;
 };
 
@@ -30,7 +30,7 @@ class Command : public Node {
 public:
     explicit Command(ustd::UniquePtr<Node> &&node) : m_node(ustd::move(node)) {}
 
-    void dump(usize indent) const override;
+    void dump(size_t indent) const override;
     ustd::UniquePtr<Value> evaluate() const override;
 };
 
@@ -40,7 +40,7 @@ class List : public Node {
 public:
     explicit List(ustd::Vector<ustd::UniquePtr<Node>> &&nodes) : m_nodes(ustd::move(nodes)) {}
 
-    void dump(usize indent) const override;
+    void dump(size_t indent) const override;
     ustd::UniquePtr<Value> evaluate() const override;
 };
 
@@ -51,7 +51,7 @@ class Pipe : public Node {
 public:
     Pipe(ustd::UniquePtr<Node> &&lhs, ustd::UniquePtr<Node> &&rhs) : m_lhs(ustd::move(lhs)), m_rhs(ustd::move(rhs)) {}
 
-    void dump(usize indent) const override;
+    void dump(size_t indent) const override;
     ustd::UniquePtr<Value> evaluate() const override;
 };
 
@@ -61,7 +61,7 @@ class StringLiteral : public Node {
 public:
     explicit StringLiteral(ustd::String text) : m_text(ustd::move(text)) {}
 
-    void dump(usize indent) const override;
+    void dump(size_t indent) const override;
     ustd::UniquePtr<Value> evaluate() const override;
 };
 

@@ -32,17 +32,17 @@ SyscallResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
     return m_file->ioctl(request, arg);
 }
 
-uintptr FileHandle::mmap(VirtSpace &virt_space) const {
+uintptr_t FileHandle::mmap(VirtSpace &virt_space) const {
     return m_file->mmap(virt_space);
 }
 
-SysResult<usize> FileHandle::read(void *data, usize size) {
-    usize bytes_read = TRY(m_file->read({data, size}, m_offset));
+SysResult<size_t> FileHandle::read(void *data, size_t size) {
+    size_t bytes_read = TRY(m_file->read({data, size}, m_offset));
     m_offset += bytes_read;
     return bytes_read;
 }
 
-usize FileHandle::seek(usize offset, SeekMode mode) {
+size_t FileHandle::seek(size_t offset, SeekMode mode) {
     switch (mode) {
     case SeekMode::Add:
         m_offset += offset;
@@ -54,8 +54,8 @@ usize FileHandle::seek(usize offset, SeekMode mode) {
     return m_offset;
 }
 
-SysResult<usize> FileHandle::write(void *data, usize size) {
-    usize bytes_written = TRY(m_file->write({data, size}, m_offset));
+SysResult<size_t> FileHandle::write(void *data, size_t size) {
+    size_t bytes_written = TRY(m_file->write({data, size}, m_offset));
     m_offset += bytes_written;
     return bytes_written;
 }

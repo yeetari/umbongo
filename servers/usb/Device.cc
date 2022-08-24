@@ -23,19 +23,19 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
-Device::Device(HostController &controller, uint8 slot_id) : m_controller(controller), m_slot_id(slot_id) {}
+Device::Device(HostController &controller, uint8_t slot_id) : m_controller(controller), m_slot_id(slot_id) {}
 Device::Device(Device &&other) : m_controller(other.m_controller), m_slot_id(other.m_slot_id) {
     m_context = ustd::exchange(other.m_context, nullptr);
     m_control_endpoint = ustd::exchange(other.m_control_endpoint, nullptr);
     m_endpoints = ustd::move(other.m_endpoints);
     m_configuration = ustd::exchange(other.m_configuration, nullptr);
-    m_configuration_length = ustd::exchange(other.m_configuration_length, static_cast<uint16>(0));
+    m_configuration_length = ustd::exchange(other.m_configuration_length, static_cast<uint16_t>(0));
 }
 
 // TODO: Free context and configuration.
 Device::~Device() = default;
 
-EndpointContext &Device::endpoint_context(uint32 endpoint_id) const {
+EndpointContext &Device::endpoint_context(uint32_t endpoint_id) const {
     if (m_controller.context_size() == 32) {
         return static_cast<DeviceContext *>(m_context)->endpoints[endpoint_id];
     }
@@ -51,16 +51,16 @@ ustd::Result<void, DeviceError> Device::read_configuration() {
     };
     ConfigDescriptor descriptor{};
     TRY(m_control_endpoint->send_control(transfer, TransferType::ReadData, {&descriptor, sizeof(ConfigDescriptor)}));
-    m_configuration = new uint8[m_configuration_length = descriptor.total_length];
+    m_configuration = new uint8_t[m_configuration_length = descriptor.total_length];
     TRY(m_control_endpoint->send_control(transfer, TransferType::ReadData, {m_configuration, m_configuration_length}));
     return {};
 }
 
-void Device::ring_doorbell(uint32 endpoint_id) const {
+void Device::ring_doorbell(uint32_t endpoint_id) const {
     m_controller.ring_doorbell(m_slot_id, endpoint_id + 1);
 }
 
-Endpoint &Device::create_endpoint(uint32 address) {
+Endpoint &Device::create_endpoint(uint32_t address) {
     const auto direction = (address & (1u << 7u)) >> 7u;
     const auto id = (address & 0xfu) * 2u + direction - 1u;
     return *m_endpoints.emplace(new Endpoint(*this, id));
@@ -80,7 +80,7 @@ ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> D
         break;
     }
 
-    constexpr ustd::Array<uint16, 5> packet_sizes{8, 64, 8, 64, 512};
+    constexpr ustd::Array<uint16_t, 5> packet_sizes{8, 64, 8, 64, 512};
     if (port.speed() >= packet_sizes.size()) {
         return DeviceError::UnsupportedSpeed;
     }
@@ -99,7 +99,7 @@ ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> D
     return m_context;
 }
 
-ustd::Result<void, DeviceError> Device::read_descriptor(ustd::Span<uint8> descriptor) {
+ustd::Result<void, DeviceError> Device::read_descriptor(ustd::Span<uint8_t> descriptor) {
     ControlTransfer transfer{
         .recipient = ControlRecipient::Device,
         .direction = ControlDirection::DeviceToHost,
@@ -110,7 +110,7 @@ ustd::Result<void, DeviceError> Device::read_descriptor(ustd::Span<uint8> descri
     return {};
 }
 
-ustd::Result<void, DeviceError> Device::set_configuration(uint8 config_value) {
+ustd::Result<void, DeviceError> Device::set_configuration(uint8_t config_value) {
     // TODO: Designated initialiser doesn't work here (compiler bug?)
     ControlTransfer transfer{};
     transfer.recipient = ControlRecipient::Device;
@@ -134,7 +134,7 @@ Device::walk_configuration(ustd::Function<ustd::Result<void, DeviceError>(void *
     return {};
 }
 
-TrbRing &Device::endpoint_ring(uint32 endpoint_id) const {
+TrbRing &Device::endpoint_ring(uint32_t endpoint_id) const {
     for (const auto &endpoint : m_endpoints) {
         if (endpoint->id() == endpoint_id) {
             return endpoint->transfer_ring();

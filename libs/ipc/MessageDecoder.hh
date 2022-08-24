@@ -9,16 +9,16 @@
 namespace ipc {
 
 class MessageDecoder {
-    const ustd::Span<const uint8> m_buffer;
-    const uint8 *m_ptr;
+    const ustd::Span<const uint8_t> m_buffer;
+    const uint8_t *m_ptr;
 
 public:
-    explicit MessageDecoder(ustd::Span<const uint8> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
+    explicit MessageDecoder(ustd::Span<const uint8_t> buffer) : m_buffer(buffer), m_ptr(buffer.data()) {}
 
     template <ustd::TriviallyCopyable T>
     T decode();
 
-    usize bytes_decoded() const { return static_cast<usize>(m_ptr - m_buffer.data()); }
+    size_t bytes_decoded() const { return static_cast<size_t>(m_ptr - m_buffer.data()); }
 };
 
 template <ustd::TriviallyCopyable T>
@@ -32,7 +32,7 @@ T MessageDecoder::decode() {
 
 template <>
 inline ustd::StringView MessageDecoder::decode() {
-    auto length = decode<usize>();
+    auto length = decode<size_t>();
     ustd::StringView view(reinterpret_cast<const char *>(m_ptr), length);
     m_ptr += length;
     return view;

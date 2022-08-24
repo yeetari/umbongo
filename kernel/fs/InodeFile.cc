@@ -7,11 +7,11 @@
 
 namespace kernel {
 
-SysResult<usize> InodeFile::read(ustd::Span<void> data, usize offset) {
+SysResult<size_t> InodeFile::read(ustd::Span<void> data, size_t offset) {
     return m_inode->read(data, offset);
 }
 
-SysResult<usize> InodeFile::write(ustd::Span<const void> data, usize offset) {
+SysResult<size_t> InodeFile::write(ustd::Span<const void> data, size_t offset) {
     return m_inode->write(data, offset);
 }
 

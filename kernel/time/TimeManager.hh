@@ -12,9 +12,9 @@ namespace kernel {
 
 struct TimeManager {
     static void initialise(acpi::HpetTable *hpet_table);
-    static void spin(uint64 millis);
+    static void spin(uint64_t millis);
     static void update();
-    static uint64 ns_since_boot();
+    static uint64_t ns_since_boot();
 };
 
 } // namespace kernel

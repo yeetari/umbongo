@@ -14,11 +14,11 @@ class Timer {
 private:
     EventLoop &m_event_loop;
     ustd::Function<void()> m_on_fire;
-    usize m_fire_time{};
-    usize m_period;
+    size_t m_fire_time{};
+    size_t m_period;
 
 public:
-    Timer(EventLoop &event_loop, usize period);
+    Timer(EventLoop &event_loop, size_t period);
     Timer(const Timer &) = delete;
     Timer(Timer &&) = delete;
     ~Timer();
@@ -26,17 +26,17 @@ public:
     Timer &operator=(const Timer &) = delete;
     Timer &operator=(Timer &&) = delete;
 
-    bool has_expired(usize now) const { return now > m_fire_time; }
-    void reload(usize now) { m_fire_time = now + m_period; }
+    bool has_expired(size_t now) const { return now > m_fire_time; }
+    void reload(size_t now) { m_fire_time = now + m_period; }
     void set_on_fire(ustd::Function<void()> on_fire) { m_on_fire = ustd::move(on_fire); }
-    void set_period(usize period) { m_period = period; }
+    void set_period(size_t period) { m_period = period; }
 
-    usize period() const { return m_period; }
+    size_t period() const { return m_period; }
 };
 
 } // namespace core
 
 // NOLINTNEXTLINE
-constexpr usize operator"" _Hz(unsigned long long frequency) {
+constexpr size_t operator"" _Hz(unsigned long long frequency) {
     return 1000000000ul / frequency;
 }

@@ -40,7 +40,7 @@
 extern void (*k_ctors_start)();
 extern void (*k_ctors_end)();
 
-usize __stack_chk_guard = 0xdeadc0de;
+size_t __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
     kernel::dmesg("\nAssertion '{}' failed at {}:{}", expr, file, line);
@@ -58,7 +58,7 @@ class LocalApic;
 
 namespace {
 
-InterruptPolarity interrupt_polarity(uint8 polarity) {
+InterruptPolarity interrupt_polarity(uint8_t polarity) {
     switch (polarity) {
     case 0b00:
     case 0b01:
@@ -70,7 +70,7 @@ InterruptPolarity interrupt_polarity(uint8 polarity) {
     }
 }
 
-InterruptTriggerMode interrupt_trigger_mode(uint8 trigger_mode) {
+InterruptTriggerMode interrupt_trigger_mode(uint8_t trigger_mode) {
     switch (trigger_mode) {
     case 0b00:
     case 0b01:
@@ -109,7 +109,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     pci::enumerate(mcfg);
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
-                                     boot_info->pixels_per_scan_line * sizeof(uint32));
+                                     boot_info->pixels_per_scan_line * sizeof(uint32_t));
     fb->leak_ref();
 
     // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
@@ -124,10 +124,10 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 } // namespace
 
 [[noreturn]] extern "C" void __stack_chk_fail() {
-    auto *rbp = static_cast<uint64 *>(__builtin_frame_address(0));
+    auto *rbp = static_cast<uint64_t *>(__builtin_frame_address(0));
     while (rbp != nullptr && rbp[1] != 0) {
         dmesg("{:h}", rbp[1]);
-        rbp = reinterpret_cast<uint64 *>(*rbp);
+        rbp = reinterpret_cast<uint64_t *>(*rbp);
     }
     ENSURE_NOT_REACHED("Stack smashing detected!");
 }
@@ -200,8 +200,8 @@ extern "C" void kmain(BootInfo *boot_info) {
     // start kernel threads, and so that the current stack we are using is no longer in use, meaning we can reclaim the
     // memory.
     auto kernel_init_thread = Thread::create_kernel(&kernel_init, ThreadPriority::Normal);
-    kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr>(boot_info);
-    kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr>(xsdt);
+    kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr_t>(boot_info);
+    kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr_t>(xsdt);
 
     Scheduler::initialise();
     Scheduler::insert_thread(ustd::move(kernel_init_thread));

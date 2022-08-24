@@ -16,7 +16,7 @@ bool compare_name(ustd::String &lhs, ustd::String &rhs) {
     return lhs.length() > rhs.length();
 }
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     const char *path = argc == 1 ? "." : argv[1];
     ustd::Vector<ustd::String> names;
     auto result = core::iterate_directory(path, [&](ustd::StringView name) {

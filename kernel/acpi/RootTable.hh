@@ -25,16 +25,16 @@ public:
     template <typename T>
     ustd::Optional<T *> find() const;
 
-    Table *entry(usize index) const;
-    usize entry_count() const;
+    Table *entry(size_t index) const;
+    size_t entry_count() const;
 };
 
 class RootTableIterator {
     const RootTable *const m_table;
-    usize m_index;
+    size_t m_index;
 
 public:
-    constexpr RootTableIterator(const RootTable *table, usize index) : m_table(table), m_index(index) {}
+    constexpr RootTableIterator(const RootTable *table, size_t index) : m_table(table), m_index(index) {}
 
     constexpr RootTableIterator &operator++() {
         m_index++;

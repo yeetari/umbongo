@@ -30,7 +30,7 @@ void print_device(const char *name) {
     builder.append(" - Class: {:h2}\n", info.clas);
     builder.append(" - Subclass: {:h2}\n", info.subc);
     builder.append(" - Prog IF: {:h2}\n", info.prif);
-    for (usize i = 0; i < info.bars.size(); i++) {
+    for (size_t i = 0; i < info.bars.size(); i++) {
         const auto &bar = info.bars[i];
         if (bar.address != 0) {
             builder.append(" - BAR{}: {:h} ({} bytes)\n", i, bar.address, bar.size);
@@ -41,7 +41,7 @@ void print_device(const char *name) {
 
 } // namespace
 
-usize main(usize argc, const char **argv) {
+size_t main(size_t argc, const char **argv) {
     if (argc == 2) {
         print_device(argv[1]);
         return 0;

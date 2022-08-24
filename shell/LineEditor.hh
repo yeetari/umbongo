@@ -10,8 +10,8 @@ class LineEditor {
     const ustd::StringView m_prompt;
     ustd::Vector<char> m_buffer;
     ustd::Vector<ustd::String> m_history;
-    uint32 m_cursor_pos{0};
-    uint32 m_history_pos{0};
+    uint32_t m_cursor_pos{0};
+    uint32_t m_history_pos{0};
 
     void clear();
     void clear_line();

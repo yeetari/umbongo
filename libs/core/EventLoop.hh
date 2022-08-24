@@ -14,16 +14,16 @@ class EventLoop {
     ustd::Vector<Timer *> m_timers;
     ustd::Vector<Watchable *> m_watchables;
 
-    uint32 index_of(Timer *timer);
-    uint32 index_of(Watchable *watchable);
-    ssize next_timer_deadline();
+    uint32_t index_of(Timer *timer);
+    uint32_t index_of(Watchable *watchable);
+    ssize_t next_timer_deadline();
 
 public:
     void register_timer(Timer &timer);
     void unregister_timer(Timer &timer);
     void watch(Watchable &watchable, kernel::PollEvents events);
     void unwatch(Watchable &watchable);
-    usize run();
+    size_t run();
 };
 
 } // namespace core

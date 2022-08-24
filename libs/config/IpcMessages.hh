@@ -47,13 +47,13 @@ class ListAllResponseMessage final : public ipc::Message {
 public:
     ListAllResponseMessage(ustd::Vector<ustd::String> &&list) : m_list(ustd::move(list)) {}
 
-    static ListAllResponseMessage decode(ustd::Span<const uint8> buffer) {
+    static ListAllResponseMessage decode(ustd::Span<const uint8_t> buffer) {
         ipc::MessageDecoder decoder(buffer);
         [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
         ASSERT(kind == MessageKind::ListAllResponse);
         ustd::Vector<ustd::String> list;
-        list.ensure_capacity(decoder.decode<uint32>());
-        for (uint32 i = 0; i < list.capacity(); i++) {
+        list.ensure_capacity(decoder.decode<uint32_t>());
+        for (uint32_t i = 0; i < list.capacity(); i++) {
             list.emplace(decoder.decode<ustd::StringView>());
         }
         return ustd::move(list);
@@ -91,7 +91,7 @@ class LookupResponseMessage final : public ipc::Message {
 public:
     LookupResponseMessage(ustd::StringView value, bool present) : m_value(value), m_present(present) {}
 
-    static LookupResponseMessage decode(ustd::Span<const uint8> buffer) {
+    static LookupResponseMessage decode(ustd::Span<const uint8_t> buffer) {
         ipc::MessageDecoder decoder(buffer);
         [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
         ASSERT(kind == MessageKind::LookupResponse);
@@ -144,7 +144,7 @@ class UpdateResponseMessage final : public ipc::Message {
 public:
     explicit UpdateResponseMessage(bool success) : m_success(success) {}
 
-    static UpdateResponseMessage decode(ustd::Span<const uint8> buffer) {
+    static UpdateResponseMessage decode(ustd::Span<const uint8_t> buffer) {
         ipc::MessageDecoder decoder(buffer);
         [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
         ASSERT(kind == MessageKind::UpdateResponse);

@@ -60,12 +60,12 @@ void DevFs::mount(Inode *parent, Inode *host) {
     m_root_inode.emplace(parent, host->name());
 }
 
-SysResult<Inode *> DevFsDirectoryInode::child(usize index) const {
-    if (index >= ustd::Limits<uint32>::max()) {
+SysResult<Inode *> DevFsDirectoryInode::child(size_t index) const {
+    if (index >= ustd::Limits<uint32_t>::max()) {
         return SysError::Invalid;
     }
     ScopedLock locker(m_lock);
-    return m_children[static_cast<uint32>(index)].ptr();
+    return m_children[static_cast<uint32_t>(index)].ptr();
 }
 
 SysResult<Inode *> DevFsDirectoryInode::create(ustd::StringView name, InodeType type) {
@@ -98,7 +98,7 @@ Inode *DevFsDirectoryInode::lookup(ustd::StringView name) {
 
 SysResult<> DevFsDirectoryInode::remove(ustd::StringView name) {
     ScopedLock locker(m_lock);
-    for (uint32 i = 0; i < m_children.size(); i++) {
+    for (uint32_t i = 0; i < m_children.size(); i++) {
         if (m_children[i]->name() == name) {
             m_children.remove(i);
             return {};
@@ -107,7 +107,7 @@ SysResult<> DevFsDirectoryInode::remove(ustd::StringView name) {
     return SysError::NonExistent;
 }
 
-usize DevFsDirectoryInode::size() const {
+size_t DevFsDirectoryInode::size() const {
     ScopedLock locker(m_lock);
     return m_children.size();
 }

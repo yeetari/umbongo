@@ -5,31 +5,31 @@
 namespace kernel::acpi {
 
 struct InterruptController {
-    uint8 type;
-    uint8 length;
+    uint8_t type;
+    uint8_t length;
 };
 
 struct [[gnu::packed]] LocalApicController : public InterruptController {
-    uint8 acpi_id;
-    uint8 apic_id;
-    uint32 flags;
+    uint8_t acpi_id;
+    uint8_t apic_id;
+    uint32_t flags;
 };
 
 struct [[gnu::packed]] IoApicController : public InterruptController {
-    uint8 id;
-    uint8 : 8;
-    uint32 address;
-    uint32 gsi_base;
+    uint8_t id;
+    uint8_t : 8;
+    uint32_t address;
+    uint32_t gsi_base;
 };
 
 struct [[gnu::packed]] InterruptSourceOverride : public InterruptController {
-    uint8 bus;
-    uint8 isa;
-    uint32 gsi;
+    uint8_t bus;
+    uint8_t isa;
+    uint32_t gsi;
     struct {
-        uint8 polarity : 2;
-        uint8 trigger_mode : 2;
-        uint16 : 12;
+        uint8_t polarity : 2;
+        uint8_t trigger_mode : 2;
+        uint16_t : 12;
     };
 };
 

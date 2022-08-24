@@ -11,8 +11,8 @@
 namespace core {
 
 ustd::Result<File, SysError> File::open(ustd::StringView path, OpenMode mode) {
-    auto fd = TRY(syscall<uint32>(Syscall::open, path.data(), mode));
-    return File(static_cast<uint32>(fd));
+    auto fd = TRY(syscall<uint32_t>(Syscall::open, path.data(), mode));
+    return File(static_cast<uint32_t>(fd));
 }
 
 File::~File() {
@@ -26,24 +26,24 @@ void File::close() {
     }
 }
 
-ustd::Result<usize, SysError> File::ioctl(kernel::IoctlRequest request, void *arg) {
+ustd::Result<size_t, SysError> File::ioctl(kernel::IoctlRequest request, void *arg) {
     return TRY(syscall(Syscall::ioctl, *m_fd, request, arg));
 }
 
-ustd::Result<uintptr, SysError> File::mmap() {
+ustd::Result<uintptr_t, SysError> File::mmap() {
     return TRY(syscall(Syscall::mmap, *m_fd));
 }
 
-ustd::Result<usize, SysError> File::read(ustd::Span<void> data) {
+ustd::Result<size_t, SysError> File::read(ustd::Span<void> data) {
     return TRY(syscall(Syscall::read, *m_fd, data.data(), data.size()));
 }
 
-ustd::Result<usize, SysError> File::read(ustd::Span<void> data, usize offset) {
+ustd::Result<size_t, SysError> File::read(ustd::Span<void> data, size_t offset) {
     TRY(syscall(Syscall::seek, *m_fd, offset, kernel::SeekMode::Set));
     return TRY(syscall(Syscall::read, *m_fd, data.data(), data.size()));
 }
 
-ustd::Result<void, SysError> File::rebind(uint32 fd) {
+ustd::Result<void, SysError> File::rebind(uint32_t fd) {
     TRY(syscall(Syscall::dup_fd, *m_fd, fd));
     if (*m_fd != fd) {
         TRY(syscall(Syscall::close, *m_fd));
@@ -52,11 +52,11 @@ ustd::Result<void, SysError> File::rebind(uint32 fd) {
     return {};
 }
 
-ustd::Result<usize, SysError> File::size() {
+ustd::Result<size_t, SysError> File::size() {
     return TRY(syscall(Syscall::size, *m_fd));
 }
 
-ustd::Result<usize, SysError> File::write(ustd::Span<const void> data) {
+ustd::Result<size_t, SysError> File::write(ustd::Span<const void> data) {
     return TRY(syscall(Syscall::write, *m_fd, data.data(), data.size()));
 }
 

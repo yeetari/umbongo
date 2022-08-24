@@ -25,7 +25,7 @@ class DevFsInode final : public Inode {
 public:
     DevFsInode(Inode *parent, ustd::StringView name) : Inode(InodeType::AnonymousFile, parent), m_name(name) {}
 
-    usize size() const override { return 0; }
+    size_t size() const override { return 0; }
     ustd::StringView name() const override { return m_name; }
 };
 
@@ -37,11 +37,11 @@ class DevFsDirectoryInode final : public Inode {
 public:
     DevFsDirectoryInode(Inode *parent, ustd::StringView name) : Inode(InodeType::Directory, parent), m_name(name) {}
 
-    SysResult<Inode *> child(usize index) const override;
+    SysResult<Inode *> child(size_t index) const override;
     SysResult<Inode *> create(ustd::StringView name, InodeType type) override;
     Inode *lookup(ustd::StringView name) override;
     SysResult<> remove(ustd::StringView name) override;
-    usize size() const override;
+    size_t size() const override;
     ustd::StringView name() const override { return m_name; }
 };
 

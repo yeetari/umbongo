@@ -7,7 +7,7 @@
 
 namespace ustd {
 
-template <typename Derived, Integral RefCountType = uint32>
+template <typename Derived, Integral RefCountType = uint32_t>
 class Shareable {
     template <typename T>
     friend class SharedPtr;

@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <stddef.h>
 #include <sys/cdefs.h>
 
 #include <core/Process.hh>
@@ -59,7 +58,7 @@ void abort() {
 }
 
 void exit(int status) {
-    core::exit(static_cast<usize>(status));
+    core::exit(static_cast<size_t>(status));
 }
 
 void *malloc(size_t size) {

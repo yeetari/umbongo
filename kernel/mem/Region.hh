@@ -10,7 +10,7 @@ namespace kernel {
 
 class VirtSpace;
 
-enum class RegionAccess : uint8 {
+enum class RegionAccess : uint8_t {
     Writable = 1u << 0u,
     Executable = 1u << 1u,
     UserAccessible = 1u << 2u,
@@ -19,14 +19,14 @@ enum class RegionAccess : uint8 {
 };
 
 class Region {
-    uintptr m_base;
-    usize m_size;
+    uintptr_t m_base;
+    size_t m_size;
     RegionAccess m_access;
     bool m_free;
     ustd::Vector<ustd::SharedPtr<PhysicalPage>> m_physical_pages;
 
 public:
-    Region(uintptr base, usize size, RegionAccess access, bool free, ustd::Optional<uintptr> phys_base);
+    Region(uintptr_t base, size_t size, RegionAccess access, bool free, ustd::Optional<uintptr_t> phys_base);
     Region(const Region &) = default;
     Region(Region &&) = default;
     ~Region() = default;
@@ -35,22 +35,22 @@ public:
     Region &operator=(Region &&) = delete;
 
     void map(VirtSpace *virt_space) const;
-    void set_base(uintptr base) { m_base = base; }
-    void set_size(usize size) { m_size = size; }
+    void set_base(uintptr_t base) { m_base = base; }
+    void set_size(size_t size) { m_size = size; }
 
-    uintptr base() const { return m_base; }
-    usize size() const { return m_size; }
+    uintptr_t base() const { return m_base; }
+    size_t size() const { return m_size; }
     RegionAccess access() const { return m_access; }
     bool free() const { return m_free; }
     const auto &physical_pages() const { return m_physical_pages; }
 };
 
 inline constexpr RegionAccess operator&(RegionAccess a, RegionAccess b) {
-    return static_cast<RegionAccess>(static_cast<uint8>(a) & static_cast<uint8>(b));
+    return static_cast<RegionAccess>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
 }
 
 inline constexpr RegionAccess operator|(RegionAccess a, RegionAccess b) {
-    return static_cast<RegionAccess>(static_cast<uint8>(a) | static_cast<uint8>(b));
+    return static_cast<RegionAccess>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
 }
 
 inline constexpr RegionAccess &operator|=(RegionAccess &a, RegionAccess b) {

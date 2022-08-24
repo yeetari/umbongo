@@ -34,8 +34,8 @@ private:
     ThreadState m_state{ThreadState::Alive};
     const ThreadPriority m_priority;
     ustd::UniquePtr<ThreadBlocker> m_blocker;
-    uint8 *m_kernel_stack{nullptr};
-    uint8 *m_simd_region{nullptr};
+    uint8_t *m_kernel_stack{nullptr};
+    uint8_t *m_simd_region{nullptr};
 
     Thread *m_prev{nullptr};
     Thread *m_next{nullptr};
@@ -43,9 +43,9 @@ private:
 public:
     template <typename F>
     static ustd::UniquePtr<Thread> create_kernel(F function, ThreadPriority priority) {
-        return create_kernel(reinterpret_cast<uintptr>(function), priority);
+        return create_kernel(reinterpret_cast<uintptr_t>(function), priority);
     }
-    static ustd::UniquePtr<Thread> create_kernel(uintptr entry_point, ThreadPriority priority);
+    static ustd::UniquePtr<Thread> create_kernel(uintptr_t entry_point, ThreadPriority priority);
     static ustd::UniquePtr<Thread> create_user(ThreadPriority priority);
 
     Thread(Process *process, ThreadPriority priority);

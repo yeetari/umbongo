@@ -51,7 +51,7 @@ KeyboardDevice::KeyboardDevice(Device &&device) : Device(ustd::move(device)) {}
 KeyboardDevice::~KeyboardDevice() = default;
 
 ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_loop) {
-    m_dma_buffer = EXPECT(mmio::alloc_dma_array<uint8>(8));
+    m_dma_buffer = EXPECT(mmio::alloc_dma_array<uint8_t>(8));
     m_pipe = EXPECT(core::create_pipe());
     EXPECT(core::syscall(Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
     TRY(walk_configuration([this](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
@@ -67,7 +67,7 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
             auto &input_endpoint = create_endpoint(endpoint_descriptor->address);
             EXPECT(input_endpoint.setup(EndpointType::InterruptIn, endpoint_descriptor->packet_size));
             input_endpoint.set_interval(endpoint_descriptor->interval);
-            for (usize i = 0; i < 255; i++) {
+            for (size_t i = 0; i < 255; i++) {
                 input_endpoint.transfer_ring().enqueue({
                     .data = EXPECT(mmio::virt_to_phys(m_dma_buffer)),
                     .status = 8u,
@@ -99,17 +99,17 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
     });
 
     config::watch("usb-server", "keyboard.repeat_delay", [this](ustd::StringView value) {
-        m_repeat_delay = ustd::cast<usize>(value).value_or(400);
+        m_repeat_delay = ustd::cast<size_t>(value).value_or(400);
     });
     config::watch("usb-server", "keyboard.repeat_rate", [this](ustd::StringView value) {
-        const auto repeat_rate = ustd::max(ustd::cast<usize>(value).value_or(25), 1ul);
+        const auto repeat_rate = ustd::max(ustd::cast<size_t>(value).value_or(25), 1ul);
         m_repeat_timer->set_period(1_Hz / repeat_rate);
     });
     return {};
 }
 
-bool KeyboardDevice::key_already_pressed(uint8 key) const {
-    for (uint8 i = 2; i < 8; i++) {
+bool KeyboardDevice::key_already_pressed(uint8_t key) const {
+    for (uint8_t i = 2; i < 8; i++) {
         if (key == m_cmp_buffer[i]) {
             return true;
         }
@@ -118,13 +118,13 @@ bool KeyboardDevice::key_already_pressed(uint8 key) const {
 }
 
 void KeyboardDevice::poll() {
-    for (uint8 i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 8; i++) {
         bool pressed_now = (m_dma_buffer[0] & (1u << i)) != 0;
         bool pressed_bef = (m_cmp_buffer[0] & (1u << i)) != 0;
         m_modifiers[i] = (pressed_now && !pressed_bef) || pressed_bef;
     }
-    for (uint8 i = 2; i < 8; i++) {
-        const uint8 key = m_dma_buffer[i];
+    for (uint8_t i = 2; i < 8; i++) {
+        const uint8_t key = m_dma_buffer[i];
         if (key_already_pressed(key)) {
             continue;
         }

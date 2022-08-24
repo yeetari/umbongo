@@ -17,7 +17,7 @@ class ServerSocket final : public File {
     mutable SpinLock m_lock;
 
 public:
-    explicit ServerSocket(uint32 backlog_limit);
+    explicit ServerSocket(uint32_t backlog_limit);
     ServerSocket(const ServerSocket &) = delete;
     ServerSocket(ServerSocket &&) = delete;
     ~ServerSocket() override;
@@ -29,11 +29,11 @@ public:
 
     ustd::SharedPtr<Socket> accept();
     bool accept_would_block() const;
-    bool read_would_block(usize) const override;
-    bool write_would_block(usize) const override;
+    bool read_would_block(size_t) const override;
+    bool write_would_block(size_t) const override;
     SysResult<> queue_connection_from(ustd::SharedPtr<Socket> socket);
-    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
-    SysResult<usize> write(ustd::Span<const void> data, usize offset) override;
+    SysResult<size_t> read(ustd::Span<void> data, size_t offset) override;
+    SysResult<size_t> write(ustd::Span<const void> data, size_t offset) override;
 };
 
 } // namespace kernel

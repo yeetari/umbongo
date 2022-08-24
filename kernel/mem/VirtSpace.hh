@@ -28,9 +28,9 @@ private:
     VirtSpace();
     explicit VirtSpace(const ustd::Vector<ustd::UniquePtr<Region>> &regions);
 
-    void map_4KiB(uintptr virt, uintptr phys, PageFlags flags);
-    void map_2MiB(uintptr virt, uintptr phys, PageFlags flags);
-    void map_1GiB(uintptr virt, uintptr phys, PageFlags flags);
+    void map_4KiB(uintptr_t virt, uintptr_t phys, PageFlags flags);
+    void map_2MiB(uintptr_t virt, uintptr_t phys, PageFlags flags);
+    void map_1GiB(uintptr_t virt, uintptr_t phys, PageFlags flags);
 
 public:
     VirtSpace(const VirtSpace &) = delete;
@@ -43,8 +43,8 @@ public:
     auto begin() const { return m_regions.begin(); }
     auto end() const { return m_regions.end(); }
 
-    Region &allocate_region(usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
-    Region &create_region(uintptr base, usize size, RegionAccess access, ustd::Optional<uintptr> phys_base = {});
+    Region &allocate_region(size_t size, RegionAccess access, ustd::Optional<uintptr_t> phys_base = {});
+    Region &create_region(uintptr_t base, size_t size, RegionAccess access, ustd::Optional<uintptr_t> phys_base = {});
     ustd::SharedPtr<VirtSpace> clone() const;
 };
 

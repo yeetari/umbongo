@@ -5,42 +5,42 @@
 #include <ustd/Array.hh>
 
 struct [[gnu::packed]] InputControlContext {
-    uint32 drop;
-    uint32 add;
-    ustd::Array<uint32, 6> rsvd;
+    uint32_t drop;
+    uint32_t add;
+    ustd::Array<uint32_t, 6> rsvd;
 };
 
 struct [[gnu::packed]] SlotContext {
-    usize route_string : 20;
-    usize : 5;
+    size_t route_string : 20;
+    size_t : 5;
     bool mtt : 1;
     bool hub : 1;
-    usize entry_count : 5;
-    uint16 max_exit_latency;
-    uint8 port_id;
-    uint8 port_count;
-    uint32 tt_info;
-    uint8 device_address;
-    usize : 19;
+    size_t entry_count : 5;
+    uint16_t max_exit_latency;
+    uint8_t port_id;
+    uint8_t port_count;
+    uint32_t tt_info;
+    uint8_t device_address;
+    size_t : 19;
     SlotState slot_state : 5;
-    ustd::Array<uint32, 4> rsvd;
+    ustd::Array<uint32_t, 4> rsvd;
 };
 
 struct [[gnu::packed]] EndpointContext {
-    uint16 : 16;
-    uint8 interval;
-    usize : 9;
-    usize error_count : 2;
+    uint16_t : 16;
+    uint8_t interval;
+    size_t : 9;
+    size_t error_count : 2;
     EndpointType endpoint_type : 3;
-    usize : 10;
-    uint16 max_packet_size;
-    uint64 tr_dequeue_pointer;
-    uint16 average_trb_length;
-    ustd::Array<uint16, 7> rsvd;
+    size_t : 10;
+    uint16_t max_packet_size;
+    uint64_t tr_dequeue_pointer;
+    uint16_t average_trb_length;
+    ustd::Array<uint16_t, 7> rsvd;
 };
 
 struct LargeEndpointContext : EndpointContext {
-    ustd::Array<uint8, 32> extra;
+    ustd::Array<uint8_t, 32> extra;
 };
 
 struct DeviceContext {
@@ -55,12 +55,12 @@ struct InputContext {
 
 struct LargeDeviceContext {
     SlotContext slot;
-    ustd::Array<uint8, 32> extra1;
+    ustd::Array<uint8_t, 32> extra1;
     ustd::Array<LargeEndpointContext, 31> endpoints;
 };
 
 struct LargeInputContext {
     InputControlContext control;
-    ustd::Array<uint8, 32> extra0;
+    ustd::Array<uint8_t, 32> extra0;
     LargeDeviceContext device;
 };

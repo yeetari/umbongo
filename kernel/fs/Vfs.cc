@@ -50,7 +50,7 @@ ustd::Optional<Mount &> find_mount(Inode *host) {
 
 Inode *resolve_path(ustd::StringView path, Inode *base, Inode **out_parent = nullptr,
                     ustd::StringView *out_part = nullptr) {
-    usize path_position = 0;
+    size_t path_position = 0;
     auto consume_part = [&]() {
         if (path_position >= path.length()) {
             return ustd::StringView();
@@ -59,8 +59,8 @@ Inode *resolve_path(ustd::StringView path, Inode *base, Inode **out_parent = nul
             path_position++;
             return ustd::StringView("/");
         }
-        usize part_start = path_position;
-        for (usize i = part_start; i < path.length(); i++) {
+        size_t part_start = path_position;
+        for (size_t i = part_start; i < path.length(); i++) {
             if (path[i] == '/') {
                 break;
             }

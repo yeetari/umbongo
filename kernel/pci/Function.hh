@@ -16,37 +16,37 @@ class VirtSpace;
 namespace kernel::pci {
 
 struct Bar {
-    uintptr address;
-    usize size;
+    uintptr_t address;
+    size_t size;
 };
 
 class Function final : public Device {
-    const uint16 m_segment;
-    const uint8 m_bus;
-    const uint8 m_device;
-    const uint8 m_function;
-    uintptr m_address;
-    uint32 m_class_info;
-    uint16 m_vendor_id;
-    uint16 m_device_id;
+    const uint16_t m_segment;
+    const uint8_t m_bus;
+    const uint8_t m_device;
+    const uint8_t m_function;
+    uintptr_t m_address;
+    uint32_t m_class_info;
+    uint16_t m_vendor_id;
+    uint16_t m_device_id;
     ustd::Array<Bar, 6> m_bars{};
     bool m_interrupt_pending{false};
 
     template <typename F>
     void enumerate_capabilities(F callback) const;
     template <typename T>
-    T read_config(uint32 offset) const;
+    T read_config(uint32_t offset) const;
     template <typename T>
-    void write_config(uint32 offset, T value);
+    void write_config(uint32_t offset, T value);
 
 public:
-    Function(uintptr segment_base, uint16 segment, uint8 bus, uint8 device, uint8 function);
+    Function(uintptr_t segment_base, uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
 
-    bool read_would_block(usize) const override { return false; }
-    bool write_would_block(usize) const override { return !m_interrupt_pending; }
+    bool read_would_block(size_t) const override { return false; }
+    bool write_would_block(size_t) const override { return !m_interrupt_pending; }
     SyscallResult ioctl(IoctlRequest request, void *arg) override;
-    uintptr mmap(VirtSpace &virt_space) const override;
-    SysResult<usize> read(ustd::Span<void> data, usize offset) override;
+    uintptr_t mmap(VirtSpace &virt_space) const override;
+    SysResult<size_t> read(ustd::Span<void> data, size_t offset) override;
 };
 
 } // namespace kernel::pci

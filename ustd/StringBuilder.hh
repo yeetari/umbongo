@@ -40,18 +40,18 @@ void StringBuilder::append_single(const char *opts, T arg) {
         m_buffer.push(static_cast<char>(arg));
         return;
     }
-    const usize base = opts[1] == 'h' || opts[1] == 'x' ? 16 : 10;
+    const size_t base = opts[1] == 'h' || opts[1] == 'x' ? 16 : 10;
     Array<char, 20> buf{};
-    uint8 len = 0;
+    uint8_t len = 0;
     do {
-        const char digit = static_cast<char>(static_cast<usize>(arg) % base);
+        const char digit = static_cast<char>(static_cast<size_t>(arg) % base);
         buf[len++] = (digit < 10 ? '0' + digit : 'a' + digit - 10);
         arg /= base;
     } while (arg > 0);
 
     char pad = opts[2];
     if (pad != '\0') {
-        for (uint8 i = len; i < pad - '0'; i++) {
+        for (uint8_t i = len; i < pad - '0'; i++) {
             buf[len++] = opts[3] != '\0' ? opts[3] : '0';
         }
     }
@@ -59,14 +59,14 @@ void StringBuilder::append_single(const char *opts, T arg) {
         buf[len++] = 'x';
         buf[len++] = '0';
     }
-    for (uint8 i = len; i > 0; i--) {
+    for (uint8_t i = len; i > 0; i--) {
         m_buffer.push(buf[i - 1]);
     }
 }
 
 template <Pointer T>
 void StringBuilder::append_single(const char *, T arg) {
-    append_single(":h", reinterpret_cast<uintptr>(arg));
+    append_single(":h", reinterpret_cast<uintptr_t>(arg));
 }
 
 template <typename T>
@@ -78,7 +78,7 @@ void StringBuilder::append_part(const char *&fmt, const T &arg) {
         return;
     }
     Array<char, 4> opts{};
-    for (uint32 i = 0; *fmt != '}';) {
+    for (uint32_t i = 0; *fmt != '}';) {
         ASSERT(i < opts.size());
         opts[i++] = *fmt++;
     }

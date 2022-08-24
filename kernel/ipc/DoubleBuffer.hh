@@ -9,20 +9,20 @@ namespace kernel {
 
 class DoubleBuffer : public ustd::Shareable<DoubleBuffer> {
     struct Buffer {
-        uint8 *data{nullptr};
-        usize size{0};
+        uint8_t *data{nullptr};
+        size_t size{0};
     };
-    uint8 *m_data;
-    usize m_size;
+    uint8_t *m_data;
+    size_t m_size;
     Buffer m_buffer1;
     Buffer m_buffer2;
     Buffer *m_read_buffer;
     Buffer *m_write_buffer;
-    usize m_read_position{0};
+    size_t m_read_position{0};
     mutable SpinLock m_lock;
 
 public:
-    explicit DoubleBuffer(usize size);
+    explicit DoubleBuffer(size_t size);
     DoubleBuffer(const DoubleBuffer &) = delete;
     DoubleBuffer(DoubleBuffer &&) = delete;
     ~DoubleBuffer();
@@ -32,8 +32,8 @@ public:
 
     bool empty() const;
     bool full() const;
-    usize read(ustd::Span<void> data);
-    usize write(ustd::Span<const void> data);
+    size_t read(ustd::Span<void> data);
+    size_t write(ustd::Span<const void> data);
 };
 
 } // namespace kernel

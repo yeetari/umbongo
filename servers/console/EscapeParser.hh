@@ -8,9 +8,9 @@ class Terminal;
 class EscapeParser {
     Terminal &m_default_terminal;
     Terminal &m_alternate_terminal;
-    uint32 m_current_param{0};
+    uint32_t m_current_param{0};
     bool m_in_escape{false};
-    ustd::Vector<uint32> m_params;
+    ustd::Vector<uint32_t> m_params;
 
 public:
     EscapeParser(Terminal &default_terminal, Terminal &alternate_terminal)

@@ -20,18 +20,18 @@ public:
 };
 
 class GetTerminalSizeRespone final : public ipc::Message {
-    uint32 m_column_count;
-    uint32 m_row_count;
+    uint32_t m_column_count;
+    uint32_t m_row_count;
 
 public:
-    GetTerminalSizeRespone(uint32 column_count, uint32 row_count)
+    GetTerminalSizeRespone(uint32_t column_count, uint32_t row_count)
         : m_column_count(column_count), m_row_count(row_count) {}
 
-    static GetTerminalSizeRespone decode(ustd::Span<const uint8> buffer) {
+    static GetTerminalSizeRespone decode(ustd::Span<const uint8_t> buffer) {
         ipc::MessageDecoder decoder(buffer);
         [[maybe_unused]] auto kind = decoder.decode<MessageKind>();
         ASSERT(kind == MessageKind::GetTerminalSizeResponse);
-        return {decoder.decode<uint32>(), decoder.decode<uint32>()};
+        return {decoder.decode<uint32_t>(), decoder.decode<uint32_t>()};
     }
 
     void encode(ipc::MessageEncoder &encoder) const override {
@@ -40,8 +40,8 @@ public:
         encoder.encode(m_row_count);
     }
 
-    uint32 column_count() const { return m_column_count; }
-    uint32 row_count() const { return m_row_count; }
+    uint32_t column_count() const { return m_column_count; }
+    uint32_t row_count() const { return m_row_count; }
 };
 
 } // namespace console

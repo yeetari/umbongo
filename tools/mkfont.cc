@@ -90,7 +90,8 @@ int main(int argc, char **argv) {
     }
 
     output_file << "#include <kernel/Font.hh>\n";
-    output_file << "#include <ustd/Array.hh>\n\n";
+    output_file << "#include <ustd/Array.hh>\n";
+    output_file << "#include <ustd/Types.hh>\n\n";
 
     FreeType freetype;
     auto face = freetype.new_face(argv[1], 0);
@@ -119,9 +120,9 @@ int main(int argc, char **argv) {
         output_file << "        " << glyph->bitmap_top << ",\n";
         output_file << "        ";
         if (glyph->bitmap.width == 0 || glyph->bitmap.rows == 0) {
-            output_file << "reinterpret_cast<const uint8 *>(0\n";
+            output_file << "reinterpret_cast<const uint8_t *>(0\n";
         } else {
-            output_file << "reinterpret_cast<const uint8 *>(\"";
+            output_file << "reinterpret_cast<const uint8_t *>(\"";
             for (unsigned int y = 0; y < glyph->bitmap.rows; y++) {
                 for (unsigned int x = 0; x < glyph->bitmap.width; x++) {
                     output_file << "\\x" << std::setfill('0') << std::setw(2) << std::hex
@@ -150,7 +151,7 @@ int main(int argc, char **argv) {
     output_file << "};\n\n";
 
     output_file << "const FontGlyph *Font::glyph(char ch) const {\n";
-    output_file << "    for (usize i = 0; i < m_glyph_count; i++) {\n";
+    output_file << "    for (size_t i = 0; i < m_glyph_count; i++) {\n";
     output_file << "        if (m_glyph_array[i].ch == ch) {\n";
     output_file << "            return &m_glyph_array[i];\n";
     output_file << "        }\n";

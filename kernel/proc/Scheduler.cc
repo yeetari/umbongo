@@ -22,10 +22,10 @@ namespace kernel {
 namespace {
 
 class PriorityQueue {
-    static constexpr uint32 k_slot_count = 1024;
+    static constexpr uint32_t k_slot_count = 1024;
     alignas(64) ustd::Array<ustd::Atomic<Thread *>, k_slot_count> m_slots;
-    alignas(64) ustd::Atomic<uint32> m_head;
-    alignas(64) ustd::Atomic<uint32> m_tail;
+    alignas(64) ustd::Atomic<uint32_t> m_head;
+    alignas(64) ustd::Atomic<uint32_t> m_tail;
 
 public:
     void enqueue(Thread *thread);
@@ -33,7 +33,7 @@ public:
 };
 
 void PriorityQueue::enqueue(Thread *thread) {
-    uint32 head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
+    uint32_t head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
     auto &slot = m_slots[head % k_slot_count];
     while (!slot.compare_exchange_temp(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
         do {
@@ -43,9 +43,9 @@ void PriorityQueue::enqueue(Thread *thread) {
 }
 
 Thread *PriorityQueue::dequeue() {
-    uint32 tail = m_tail.load(ustd::MemoryOrder::Relaxed);
+    uint32_t tail = m_tail.load(ustd::MemoryOrder::Relaxed);
     do {
-        if (static_cast<int32>(m_head.load(ustd::MemoryOrder::Relaxed) - tail) <= 0) {
+        if (static_cast<int32_t>(m_head.load(ustd::MemoryOrder::Relaxed) - tail) <= 0) {
             return nullptr;
         }
     } while (!m_tail.compare_exchange(tail, tail + 1, ustd::MemoryOrder::Acquire, ustd::MemoryOrder::Relaxed));
@@ -61,8 +61,8 @@ Thread *PriorityQueue::dequeue() {
     }
 }
 
-constexpr uint8 k_timer_vector = 40;
-uint32 s_ticks_in_one_ms = 0;
+constexpr uint8_t k_timer_vector = 40;
+uint32_t s_ticks_in_one_ms = 0;
 
 Thread *s_base_thread;
 SpinLock s_thread_list_lock;
@@ -73,7 +73,7 @@ ustd::Array<PriorityQueue *, 2> s_queues;
 
 Thread *pick_next() {
     while (auto *thread = s_blocked_queue->dequeue()) {
-        s_queues[static_cast<uint32>(thread->priority())]->enqueue(thread);
+        s_queues[static_cast<uint32_t>(thread->priority())]->enqueue(thread);
     }
     for (auto *queue = s_queues.end(); queue-- != s_queues.begin();) {
         while (auto *thread = (*queue)->dequeue()) {
@@ -87,15 +87,15 @@ Thread *pick_next() {
     ENSURE_NOT_REACHED("Thread queue empty!");
 }
 
-uint32 time_slice_for(Thread *thread) {
-    return (static_cast<uint32>(thread->priority()) + 1u) * s_ticks_in_one_ms;
+uint32_t time_slice_for(Thread *thread) {
+    return (static_cast<uint32_t>(thread->priority()) + 1u) * s_ticks_in_one_ms;
 }
 
 } // namespace
 
 extern "C" void switch_now(RegisterState *regs);
 
-ustd::SharedPtr<Process> Process::from_pid(usize pid) {
+ustd::SharedPtr<Process> Process::from_pid(size_t pid) {
     ScopedLock locker(s_thread_list_lock);
     Thread *thread = s_base_thread;
     do {
@@ -151,7 +151,7 @@ void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
     thread->m_prev->m_next = thread;
     thread->m_next->m_prev = thread;
     if (thread->priority() != ThreadPriority::Idle) {
-        s_queues[static_cast<uint32>(thread->priority())]->enqueue(thread);
+        s_queues[static_cast<uint32_t>(thread->priority())]->enqueue(thread);
     }
 }
 
@@ -183,7 +183,7 @@ void Scheduler::start() {
 void Scheduler::switch_next(RegisterState *regs) {
     Thread *current_thread = Processor::current_thread();
     if (current_thread->m_state != ThreadState::Dead) {
-        s_queues[static_cast<uint32>(current_thread->priority())]->enqueue(current_thread);
+        s_queues[static_cast<uint32_t>(current_thread->priority())]->enqueue(current_thread);
     } else {
         delete current_thread;
     }
