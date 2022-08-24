@@ -59,6 +59,7 @@ jobs:
             -print0 |
           parallel -0 \
             include-what-you-use \
+              -Xiwyu --no_default_mappings \
               -std=c++20 \
               -ffreestanding \
               -nostdinc \
