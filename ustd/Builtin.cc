@@ -1,6 +1,13 @@
-#include <ustd/Memory.hh>
-
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
+
+extern "C" int __cxa_atexit(void (*)(void *), void *, void *) {
+    return 0;
+}
+
+extern "C" [[noreturn]] void __cxa_pure_virtual() {
+    ENSURE_NOT_REACHED("__cxa_pure_virtual");
+}
 
 extern "C" int memcmp(const void *aptr, const void *bptr, size_t size) {
     const auto *a = static_cast<const uint8_t *>(aptr);

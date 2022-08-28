@@ -3,11 +3,11 @@
 #include <elf/Elf.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/RingBuffer.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 namespace {
 

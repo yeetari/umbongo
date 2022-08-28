@@ -9,7 +9,6 @@
 #include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -17,6 +16,7 @@
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 struct FILE {
 private:

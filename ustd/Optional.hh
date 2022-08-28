@@ -2,7 +2,6 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>

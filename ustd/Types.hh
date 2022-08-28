@@ -13,6 +13,18 @@ using uint64_t = __UINT64_TYPE__;
 using uintptr_t = __UINTPTR_TYPE__;
 using size_t = __SIZE_TYPE__;
 
+namespace std {
+
+enum class align_val_t : size_t {};
+
+} // namespace std
+
+namespace ustd {
+
+using align_val_t = std::align_val_t;
+
+} // namespace ustd
+
 // NOLINTNEXTLINE: Must used unsigned long long here.
 constexpr size_t operator"" _KiB(unsigned long long num) {
     return num * 0x400;

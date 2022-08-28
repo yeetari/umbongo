@@ -16,7 +16,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/Memory.hh>
 #include <ustd/ScopeGuard.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 

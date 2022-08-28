@@ -73,3 +73,11 @@ constexpr void swap(T &lhs, T &rhs) {
 }
 
 } // namespace ustd
+
+inline void *operator new(__SIZE_TYPE__, void *ptr) {
+    return ptr;
+}
+
+inline void *operator new[](__SIZE_TYPE__, void *ptr) {
+    return ptr;
+}

@@ -9,7 +9,6 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>

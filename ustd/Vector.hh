@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
 #include <ustd/Traits.hh>

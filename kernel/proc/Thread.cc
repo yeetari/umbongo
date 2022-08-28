@@ -19,7 +19,6 @@
 #include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>

@@ -2,11 +2,11 @@
 
 #include <boot/BootInfo.hh>
 #include <kernel/SysResult.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/RingBuffer.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 namespace kernel {
 namespace {

@@ -1,4 +1,3 @@
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Types.hh>
 

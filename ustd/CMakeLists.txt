@@ -1,6 +1,5 @@
 set(SOURCES
-    Abi.cc
-    Memory.cc
+    Builtin.cc
     String.cc
     StringBuilder.cc
     StringView.cc)

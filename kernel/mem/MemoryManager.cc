@@ -10,11 +10,11 @@
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 
 namespace kernel {
 namespace {

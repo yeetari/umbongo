@@ -4,9 +4,9 @@
 #include <kernel/SpinLock.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Memory.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 
 using namespace kernel;
 
