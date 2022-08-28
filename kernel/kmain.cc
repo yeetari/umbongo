@@ -123,7 +123,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
 
 } // namespace
 
-[[noreturn]] extern "C" void __stack_chk_fail() {
+extern "C" [[noreturn]] void __stack_chk_fail() {
     auto *rbp = static_cast<uint64_t *>(__builtin_frame_address(0));
     while (rbp != nullptr && rbp[1] != 0) {
         dmesg("{:h}", rbp[1]);
