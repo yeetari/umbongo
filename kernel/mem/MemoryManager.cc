@@ -118,7 +118,9 @@ void MemoryManager::initialise(BootInfo *boot_info) {
     ENSURE(is_frame_free(0x8000));
     set_frame(0x8000 / k_frame_size);
     Heap::initialise();
+}
 
+void MemoryManager::initialise_kernel_space() {
     // Create the kernel virtual space and identity map physical memory up to 512 GiB. Using 1 GiB pages means this only
     // takes 4 KiB of page structures to do.
     constexpr auto access = RegionAccess::Writable | RegionAccess::Executable | RegionAccess::Global;

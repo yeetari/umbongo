@@ -10,6 +10,7 @@ class VirtSpace;
 
 struct MemoryManager {
     static void initialise(BootInfo *boot_info);
+    static void initialise_kernel_space();
     static void reclaim(BootInfo *boot_info);
     static void switch_space(VirtSpace &virt_space);
 

@@ -150,6 +150,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     MemoryManager::initialise(boot_info);
     Processor::initialise();
     Processor::setup(0);
+    MemoryManager::initialise_kernel_space();
 
     // Invoke global constructors.
     dmesg("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
