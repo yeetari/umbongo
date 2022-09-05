@@ -5,6 +5,8 @@
 
 namespace elf {
 
+constexpr ustd::Array<uint8_t, 4> k_magic{0x7f, 'E', 'L', 'F'};
+
 struct Header {
     ustd::Array<uint8_t, 4> magic;
     ustd::Array<uint8_t, 12> ident;
