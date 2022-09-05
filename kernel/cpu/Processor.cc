@@ -196,6 +196,7 @@ LocalApic *s_apic = nullptr;
 ustd::Atomic<uint8_t> s_initialised_ap_count = 0;
 uint8_t *s_simd_default_region = nullptr;
 uint32_t s_simd_region_size = 0;
+bool s_huge_pages_supported = false;
 
 uint64_t read_cr0() {
     uint64_t cr0 = 0;
@@ -335,11 +336,17 @@ void Processor::initialise() {
         write_cr4(read_cr4() | (1u << 11u));
     }
 
-    // Perform an extended cpuid and ensure that the syscall/sysret, NX and 1 GiB page features are available.
+    // Perform an extended cpuid and ensure that syscall/sysret and NX are available.
     CpuId extended_cpu_id(0x80000001);
     ENSURE((extended_cpu_id.edx() & (1u << 11u)) != 0, "syscall/sysret not available!");
     ENSURE((extended_cpu_id.edx() & (1u << 20u)) != 0, "NX not available!");
-    ENSURE((extended_cpu_id.edx() & (1u << 26u)) != 0, "1GiB pages not available!");
+
+    s_huge_pages_supported = (extended_cpu_id.edx() & (1u << 26u)) != 0;
+    if (s_huge_pages_supported) {
+        dmesg(" cpu: Huge pages supported");
+    } else {
+        dmesg(" cpu: Huge pages not supported");
+    }
 
     // Enable EFER.SCE (System Call Extensions) and EFER.NXE (No-Execute Enable).
     write_msr(k_msr_efer, read_msr(k_msr_efer) | (1u << 11u) | (1u << 0u));
@@ -511,6 +518,10 @@ uint8_t *Processor::simd_default_region() {
 uint32_t Processor::simd_region_size() {
     ASSERT(s_simd_region_size != 0u);
     return s_simd_region_size;
+}
+
+bool Processor::huge_pages_supported() {
+    return s_huge_pages_supported;
 }
 
 } // namespace kernel

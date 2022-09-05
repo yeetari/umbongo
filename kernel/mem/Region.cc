@@ -2,6 +2,7 @@
 
 #include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Paging.hh>
+#include <kernel/cpu/Processor.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/PhysicalPage.hh>
 #include <kernel/mem/VirtSpace.hh>
@@ -53,7 +54,7 @@ Region::Region(uintptr_t base, size_t size, RegionAccess access, bool free, ustd
     }
     uintptr_t phys = *phys_base;
     do {
-        const size_t map_size = size >= 1_GiB ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
+        const size_t map_size = (Processor::huge_pages_supported() && size >= 1_GiB) ? 1_GiB : size >= 2_MiB ? 2_MiB : 4_KiB;
         const auto page_size = map_size == 1_GiB   ? PhysicalPageSize::Huge
                                : map_size == 2_MiB ? PhysicalPageSize::Large
                                                    : PhysicalPageSize::Normal;

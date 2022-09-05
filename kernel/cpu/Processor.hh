@@ -34,6 +34,7 @@ struct Processor {
     static uint8_t id();
     static uint8_t *simd_default_region();
     static uint32_t simd_region_size();
+    static bool huge_pages_supported();
 };
 
 } // namespace kernel
