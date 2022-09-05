@@ -63,6 +63,11 @@ struct Limits<uint64_t> {
 };
 
 template <typename T>
+constexpr T ceil_div(T x, T y) {
+    return x / y + T(x % y != 0);
+}
+
+template <typename T>
 constexpr T min(T a, T b) {
     return b < a ? b : a;
 }
