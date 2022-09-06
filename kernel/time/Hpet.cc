@@ -1,5 +1,6 @@
 #include <kernel/time/Hpet.hh>
 
+#include <ustd/Assert.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {
@@ -25,7 +26,8 @@ void Hpet::enable() const {
 
 uint64_t Hpet::read_counter() const {
     auto value = *reinterpret_cast<volatile uint64_t *>(m_address + 0xf0);
-    if (m_64_bit) {
+    if (!m_64_bit) {
+        ASSERT((value >> 32u) == 0u);
         value |= (static_cast<uint64_t>(m_32_bit_wraps) << 32u);
     }
     return value;

@@ -199,8 +199,8 @@ void Scheduler::switch_next(RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
-    if (!s_time_being_updated.load(ustd::MemoryOrder::Acquire)) {
-        s_time_being_updated.store(true, ustd::MemoryOrder::Release);
+    if (s_time_being_updated.compare_exchange_temp(false, true, ustd::MemoryOrder::AcqRel,
+                                                   ustd::MemoryOrder::Acquire)) {
         TimeManager::update();
         s_time_being_updated.store(false, ustd::MemoryOrder::Release);
     }
