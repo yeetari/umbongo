@@ -219,8 +219,12 @@ struct SimpleFileSystemProtocol {
     Status (*open_volume)(SimpleFileSystemProtocol *, FileProtocol **);
 };
 
-} // namespace efi
-
-inline constexpr efi::FileFlag operator&(efi::FileFlag a, efi::FileFlag b) {
-    return static_cast<efi::FileFlag>(static_cast<size_t>(a) & static_cast<size_t>(b));
+inline constexpr bool operator==(const Guid &lhs, const Guid &rhs) {
+    return __builtin_memcmp(&lhs, &rhs, sizeof(Guid)) == 0;
 }
+
+inline constexpr FileFlag operator&(FileFlag lhs, FileFlag rhs) {
+    return static_cast<FileFlag>(static_cast<uint64_t>(lhs) & static_cast<uint64_t>(rhs));
+}
+
+} // namespace efi

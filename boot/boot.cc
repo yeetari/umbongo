@@ -1,10 +1,12 @@
 #include <boot/BootInfo.hh>
 #include <boot/Efi.hh>
 #include <elf/Elf.hh>
+#include <ustd/Algorithm.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/RingBuffer.hh>
+#include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
@@ -63,7 +65,7 @@ efi::SimpleTextOutputProtocol *s_con_out;
     ENSURE((ptr) != nullptr __VA_OPT__(, ) __VA_ARGS__)
 
 static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsEntry *&current_entry,
-                               efi::FileProtocol *directory, const char *path, size_t path_length) {
+                               efi::FileProtocol *directory, ustd::StringView path) {
     // Get size of file info struct.
     efi::FileInfo *info = nullptr;
     size_t info_size = 0;
@@ -102,8 +104,8 @@ static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsE
 
     // Allocate memory for ramfs entry.
     const size_t entry_size =
-        sizeof(RamFsEntry) + path_length + 1 + name_length + (!is_directory ? info->file_size : 0);
-    const size_t page_count = (entry_size + 4096 - 1) / 4096;
+        sizeof(RamFsEntry) + path.length() + 1 + name_length + (!is_directory ? info->file_size : 0);
+    const auto page_count = ustd::ceil_div(entry_size, 4_KiB);
     auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &ram_fs;
     EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::LoaderData,
                                                 page_count, reinterpret_cast<uintptr_t *>(next_entry_ptr)),
@@ -113,27 +115,27 @@ static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsE
     // Setup header.
     auto *header = new (*next_entry_ptr) RamFsEntry;
     header->name = reinterpret_cast<const char *>(&header->next) + sizeof(void *);
-    header->data = !is_directory ? reinterpret_cast<const uint8_t *>(&header->next) + sizeof(void *) + path_length + 1 +
-                                       name_length
+    header->data = !is_directory ? reinterpret_cast<const uint8_t *>(&header->next) + sizeof(void *) + path.length() +
+                                       1 + name_length
                                  : nullptr;
     header->data_size = info->file_size;
     header->is_directory = is_directory;
 
     // Copy name. We can't use memcpy since the UEFI file name is made up of wide chars.
-    for (size_t i = 0; i < path_length; i++) {
+    for (size_t i = 0; i < path.length(); i++) {
         const_cast<char *>(header->name)[i] = path[i];
     }
-    const_cast<char *>(header->name)[path_length] = '/';
+    const_cast<char *>(header->name)[path.length()] = '/';
     for (size_t i = 0; i < name_length; i++) {
-        const_cast<char *>(header->name)[path_length + i + 1] = static_cast<char>(info->name[i]);
+        const_cast<char *>(header->name)[path.length() + i + 1] = static_cast<char>(info->name[i]);
     }
 
-    if (is_directory) {
-        while (traverse_directory(st, ram_fs, current_entry, file, header->name, path_length + name_length)) {
-        }
+    if (!is_directory) {
+        // Copy file data.
+        EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8_t *>(header->data)), "Failed to read file!");
     } else {
-        // Copy data.
-        EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8_t *>(header->data)), "Failed to read from file!");
+        while (traverse_directory(st, ram_fs, current_entry, file, {header->name, path.length() + name_length})) {
+        }
     }
 
     // Finally, close file and free memory for file info struct.
@@ -178,10 +180,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     uint64_t kernel_header_size = sizeof(elf::Header);
     st->con_out->output_string(st->con_out, L"Parsing kernel ELF header...\r\n");
     EFI_CHECK(kernel_file->read(kernel_file, &kernel_header_size, &kernel_header), "Failed to read kernel header!");
-    ENSURE(kernel_header.magic[0] == 0x7f, "Kernel ELF header corrupt!");
-    ENSURE(kernel_header.magic[1] == 'E', "Kernel ELF header corrupt!");
-    ENSURE(kernel_header.magic[2] == 'L', "Kernel ELF header corrupt!");
-    ENSURE(kernel_header.magic[3] == 'F', "Kernel ELF header corrupt!");
+    ENSURE(ustd::equal(kernel_header.magic, elf::k_magic), "Kernel ELF header corrupt!");
 
     // Allocate memory for and read kernel program headers.
     elf::ProgramHeader *phdrs = nullptr;
@@ -199,14 +198,15 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
         if (phdr.type != elf::SegmentType::Load) {
             continue;
         }
-        const size_t page_count = (phdr.memsz + 4096 - 1) / 4096;
+        const auto page_count = ustd::ceil_div(phdr.memsz, 4_KiB);
         EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Reserved,
                                                     page_count, &phdr.paddr),
                   "Failed to claim physical memory for kernel!");
 
         // Zero out any uninitialised data.
         if (phdr.filesz != phdr.memsz) {
-            __builtin_memset(reinterpret_cast<void *>(phdr.paddr), 0, phdr.memsz);
+            ENSURE(phdr.filesz < phdr.memsz);
+            ustd::fill_n(reinterpret_cast<uint8_t *>(phdr.paddr) + phdr.filesz, phdr.memsz - phdr.filesz, 0);
         }
 
         EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64_t>(phdr.offset)));
@@ -216,9 +216,10 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!");
     EFI_CHECK(kernel_file->close(kernel_file), "Failed to close kernel file!");
 
+    // Load all files.
     RamFsEntry *ram_fs = nullptr;
     RamFsEntry *current_entry = nullptr;
-    while (traverse_directory(st, ram_fs, current_entry, root_directory, nullptr, 0)) {
+    while (traverse_directory(st, ram_fs, current_entry, root_directory, {})) {
     }
     EFI_CHECK(root_directory->close(root_directory), "Failed to close directory!");
 
@@ -230,7 +231,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     ENSURE(kernel_stack != 0, "Failed to allocate memory for kernel stack!");
 
     // Allocate dmesg ring buffer memory.
-    const auto dmesg_area_page_count = ustd::align_up(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB) / 4_KiB;
+    const auto dmesg_area_page_count = ustd::ceil_div(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB);
     uintptr_t dmesg_area = 0;
     EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::Reserved,
                                                 dmesg_area_page_count, &dmesg_area),
@@ -240,9 +241,8 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     // Find ACPI RSDP.
     void *rsdp = nullptr;
     st->con_out->output_string(st->con_out, L"Finding ACPI RSDP...\r\n");
-    for (size_t i = 0; i < st->configuration_table_count; i++) {
-        auto &table = st->configuration_table[i];
-        if (__builtin_memcmp(&table.vendor_guid, &efi::ConfigurationTable::acpi_guid, sizeof(efi::Guid)) == 0) {
+    for (const auto &table : ustd::make_span(st->configuration_table, st->configuration_table_count)) {
+        if (table.vendor_guid == efi::ConfigurationTable::acpi_guid) {
             rsdp = table.vendor_table;
             break;
         }
@@ -250,19 +250,20 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     ENSURE(rsdp != nullptr, "Failed to find ACPI RSDP!");
 
     // Get framebuffer info.
-    efi::GraphicsOutputProtocol *gop = nullptr;
+    efi::GraphicsOutputProtocol *graphics_protocol = nullptr;
     st->con_out->output_string(st->con_out, L"Querying framebuffer info...\r\n");
     EFI_CHECK_PTR(st->boot_services->locate_protocol(&efi::GraphicsOutputProtocol::guid, nullptr,
-                                                     reinterpret_cast<void **>(&gop)),
-                  gop, "Failed to locate graphics output protocol!");
+                                                     reinterpret_cast<void **>(&graphics_protocol)),
+                  graphics_protocol, "Failed to locate graphics output protocol!");
 
     // Find the best video mode.
     uint32_t pixel_count = 0;
     uint32_t preferred_mode = 0;
-    for (uint32_t i = 0; i < gop->mode->max_mode; i++) {
+    for (uint32_t i = 0; i < graphics_protocol->mode->max_mode; i++) {
         efi::GraphicsOutputModeInfo *info = nullptr;
         size_t info_size = 0;
-        EFI_CHECK(gop->query_mode(gop, i, &info_size, &info), "Failed to query video mode!");
+        EFI_CHECK(graphics_protocol->query_mode(graphics_protocol, i, &info_size, &info),
+                  "Failed to query video mode!");
         if (info->width * info->height > pixel_count) {
             pixel_count = info->width * info->height;
             preferred_mode = i;
@@ -270,7 +271,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     }
 
     // Set video mode.
-    EFI_CHECK(gop->set_mode(gop, preferred_mode), "Failed to set video mode!");
+    EFI_CHECK(graphics_protocol->set_mode(graphics_protocol, preferred_mode), "Failed to set video mode!");
 
     // Get EFI memory map data.
     size_t map_key = 0;
@@ -338,10 +339,10 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     BootInfo boot_info{
         .dmesg_area = reinterpret_cast<void *>(dmesg_area),
         .rsdp = rsdp,
-        .width = gop->mode->info->width,
-        .height = gop->mode->info->height,
-        .pixels_per_scan_line = gop->mode->info->pixels_per_scan_line,
-        .framebuffer_base = gop->mode->framebuffer_base,
+        .width = graphics_protocol->mode->info->width,
+        .height = graphics_protocol->mode->info->height,
+        .pixels_per_scan_line = graphics_protocol->mode->info->pixels_per_scan_line,
+        .framebuffer_base = graphics_protocol->mode->framebuffer_base,
         .map = map,
         // Recalculate map entry count here. We can't use efi_map_entry_count since the memory for the memory map needs
         // to be overallocated to store an entry for itself.
@@ -356,7 +357,6 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     asm volatile("mov %0, %%rsp" : : "r"(kernel_stack + k_kernel_stack_page_count * 4_KiB) : "rsp");
     reinterpret_cast<__attribute__((sysv_abi)) void (*)(BootInfo *)>(kernel_header.entry)(&boot_info);
     while (true) {
-        asm volatile("cli");
-        asm volatile("hlt");
+        asm volatile("cli; hlt");
     }
 }
