@@ -49,4 +49,9 @@ constexpr U &Span<T>::operator[](size_t index) const requires(!is_void) {
     return begin()[index];
 }
 
+template <typename T>
+constexpr Span<T> make_span(T *data, size_t size) {
+    return {data, size};
+}
+
 } // namespace ustd
