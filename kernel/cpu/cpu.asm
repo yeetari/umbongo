@@ -50,11 +50,6 @@ syscall_stub:
     mov rsp, [gs:8]
     push qword [gs:16]
 
-    ; We can now enable interrupts, but we have to be careful how we index into the LocalStorage via gs. For example,
-    ; it's still safe to access the current thread (gs:24) since if we get interrupted and rescheduled, it will be the
-    ; correct value. However, this isn't true when accessing the temporary user stack storage.
-    sti
-
     ; Push all GP registers.
     push rax
     push rbx
@@ -93,7 +88,5 @@ syscall_stub:
     pop rbx
     pop rax
 
-    ; Disable interrupts before restoring the user stack.
-    cli
     pop rsp
     o64 sysret

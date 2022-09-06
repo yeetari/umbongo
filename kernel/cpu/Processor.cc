@@ -262,7 +262,6 @@ extern "C" void syscall_stub();
 extern "C" void ap_entry(uint8_t id) {
     s_initialised_ap_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
     Processor::setup(id);
-    Scheduler::setup();
     Scheduler::start();
 }
 

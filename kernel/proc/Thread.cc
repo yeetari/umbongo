@@ -5,7 +5,6 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -94,6 +93,9 @@ Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), 
     m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
     m_register_state.rflags = 0x202;
     if (process->m_is_kernel) {
+        // Disable preemption for kernel threads.
+        m_register_state.rflags &= ~(1u << 9u);
+
         // A kernel process doesn't use syscalls, so we can use m_kernel_stack.
         m_register_state.rsp = reinterpret_cast<uintptr_t>(m_kernel_stack);
     }
@@ -116,8 +118,6 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     m_register_state.rsp = stack_region.base() + stack_region.size();
 
-    // We don't want to be interrupted whilst we have our virt space mapped in to copy the executable data.
-    InterruptDisabler disabler;
     auto *original_space = MemoryManager::current_space();
     MemoryManager::switch_space(*m_process->m_virt_space);
     ustd::ScopeGuard space_guard([original_space] {

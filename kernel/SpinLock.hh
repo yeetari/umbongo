@@ -5,27 +5,28 @@
 namespace kernel {
 
 class SpinLock {
-    uint64_t m_flags{0};
     ustd::Atomic<bool> m_locked{false};
 
 public:
     void lock() {
-        while (m_locked.exchange(true, ustd::MemoryOrder::Acquire)) {
-            asm volatile("pause");
-        }
+#ifdef ASSERTIONS_PEDANTIC
+        uint64_t flags = ~0ull;
         asm volatile("pushf\n\t"
                      "pop %0"
-                     : "=rm"(m_flags));
-        asm volatile("cli");
-    }
-    void unlock() {
-        m_locked.store(false, ustd::MemoryOrder::Release);
-        if ((m_flags & (1u << 9u)) != 0) {
-            asm volatile("sti");
+                     : "=rm"(flags));
+        ASSERT_PEDANTIC((flags & (1u << 9u)) == 0u);
+#endif
+        while (m_locked.exchange(true, ustd::MemoryOrder::Relaxed)) {
+            asm volatile("pause");
         }
     }
+    void unlock() {
+        m_locked.store(false, ustd::MemoryOrder::Relaxed);
+    }
 
-    bool locked() const { return m_locked.load(ustd::MemoryOrder::Relaxed); }
+    bool locked() const {
+        return m_locked.load(ustd::MemoryOrder::Relaxed);
+    }
 };
 
 } // namespace kernel

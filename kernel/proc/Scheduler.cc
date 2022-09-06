@@ -155,7 +155,7 @@ void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
     }
 }
 
-void Scheduler::setup() {
+void Scheduler::start() {
     // Enable the local APIC and acknowledge any outstanding interrupts.
     Processor::apic()->enable();
     Processor::apic()->send_eoi();
@@ -171,9 +171,7 @@ void Scheduler::setup() {
         Processor::set_current_thread(idle_thread.ptr());
         insert_thread(ustd::move(idle_thread));
     }
-}
 
-void Scheduler::start() {
     asm volatile("sti");
     while (true) {
         asm volatile("hlt");
@@ -217,7 +215,6 @@ void Scheduler::yield(bool save_state) {
         asm volatile("int $40");
         return;
     }
-    asm volatile("cli");
     RegisterState regs{};
     switch_next(&regs);
     switch_now(&regs);

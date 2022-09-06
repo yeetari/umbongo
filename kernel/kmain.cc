@@ -205,7 +205,6 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     Scheduler::initialise();
     Scheduler::insert_thread(ustd::move(kernel_init_thread));
-    Scheduler::setup();
     Scheduler::start();
 }
 

@@ -4,7 +4,6 @@
 #include <kernel/Dmesg.hh>
 #include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/SpinLock.hh>
-#include <kernel/cpu/InterruptDisabler.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/Heap.hh>
 #include <kernel/mem/Region.hh>
@@ -130,7 +129,6 @@ void MemoryManager::initialise(BootInfo *boot_info) {
 }
 
 void MemoryManager::reclaim(BootInfo *boot_info) {
-    InterruptDisabler disabler;
     size_t total_reclaimed = 0;
     for (size_t i = 0; i < boot_info->map_entry_count; i++) {
         auto &entry = boot_info->map[i];
