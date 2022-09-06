@@ -205,10 +205,10 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 void Thread::handle_fault(RegisterState *regs) {
     uint64_t cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
-    if ((regs->cs & 3u) == 0u) {
-        dmesg_unlock();
+    if ((regs->cs & 3u) != 0u) {
+        dmesg("[#{}]: Fault {} caused by instruction at {:h}! (cr2={:h})", m_process->pid(), regs->int_num, regs->rip,
+              cr2);
     }
-    dmesg("[#{}]: Fault {} caused by instruction at {:h}! (cr2={:h})", m_process->pid(), regs->int_num, regs->rip, cr2);
     if ((regs->cs & 3u) == 0u) {
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }

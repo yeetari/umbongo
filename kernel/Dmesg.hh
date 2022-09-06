@@ -73,13 +73,18 @@ void dmesg_part(const char *&fmt, const T &arg) {
 }
 
 template <typename... Args>
-void dmesg(const char *fmt, const Args &...args) {
-    dmesg_lock();
+void dmesg_no_lock(const char *fmt, const Args &...args) {
     (dmesg_part(fmt, args), ...);
     while (*fmt != '\0') {
         dmesg_put_char(*fmt++);
     }
     dmesg_put_char('\n');
+}
+
+template <typename... Args>
+void dmesg(const char *fmt, const Args &...args) {
+    dmesg_lock();
+    dmesg_no_lock(fmt, args...);
     dmesg_unlock();
 }
 

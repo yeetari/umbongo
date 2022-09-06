@@ -43,9 +43,9 @@ extern void (*k_ctors_end)();
 size_t __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
-    kernel::dmesg("\nAssertion '{}' failed at {}:{}", expr, file, line);
+    kernel::dmesg_no_lock("\nAssertion '{}' failed at {}:{}", expr, file, line);
     if (msg != nullptr) {
-        kernel::dmesg("=> {}", msg);
+        kernel::dmesg_no_lock("=> {}", msg);
     }
     while (true) {
         asm volatile("cli; hlt");
