@@ -128,7 +128,52 @@ public:
         return m_error;
     }
     void value() const {}
-    void disown_value() const {}
+    int disown_value() const { return 0; }
+};
+
+template <typename T>
+class RefWrapper {
+    T *m_ptr;
+
+public:
+    static constexpr bool k_is_ref_wrapper = true;
+    RefWrapper(T &ptr) : m_ptr(&ptr) {}
+    T &ref() { return *m_ptr; }
+};
+
+template <typename T, typename E>
+class [[nodiscard]] Result<T &, E> {
+    union {
+        T *const m_ptr{nullptr};
+        E m_error;
+    };
+    const bool m_is_error{true};
+
+public:
+    Result(E error) : m_error(error) {}
+    template <typename F>
+    Result(F error) requires ErrorUnionContains<E, F> : m_error(error) {}
+    Result(T &ref) : m_ptr(&ref), m_is_error(false) {}
+    Result(const Result &) = delete;
+    Result(Result &&) = delete;
+    ~Result() = default;
+
+    Result &operator=(const Result &) = delete;
+    Result &operator=(Result &&) = delete;
+
+    bool operator==(E error) const { return m_is_error && m_error == error; }
+
+    bool has_value() const { return !m_is_error; }
+    bool is_error() const { return m_is_error; }
+    E error() const {
+        ASSERT(m_is_error);
+        return m_error;
+    }
+    T &value() {
+        ASSERT(!m_is_error);
+        return *m_ptr;
+    }
+    RefWrapper<T> disown_value() { return value(); }
 };
 
 template <typename T, typename E>
