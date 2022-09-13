@@ -26,82 +26,74 @@ struct Conditional<false, T, F> {
     using type = F;
 };
 
-template <typename>
-struct IsConstCheck {
-    static constexpr bool value = false;
-};
-template <typename T>
-struct IsConstCheck<const T> {
-    static constexpr bool value = true;
-};
-
-template <typename>
-struct IsIntegralCheck : public FalseType {};
-template <>
-struct IsIntegralCheck<bool> : public TrueType {};
-template <>
-struct IsIntegralCheck<char> : public TrueType {};
-template <>
-struct IsIntegralCheck<int8_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<int16_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<int32_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<int64_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<uint8_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<uint16_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<uint32_t> : public TrueType {};
-template <>
-struct IsIntegralCheck<uint64_t> : public TrueType {};
-
-template <typename>
-struct IsPointerCheck : public FalseType {};
-template <typename T>
-struct IsPointerCheck<T *> : public TrueType {};
-
-template <typename, typename>
-struct IsSameCheck : public FalseType {};
-template <typename T>
-struct IsSameCheck<T, T> : public TrueType {};
-
 } // namespace detail
 
 template <bool B, typename T, typename F>
 using conditional = typename detail::Conditional<B, T, F>::type;
 
-template <typename T, typename U>
-inline constexpr bool is_convertible_to = detail::IsSameCheck<T, U>::value || requires(T obj) {
-    static_cast<U>(obj);
-};
-
+template <typename>
+inline constexpr bool is_const = false;
 template <typename T>
-inline constexpr bool is_const = detail::IsConstCheck<T>::value;
+inline constexpr bool is_const<const T> = true;
 
-template <typename T>
-inline constexpr bool is_integral = detail::IsIntegralCheck<remove_cv<T>>::value;
+template <typename>
+inline constexpr bool is_integral = false;
+template <>
+inline constexpr bool is_integral<bool> = true;
+template <>
+inline constexpr bool is_integral<char> = true;
+template <>
+inline constexpr bool is_integral<int8_t> = true;
+template <>
+inline constexpr bool is_integral<int16_t> = true;
+template <>
+inline constexpr bool is_integral<int32_t> = true;
+template <>
+inline constexpr bool is_integral<int64_t> = true;
+template <>
+inline constexpr bool is_integral<uint8_t> = true;
+template <>
+inline constexpr bool is_integral<uint16_t> = true;
+template <>
+inline constexpr bool is_integral<uint32_t> = true;
+template <>
+inline constexpr bool is_integral<uint64_t> = true;
 
 template <typename T>
 inline constexpr bool is_move_constructible = requires(T &&t) {
     new T(move(t));
 };
 
+template <typename>
+inline constexpr bool is_pointer = false;
 template <typename T>
-inline constexpr bool is_pointer = detail::IsPointerCheck<remove_cv<T>>::value;
+inline constexpr bool is_pointer<T *> = true;
 
-template <typename T, typename U>
-inline constexpr bool is_same = detail::IsSameCheck<T, U>::value;
+template <typename>
+inline constexpr bool is_reference = false;
+template <typename T>
+inline constexpr bool is_reference<T &> = true;
+template <typename T>
+inline constexpr bool is_reference<T &&> = true;
+
+template <typename, typename>
+inline constexpr bool is_same = false;
+template <typename T>
+inline constexpr bool is_same<T, T> = true;
 
 template <typename T>
 inline constexpr bool is_signed = T(-1) < T(0);
 
 template <typename T>
+inline constexpr bool is_trivially_constructible = __is_trivially_constructible(T);
+template <typename T>
 inline constexpr bool is_trivially_copyable = __is_trivially_copyable(T);
-
 template <typename T>
 inline constexpr bool is_trivially_destructible = __is_trivially_destructible(T);
+
+template <typename T, typename U>
+inline constexpr bool is_convertible_to = is_same<T, U> || requires(T obj) {
+    static_cast<U>(obj);
+};
 
 } // namespace ustd

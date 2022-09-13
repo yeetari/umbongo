@@ -4,41 +4,41 @@ namespace ustd {
 namespace detail {
 
 template <typename T>
-struct RemoveCvImpl {
+struct RemoveCv {
     using type = T;
 };
 template <typename T>
-struct RemoveCvImpl<const T> {
+struct RemoveCv<const T> {
     using type = T;
 };
 template <typename T>
-struct RemoveCvImpl<volatile T> {
+struct RemoveCv<volatile T> {
     using type = T;
 };
 template <typename T>
-struct RemoveCvImpl<const volatile T> {
+struct RemoveCv<const volatile T> {
     using type = T;
 };
 
 template <typename T>
-struct RemoveRefImpl {
+struct RemoveRef {
     using type = T;
 };
 template <typename T>
-struct RemoveRefImpl<T &> {
+struct RemoveRef<T &> {
     using type = T;
 };
 template <typename T>
-struct RemoveRefImpl<T &&> {
+struct RemoveRef<T &&> {
     using type = T;
 };
 
 } // namespace detail
 
 template <typename T>
-using remove_cv = typename detail::RemoveCvImpl<T>::type;
+using remove_cv = typename detail::RemoveCv<T>::type;
 template <typename T>
-using remove_ref = typename detail::RemoveRefImpl<T>::type;
+using remove_ref = typename detail::RemoveRef<T>::type;
 
 template <typename T>
 T declval();
