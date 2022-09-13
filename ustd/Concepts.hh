@@ -8,6 +8,9 @@ template <typename T, typename U>
 concept ConvertibleTo = is_convertible_to<T, U>;
 
 template <typename T>
+concept Enum = is_enum<T>;
+
+template <typename T>
 concept Integral = is_integral<T>;
 
 template <typename T>

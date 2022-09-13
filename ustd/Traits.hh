@@ -36,6 +36,9 @@ inline constexpr bool is_const = false;
 template <typename T>
 inline constexpr bool is_const<const T> = true;
 
+template <typename T>
+inline constexpr bool is_enum = __is_enum(T);
+
 template <typename>
 inline constexpr bool is_integral = false;
 template <>
@@ -95,5 +98,13 @@ template <typename T, typename U>
 inline constexpr bool is_convertible_to = is_same<T, U> || requires(T obj) {
     static_cast<U>(obj);
 };
+
+template <typename E>
+using underlying_type = __underlying_type(E);
+
+template <typename E>
+constexpr auto to_underlying(E value) {
+    return static_cast<underlying_type<E>>(value);
+}
 
 } // namespace ustd
