@@ -12,6 +12,9 @@ class Span {
     T *m_data{nullptr};
     size_t m_size{0};
 
+    template <typename U>
+    using const_t = conditional<is_const<T>, const U, U>;
+
     static constexpr bool is_void = is_same<remove_cv<T>, void>;
     using no_void_t = conditional<is_void, char, T>;
 
@@ -21,6 +24,7 @@ public:
 
     template <typename U>
     constexpr Span<U> as() const;
+    constexpr const_t<uint8_t> *byte_offset(size_t offset) const;
 
     // Allow implicit conversion of `Span<T>` to `Span<void>`.
     constexpr operator Span<void>() const requires(!is_const<T>) { return {data(), size_bytes()}; }
@@ -41,6 +45,11 @@ template <typename T>
 template <typename U>
 constexpr Span<U> Span<T>::as() const {
     return {static_cast<U *>(m_data), m_size};
+}
+
+template <typename T>
+constexpr typename Span<T>::template const_t<uint8_t> *Span<T>::byte_offset(size_t offset) const {
+    return as<const_t<uint8_t>>().data() + offset;
 }
 
 template <typename T>
