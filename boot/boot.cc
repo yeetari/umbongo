@@ -182,38 +182,31 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     EFI_CHECK(kernel_file->read(kernel_file, &kernel_header_size, &kernel_header), "Failed to read kernel header!");
     ENSURE(ustd::equal(kernel_header.magic, elf::k_magic), "Kernel ELF header corrupt!");
 
-    // Allocate memory for and read kernel program headers.
-    elf::ProgramHeader *phdrs = nullptr;
-    uint64_t phdrs_size = kernel_header.ph_count * kernel_header.ph_size;
-    EFI_CHECK(
-        st->boot_services->allocate_pool(efi::MemoryType::LoaderData, phdrs_size, reinterpret_cast<void **>(&phdrs)),
-        "Failed to allocate memory for kernel program headers!");
+    // Read single program header.
+    elf::ProgramHeader phdr{};
+    size_t phdr_size = sizeof(elf::ProgramHeader);
+    ENSURE(kernel_header.ph_count == 1);
+    ENSURE(kernel_header.ph_size == phdr_size);
     EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64_t>(kernel_header.ph_off)));
-    EFI_CHECK(kernel_file->read(kernel_file, &phdrs_size, phdrs), "Failed to read kernel program headers!");
+    EFI_CHECK(kernel_file->read(kernel_file, &phdr_size, &phdr), "Failed to read kernel program header!");
+    ENSURE(phdr.type == elf::SegmentType::Load);
 
-    // Parse kernel load program headers.
-    st->con_out->output_string(st->con_out, L"Parsing kernel load program headers...\r\n");
-    for (uint16_t i = 0; i < kernel_header.ph_count; i++) {
-        auto &phdr = phdrs[i];
-        if (phdr.type != elf::SegmentType::Load) {
-            continue;
-        }
-        const auto page_count = ustd::ceil_div(phdr.memsz, 4_KiB);
-        EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Reserved,
-                                                    page_count, &phdr.paddr),
-                  "Failed to claim physical memory for kernel!");
+    // Claim memory for kernel.
+    const auto kernel_page_count = ustd::ceil_div(phdr.memsz, 4_KiB);
+    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Reserved,
+                                                kernel_page_count, &phdr.paddr),
+              "Failed to claim physical memory for kernel!");
 
-        // Zero out any uninitialised data.
-        if (phdr.filesz != phdr.memsz) {
-            ENSURE(phdr.filesz < phdr.memsz);
-            ustd::fill_n(reinterpret_cast<uint8_t *>(phdr.paddr) + phdr.filesz, phdr.memsz - phdr.filesz, 0);
-        }
-
-        EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64_t>(phdr.offset)));
-        EFI_CHECK(kernel_file->read(kernel_file, &phdr.filesz, reinterpret_cast<void *>(phdr.paddr)),
-                  "Failed to read kernel!");
+    // Zero out any uninitialised data.
+    if (phdr.filesz != phdr.memsz) {
+        ENSURE(phdr.filesz < phdr.memsz);
+        ustd::fill_n(reinterpret_cast<uint8_t *>(phdr.paddr) + phdr.filesz, phdr.memsz - phdr.filesz, 0);
     }
-    EFI_CHECK(st->boot_services->free_pool(phdrs), "Failed to free memory for kernel program headers!");
+
+    // Load kernel.
+    EFI_CHECK(kernel_file->set_position(kernel_file, static_cast<uint64_t>(phdr.offset)));
+    EFI_CHECK(kernel_file->read(kernel_file, &phdr.filesz, reinterpret_cast<void *>(phdr.paddr)),
+              "Failed to read kernel!");
     EFI_CHECK(kernel_file->close(kernel_file), "Failed to close kernel file!");
 
     // Load all files.
