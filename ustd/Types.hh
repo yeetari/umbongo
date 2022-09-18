@@ -44,3 +44,13 @@ constexpr size_t operator"" _GiB(unsigned long long num) {
 constexpr size_t operator"" _TiB(unsigned long long num) {
     return num * 0x10000000000;
 }
+
+inline constexpr auto &operator&=(auto &lhs, auto rhs) {
+    return lhs = (lhs & rhs);
+}
+inline constexpr auto &operator|=(auto &lhs, auto rhs) {
+    return lhs = (lhs | rhs);
+}
+inline constexpr auto &operator^=(auto &lhs, auto rhs) {
+    return lhs = (lhs ^ rhs);
+}
