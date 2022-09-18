@@ -1,5 +1,9 @@
 ENTRY(kmain)
 
+PHDRS {
+    load PT_LOAD;
+}
+
 SECTIONS {
     . = 1M;
 
