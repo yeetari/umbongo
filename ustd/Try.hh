@@ -1,7 +1,5 @@
 #pragma once
 
-// TODO: ASSUME macro like EXPECT but that ASSERTs instead?
-
 namespace ustd::detail {
 
 template <typename T>
@@ -24,6 +22,13 @@ struct Selector<true> {
 
 } // namespace ustd::detail
 
+#define ASSUME_INTERNAL(expr, ...)                                                                                     \
+    ({                                                                                                                 \
+        auto _result_assume = (expr);                                                                                  \
+        ASSERT(_result_assume.has_value() __VA_OPT__(, ) __VA_ARGS__);                                                 \
+        _result_assume.disown_value();                                                                                 \
+    })
+
 #define EXPECT_INTERNAL(expr, ...)                                                                                     \
     ({                                                                                                                 \
         auto _result_expect = (expr);                                                                                  \
@@ -43,5 +48,6 @@ struct Selector<true> {
 #define SELECTOR_DISPATCH(macro, expr, ...)                                                                            \
     ustd::detail::Selector<ustd::detail::IsRefWrapper<decltype(macro(expr __VA_OPT__(, ) __VA_ARGS__))>>::select(      \
         macro(expr __VA_OPT__(, ) __VA_ARGS__))
+#define ASSUME(expr, ...) SELECTOR_DISPATCH(ASSUME_INTERNAL, expr __VA_OPT__(, ) __VA_ARGS__)
 #define EXPECT(expr, ...) SELECTOR_DISPATCH(EXPECT_INTERNAL, expr __VA_OPT__(, ) __VA_ARGS__)
 #define TRY(expr) SELECTOR_DISPATCH(TRY_INTERNAL, expr)
