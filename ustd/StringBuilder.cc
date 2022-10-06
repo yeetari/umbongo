@@ -20,13 +20,6 @@ void StringBuilder::append_single(const char *, StringView arg) {
     }
 }
 
-void StringBuilder::append_single(const char *, const String &arg) {
-    m_buffer.ensure_capacity(m_buffer.size() + arg.length());
-    for (char ch : arg) {
-        m_buffer.push(ch);
-    }
-}
-
 void StringBuilder::append_single(const char *, bool arg) {
     append_single("", arg ? "true" : "false");
 }

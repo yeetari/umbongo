@@ -19,7 +19,6 @@ class StringBuilder {
     void append_single(const char *opts, T arg);
     void append_single(const char *opts, const char *arg);
     void append_single(const char *opts, StringView arg);
-    void append_single(const char *opts, const String &arg);
     void append_single(const char *opts, bool arg);
     template <typename T>
     void append_part(const char *&fmt, const T &arg);
