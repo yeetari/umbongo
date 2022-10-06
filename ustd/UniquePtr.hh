@@ -72,6 +72,11 @@ T *UniquePtr<T>::operator->() const {
     return m_ptr;
 }
 
+template <typename T>
+UniquePtr<T> adopt_unique(T *ptr) {
+    return UniquePtr<T>(ptr);
+}
+
 template <typename T, typename... Args>
 UniquePtr<T> make_unique(Args &&...args) {
     return UniquePtr<T>(new T(forward<Args>(args)...));
