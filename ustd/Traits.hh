@@ -31,6 +31,9 @@ struct Conditional<false, T, F> {
 template <bool B, typename T, typename F>
 using conditional = typename detail::Conditional<B, T, F>::type;
 
+template <typename T, typename U>
+inline constexpr bool is_base_of = __is_base_of(T, U);
+
 template <typename>
 inline constexpr bool is_const = false;
 template <typename T>
