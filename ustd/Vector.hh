@@ -40,6 +40,8 @@ public:
     T &emplace(Args &&...args);
     template <typename... Args>
     T &emplace_at(SizeType index, Args &&...args);
+    template <typename Container>
+    void extend(const Container &container);
     void push(const T &elem);
     void push(T &&elem);
     conditional<is_trivially_copyable<T>, T, void> pop();
@@ -190,6 +192,23 @@ T &Vector<T, SizeType>::emplace_at(SizeType index, Args &&...args) {
 
     m_size++;
     return *new (elem) T(forward<Args>(args)...);
+}
+
+template <typename T, typename SizeType>
+template <typename Container>
+void Vector<T, SizeType>::extend(const Container &container) {
+    if (container.empty()) {
+        return;
+    }
+    ensure_capacity(m_size + SizeType(container.size()));
+    if constexpr (is_trivially_copyable<T>) {
+        __builtin_memcpy(end(), container.data(), container.size_bytes());
+        m_size += SizeType(container.size());
+    } else {
+        for (const auto &elem : container) {
+            push(elem);
+        }
+    }
 }
 
 template <typename T, typename SizeType>
