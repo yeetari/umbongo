@@ -58,12 +58,12 @@ class Optional<T &> {
 public:
     constexpr Optional() = default;
     constexpr Optional(T &ref) : m_ptr(&ref) {}
-    constexpr Optional(const Optional &) = delete;
-    constexpr Optional(Optional &&) = delete;
+    constexpr Optional(const Optional &) = default;
+    constexpr Optional(Optional &&other) : m_ptr(exchange(other.m_ptr, nullptr)) {}
     constexpr ~Optional() = default;
 
-    constexpr Optional &operator=(const Optional &) = delete;
-    constexpr Optional &operator=(Optional &&) = delete;
+    constexpr Optional &operator=(const Optional &) = default;
+    constexpr Optional &operator=(Optional &&);
 
     constexpr RefWrapper disown_value() { return operator*(); }
     constexpr explicit operator bool() const { return m_ptr != nullptr; }
@@ -157,6 +157,12 @@ template <typename T>
 constexpr const T *Optional<T>::operator->() const {
     ASSERT(m_present);
     return reinterpret_cast<const T *>(m_data.data());
+}
+
+template <typename T>
+constexpr Optional<T &> &Optional<T &>::operator=(Optional &&other) {
+    m_ptr = exchange(other.m_ptr, nullptr);
+    return *this;
 }
 
 template <typename T>
