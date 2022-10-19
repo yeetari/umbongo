@@ -7,6 +7,8 @@
 
 namespace kernel {
 
+// TODO: Needs a rewrite when moved to arch specific subdirectory.
+
 enum class PageFlags : size_t {
     Present = 1ul << 0ul,
     Writable = 1ul << 1ul,
@@ -18,16 +20,12 @@ enum class PageFlags : size_t {
     NoExecute = 1ul << 63ul,
 };
 
-inline constexpr PageFlags operator&(PageFlags a, PageFlags b) {
-    return static_cast<PageFlags>(static_cast<size_t>(a) & static_cast<size_t>(b));
+inline constexpr PageFlags operator&(PageFlags lhs, PageFlags rhs) {
+    return static_cast<PageFlags>(ustd::to_underlying(lhs) & ustd::to_underlying(rhs));
 }
 
-inline constexpr PageFlags operator|(PageFlags a, PageFlags b) {
-    return static_cast<PageFlags>(static_cast<size_t>(a) | static_cast<size_t>(b));
-}
-
-inline constexpr PageFlags &operator|=(PageFlags &a, PageFlags b) {
-    return a = (a | b);
+inline constexpr PageFlags operator|(PageFlags lhs, PageFlags rhs) {
+    return static_cast<PageFlags>(ustd::to_underlying(lhs) | ustd::to_underlying(rhs));
 }
 
 template <typename Entry>
@@ -47,18 +45,16 @@ public:
 template <typename Entry>
 class [[gnu::aligned(4_KiB)]] PageLevel {
     ustd::Array<PageLevelEntry<Entry>, 512> m_entries{};
+    size_t m_entry_count{0};
 
 public:
     constexpr PageLevel() = default;
     PageLevel(const PageLevel &) = delete;
     PageLevel(PageLevel &&) = delete;
     ~PageLevel() {
-        if constexpr (!ustd::is_same<Entry, uintptr_t>) {
-            for (auto &entry : m_entries) {
-                if (!entry.empty() && (entry.flags() & PageFlags::Large) != PageFlags::Large) {
-                    delete entry.entry();
-                }
-            }
+        ASSERT(m_entry_count == 0);
+        for ([[maybe_unused]] auto &entry : m_entries) {
+            ASSERT(entry.empty());
         }
     }
 
@@ -69,20 +65,49 @@ public:
         ASSERT(index < 512);
         ASSERT(m_entries[index].empty());
         m_entries[index] = PageLevelEntry<Entry>(phys, flags);
+
+        ASSERT(m_entry_count < 512);
+        m_entry_count++;
+    }
+
+    void unset(size_t index) {
+        ASSERT(index < 512);
+        auto &entry = m_entries[index];
+        ASSERT(!entry.empty());
+
+        if constexpr (!ustd::is_same<Entry, uintptr_t>) {
+            if ((entry.flags() & PageFlags::Large) != PageFlags::Large) {
+                delete entry.entry();
+            }
+        }
+        entry = {};
+
+        ASSERT(m_entry_count > 0);
+        m_entry_count--;
     }
 
     Entry *ensure(size_t index) {
         ASSERT(index < 512);
         ASSERT((m_entries[index].flags() & PageFlags::Large) != PageFlags::Large);
         if (m_entries[index].empty()) {
-            // Top level page structures have all access bits set.
+            // Top level page structures have most lenient access bits set.
             set(index, reinterpret_cast<uintptr_t>(new Entry), PageFlags::Writable | PageFlags::User);
         }
         return m_entries[index].entry();
     }
 
+    Entry *expect(size_t index) {
+        ASSERT(index < 512);
+        ASSERT(!m_entries[index].empty());
+        ASSERT((m_entries[index].flags() & PageFlags::Large) != PageFlags::Large);
+        return m_entries[index].entry();
+    }
+
     const ustd::Array<PageLevelEntry<Entry>, 512> &entries() const {
         return m_entries;
+    }
+    size_t entry_count() const {
+        return m_entry_count;
     }
 };
 

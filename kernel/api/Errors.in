@@ -1,0 +1,6 @@
+E(BAD_ACCESS, BadAccess, -1)
+E(BAD_ADDRESS, BadAddress, -2)
+E(BAD_HANDLE, BadHandle, -3)
+E(TOO_BIG, TooBig, -4)
+E(VIRT_SPACE_FULL, VirtSpaceFull, -5)
+E(NO_EXEC, NoExec, -6)

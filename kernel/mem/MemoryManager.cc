@@ -8,9 +8,11 @@
 #include <kernel/mem/Heap.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
+#include <kernel/mem/VmObject.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
@@ -122,7 +124,7 @@ void MemoryManager::initialise(BootInfo *boot_info) {
     // takes 4 KiB of page structures to do.
     constexpr auto access = RegionAccess::Writable | RegionAccess::Executable | RegionAccess::Global;
     s_data.kernel_space = new VirtSpace;
-    s_data.kernel_space->create_region(0, 512_GiB, access, 0);
+    EXPECT(s_data.kernel_space->allocate_specific(0, access, VmObject::create_physical(0, 512_GiB)))->leak_ref();
 
     // Leak a ref for the kernel space to ensure it never gets deleted by a kernel process being destroyed.
     s_data.kernel_space->leak_ref();

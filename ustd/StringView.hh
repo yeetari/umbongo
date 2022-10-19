@@ -9,6 +9,7 @@ class StringView : public Span<const char> {
 public:
     using Span::Span;
     constexpr StringView(const char *string) : Span(string, __builtin_strlen(string)) {}
+    constexpr StringView(Span<const char> span) : Span(span) {}
 
     StringView substr(size_t begin) const;
     StringView substr(size_t begin, size_t end) const;

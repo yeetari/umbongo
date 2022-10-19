@@ -2,20 +2,17 @@
 
 #include <elf/Elf.hh>
 #include <kernel/Dmesg.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/fs/File.hh>
-#include <kernel/fs/Vfs.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
+#include <kernel/mem/VmObject.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
-#include <kernel/proc/ThreadBlocker.hh>
 #include <kernel/proc/ThreadPriority.hh>
+#include <ustd/Algorithm.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Numeric.hh>
@@ -31,10 +28,15 @@
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
+extern uint8_t k_user_access_start;
+extern uint8_t k_user_access_end;
+extern "C" bool user_copy(uintptr_t dst, uintptr_t src, size_t size);
+extern "C" bool user_copy_fault();
+
 namespace kernel {
 namespace {
 
-constexpr size_t k_kernel_stack_size = 64_KiB;
+constexpr size_t k_kernel_stack_size = 8_KiB;
 
 void dump_backtrace([[maybe_unused]] RegisterState *regs) {
     // TODO(GH-9): Backtrace generation is unsafe.
@@ -47,41 +49,23 @@ void dump_backtrace([[maybe_unused]] RegisterState *regs) {
 #endif
 }
 
-ustd::Optional<ustd::String> interpreter_for(File &file) {
-    elf::Header header{};
-    if (file.read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
-        return {};
-    }
-    for (uint16_t i = 0; i < header.ph_count; i++) {
-        elf::ProgramHeader phdr{};
-        if (file.read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i) !=
-            sizeof(elf::ProgramHeader)) {
-            return {};
-        }
-        if (phdr.type == elf::SegmentType::Interp) {
-            // TODO: Size limit.
-            ustd::String path(phdr.filesz - 1);
-            if (file.read({path.data(), phdr.filesz - 1}, phdr.offset) != phdr.filesz - 1) {
-                return {};
-            }
-            return ustd::move(path);
-        }
-    }
-    return {{}};
-}
-
 } // namespace
 
-ustd::UniquePtr<Thread> Thread::create_kernel(uintptr_t entry_point, ThreadPriority priority) {
-    auto *process = new Process(true, ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
+ustd::UniquePtr<Thread> Thread::create_kernel(uintptr_t entry_point, ThreadPriority priority, ustd::String &&name) {
+    auto *process = new Process(true, ustd::move(name), ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
     auto thread = process->create_thread(priority);
     thread->m_register_state.rip = entry_point;
     return thread;
 }
 
-ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
-    auto *process = new Process(false, MemoryManager::kernel_space()->clone());
+ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority, ustd::String &&name) {
+    auto *process = new Process(false, ustd::move(name), MemoryManager::kernel_space()->clone());
     return process->create_thread(priority);
+}
+
+void Thread::kill_and_yield() {
+    Processor::current_thread()->set_state(ThreadState::Dead);
+    Scheduler::yield(false);
 }
 
 Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), m_priority(priority) {
@@ -102,7 +86,7 @@ Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), 
 }
 
 Thread::~Thread() {
-    delete[](m_kernel_stack - k_kernel_stack_size);
+    delete[] (m_kernel_stack - k_kernel_stack_size);
     operator delete[](m_simd_region, ustd::align_val_t(64));
     m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
     if (m_prev != nullptr) {
@@ -112,124 +96,214 @@ Thread::~Thread() {
     }
 }
 
-SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String> &args) {
-    auto file = TRY(Vfs::open(path, OpenMode::None, m_process->m_cwd));
-    auto &stack_region =
-        m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
-    m_register_state.rsp = stack_region.base() + stack_region.size();
+bool Thread::copy_from_user(void *dst, uintptr_t src, size_t size) {
+    return src <= 256_GiB || user_copy(reinterpret_cast<uintptr_t>(dst), src, size);
+}
 
-    auto *original_space = MemoryManager::current_space();
-    MemoryManager::switch_space(*m_process->m_virt_space);
-    ustd::ScopeGuard space_guard([original_space] {
-        MemoryManager::switch_space(*original_space);
-    });
+bool Thread::copy_to_user(uintptr_t dst, void *src, size_t size) {
+    return dst <= 256_GiB || user_copy(dst, reinterpret_cast<uintptr_t>(src), size);
+}
 
-    auto interpreter_path = interpreter_for(*file);
-    if (!interpreter_path) {
-        // If there was an error trying to parse the interpreter location, not if the executable doesn't have one.
-        return SysError::NoExec;
-    }
-    auto executable = file;
-    if (!interpreter_path->empty()) {
-        auto interpreter = TRY(Vfs::open(*interpreter_path, OpenMode::None, m_process->m_cwd));
-        executable = ustd::move(interpreter);
+// TODO: Move loading to a userspace library and or service, kernel only needs to load root program.
+SysResult<> Thread::exec(UserPtr<const uint8_t> binary, size_t binary_size) {
+    if (binary_size < sizeof(elf::Header)) {
+        return Error::NoExec;
     }
 
     elf::Header header{};
-    if (executable->read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
-        return SysError::NoExec;
+    TRY(copy_from_user(&header, binary, sizeof(elf::Header)));
+
+    if (!ustd::equal(header.magic, elf::k_magic)) {
+        return Error::NoExec;
     }
-    for (uint16_t i = 0; i < header.ph_count; i++) {
-        elf::ProgramHeader phdr{};
-        if (executable->read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i) !=
-                sizeof(elf::ProgramHeader) ||
-            phdr.filesz > phdr.memsz) {
-            return SysError::NoExec;
-        }
+    if (header.type != elf::ObjectType::Dyn) {
+        return Error::NoExec;
+    }
+    if (header.ph_count > 256) {
+        return Error::NoExec;
+    }
+    if (header.ph_size != sizeof(elf::ProgramHeader)) {
+        return Error::NoExec;
+    }
+    if (header.ph_off + header.ph_count * sizeof(elf::ProgramHeader) > binary_size) {
+        return Error::NoExec;
+    }
+
+    ustd::Vector<elf::ProgramHeader> phdrs(header.ph_count);
+    TRY(copy_from_user(phdrs.data(), binary.offseted(header.ph_off), phdrs.size_bytes()));
+
+    uintptr_t memory_base = ustd::Limits<uintptr_t>::max();
+    uintptr_t memory_end = 0;
+    for (const auto &phdr : phdrs) {
         if (phdr.type != elf::SegmentType::Load) {
             continue;
         }
+        if (phdr.filesz > phdr.memsz) {
+            return Error::NoExec;
+        }
+        memory_base = ustd::min(memory_base, phdr.vaddr);
+        memory_end = ustd::max(memory_end, phdr.vaddr + phdr.memsz);
+    }
+
+    // Immediately allocate and free some VM space to reserve a contigious block we can allocate it.
+    auto executable_base =
+        TRY(MemoryManager::current_space()->allocate_anywhere(RegionAccess::None, memory_end - memory_base))->base();
+
+
+
+//    auto executable_vmo = VmObject::create(memory_end - memory_base);
+//    auto copy_region = TRY(MemoryManager::current_space()->allocate_anywhere(RegionAccess::Writable, executable_vmo));
+
+    size_t dynamic_entry_count = 0;
+    size_t dynamic_table_offset = 0;
+    for (const auto &phdr : phdrs) {
+        if (phdr.type == elf::SegmentType::Dynamic) {
+            if (phdr.filesz % sizeof(elf::DynamicEntry) != 0) {
+                return Error::NoExec;
+            }
+            dynamic_entry_count = phdr.filesz / sizeof(elf::DynamicEntry);
+            dynamic_table_offset = phdr.offset;
+        }
+    }
+
+    ustd::Vector<elf::DynamicEntry> dynamic_entries(dynamic_entry_count);
+    TRY(copy_from_user(dynamic_entries.data(), binary.offseted(dynamic_table_offset), dynamic_entries.size_bytes()));
+
+    size_t relocation_entry_size = 0;
+    size_t relocation_table_offset = 0;
+    size_t relocation_table_size = 0;
+    for (const auto &entry : dynamic_entries) {
+        switch (entry.type) {
+        case elf::DynamicType::Null:
+        case elf::DynamicType::Hash:
+        case elf::DynamicType::StrTab:
+        case elf::DynamicType::SymTab:
+        case elf::DynamicType::StrSz:
+        case elf::DynamicType::SymEnt:
+        case elf::DynamicType::Debug:
+        case elf::DynamicType::GnuHash:
+        case elf::DynamicType::RelaCount:
+        case elf::DynamicType::Flags1:
+            break;
+        case elf::DynamicType::Rela:
+            relocation_table_offset = entry.value;
+            break;
+        case elf::DynamicType::RelaSz:
+            relocation_table_size = entry.value;
+            break;
+        case elf::DynamicType::RelaEnt:
+            relocation_entry_size = entry.value;
+            break;
+        default:
+            dmesg("Unknown dynamic entry type {}", ustd::to_underlying(entry.type));
+            return Error::NoExec;
+        }
+    }
+
+    for (uint16_t i = 0; i < header.ph_count; i++) {
+        elf::ProgramHeader phdr{};
+        TRY(copy_from_user(&phdr, binary.offseted(header.ph_off + i * sizeof(elf::ProgramHeader)),
+                           sizeof(elf::ProgramHeader)));
+
+        if (phdr.type != elf::SegmentType::Load) {
+            continue;
+        }
+
+        if (phdr.filesz > phdr.memsz) {
+            return Error::NoExec;
+        }
+
+        auto vm_object = VmObject::create(phdr.memsz + (phdr.vaddr & 0xfffu));
+        auto copy_region = TRY(MemoryManager::current_space()->allocate_anywhere(RegionAccess::Writable, vm_object));
+
+        size_t copy_offset = phdr.vaddr & 0xfffu;
+        ASSERT(copy_offset + phdr.memsz <= copy_region->range().size());
+
+        auto *copy_dst = reinterpret_cast<uint8_t *>(copy_region->base() + copy_offset);
+        if (phdr.filesz != phdr.memsz) {
+            ustd::fill_n(copy_dst + phdr.filesz, phdr.memsz - phdr.filesz, 0);
+        }
+        TRY(copy_from_user(copy_dst, binary.offseted(phdr.offset), phdr.filesz));
+
         auto access = RegionAccess::UserAccessible;
         if ((phdr.flags & elf::SegmentFlags::Executable) == elf::SegmentFlags::Executable) {
             access |= RegionAccess::Executable;
         }
-        // TODO: Don't always map writable. We only need to for copying the data in.
-        access |= RegionAccess::Writable;
-        auto &region = m_process->m_virt_space->allocate_region(phdr.memsz + (phdr.vaddr & 0xfffu), access);
+        if ((phdr.flags & elf::SegmentFlags::Writable) == elf::SegmentFlags::Writable) {
+            access |= RegionAccess::Writable;
+        }
+
+        auto region = TRY(m_process->virt_space().allocate_anywhere(access, ustd::move(vm_object)));
+        m_executable_regions.push(region);
 
         // Segment contains entry point.
         if (header.entry >= phdr.vaddr && header.entry < phdr.vaddr + phdr.memsz) {
-            m_register_state.rip = region.base() + header.entry - (phdr.vaddr & ~4095u);
-        }
-
-        size_t copy_offset = phdr.vaddr & 0xfffu;
-        if (copy_offset + phdr.memsz > region.size()) {
-            return SysError::NoExec;
-        }
-        if (executable->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.filesz}, phdr.offset) !=
-            phdr.filesz) {
-            return SysError::NoExec;
+            m_register_state.rip = region->base() + header.entry - (phdr.vaddr & ~4095u);
         }
     }
 
-    // Setup user stack.
-    ustd::Vector<uintptr_t> argv;
-    auto push_arg = [&](ustd::StringView arg) {
-        m_register_state.rsp -= ustd::align_up(arg.length() + 1, sizeof(size_t));
-        __builtin_memcpy(reinterpret_cast<void *>(m_register_state.rsp), arg.data(), arg.length());
-        *(reinterpret_cast<char *>(m_register_state.rsp) + arg.length()) = '\0';
-        argv.push(m_register_state.rsp);
-    };
-    if (!interpreter_path->empty()) {
-        push_arg(path);
-    }
-    for (const auto &arg : args) {
-        push_arg(arg);
-    }
-
-    m_register_state.rsp -= sizeof(uintptr_t);
-    *reinterpret_cast<uintptr_t *>(m_register_state.rsp) = 0;
-    for (uint32_t i = 0; i < argv.size(); i++) {
-        m_register_state.rsp -= sizeof(uintptr_t);
-        *reinterpret_cast<uintptr_t *>(m_register_state.rsp) = argv[argv.size() - i - 1];
-    }
-
-    m_register_state.rdi = argv.size();          // argc
-    m_register_state.rsi = m_register_state.rsp; // argv
+    auto stack_region = TRY(m_process->virt_space().allocate_anywhere(
+        RegionAccess::Writable | RegionAccess::UserAccessible, VmObject::create(1_MiB)));
+    m_executable_regions.push(stack_region);
+    m_register_state.rsp = stack_region->range().end();
 
     // Allocate some space for heap storage.
-    m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
+    // TODO: Remove.
+    auto heap_region = TRY(m_process->virt_space().allocate_specific(
+        6_TiB, RegionAccess::Writable | RegionAccess::UserAccessible, VmObject::create(2_MiB)));
+    m_executable_regions.push(heap_region);
     return {};
 }
 
 void Thread::handle_fault(RegisterState *regs) {
+    const bool kernel_fault = (regs->cs & 3u) == 0u;
+    const auto *rip = reinterpret_cast<uint8_t *>(regs->rip);
+    if (kernel_fault && regs->int_num == 14 && rip >= &k_user_access_start && rip < &k_user_access_end) {
+        // Fault in user copy.
+        regs->rip = reinterpret_cast<uintptr_t>(&user_copy_fault);
+        return;
+    }
+
     uint64_t cr2 = 0;
     asm volatile("mov %%cr2, %0" : "=r"(cr2));
-    if ((regs->cs & 3u) != 0u) {
+
+    if (!kernel_fault) {
         dmesg("[#{}]: Fault {} caused by instruction at {:h}! (cr2={:h})", m_process->pid(), regs->int_num, regs->rip,
               cr2);
     }
-    if ((regs->cs & 3u) == 0u) {
+    if (kernel_fault) {
         ENSURE_NOT_REACHED("Fault in ring 0!");
     }
     dump_backtrace(regs);
-    kill();
+    set_state(ThreadState::Dead);
     Scheduler::switch_next(regs);
 }
 
-void Thread::kill() {
-    m_state = ThreadState::Dead;
+void Thread::set_state(ThreadState state) {
+    m_state.store(state);
 }
 
-void Thread::try_unblock() {
-    if (m_state != ThreadState::Blocked) {
-        return;
+void Thread::unblock() {
+    ASSERT(state() == ThreadState::Blocked);
+    set_state(ThreadState::Alive);
+    Scheduler::requeue_thread(this);
+}
+
+SyscallResult Thread::sys_debug_line(UserPtr<const char> msg, size_t msg_len) {
+    if (msg_len > 2048) {
+        return Error::TooBig;
     }
-    ASSERT_PEDANTIC(m_blocker);
-    if (m_blocker->should_unblock()) {
-        m_blocker.clear();
-        m_state = ThreadState::Alive;
-    }
+    ustd::String string(msg_len);
+    TRY(copy_from_user(string.data(), msg, msg_len));
+
+    const auto name = m_process->name();
+    dmesg("[{}{}#{}]: {}", name, !name.empty() ? " " : "", m_process->pid(), string);
+    return 0;
+}
+
+SyscallResult Thread::sys_thrd_yield() {
+    Scheduler::yield(true);
+    return 0;
 }
 
 } // namespace kernel

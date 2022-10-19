@@ -3,7 +3,7 @@
 #include <config/IpcMessages.hh>
 #include <core/EventLoop.hh>
 #include <ipc/Client.hh>
-#include <ipc/MessageDecoder.hh>
+#include <ipc/Decoder.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>

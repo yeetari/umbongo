@@ -22,39 +22,25 @@ add_executable(kernel
     acpi/Table.cc
     cpu/LocalApic.cc
     cpu/Processor.cc
-    dev/DevFs.cc
-    dev/Device.cc
-    dev/DmesgDevice.cc
-    dev/FramebufferDevice.cc
-    fs/FileHandle.cc
-    fs/Inode.cc
-    fs/InodeFile.cc
-    fs/RamFs.cc
-    fs/Vfs.cc
     intr/InterruptManager.cc
     intr/IoApic.cc
-    ipc/DoubleBuffer.cc
-    ipc/Pipe.cc
-    ipc/ServerSocket.cc
-    ipc/Socket.cc
+    ipc/Channel.cc
+    ipc/Endpoint.cc
     mem/Heap.cc
     mem/MemoryManager.cc
     mem/PhysicalPage.cc
     mem/Region.cc
     mem/VirtSpace.cc
-    pci/Enumerate.cc
-    pci/Function.cc
+    mem/VmObject.cc
     proc/Process.cc
     proc/Scheduler.cc
     proc/Thread.cc
-    proc/ThreadBlocker.cc
     time/Hpet.cc
     time/TimeManager.cc
     Console.cc
     Dmesg.cc
     ${CMAKE_CURRENT_BINARY_DIR}/Font.cc
     kmain.cc
-    Syscalls.cc
     UbSan.cc)
 add_library(kernel_asm OBJECT
     cpu/cpu.asm

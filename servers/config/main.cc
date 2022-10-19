@@ -2,7 +2,7 @@
 #include <core/EventLoop.hh>
 #include <core/File.hh>
 #include <ipc/Client.hh>
-#include <ipc/MessageDecoder.hh>
+#include <ipc/Decoder.hh>
 #include <ipc/Server.hh>
 #include <log/Log.hh>
 #include <ustd/Format.hh>

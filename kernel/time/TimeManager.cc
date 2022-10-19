@@ -2,6 +2,7 @@
 
 #include <kernel/acpi/GenericAddress.hh>
 #include <kernel/acpi/HpetTable.hh>
+#include <kernel/proc/Thread.hh>
 #include <kernel/time/Hpet.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Types.hh>
@@ -33,7 +34,7 @@ void TimeManager::update() {
     s_ns_since_boot += s_hpet->update_time();
 }
 
-uint64_t TimeManager::ns_since_boot() {
+SyscallResult Thread::sys_uptime() {
     return s_ns_since_boot;
 }
 

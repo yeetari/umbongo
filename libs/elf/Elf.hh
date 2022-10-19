@@ -7,10 +7,14 @@ namespace elf {
 
 constexpr ustd::Array<uint8_t, 4> k_magic{0x7f, 'E', 'L', 'F'};
 
+enum class ObjectType : uint16_t {
+    Dyn = 3,
+};
+
 struct Header {
     ustd::Array<uint8_t, 4> magic;
     ustd::Array<uint8_t, 12> ident;
-    uint16_t type;
+    ObjectType type;
     uint16_t machine;
     uint32_t version;
     uintptr_t entry;

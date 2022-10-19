@@ -8,7 +8,7 @@
 #include <core/File.hh>
 #include <core/Timer.hh>
 #include <ipc/Client.hh>
-#include <ipc/MessageDecoder.hh>
+#include <ipc/Decoder.hh>
 #include <ipc/Server.hh>
 #include <kernel/SyscallTypes.hh>
 #include <log/Log.hh>

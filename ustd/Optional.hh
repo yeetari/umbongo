@@ -49,8 +49,9 @@ class Optional<T &> {
         T *m_ptr;
 
     public:
+        static constexpr bool k_is_ref_wrapper = true;
         RefWrapper(T &ptr) : m_ptr(&ptr) {}
-        operator T &() { return *m_ptr; }
+        T &ref() { return *m_ptr; }
     };
 
     T *m_ptr{nullptr};

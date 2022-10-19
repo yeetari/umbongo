@@ -16,6 +16,23 @@ enum class MemoryOrder {
 };
 
 template <typename T>
+bool atomic_cmpxchg(T &ptr, T expected, T desired, MemoryOrder success_order = MemoryOrder::Relaxed,
+                    MemoryOrder failure_order = MemoryOrder::Relaxed) {
+    return __atomic_compare_exchange_n(&ptr, &expected, desired, false, static_cast<int>(success_order),
+                                       static_cast<int>(failure_order));
+}
+
+template <typename T>
+T atomic_load(T &ptr, MemoryOrder order = MemoryOrder::Relaxed) {
+    return __atomic_load_n(&ptr, static_cast<int>(order));
+}
+
+template <typename T>
+void atomic_store(T &ptr, T value, MemoryOrder order = MemoryOrder::Relaxed) {
+    __atomic_store_n(&ptr, value, static_cast<int>(order));
+}
+
+template <typename T>
 class Atomic {
     T m_value{0};
 
@@ -72,8 +89,8 @@ public:
                                            false, static_cast<int>(success_order), static_cast<int>(failure_order));
     }
 
-    bool compare_exchange_temp(T expected, T desired, MemoryOrder success_order = MemoryOrder::Relaxed,
-                               MemoryOrder failure_order = MemoryOrder::Relaxed) {
+    bool cmpxchg(T expected, T desired, MemoryOrder success_order = MemoryOrder::Relaxed,
+                 MemoryOrder failure_order = MemoryOrder::Relaxed) {
         return __atomic_compare_exchange_n(&m_value, reinterpret_cast<storage_t *>(&expected), storage_t(desired),
                                            false, static_cast<int>(success_order), static_cast<int>(failure_order));
     }

@@ -90,3 +90,18 @@ syscall_stub:
 
     pop rsp
     o64 sysret
+
+section .user_access
+
+; TODO: More optimal version for CPUs not supporting FSRM (anything pre ice lake or zen 3).
+; bool user_copy(uintptr_t dst, uintptr_t src, uint32_t size)
+global user_copy
+user_copy:
+    mov ecx, edx ; copy size into count register
+    xor eax, eax
+    rep movsb
+    ret
+global user_copy_fault
+user_copy_fault:
+    inc eax
+    ret

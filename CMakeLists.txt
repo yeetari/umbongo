@@ -110,8 +110,7 @@ if(QEMU_EXECUTABLE)
             -drive file=fat:rw:${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_PREFIX},format=raw,id=esp,if=none
             -machine q35
             -nodefaults
-            -no-reboot
-            -smp ${CORE_COUNT})
+            -no-reboot)
         add_custom_target(run
             COMMAND ${QEMU_EXECUTABLE} ${QEMU_FLAGS} $<$<BOOL:${KVM_AVAILABLE}>:-enable-kvm>
             DEPENDS install
@@ -136,13 +135,12 @@ add_link_options(-pie -nostdlib -Wno-unused-command-line-argument)
 include_directories(${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR} libs)
 
 add_subdirectory(boot)
-add_subdirectory(dynamic-linker)
+#add_subdirectory(dynamic-linker)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/${CMAKE_INSTALL_PREFIX} DESTINATION ${CMAKE_BINARY_DIR})
 
-add_link_options(LINKER:-dynamic-linker,/bin/dynamic-linker)
-add_subdirectory(coreutils)
+#add_subdirectory(coreutils)
 add_subdirectory(kernel)
 add_subdirectory(libs)
 add_subdirectory(servers)
-add_subdirectory(shell)
+#add_subdirectory(shell)
 add_subdirectory(ustd)

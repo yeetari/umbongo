@@ -15,9 +15,8 @@ struct MemoryMapEntry {
 };
 
 struct RamFsEntry {
-    const char *name{nullptr};
-    const uint8_t *data{nullptr};
     size_t data_size{0};
+    uint16_t name_length{0};
     bool is_directory{false};
     RamFsEntry *next{nullptr};
 };
@@ -39,6 +38,6 @@ struct BootInfo {
     MemoryMapEntry *map;
     size_t map_entry_count;
 
-    // RamFS.
-    RamFsEntry *ram_fs;
+    // Initial files needed to boot.
+    RamFsEntry *initramfs;
 };

@@ -35,7 +35,7 @@ public:
 void PriorityQueue::enqueue(Thread *thread) {
     uint32_t head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
     auto &slot = m_slots[head % k_slot_count];
-    while (!slot.compare_exchange_temp(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
+    while (!slot.cmpxchg(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
         do {
             asm volatile("pause");
         } while (slot.load(ustd::MemoryOrder::Relaxed) != nullptr);
@@ -67,21 +67,13 @@ uint32_t s_ticks_in_one_ms = 0;
 Thread *s_base_thread;
 SpinLock s_thread_list_lock;
 ustd::Atomic<bool> s_time_being_updated;
-
-PriorityQueue *s_blocked_queue;
 ustd::Array<PriorityQueue *, 2> s_queues;
 
 Thread *pick_next() {
-    while (auto *thread = s_blocked_queue->dequeue()) {
-        s_queues[static_cast<uint32_t>(thread->priority())]->enqueue(thread);
-    }
     for (auto *queue = s_queues.end(); queue-- != s_queues.begin();) {
-        while (auto *thread = (*queue)->dequeue()) {
-            thread->try_unblock();
-            if (thread->state() == ThreadState::Alive) {
-                return thread;
-            }
-            s_blocked_queue->enqueue(thread);
+        if (auto *thread = (*queue)->dequeue()) {
+            ASSERT(thread->state() == ThreadState::Alive);
+            return thread;
         }
     }
     ENSURE_NOT_REACHED("Thread queue empty!");
@@ -118,7 +110,7 @@ void Scheduler::initialise() {
 
     // Initialise idle thread and process. We pass null as the entry point as when the thread first gets interrupted,
     // its state will be saved.
-    s_base_thread = Thread::create_kernel(nullptr, ThreadPriority::Idle).disown();
+    s_base_thread = Thread::create_kernel(nullptr, ThreadPriority::Idle, {}).disown();
     s_base_thread->m_prev = s_base_thread;
     s_base_thread->m_next = s_base_thread;
     Processor::set_current_thread(s_base_thread);
@@ -137,7 +129,6 @@ void Scheduler::initialise() {
     Processor::wire_interrupt(14, handle_fault);
     Processor::wire_interrupt(k_timer_vector, &timer_handler);
 
-    s_blocked_queue = new PriorityQueue;
     for (auto &queue : s_queues) {
         queue = new PriorityQueue;
     }
@@ -155,6 +146,10 @@ void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
     }
 }
 
+void Scheduler::requeue_thread(Thread *thread) {
+    s_queues[static_cast<uint32_t>(thread->priority())]->enqueue(thread);
+}
+
 void Scheduler::start() {
     // Enable the local APIC and acknowledge any outstanding interrupts.
     Processor::apic()->enable();
@@ -167,7 +162,7 @@ void Scheduler::start() {
 
     // Each AP needs an idle thread created to ensure that there is always something to schedule.
     if (Processor::id() != 0) {
-        auto idle_thread = Thread::create_kernel(&start, ThreadPriority::Idle);
+        auto idle_thread = Thread::create_kernel(&start, ThreadPriority::Idle, {});
         Processor::set_current_thread(idle_thread.ptr());
         insert_thread(ustd::move(idle_thread));
     }
@@ -180,10 +175,11 @@ void Scheduler::start() {
 
 void Scheduler::switch_next(RegisterState *regs) {
     Thread *current_thread = Processor::current_thread();
-    if (current_thread->m_state != ThreadState::Dead) {
-        s_queues[static_cast<uint32_t>(current_thread->priority())]->enqueue(current_thread);
-    } else {
+    if (const auto state = current_thread->state(); state == ThreadState::Dead) {
+        MemoryManager::switch_space(*MemoryManager::kernel_space());
         delete current_thread;
+    } else if (state == ThreadState::Alive) {
+        requeue_thread(current_thread);
     }
 
     Thread *next_thread = pick_next();
@@ -199,8 +195,7 @@ void Scheduler::switch_next(RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
-    if (s_time_being_updated.compare_exchange_temp(false, true, ustd::MemoryOrder::AcqRel,
-                                                   ustd::MemoryOrder::Acquire)) {
+    if (s_time_being_updated.cmpxchg(false, true, ustd::MemoryOrder::AcqRel, ustd::MemoryOrder::Acquire)) {
         TimeManager::update();
         s_time_being_updated.store(false, ustd::MemoryOrder::Release);
     }
@@ -220,9 +215,9 @@ void Scheduler::yield(bool save_state) {
     switch_now(&regs);
 }
 
-void Scheduler::yield_and_kill() {
-    Processor::current_thread()->kill();
-    yield(false);
+// TODO: Actually yield to thread.
+void Scheduler::yield_to(Thread *) {
+    Scheduler::yield(true);
 }
 
 } // namespace kernel

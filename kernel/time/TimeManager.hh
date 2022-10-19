@@ -14,7 +14,6 @@ struct TimeManager {
     static void initialise(acpi::HpetTable *hpet_table);
     static void spin(uint64_t millis);
     static void update();
-    static uint64_t ns_since_boot();
 };
 
 } // namespace kernel

@@ -64,7 +64,7 @@ efi::SimpleTextOutputProtocol *s_con_out;
     EFI_CHECK(expr __VA_OPT__(, ) __VA_ARGS__);                                                                        \
     ENSURE((ptr) != nullptr __VA_OPT__(, ) __VA_ARGS__)
 
-static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsEntry *&current_entry,
+static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&initramfs, RamFsEntry *&current_entry,
                                efi::FileProtocol *directory, ustd::StringView path) {
     // Get size of file info struct.
     efi::FileInfo *info = nullptr;
@@ -85,9 +85,8 @@ static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsE
     while (name[name_length] != '\0') {
         name_length++;
     }
-    name_length++;
-    ustd::StringView name_view(reinterpret_cast<const char *>(name));
-    if (name_view == reinterpret_cast<const char *>(L"kernel") ||
+    if (ustd::StringView name_view(reinterpret_cast<const char *>(name));
+        name_view == reinterpret_cast<const char *>(L"kernel") ||
         name_view == reinterpret_cast<const char *>(L"NvVars") || name_view == reinterpret_cast<const char *>(L".") ||
         name_view == reinterpret_cast<const char *>(L"..")) {
         EFI_CHECK(st->boot_services->free_pool(info), "Failed to free memory for file info struct!");
@@ -106,7 +105,7 @@ static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsE
     const size_t entry_size =
         sizeof(RamFsEntry) + path.length() + 1 + name_length + (!is_directory ? info->file_size : 0);
     const auto page_count = ustd::ceil_div(entry_size, 4_KiB);
-    auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &ram_fs;
+    auto **next_entry_ptr = current_entry != nullptr ? &current_entry->next : &initramfs;
     EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::LoaderData,
                                                 page_count, reinterpret_cast<uintptr_t *>(next_entry_ptr)),
               "Failed to allocate memory for ramfs entry!");
@@ -114,27 +113,27 @@ static bool traverse_directory(efi::SystemTable *st, RamFsEntry *&ram_fs, RamFsE
 
     // Setup header.
     auto *header = new (*next_entry_ptr) RamFsEntry;
-    header->name = reinterpret_cast<const char *>(&header->next) + sizeof(void *);
-    header->data = !is_directory ? reinterpret_cast<const uint8_t *>(&header->next) + sizeof(void *) + path.length() +
-                                       1 + name_length
-                                 : nullptr;
     header->data_size = info->file_size;
+    header->name_length = static_cast<uint16_t>(path.length() + 1 + name_length);
     header->is_directory = is_directory;
+
+    auto *name_dst = reinterpret_cast<char *>(header + 1);
+    auto *data_dst = name_dst + header->name_length;
 
     // Copy name. We can't use memcpy since the UEFI file name is made up of wide chars.
     for (size_t i = 0; i < path.length(); i++) {
-        const_cast<char *>(header->name)[i] = path[i];
+        name_dst[i] = path[i];
     }
-    const_cast<char *>(header->name)[path.length()] = '/';
+    name_dst[path.length()] = '/';
     for (size_t i = 0; i < name_length; i++) {
-        const_cast<char *>(header->name)[path.length() + i + 1] = static_cast<char>(info->name[i]);
+        name_dst[path.length() + i + 1] = static_cast<char>(info->name[i]);
     }
 
     if (!is_directory) {
         // Copy file data.
-        EFI_CHECK(file->read(file, &info->file_size, const_cast<uint8_t *>(header->data)), "Failed to read file!");
+        EFI_CHECK(file->read(file, &info->file_size, data_dst), "Failed to read file!");
     } else {
-        while (traverse_directory(st, ram_fs, current_entry, file, {header->name, path.length() + name_length})) {
+        while (traverse_directory(st, initramfs, current_entry, file, {name_dst, header->name_length})) {
         }
     }
 
@@ -210,9 +209,9 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     EFI_CHECK(kernel_file->close(kernel_file), "Failed to close kernel file!");
 
     // Load all files.
-    RamFsEntry *ram_fs = nullptr;
+    RamFsEntry *initramfs = nullptr;
     RamFsEntry *current_entry = nullptr;
-    while (traverse_directory(st, ram_fs, current_entry, root_directory, {})) {
+    while (traverse_directory(st, initramfs, current_entry, root_directory, {})) {
     }
     EFI_CHECK(root_directory->close(root_directory), "Failed to close directory!");
 
@@ -340,7 +339,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
         // Recalculate map entry count here. We can't use efi_map_entry_count since the memory for the memory map needs
         // to be overallocated to store an entry for itself.
         .map_entry_count = map_size / descriptor_size - 1,
-        .ram_fs = ram_fs,
+        .initramfs = initramfs,
     };
 
     // Exit boot services.

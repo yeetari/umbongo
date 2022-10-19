@@ -11,20 +11,16 @@
 #include <kernel/acpi/RootTable.hh>
 #include <kernel/acpi/RootTablePtr.hh>
 #include <kernel/acpi/Table.hh>
+#include <kernel/api/BootFs.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
-#include <kernel/dev/DevFs.hh>
-#include <kernel/dev/DmesgDevice.hh>
-#include <kernel/dev/FramebufferDevice.hh>
-#include <kernel/fs/FileSystem.hh>
-#include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeType.hh>
-#include <kernel/fs/RamFs.hh>
-#include <kernel/fs/Vfs.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/intr/InterruptType.hh>
 #include <kernel/mem/MemoryManager.hh>
-#include <kernel/pci/Enumerate.hh>
+#include <kernel/mem/Region.hh>
+#include <kernel/mem/VirtSpace.hh>
+#include <kernel/mem/VmObject.hh>
+#include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadPriority.hh>
@@ -40,6 +36,7 @@
 extern void (*k_ctors_start)();
 extern void (*k_ctors_end)();
 
+// TODO: Randomise value.
 size_t __stack_chk_guard = 0xdeadc0de;
 
 [[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
@@ -86,39 +83,53 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     Processor::start_aps(madt);
 
-    // Setup in-memory file system.
-    auto root_fs = ustd::make_unique<RamFs>();
-    Vfs::initialise();
-    Vfs::mount_root(ustd::move(root_fs));
-
-    // Copy over files loaded by UEFI into the ramdisk.
-    for (auto *entry = boot_info->ram_fs; entry != nullptr; entry = entry->next) {
+    size_t boot_fs_size = sizeof(BootFsEntry);
+    for (auto *entry = boot_info->initramfs; entry != nullptr; entry = entry->next) {
         if (entry->is_directory) {
-            EXPECT(Vfs::mkdir(entry->name, nullptr));
             continue;
         }
-        auto *inode = EXPECT(Vfs::create(entry->name, nullptr, InodeType::RegularFile));
-        inode->write({entry->data, entry->data_size}, 0);
+        boot_fs_size += sizeof(BootFsEntry) + entry->name_length + entry->data_size;
     }
 
-    // Create and mount the device filesystem.
-    DevFs::initialise();
-    DmesgDevice::initialise();
+    auto boot_fs_vmo = VmObject::create(boot_fs_size);
+    auto copy_region = EXPECT(MemoryManager::current_space()->allocate_anywhere(RegionAccess::Writable, boot_fs_vmo));
+    auto *copy_base = reinterpret_cast<uint8_t *>(copy_region->base());
+    for (auto *entry = boot_info->initramfs; entry != nullptr; entry = entry->next) {
+        if (entry->is_directory) {
+            continue;
+        }
+        BootFsEntry new_entry(entry->data_size, entry->name_length);
+        __builtin_memcpy(copy_base, &new_entry, sizeof(BootFsEntry));
+        copy_base += sizeof(BootFsEntry);
 
-    auto *mcfg = EXPECT(xsdt->find<acpi::PciTable>());
-    pci::enumerate(mcfg);
+        __builtin_memcpy(copy_base, entry + 1, entry->name_length);
+        copy_base += entry->name_length;
 
-    auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
-                                     boot_info->pixels_per_scan_line * sizeof(uint32_t));
-    fb->leak_ref();
+        if (entry->data_size != 0) {
+            __builtin_memcpy(copy_base, reinterpret_cast<uint8_t *>(entry + 1) + entry->name_length, entry->data_size);
+        }
+        copy_base += entry->data_size;
+    }
+
+    BootFsEntry terminator_entry(size_t(-1), 0);
+    __builtin_memcpy(copy_base, &terminator_entry, sizeof(BootFsEntry));
+    ENSURE(copy_base + sizeof(BootFsEntry) == reinterpret_cast<uint8_t *>(copy_region->base() + boot_fs_size));
 
     // Mark reclaimable memory as available. Note that this means boot_info is invalid to access after this point.
     MemoryManager::reclaim(boot_info);
 
-    auto init_thread = Thread::create_user(ThreadPriority::Normal);
-    EXPECT(init_thread->exec("/bin/system-server"sv));
-    Scheduler::insert_thread(ustd::move(init_thread));
-    Scheduler::yield_and_kill();
+    const auto &root_server_entry =
+        EXPECT(reinterpret_cast<BootFsEntry *>(copy_region->base())->find("/bin/root-server"sv));
+    const auto root_server_data = root_server_entry.data();
+    const auto root_server_ptr = UserPtr<const uint8_t>::from_raw(root_server_data.data());
+
+    auto root_thread = Thread::create_user(ThreadPriority::Normal, "/bin/root-server");
+    ENSURE(root_thread->process().allocate_handle(boot_fs_vmo) == 0);
+    EXPECT(root_thread->exec(root_server_ptr, root_server_data.size()));
+    copy_region.clear();
+
+    Scheduler::insert_thread(ustd::move(root_thread));
+    Thread::kill_and_yield();
 }
 
 } // namespace
@@ -134,18 +145,12 @@ extern "C" [[noreturn]] void __stack_chk_fail() {
 
 extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
-    DmesgDevice::early_initialise(boot_info);
-    dmesg("core: Using font {} {}", g_font.name(), g_font.style());
-    if constexpr (k_kernel_qemu_debug) {
-        ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
-    }
-    if constexpr (k_kernel_stack_protector) {
-        dmesg("core: SSP initialised with guard value {:h}", __stack_chk_guard);
-    }
-
     dmesg("core: boot_info = {}", boot_info);
     dmesg("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
     dmesg("core: rsdp = {}", boot_info->rsdp);
+    if constexpr (k_kernel_stack_protector) {
+        dmesg("core: Stack protector initialised");
+    }
 
     MemoryManager::initialise(boot_info);
     Processor::initialise();
@@ -199,7 +204,7 @@ extern "C" void kmain(BootInfo *boot_info) {
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely
     // start kernel threads, and so that the current stack we are using is no longer in use, meaning we can reclaim the
     // memory.
-    auto kernel_init_thread = Thread::create_kernel(&kernel_init, ThreadPriority::Normal);
+    auto kernel_init_thread = Thread::create_kernel(&kernel_init, ThreadPriority::Normal, {});
     kernel_init_thread->register_state().rdi = reinterpret_cast<uintptr_t>(boot_info);
     kernel_init_thread->register_state().rsi = reinterpret_cast<uintptr_t>(xsdt);
 

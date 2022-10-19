@@ -11,6 +11,9 @@ SECTIONS {
         k_interrupt_stubs_start = .;
         KEEP(*(.interrupt_stubs))
         k_interrupt_stubs_end = .;
+        k_user_access_start = .;
+        KEEP(*(.user_access))
+        k_user_access_end = .;
         *(.text*)
     }
 

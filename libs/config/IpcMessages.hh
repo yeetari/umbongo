@@ -1,8 +1,8 @@
 #pragma once
 
+#include <ipc/Decoder.hh>
+#include <ipc/Encoder.hh>
 #include <ipc/Message.hh>
-#include <ipc/MessageDecoder.hh>
-#include <ipc/MessageEncoder.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
 #include <ustd/Types.hh>

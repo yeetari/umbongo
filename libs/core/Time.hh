@@ -5,6 +5,6 @@
 namespace core {
 
 void sleep(size_t ns);
-size_t time();
+size_t uptime();
 
 } // namespace core

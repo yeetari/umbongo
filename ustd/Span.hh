@@ -28,7 +28,7 @@ public:
 
     // Allow implicit conversion of `Span<T>` to `Span<void>`.
     constexpr operator Span<void>() const requires(!is_const<T>) { return {data(), size_bytes()}; }
-    constexpr operator Span<const void>() const { return {data(), size_bytes()}; }
+    constexpr operator Span<const T>() const { return {data(), size_bytes()}; }
 
     constexpr T *begin() const { return m_data; }
     constexpr T *end() const { return m_data + m_size; }
@@ -44,7 +44,7 @@ public:
 template <typename T>
 template <typename U>
 constexpr Span<U> Span<T>::as() const {
-    return {static_cast<U *>(m_data), m_size};
+    return {reinterpret_cast<U *>(m_data), m_size};
 }
 
 template <typename T>
@@ -55,6 +55,7 @@ constexpr typename Span<T>::template const_t<uint8_t> *Span<T>::byte_offset(size
 template <typename T>
 template <typename U>
 constexpr U &Span<T>::operator[](size_t index) const requires(!is_void) {
+    ASSERT(index < m_size);
     return begin()[index];
 }
 
