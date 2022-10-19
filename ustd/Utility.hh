@@ -40,6 +40,10 @@ using remove_cv = typename detail::RemoveCv<T>::type;
 template <typename T>
 using remove_ref = typename detail::RemoveRef<T>::type;
 
+// TODO: Actually do the handling for arrays and functions.
+template <typename T>
+using decay = remove_cv<remove_ref<T>>;
+
 template <typename T>
 T declval();
 
