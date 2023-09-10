@@ -1,0 +1,9 @@
+subdirs = [
+    "config",
+    "console",
+    "log",
+    "system",
+    "usb",
+]
+
+ld_flags = "-Wl,-dynamic-linker,/bin/dynamic-linker"

@@ -1,5 +1,4 @@
 #include <boot/BootInfo.hh>
-#include <kernel/Config.hh>
 #include <kernel/Console.hh>
 #include <kernel/Dmesg.hh>
 #include <kernel/Font.hh>
@@ -136,12 +135,9 @@ extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
     DmesgDevice::early_initialise(boot_info);
     dmesg("core: Using font {} {}", g_font.name(), g_font.style());
-    if constexpr (k_kernel_qemu_debug) {
-        ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
-    }
-    if constexpr (k_kernel_stack_protector) {
-        dmesg("core: SSP initialised with guard value {:h}", __stack_chk_guard);
-    }
+#ifdef KERNEL_QEMU_DEBUG
+    ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
+#endif
 
     dmesg("core: boot_info = {}", boot_info);
     dmesg("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);

@@ -1,0 +1,7 @@
+[[executable]]
+name = "dynamic-linker"
+deps = ["core", "log", "ipc", "ustd"]
+ld_flags = "-Wl,-no-dynamic-linker"
+sources = [
+    "main.cc",
+]

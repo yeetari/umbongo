@@ -1,0 +1,8 @@
+[[executable]]
+name = "mkfont"
+no_inherit = true
+cxx_flags = "-I/usr/include/freetype2"
+ld_flags = "-lfreetype"
+sources = [
+    "mkfont.cc",
+]

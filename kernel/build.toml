@@ -1,0 +1,65 @@
+[[command]]
+command = "$build_root/tools/mkfont $root/FantasqueSansMono.ttf $build_root/kernel/Font.cc 24"
+deps = ["mkfont"]
+output = "Font.cc"
+
+[[library]]
+name = "kernel-asm"
+type = "object"
+sources = [
+    "cpu/cpu.asm",
+    "cpu/interrupts.asm",
+    "cpu/smp.asm",
+]
+
+[[executable]]
+name = "kernel"
+deps = [
+    "kernel-asm",
+    "ustd-no-sse",
+]
+
+cxx_flags = "-ffreestanding -mno-red-zone -mno-sse"
+ld_flags = "-T$root/kernel/linker.ld -no-pie"
+sources = [
+    "acpi/ApicTable.cc",
+    "acpi/PciTable.cc",
+    "acpi/RootTable.cc",
+    "acpi/Table.cc",
+    "cpu/LocalApic.cc",
+    "cpu/Processor.cc",
+    "dev/DevFs.cc",
+    "dev/Device.cc",
+    "dev/DmesgDevice.cc",
+    "dev/FramebufferDevice.cc",
+    "fs/FileHandle.cc",
+    "fs/Inode.cc",
+    "fs/InodeFile.cc",
+    "fs/RamFs.cc",
+    "fs/Vfs.cc",
+    "intr/InterruptManager.cc",
+    "intr/IoApic.cc",
+    "ipc/DoubleBuffer.cc",
+    "ipc/Pipe.cc",
+    "ipc/ServerSocket.cc",
+    "ipc/Socket.cc",
+    "mem/Heap.cc",
+    "mem/MemoryManager.cc",
+    "mem/PhysicalPage.cc",
+    "mem/Region.cc",
+    "mem/VirtSpace.cc",
+    "pci/Enumerate.cc",
+    "pci/Function.cc",
+    "proc/Process.cc",
+    "proc/Scheduler.cc",
+    "proc/Thread.cc",
+    "proc/ThreadBlocker.cc",
+    "time/Hpet.cc",
+    "time/TimeManager.cc",
+    "Console.cc",
+    "Dmesg.cc",
+    "Font.cc",
+    "kmain.cc",
+    "Syscalls.cc",
+    "UbSan.cc",
+]

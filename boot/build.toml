@@ -1,0 +1,22 @@
+[[executable]]
+name = "bootloader"
+deps = [
+    "ustd-uefi",
+]
+
+cxx_flags = """\
+-ffreestanding \
+-fshort-wchar \
+-mno-red-zone \
+-mno-sse \
+-target x86_64-unknown-windows \
+"""
+
+ld_flags = """\
+-Wl,-entry:efi_main \
+-Wl,-subsystem:efi_application \
+"""
+
+sources = [
+    "boot.cc",
+]

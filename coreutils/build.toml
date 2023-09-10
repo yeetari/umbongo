@@ -1,0 +1,31 @@
+ld_flags = "-Wl,-dynamic-linker,/bin/dynamic-linker"
+
+[[executable]]
+name = "cat"
+deps = ["core", "log", "ipc", "ustd"]
+sources = ["cat.cc"]
+
+[[executable]]
+name = "ls"
+deps = ["core", "log", "ipc", "ustd"]
+sources = ["ls.cc"]
+
+[[executable]]
+name = "lspci"
+deps = ["core", "log", "ipc", "ustd"]
+sources = ["lspci.cc"]
+
+[[executable]]
+name = "syscfg"
+deps = ["config", "core", "log", "ipc", "ustd"]
+sources = ["syscfg.cc"]
+
+[[executable]]
+name = "te"
+deps = ["console", "core", "log", "ipc", "ustd"]
+sources = ["te.cc"]
+
+[[executable]]
+name = "yes"
+deps = ["core", "log", "ipc", "ustd"]
+sources = ["yes.cc"]

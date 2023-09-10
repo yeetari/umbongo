@@ -1,0 +1,29 @@
+[[library]]
+name = "posix-asm"
+type = "object"
+sources = [
+    "setjmp.asm",
+]
+
+[[library]]
+name = "posix"
+deps = ["posix-asm"]
+cxx_flags = "-I$root/libs/posix"
+sources = [
+    "sys/stat.cc",
+    "sys/wait.cc",
+    "assert.cc",
+    "ctype.cc",
+    "fcntl.cc",
+    "init.cc",
+    "locale.cc",
+    "math.cc",
+    "setjmp.cc",
+    "signal.cc",
+    "stdio.cc",
+    "stdlib.cc",
+    "string.cc",
+    "time.cc",
+    "unistd.cc",
+    "utime.cc",
+]

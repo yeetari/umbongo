@@ -1,0 +1,12 @@
+[[executable]]
+name = "shell"
+deps = ["core", "log", "ipc", "ustd"]
+ld_flags = "-Wl,-dynamic-linker,/bin/dynamic-linker"
+sources = [
+    "Ast.cc",
+    "Lexer.cc",
+    "LineEditor.cc",
+    "main.cc",
+    "Parser.cc",
+    "Token.cc",
+]

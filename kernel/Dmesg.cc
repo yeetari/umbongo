@@ -1,6 +1,5 @@
 #include <kernel/Dmesg.hh>
 
-#include <kernel/Config.hh>
 #include <kernel/Console.hh>
 #include <kernel/Port.hh>
 #include <kernel/SpinLock.hh>
@@ -27,9 +26,9 @@ void dmesg_unlock() {
 
 void dmesg_put_char(char ch) {
     DmesgDevice::put_char(ch);
-    if constexpr (k_kernel_qemu_debug) {
-        port_write(0xe9, ch);
-    }
+#ifdef KERNEL_QEMU_DEBUG
+    port_write(0xe9, ch);
+#endif
     if (g_console_enabled) {
         Console::put_char(ch);
     }

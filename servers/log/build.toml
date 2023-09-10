@@ -1,0 +1,6 @@
+[[executable]]
+name = "log-server"
+deps = ["core", "log", "ipc", "ustd"]
+sources = [
+    "main.cc",
+]

@@ -1,0 +1,8 @@
+subdirs = [
+    "config",
+    "console",
+    "core",
+    "ipc",
+    "log",
+    "posix",
+]

@@ -1,0 +1,22 @@
+sources = [
+    "Builtin.cc",
+    "String.cc",
+    "StringBuilder.cc",
+    "StringView.cc",
+]
+
+[[library]]
+name = "ustd"
+
+[[library]]
+name = "ustd-no-sse"
+cxx_flags = "-mno-sse"
+
+[[library]]
+name = "ustd-uefi"
+cxx_flags = """\
+-fshort-wchar \
+-mno-red-zone \
+-mno-sse \
+-target x86_64-unknown-windows \
+"""

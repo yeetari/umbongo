@@ -1,0 +1,12 @@
+[[executable]]
+name = "usb-server"
+deps = ["config", "core", "log", "ipc", "ustd"]
+sources = [
+    "Device.cc",
+    "Endpoint.cc",
+    "HostController.cc",
+    "KeyboardDevice.cc",
+    "main.cc",
+    "Port.cc",
+    "TrbRing.cc",
+]

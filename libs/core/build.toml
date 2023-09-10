@@ -1,0 +1,15 @@
+[[library]]
+name = "core"
+sources = [
+    "Directory.cc",
+    "Error.cc",
+    "EventLoop.cc",
+    "File.cc",
+    "FileSystem.cc",
+    "Heap.cc",
+    "Pipe.cc",
+    "Process.cc",
+    "start.cc",
+    "Time.cc",
+    "Timer.cc",
+]

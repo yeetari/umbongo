@@ -1,0 +1,78 @@
+subdirs = [
+    "boot",
+    "coreutils",
+    "dynamic-linker",
+    "kernel",
+    "libs",
+    "servers",
+    "shell",
+    "tools",
+    "ustd",
+]
+
+# TODO: Don't pass -ffreestanding here.
+cxx_flags = """\
+-std=c++20 \
+-fcolor-diagnostics \
+-fno-builtin-bcmp \
+-fno-exceptions \
+-fno-rtti \
+-nostdinc \
+-nostdinc++ \
+-nostdlib \
+-I$root \
+-I$root/libs \
+-Wno-unused-command-line-argument \
+-ffreestanding \
+"""
+
+ld_flags = "-fuse-ld=lld"
+
+[preset.debug]
+
+[preset.release]
+cxx_flags = "-DNDEBUG -O2 -fdata-sections -ffunction-sections"
+ld_flags="-Wl,--gc-sections -s"
+
+[preset.release-small]
+cxx_flags = "-DNDEBUG -Oz -fdata-sections -ffunction-sections"
+ld_flags = "-Wl,--gc-sections -s"
+
+[[phony]]
+name = "sysroot"
+deps = ["all"]
+commands = [
+    "cp -a $root/sysroot $build_root",
+    "mkdir -p sysroot/EFI/BOOT sysroot/bin sysroot/include sysroot/lib",
+    "cp -a boot/bootloader sysroot/EFI/BOOT/BOOTX64.EFI",
+    "cp -a coreutils/cat sysroot/bin/",
+    "cp -a coreutils/ls sysroot/bin/",
+    "cp -a coreutils/lspci sysroot/bin/",
+    "cp -a coreutils/syscfg sysroot/bin/",
+    "cp -a coreutils/te sysroot/bin/",
+    "cp -a coreutils/yes sysroot/bin/",
+    "cp -a dynamic-linker/dynamic-linker sysroot/bin/",
+    "cp -a kernel/kernel sysroot/",
+    "cp -a libs/config/libconfig.a sysroot/lib/",
+    "cp -a libs/console/libconsole.a sysroot/lib/",
+    "cp -a libs/core/libcore.a sysroot/lib/",
+    "cp -a libs/ipc/libipc.a sysroot/lib/",
+    "cp -a libs/log/liblog.a sysroot/lib/",
+    "cp -a libs/posix/libposix.a sysroot/lib/",
+    "cp -a servers/config/config-server sysroot/bin/",
+    "cp -a servers/console/console-server sysroot/bin/",
+    "cp -a servers/log/log-server sysroot/bin/",
+    "cp -a servers/system/system-server sysroot/bin/",
+    "cp -a servers/usb/usb-server sysroot/bin/",
+    "cp -a shell/shell sysroot/bin/",
+    "cp -a ustd/libustd.a sysroot/lib/",
+    "pushd $root/libs/posix && find . -name '*.h' -exec cp --parents -a {} $build_root/sysroot/include/ \\; && popd",
+]
+
+[[phony]]
+name = "run"
+deps = ["sysroot"]
+uses_console = true
+commands = [
+    "$root/tools/run_qemu.bash $root/OVMF.fd $build_root/sysroot",
+]
