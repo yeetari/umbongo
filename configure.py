@@ -95,13 +95,13 @@ class Context(NinjaWriter):
         output_file = output_path.open('w')
         super().__init__(output_file, width=120)
 
-    def build_tree(self, dir_path: Path, flags: dict[str, str]):
+    def build_tree(self, dir_path: Path, flags: dict[str, str], indent: int):
         # Add toml path to list for the auto-reconfigure rule.
         toml_path = dir_path.joinpath('build.toml')
         self.toml_paths.append(f'$root/{str(toml_path)}')
 
         # Load and parse toml.
-        print(f'Building {str(toml_path)}')
+        print(f'{" " * indent}Building {str(toml_path)}')
         with self.source_root.joinpath(toml_path).open('rb') as file:
             toml = tomllib.load(file)
 
@@ -121,7 +121,7 @@ class Context(NinjaWriter):
 
         # Recurse through subdirectories.
         for subdir in toml.get('subdirs', []):
-            self.build_tree(dir_path.joinpath(subdir), flags.copy())
+            self.build_tree(dir_path.joinpath(subdir), flags.copy(), indent + 2)
 
         # Get sources global to each target in this toml file.
         sources = toml.get('sources', [])
@@ -251,7 +251,7 @@ def main():
         'asm': '',
         'cxx': '',
         'ld': '',
-    })
+    }, 0)
 
     context.targets.append(Target(
         name='all',
