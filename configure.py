@@ -81,14 +81,16 @@ class Context(NinjaWriter):
     source_root: Path
     build_root: Path
     preset: str
+    enabled_options: list[str]
 
     toml_paths: list[str] = []
     targets: list[Target] = []
 
-    def __init__(self, source_root, build_root, preset):
+    def __init__(self, source_root, build_root, preset, enabled_options):
         self.source_root = source_root
         self.build_root = build_root
         self.preset = preset
+        self.enabled_options = enabled_options
 
         self.build_root.mkdir(exist_ok=True)
         output_path = self.build_root.joinpath('build.ninja')
@@ -118,6 +120,12 @@ class Context(NinjaWriter):
                 print(f'No preset {self.preset}')
                 sys.exit(1)
             add_flags(flags, presets[self.preset])
+
+        # Add flags for any enabled options.
+        options = toml.get('option', {})
+        for enabled_option in filter(lambda o: o in options, self.enabled_options):
+            print(f'{" " * indent}  Enabling option \'{enabled_option}\'')
+            add_flags(flags, options[enabled_option])
 
         # Recurse through subdirectories.
         for subdir in toml.get('subdirs', []):
@@ -237,15 +245,17 @@ class Context(NinjaWriter):
 
 
 def main():
-    arg_parser = argparse.ArgumentParser(prog='Configure', description='Configure umbongo build')
+    arg_parser = argparse.ArgumentParser(prog=sys.argv[0], description='Configure umbongo build')
     arg_parser.add_argument('-B', default='build', dest='build_dir')
     arg_parser.add_argument('-p', '--preset', default='debug')
+    arg_parser.add_argument('-e', '--enable', action='append', help='Enable option', default=[])
     args = arg_parser.parse_args()
 
     context = Context(
         source_root=Path(__file__).parent,
         build_root=Path(args.build_dir),
         preset=args.preset,
+        enabled_options=args.enable,
     )
     context.build_tree(Path('.'), {
         'asm': '',
@@ -307,9 +317,10 @@ def main():
     context.generate_targets()
 
     # Write auto-reconfigure rule.
+    option_command_line = ' '.join([f'-e {option}' for option in context.enabled_options])
     context.comment('Regenerate build files if python or toml changes.')
     context.rule('configure',
-                 command='$root/configure.py -B $build_root -p $build_preset',
+                 command=f'$root/configure.py -B $build_root -p $build_preset {option_command_line}',
                  description='Reconfiguring...',
                  generator=1)
     context.build('build.ninja', 'configure', pool='console',

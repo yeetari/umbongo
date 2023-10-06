@@ -38,6 +38,12 @@ ld_flags="-Wl,--gc-sections -s"
 cxx_flags = "-DNDEBUG -Oz -fdata-sections -ffunction-sections"
 ld_flags = "-Wl,--gc-sections -s"
 
+[option.assertions]
+cxx_flags = "-DASSERTIONS"
+
+[option.assertions_pedantic]
+cxx_flags = "-DASSERTIONS_PEDANTIC"
+
 [[phony]]
 name = "sysroot"
 deps = ["all"]

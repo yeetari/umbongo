@@ -63,3 +63,12 @@ sources = [
     "Syscalls.cc",
     "UbSan.cc",
 ]
+
+[option.kernel_qemu_debug]
+cxx_flags = "-DKERNEL_QEMU_DEBUG"
+
+[option.kernel_stack_protector]
+cxx_flags = "-fstack-protector-strong -mstack-protector-guard=global"
+
+[option.kernel_ubsan]
+cxx_flags = "-fsanitize=address -fno-sanitize=function"
