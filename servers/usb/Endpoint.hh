@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Common.hh"
-#include "Error.hh"
-
 #include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -11,6 +8,10 @@
 
 class Device;
 class TrbRing;
+enum class DeviceError;
+enum class EndpointType : uint8_t;
+enum class HostError;
+enum class TransferType : uint8_t;
 
 enum class ControlRecipient : uint8_t {
     Device = 0,

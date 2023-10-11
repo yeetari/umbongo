@@ -1,16 +1,16 @@
 #include <kernel/dev/DevFs.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/dev/Device.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeType.hh>
 #include <kernel/fs/Vfs.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Numeric.hh> // IWYU pragma: keep
+#include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/StringView.hh>

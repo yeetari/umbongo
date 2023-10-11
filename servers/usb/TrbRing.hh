@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Common.hh"
-
 #include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
+
+enum class TransferType : uint8_t;
 
 enum class TrbType : uint8_t {
     // Transfers.

@@ -6,6 +6,7 @@
 #include <ipc/Message.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/MessageEncoder.hh>
+#include <kernel/SysError.hh>
 #include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>

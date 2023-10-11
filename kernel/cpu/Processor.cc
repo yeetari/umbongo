@@ -16,7 +16,7 @@
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/ScopeGuard.hh> // IWYU pragma: keep
+#include <ustd/ScopeGuard.hh>
 #include <ustd/Types.hh>
 
 extern uint8_t k_interrupt_stubs_start;

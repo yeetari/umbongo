@@ -1,10 +1,12 @@
 #pragma once
 
-#include <kernel/intr/InterruptType.hh>
 #include <ustd/Function.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
 namespace kernel {
+
+enum class InterruptPolarity;
+enum class InterruptTriggerMode;
 
 struct InterruptManager {
     static uint8_t allocate(ustd::Function<void()> &&handler);

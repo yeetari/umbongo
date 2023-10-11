@@ -1,6 +1,7 @@
 #include <kernel/ipc/ServerSocket.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/ipc/Socket.hh>

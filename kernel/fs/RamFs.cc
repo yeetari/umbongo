@@ -1,14 +1,13 @@
 #include <kernel/fs/RamFs.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
-#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Numeric.hh> // IWYU pragma: keep
+#include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
@@ -18,6 +17,8 @@
 #include <ustd/Vector.hh>
 
 namespace kernel {
+
+class File;
 
 void RamFs::mount(Inode *parent, Inode *host) {
     ASSERT(!m_root_inode);

@@ -9,7 +9,6 @@
 #include "Port.hh"
 
 #include <core/Error.hh>
-#include <kernel/SysError.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>

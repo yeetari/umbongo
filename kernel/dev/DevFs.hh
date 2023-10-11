@@ -2,13 +2,9 @@
 
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/fs/File.hh> // IWYU pragma: keep
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeType.hh>
 #include <ustd/Optional.hh>
-#include <ustd/SharedPtr.hh> // IWYU pragma: keep
-#include <ustd/Span.hh>      // IWYU pragma: keep
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>

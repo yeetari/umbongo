@@ -2,12 +2,11 @@
 
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
-#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Atomic.hh>
-#include <ustd/Optional.hh> // IWYU pragma: keep
+#include <ustd/Optional.hh>
 #include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -17,8 +16,9 @@
 namespace kernel {
 
 class Inode;
-struct Scheduler;
 class Thread;
+enum class ThreadPriority : uint32_t;
+struct Scheduler;
 
 class Process : public ustd::Shareable<Process> {
     friend Scheduler;

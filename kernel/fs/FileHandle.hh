@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>

@@ -1,10 +1,10 @@
 #include <kernel/fs/Inode.hh>
 
 #include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
-#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>

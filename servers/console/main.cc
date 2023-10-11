@@ -20,7 +20,6 @@
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
-#include <ustd/Vector.hh>
 
 size_t main(size_t, const char **) {
     log::initialise("console-server");

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/SyscallTypes.hh>
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 

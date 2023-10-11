@@ -2,7 +2,7 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Concepts.hh> // IWYU pragma: keep
+#include <ustd/Concepts.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>

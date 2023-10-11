@@ -66,9 +66,7 @@ template <>
 inline constexpr bool is_integral<uint64_t> = true;
 
 template <typename T>
-inline constexpr bool is_move_constructible = requires(T &&t) {
-    new T(move(t));
-};
+inline constexpr bool is_move_constructible = requires(T &&t) { new T(move(t)); };
 
 template <typename>
 inline constexpr bool is_pointer = false;
@@ -98,9 +96,7 @@ template <typename T>
 inline constexpr bool is_trivially_destructible = __is_trivially_destructible(T);
 
 template <typename T, typename U>
-inline constexpr bool is_convertible_to = is_same<T, U> || requires(T obj) {
-    static_cast<U>(obj);
-};
+inline constexpr bool is_convertible_to = is_same<T, U> || requires(T obj) { static_cast<U>(obj); };
 
 template <typename E>
 using underlying_type = __underlying_type(E);

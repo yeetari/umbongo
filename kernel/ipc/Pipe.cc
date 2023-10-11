@@ -1,6 +1,7 @@
 #include <kernel/ipc/Pipe.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/ipc/DoubleBuffer.hh>

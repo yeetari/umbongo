@@ -1,9 +1,12 @@
 #include <kernel/intr/IoApic.hh>
 
-#include <kernel/intr/InterruptType.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {
+
+enum class InterruptPolarity;
+enum class InterruptTriggerMode;
+
 namespace {
 
 constexpr size_t k_reg_id = 0x0;

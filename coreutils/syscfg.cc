@@ -2,6 +2,7 @@
 #include <core/Print.hh>
 #include <ustd/Algorithm.hh>
 #include <ustd/Optional.hh>
+#include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>

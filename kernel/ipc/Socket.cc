@@ -1,6 +1,5 @@
 #include <kernel/ipc/Socket.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
 #include <kernel/SysResult.hh>
 #include <kernel/ipc/DoubleBuffer.hh>
 #include <ustd/SharedPtr.hh>

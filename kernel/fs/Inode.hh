@@ -3,13 +3,18 @@
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
-#include <kernel/fs/InodeType.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {
+
+enum class InodeType {
+    AnonymousFile,
+    Directory,
+    RegularFile,
+};
 
 class Inode {
     Inode *const m_parent;

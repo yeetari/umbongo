@@ -2,7 +2,7 @@
 
 #include <boot/BootInfo.hh>
 #include <kernel/Dmesg.hh>
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/mem/Heap.hh>

@@ -3,9 +3,7 @@
 namespace ustd::detail {
 
 template <typename T>
-concept IsRefWrapper = requires {
-    T::k_is_ref_wrapper;
-};
+concept IsRefWrapper = requires { T::k_is_ref_wrapper; };
 
 template <bool>
 struct Selector;

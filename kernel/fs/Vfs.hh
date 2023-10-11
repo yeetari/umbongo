@@ -1,9 +1,8 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
-#include <kernel/fs/InodeType.hh>
-#include <ustd/SharedPtr.hh> // IWYU pragma: keep
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
+#include <ustd/SharedPtr.hh>      // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
@@ -12,6 +11,7 @@ namespace kernel {
 class File;
 class FileSystem;
 class Inode;
+enum class InodeType;
 
 struct Vfs {
     static void initialise();

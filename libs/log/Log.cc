@@ -3,7 +3,6 @@
 #include <core/Syscall.hh>
 #include <ipc/Client.hh>
 #include <log/IpcMessages.hh>
-#include <log/Level.hh>
 #include <ustd/Assert.hh>
 #include <ustd/StringView.hh>
 
@@ -13,6 +12,8 @@ namespace {
 ipc::Client *s_client = nullptr;
 
 } // namespace
+
+enum class Level;
 
 void initialise(ustd::StringView name) {
     ASSERT(s_client == nullptr);

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Device.hh"
-#include "Error.hh"
 
 #include <core/Pipe.hh>
 #include <ustd/Array.hh>
@@ -15,6 +14,8 @@ class EventLoop;
 class Timer;
 
 } // namespace core
+
+enum class DeviceError;
 
 class KeyboardDevice final : public Device {
     uint8_t *m_dma_buffer{nullptr};

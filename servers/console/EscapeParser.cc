@@ -3,7 +3,6 @@
 #include "Terminal.hh"
 
 #include <log/Log.hh>
-#include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
 bool EscapeParser::parse(char ch, Terminal *&terminal) {

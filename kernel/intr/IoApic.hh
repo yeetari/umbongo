@@ -1,9 +1,11 @@
 #pragma once
 
-#include <kernel/intr/InterruptType.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {
+
+enum class InterruptPolarity;
+enum class InterruptTriggerMode;
 
 class IoApic {
     volatile uint32_t *const m_base{nullptr};

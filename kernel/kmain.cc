@@ -2,7 +2,6 @@
 #include <kernel/Console.hh>
 #include <kernel/Dmesg.hh>
 #include <kernel/Font.hh>
-#include <kernel/Port.hh>
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/HpetTable.hh>
 #include <kernel/acpi/InterruptController.hh>
@@ -17,7 +16,6 @@
 #include <kernel/dev/FramebufferDevice.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeType.hh>
 #include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/intr/InterruptManager.hh>
@@ -26,7 +24,6 @@
 #include <kernel/pci/Enumerate.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -35,6 +32,10 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
+
+#ifdef KERNEL_QEMU_DEBUG
+#include <kernel/Port.hh>
+#endif
 
 extern void (*k_ctors_start)();
 extern void (*k_ctors_end)();

@@ -15,7 +15,6 @@
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
-#include <ustd/Vector.hh>
 
 namespace {
 

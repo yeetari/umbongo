@@ -15,13 +15,12 @@
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/ThreadBlocker.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Atomic.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
-#include <ustd/ScopeGuard.hh> // IWYU pragma: keep
+#include <ustd/ScopeGuard.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -102,7 +101,7 @@ Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), 
 }
 
 Thread::~Thread() {
-    delete[](m_kernel_stack - k_kernel_stack_size);
+    delete[] (m_kernel_stack - k_kernel_stack_size);
     operator delete[](m_simd_region, ustd::align_val_t(64));
     m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
     if (m_prev != nullptr) {

@@ -81,9 +81,7 @@ public:
         return m_entries[index].entry();
     }
 
-    const ustd::Array<PageLevelEntry<Entry>, 512> &entries() const {
-        return m_entries;
-    }
+    const ustd::Array<PageLevelEntry<Entry>, 512> &entries() const { return m_entries; }
 };
 
 using Page = uintptr_t;                                 // PTE

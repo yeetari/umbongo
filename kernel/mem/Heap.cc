@@ -1,6 +1,6 @@
 #include <kernel/mem/Heap.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/mem/MemoryManager.hh>
 #include <ustd/Assert.hh>

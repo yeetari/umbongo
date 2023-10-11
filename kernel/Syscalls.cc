@@ -1,7 +1,8 @@
 #include <kernel/proc/Process.hh>
 
 #include <kernel/Dmesg.hh>
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
@@ -11,7 +12,6 @@
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
-#include <kernel/fs/InodeType.hh>
 #include <kernel/fs/RamFs.hh>
 #include <kernel/fs/Vfs.hh>
 #include <kernel/ipc/DoubleBuffer.hh>
@@ -24,11 +24,9 @@
 #include <kernel/proc/Scheduler.hh>
 #include <kernel/proc/Thread.hh>
 #include <kernel/proc/ThreadBlocker.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Optional.hh>
-#include <ustd/Result.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>

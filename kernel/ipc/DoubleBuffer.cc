@@ -1,6 +1,7 @@
 #include <kernel/ipc/DoubleBuffer.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>

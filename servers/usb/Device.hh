@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Common.hh"
-#include "Error.hh"
-
 #include <core/Error.hh>
 #include <ustd/Function.hh> // IWYU pragma: keep
 #include <ustd/Result.hh>
@@ -12,10 +9,14 @@
 #include <ustd/Vector.hh>
 
 class Endpoint;
-struct EndpointContext;
 class HostController;
 class Port;
 class TrbRing;
+enum class DescriptorType : uint8_t;
+enum class DeviceError;
+enum class HostError;
+enum class SlotState : uint8_t;
+struct EndpointContext;
 
 class Device {
     friend Endpoint;

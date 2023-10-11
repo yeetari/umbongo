@@ -1,6 +1,7 @@
 #include <kernel/proc/ThreadBlocker.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/SyscallTypes.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>

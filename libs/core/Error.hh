@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/SysError.hh>
+#include <kernel/SysError.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
 
 namespace core {

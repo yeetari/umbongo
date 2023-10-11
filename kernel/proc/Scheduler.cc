@@ -8,7 +8,6 @@
 #include <kernel/mem/MemoryManager.hh>
 #include <kernel/proc/Process.hh>
 #include <kernel/proc/Thread.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <kernel/time/TimeManager.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>

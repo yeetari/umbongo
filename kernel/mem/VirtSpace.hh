@@ -3,7 +3,6 @@
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
-#include <ustd/Array.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>

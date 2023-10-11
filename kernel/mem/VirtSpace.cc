@@ -1,6 +1,7 @@
 #include <kernel/mem/VirtSpace.hh>
 
-#include <kernel/ScopedLock.hh> // IWYU pragma: keep
+#include <kernel/ScopedLock.hh>
+#include <kernel/SpinLock.hh>
 #include <kernel/cpu/Paging.hh>
 #include <kernel/mem/Region.hh>
 #include <ustd/Assert.hh>

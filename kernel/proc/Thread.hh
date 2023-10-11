@@ -3,7 +3,6 @@
 #include <kernel/SysResult.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/proc/Scheduler.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Assert.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/String.hh> // IWYU pragma: keep
@@ -17,6 +16,11 @@ namespace kernel {
 
 class Process;
 class ThreadBlocker;
+
+enum class ThreadPriority : uint32_t {
+    Idle = 0,
+    Normal = 1,
+};
 
 enum class ThreadState {
     Alive,

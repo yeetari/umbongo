@@ -4,7 +4,6 @@
 #include "Descriptor.hh"
 #include "Device.hh"
 #include "Endpoint.hh"
-#include "Error.hh"
 #include "TrbRing.hh"
 
 #include <config/Config.hh>
@@ -24,6 +23,8 @@
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
 #include <ustd/Utility.hh>
+
+enum class DeviceError;
 
 namespace {
 

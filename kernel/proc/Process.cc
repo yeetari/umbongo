@@ -2,9 +2,7 @@
 
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/fs/Vfs.hh>
-#include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
 #include <kernel/proc/Thread.hh>
-#include <kernel/proc/ThreadPriority.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -18,6 +16,8 @@ namespace {
 size_t s_pid_counter = 0;
 
 } // namespace
+
+class VirtSpace;
 
 Process::Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space)
     : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()), m_virt_space(ustd::move(virt_space)) {}

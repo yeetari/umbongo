@@ -3,13 +3,12 @@
 #include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/SyscallTypes.hh>
-#include <kernel/fs/File.hh> // IWYU pragma: keep
+#include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
-#include <kernel/fs/InodeType.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Optional.hh>
-#include <ustd/SharedPtr.hh> // IWYU pragma: keep
+#include <ustd/SharedPtr.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>

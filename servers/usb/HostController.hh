@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Error.hh"
 #include "Port.hh" // IWYU pragma: keep
 
 #include <core/Error.hh>
@@ -20,8 +19,10 @@ class EventLoop;
 } // namespace core
 
 class Device;
-struct RawTrb;
 class TrbRing;
+enum class DeviceError;
+enum class HostError;
+struct RawTrb;
 
 struct [[gnu::packed]] CapRegs {
     uint8_t cap_length;

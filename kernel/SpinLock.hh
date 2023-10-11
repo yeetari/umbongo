@@ -20,13 +20,9 @@ public:
             asm volatile("pause");
         }
     }
-    void unlock() {
-        m_locked.store(false, ustd::MemoryOrder::Relaxed);
-    }
 
-    bool locked() const {
-        return m_locked.load(ustd::MemoryOrder::Relaxed);
-    }
+    void unlock() { m_locked.store(false, ustd::MemoryOrder::Relaxed); }
+    bool locked() const { return m_locked.load(ustd::MemoryOrder::Relaxed); }
 };
 
 } // namespace kernel

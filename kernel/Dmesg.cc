@@ -1,11 +1,14 @@
 #include <kernel/Dmesg.hh>
 
 #include <kernel/Console.hh>
-#include <kernel/Port.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/dev/DmesgDevice.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
+
+#ifdef KERNEL_QEMU_DEBUG
+#include <kernel/Port.hh>
+#endif
 
 namespace kernel {
 namespace {
