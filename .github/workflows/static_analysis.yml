@@ -4,27 +4,15 @@ jobs:
   clang-tidy:
     name: Clang Tidy
     runs-on: ubuntu-latest
-    container: ubuntu:22.04
-    env:
-      DEBIAN_FRONTEND: noninteractive
+    container: ghcr.io/yeetari/umbongo:master
     steps:
-      - name: Update package lists
-        run: apt update -qq
-      - name: Install tools
-        run: >-
-          apt install -y
-          clang
-          cmake
-          clang-tidy
-          lld
-          nasm
-          parallel
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Configure CMake
-        run: cmake . -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Configure
+        run: python3 configure.py -Bbuild
       - name: Run clang-tidy
         run: |
+          ninja -C build -t compdb > build/compile_commands.json
           find . \
             -name '*.cc' \
             -and -not -name 'mkfont.cc' \

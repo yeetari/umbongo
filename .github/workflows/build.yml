@@ -4,32 +4,15 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: ubuntu:22.04
-    env:
-      DEBIAN_FRONTEND: noninteractive
+    container: ghcr.io/yeetari/umbongo:master
     steps:
-      - name: Update package lists
-        run: apt update -qq
-      - name: Install tools
-        run: >-
-          apt install -y
-          clang
-          cmake
-          libfreetype-dev
-          lld
-          nasm
-          ninja-build
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Configure CMake
+      - name: Configure
         run: >-
-          cmake .
+          python3 configure.py
           -Bbuild
-          -DBUILD_TYPE=Release
-          -DBUILD_WARNINGS=ON
-          -DENABLE_ASSERTIONS=ON
-          -DKERNEL_UBSAN=ON
-          -DLINK_TIME_OPT=ON
-          -GNinja
+          -p release
+          -e assertions
       - name: Build
-        run: cmake --build build
+        run: ninja -C build
