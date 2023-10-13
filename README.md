@@ -9,51 +9,65 @@ An x86 operating system
 
 ## Building and running
 
-### Prerequisites
+Umbongo uses an LLVM toolchain for building, along with its own build tool for generating `ninja` files. `freetype` and
+`nasm` (`yasm` should also work) will also be needed. `mtools` and `qemu` are optional and are needed for building a
+filesystem image and running in a VM respectively.
 
-Umbongo uses an LLVM toolchain for building. `cmake`, `freetype`, `nasm` (`yasm` should also work), and either `make`
-or `ninja` will also be needed. `mtools` and `qemu` are optional and are needed for building a filesystem image and
-running in a VM respectively.
+Alternatively, umbongo can be built in a reproducible docker environment ([see below](#building-in-docker)).
+
+### Installing tools and dependencies
 
 #### Gentoo
 
     emerge -n \
       app-emulation/qemu \
       dev-lang/nasm \
-      dev-util/cmake \
       dev-util/ninja \
       media-libs/freetype \
       sys-devel/clang \
       sys-devel/lld \
       sys-fs/mtools
 
-### Configuring CMake
+### Configuring the build
 
-To configure umbongo, use
+To configure umbongo, call the `configure.py` script with a preset:
 
-    ccmake . -Bbuild -GNinja
+    python3 configure.py \
+      -B build \
+      -p release \
+      -e assertions \
+      -e kernel_qemu_debug
 
-which will bring up cmake's terminal interface to allow configuration. Alternatively, options can be passed on the
-command line using `-D`:
+#### Available options
 
-    cmake . \
-      -Bbuild \
-      -DBUILD_TYPE=Release \
-      -DENABLE_ASSERTIONS=ON \
-      -GNinja
+| Option                   | Description                                      |
+|--------------------------|--------------------------------------------------|
+| `assertions`             | Enables assertions project-wide                  |
+| `assertions_pedantic`    | Enables more aggressive assertions               |
+| `kernel_qemu_debug`      | Enables kernel debug logging to port E9          |
+| `kernel_stack_protector` | Enables stack smashing protection for the kernel |
+| `kernel_ubsan`           | Enables UBSan for the kernel                     |
 
 ### Running with qemu
 
-    cmake --build build --target run
+    ninja -C build run
 
 ## Installing ports
 
 To install ports, first make sure the sysroot is up-to-date by running
 
-    cmake --build build --target install
+    ninja -C build sysroot
 
 (note that the `image` and `run` targets automatically do this)
 
 Then, run the port's `install.sh` script, passing in the build directory. For example, to install `tcc`, you would do
 
     ./ports/tcc/install.sh build
+
+## Building in docker
+
+    docker run --rm -u $(id -u) -v $(pwd):/src ghcr.io/yeetari/umbongo:master python3 /src/configure.py \
+      -B/src/build \
+      -p release \
+      -e assertions
+    docker run --rm -u $(id -u) -v $(pwd):/src ghcr.io/yeetari/umbongo:master ninja -C /src/build
