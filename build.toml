@@ -82,3 +82,13 @@ uses_console = true
 commands = [
     "$root/tools/run_qemu.bash $root/OVMF.fd $build_root/sysroot",
 ]
+
+[[phony]]
+name = "image"
+deps = ["sysroot"]
+uses_console = true
+commands = [
+    "truncate --size 28800000 $build_root/fs.img",
+    "mformat -i $build_root/fs.img -f 2880 -h 20 ::",
+    "mcopy -si $build_root/fs.img $build_root/sysroot/* ::",
+]
