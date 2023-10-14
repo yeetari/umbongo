@@ -9,10 +9,10 @@
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Format.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/ScopedChange.hh>
 #include <ustd/Span.hh>
+#include <ustd/StringBuilder.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

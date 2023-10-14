@@ -2,10 +2,11 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Concepts.hh> // IWYU pragma: keep
+#include <ustd/Concepts.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace ustd {
@@ -91,6 +92,13 @@ void StringBuilder::append(const char *fmt, const Args &...args) {
     while (*fmt != '\0') {
         m_buffer.push(*fmt++);
     }
+}
+
+template <typename... Args>
+String format(const char *fmt, Args &&...args) {
+    StringBuilder builder;
+    builder.append(fmt, forward<Args>(args)...);
+    return builder.build();
 }
 
 } // namespace ustd

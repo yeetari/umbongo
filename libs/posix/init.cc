@@ -1,8 +1,8 @@
 #include <sys/cdefs.h>
 
 #include <log/Log.hh>
-#include <ustd/Format.hh>
 #include <ustd/String.hh>
+#include <ustd/StringBuilder.hh>
 #include <ustd/Types.hh>
 
 __BEGIN_DECLS

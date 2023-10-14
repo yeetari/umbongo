@@ -5,7 +5,6 @@
 #include <core/Process.hh>
 #include <kernel/SyscallTypes.hh>
 #include <ustd/Array.hh>
-#include <ustd/Format.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringBuilder.hh>

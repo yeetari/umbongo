@@ -5,10 +5,10 @@
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
 #include <log/Log.hh>
-#include <ustd/Format.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Span.hh>
 #include <ustd/String.hh>
+#include <ustd/StringBuilder.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>

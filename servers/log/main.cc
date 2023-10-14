@@ -8,9 +8,9 @@
 #include <log/IpcMessages.hh>
 #include <log/Level.hh>
 #include <ustd/Array.hh>
-#include <ustd/Format.hh>
 #include <ustd/Optional.hh>
 #include <ustd/String.hh>
+#include <ustd/StringBuilder.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>

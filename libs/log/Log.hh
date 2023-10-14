@@ -1,7 +1,7 @@
 #pragma once
 
 #include <log/Level.hh>
-#include <ustd/Format.hh>
+#include <ustd/StringBuilder.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Utility.hh>
 
