@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

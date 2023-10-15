@@ -3,7 +3,6 @@
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Span.hh>
-#include <ustd/Traits.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
@@ -22,9 +21,7 @@ public:
     template <typename... Args>
     explicit Vector(SizeType size, Args &&...args);
     Vector(const Vector &);
-    Vector(Vector &&other)
-        : m_data(exchange(other.m_data, nullptr)), m_capacity(exchange(other.m_capacity, 0u)),
-          m_size(exchange(other.m_size, 0u)) {}
+    Vector(Vector &&);
     ~Vector();
 
     Vector &operator=(const Vector &) = delete;
@@ -73,7 +70,7 @@ public:
 };
 
 template <typename T>
-using LargeVector = Vector<T, size_t>;
+using LargeVector = Vector<T, uint64_t>;
 
 template <typename T, typename SizeType>
 template <typename... Args>
@@ -92,6 +89,13 @@ Vector<T, SizeType>::Vector(const Vector &other) {
     } else {
         __builtin_memcpy(m_data, other.data(), other.size_bytes());
     }
+}
+
+template <typename T, typename SizeType>
+Vector<T, SizeType>::Vector(Vector &&other) {
+    m_data = exchange(other.m_data, nullptr);
+    m_capacity = exchange(other.m_capacity, SizeType(0));
+    m_size = exchange(other.m_size, SizeType(0));
 }
 
 template <typename T, typename SizeType>

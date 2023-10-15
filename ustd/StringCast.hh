@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ustd/Concepts.hh>
+#include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/StringView.hh>
 
