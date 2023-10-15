@@ -29,6 +29,8 @@ VirtSpace::VirtSpace(const ustd::Vector<ustd::UniquePtr<Region>> &regions) : m_p
     }
 }
 
+VirtSpace::~VirtSpace() = default;
+
 void VirtSpace::map_4KiB(uintptr_t virt, uintptr_t phys, PageFlags flags) {
     ASSERT_PEDANTIC(virt % 4_KiB == 0);
     ASSERT_PEDANTIC(phys % 4_KiB == 0);

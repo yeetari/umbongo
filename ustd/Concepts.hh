@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ustd/Traits.hh>
+#include <ustd/Traits.hh> // IWYU pragma: keep
 
 namespace ustd {
 

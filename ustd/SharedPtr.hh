@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ustd/Assert.hh>
-#include <ustd/Shareable.hh>
+#include <ustd/Shareable.hh> // IWYU pragma: keep
 #include <ustd/Utility.hh>
 
 namespace ustd {

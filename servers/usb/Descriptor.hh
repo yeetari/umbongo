@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Common.hh"
-
 #include <ustd/Types.hh>
+
+enum class DescriptorType : uint8_t;
 
 struct DescriptorHeader {
     uint8_t length;

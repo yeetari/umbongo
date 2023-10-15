@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/mem/PhysicalPage.hh>
-#include <ustd/Optional.hh>
+#include <ustd/Optional.hh> // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>

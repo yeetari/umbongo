@@ -1,8 +1,10 @@
 #pragma once
 
-#include "Common.hh"
-
 #include <ustd/Array.hh>
+#include <ustd/Types.hh>
+
+enum class EndpointType : uint8_t;
+enum class SlotState : uint8_t;
 
 struct [[gnu::packed]] InputControlContext {
     uint32_t drop;

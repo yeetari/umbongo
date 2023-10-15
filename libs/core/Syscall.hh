@@ -5,6 +5,8 @@
 #include <kernel/SyscallTypes.hh> // IWYU pragma: export
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
+// IWYU pragma: no_include "kernel/Syscall.hh"
+// IWYU pragma: no_include "kernel/SyscallTypes.hh"
 
 namespace core {
 

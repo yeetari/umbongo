@@ -2,7 +2,7 @@
 
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
-#include <ustd/Traits.hh>
+#include <ustd/Traits.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
 namespace kernel {

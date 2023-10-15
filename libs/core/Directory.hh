@@ -5,6 +5,7 @@
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
+// IWYU pragma: no_forward_declare ustd::Function
 
 namespace core {
 

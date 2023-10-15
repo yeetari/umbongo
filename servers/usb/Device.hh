@@ -1,12 +1,13 @@
 #pragma once
 
 #include <core/Error.hh>
-#include <ustd/Function.hh> // IWYU pragma: keep
+#include <ustd/Function.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 #include <ustd/Vector.hh>
+// IWYU pragma: no_forward_declare ustd::Function
 
 class Endpoint;
 class HostController;

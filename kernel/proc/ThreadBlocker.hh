@@ -3,17 +3,16 @@
 #include <kernel/fs/File.hh>
 #include <kernel/ipc/ServerSocket.hh>
 #include <kernel/ipc/Socket.hh>
+#include <kernel/proc/Process.hh>
 #include <ustd/Optional.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
-// IWYU pragma: no_include "kernel/proc/Process.hh"
 
 namespace kernel {
 
 struct PollFd;
-class Process; // IWYU pragma: keep
 class SpinLock;
 
 class ThreadBlocker {

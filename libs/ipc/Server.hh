@@ -3,20 +3,19 @@
 #include <core/EventLoop.hh>
 #include <core/Syscall.hh>
 #include <core/Watchable.hh>
-#include <ipc/Client.hh>
-#include <ipc/MessageDecoder.hh>
-#include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Optional.hh>
-#include <ustd/Result.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Try.hh>
 #include <ustd/Types.hh>
-#include <ustd/UniquePtr.hh>
+#include <ustd/UniquePtr.hh> // IWYU pragma: keep
 #include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 namespace ipc {
+
+class MessageDecoder;
 
 template <typename ClientType>
 class Server : public core::Watchable {

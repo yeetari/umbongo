@@ -1,9 +1,10 @@
 #pragma once
 
-#include <kernel/SyscallTypes.hh>
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
 #include <ustd/String.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+#include <ustd/Utility.hh>
 #include <ustd/Vector.hh>
 
 enum class ValueKind {

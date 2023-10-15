@@ -4,6 +4,7 @@
 #include <ustd/Concepts.hh>
 #include <ustd/Span.hh>
 #include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 
 namespace ipc {
 

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <ipc/Message.hh>
-#include <ipc/MessageDecoder.hh>
 #include <ipc/MessageEncoder.hh>
-#include <log/Level.hh>
+#include <ustd/StringView.hh>
 
 namespace log {
+
+enum class Level;
 
 enum class MessageKind {
     Initialise,

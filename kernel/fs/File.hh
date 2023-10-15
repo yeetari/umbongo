@@ -1,9 +1,10 @@
 #pragma once
 
+#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
 #include <ustd/Shareable.hh>
-#include <ustd/Span.hh>
+#include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 
 namespace kernel {

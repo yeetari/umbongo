@@ -5,6 +5,7 @@
 #include <ustd/String.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/Vector.hh>
+// IWYU pragma: no_forward_declare ustd::Function
 
 namespace core {
 

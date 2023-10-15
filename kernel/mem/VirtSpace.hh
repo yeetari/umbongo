@@ -2,7 +2,6 @@
 
 #include <kernel/SpinLock.hh>
 #include <kernel/cpu/Paging.hh>
-#include <kernel/mem/Region.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Shareable.hh>
 #include <ustd/SharedPtr.hh>
@@ -12,6 +11,8 @@
 
 namespace kernel {
 
+class Region;
+enum class RegionAccess : uint8_t;
 struct MemoryManager;
 
 class VirtSpace : public ustd::Shareable<VirtSpace> {
@@ -34,7 +35,7 @@ private:
 public:
     VirtSpace(const VirtSpace &) = delete;
     VirtSpace(VirtSpace &&) = delete;
-    ~VirtSpace() = default;
+    ~VirtSpace();
 
     VirtSpace &operator=(const VirtSpace &) = delete;
     VirtSpace &operator=(VirtSpace &&) = delete;

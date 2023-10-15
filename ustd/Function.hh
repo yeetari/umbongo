@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ustd/Numeric.hh>
-#include <ustd/Traits.hh>
+#include <ustd/Traits.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 

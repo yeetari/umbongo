@@ -2,6 +2,7 @@
 
 #include <ustd/Function.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
+// IWYU pragma: no_forward_declare ustd::Function
 
 namespace kernel {
 

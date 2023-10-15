@@ -1,12 +1,12 @@
 #pragma once
 
-#include <kernel/SysError.hh>
-#include <ustd/Assert.hh>
 #include <ustd/Concepts.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
 namespace kernel {
+
+enum class SysError : ssize_t;
 
 template <typename T = void>
 using SysResult = ustd::Result<T, SysError>;
