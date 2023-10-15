@@ -1,7 +1,7 @@
 #!/bin/bash
 
 find . \
-    -name '*.cc' \
+    -name '*.cc' -or -name '*.hh' \
     -and -not -name 'mkfont.cc' \
     -print0 |
 parallel -0 \
