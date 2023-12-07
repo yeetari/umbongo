@@ -1,5 +1,6 @@
 #pragma once
 
+#include <system/Error.h>
 #include <ustd/Function.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -7,12 +8,6 @@
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 #include <ustd/Vector.hh>
 // IWYU pragma: no_forward_declare ustd::Function
-
-namespace core {
-
-enum class SysError : ssize_t;
-
-} // namespace core
 
 class Endpoint;
 class HostController;
@@ -54,7 +49,7 @@ public:
     virtual void poll() {}
 
     Endpoint &create_endpoint(uint32_t address);
-    ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, core::SysError>> setup(const Port &port);
+    ustd::Result<void *, ustd::ErrorUnion<DeviceError, HostError, ub_error_t>> setup(const Port &port);
     ustd::Result<void, DeviceError> read_descriptor(ustd::Span<uint8_t> descriptor);
     ustd::Result<void, DeviceError> set_configuration(uint8_t config_value);
     ustd::Result<void, DeviceError>

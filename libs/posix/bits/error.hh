@@ -2,29 +2,28 @@
 
 #include <errno.h>
 
-#include <core/Error.hh>
+#include <system/Error.h>
 #include <ustd/Assert.hh>
 
 namespace posix {
 
-inline int to_errno(core::SysError error) {
-    using core::SysError;
+inline int to_errno(ub_error_t error) {
     switch (error) {
-    case SysError::BadFd:
+    case UB_ERROR_BAD_FD:
         return EBADF;
-    case SysError::NonExistent:
+    case UB_ERROR_NON_EXISTENT:
         return ENOENT;
-    case SysError::BrokenHandle:
+    case UB_ERROR_BROKEN_HANDLE:
         return EIO;
-    case SysError::Invalid:
+    case UB_ERROR_INVALID:
         return EINVAL;
-    case SysError::NoExec:
+    case UB_ERROR_NO_EXEC:
         return ENOEXEC;
-    case SysError::NotDirectory:
+    case UB_ERROR_NOT_DIRECTORY:
         return ENOTDIR;
-    case SysError::AlreadyExists:
+    case UB_ERROR_ALREADY_EXISTS:
         return EEXIST;
-    case SysError::Busy:
+    case UB_ERROR_BUSY:
         return EBUSY;
     default:
         ENSURE_NOT_REACHED();

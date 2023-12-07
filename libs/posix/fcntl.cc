@@ -5,8 +5,8 @@
 #include <stdarg.h>
 #include <sys/cdefs.h>
 
-#include <core/Syscall.hh>
 #include <log/Log.hh>
+#include <system/Syscall.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 
@@ -43,7 +43,7 @@ int open(const char *path, int oflag, ...) {
         return -1;
     }
 
-    auto result = core::syscall(core::Syscall::open, path, mode);
+    auto result = system::syscall(UB_SYS_open, path, mode);
     if (result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;

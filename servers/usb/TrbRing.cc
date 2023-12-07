@@ -15,7 +15,7 @@ constexpr size_t k_ring_length = 256;
 
 } // namespace
 
-ustd::Result<ustd::UniquePtr<TrbRing>, core::SysError> TrbRing::create(bool insert_link) {
+ustd::Result<ustd::UniquePtr<TrbRing>, ub_error_t> TrbRing::create(bool insert_link) {
     auto *ring_dma = TRY(mmio::alloc_dma_array<RawTrb>(k_ring_length));
     return ustd::make_unique<TrbRing>(ring_dma, insert_link);
 }
@@ -58,11 +58,11 @@ RawTrb &TrbRing::enqueue(const RawTrb &trb) {
     return enqueued;
 }
 
-ustd::Result<uintptr_t, core::SysError> TrbRing::physical_base() const {
+ustd::Result<uintptr_t, ub_error_t> TrbRing::physical_base() const {
     return TRY(mmio::virt_to_phys(m_ring));
 }
 
-ustd::Result<uintptr_t, core::SysError> TrbRing::physical_head() const {
+ustd::Result<uintptr_t, ub_error_t> TrbRing::physical_head() const {
     return TRY(mmio::virt_to_phys(&m_ring[m_index]));
 }
 

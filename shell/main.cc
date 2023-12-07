@@ -9,7 +9,7 @@
 #include <core/Pipe.hh>
 #include <core/Print.hh>
 #include <core/Process.hh>
-#include <core/Syscall.hh>
+#include <system/Syscall.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
 #include <ustd/StringView.hh>
@@ -77,7 +77,7 @@ size_t main(size_t, const char **) {
         while (true) {
             core::KeyEvent event;
             while (true) {
-                auto rc = core::syscall(core::Syscall::read, 0, &event, sizeof(core::KeyEvent));
+                auto rc = system::syscall(UB_SYS_read, 0, &event, sizeof(core::KeyEvent));
                 if (rc.is_error()) {
                     return 1;
                 }

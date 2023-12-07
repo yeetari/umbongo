@@ -3,7 +3,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-#include <core/Syscall.hh>
+#include <system/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
@@ -30,7 +30,7 @@ int stat(const char *, struct stat *st) {
 
 int fstat(int fd, struct stat *st) {
     __builtin_memset(st, 0, sizeof(struct stat));
-    ssize_t size = EXPECT(core::syscall<ssize_t>(core::Syscall::size, fd));
+    ssize_t size = EXPECT(system::syscall<ssize_t>(UB_SYS_size, fd));
     ASSERT(size >= 0);
     st->st_mode = S_IFREG | S_IRWXU;
     st->st_size = size;

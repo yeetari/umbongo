@@ -1,15 +1,10 @@
 #pragma once
 
+#include <system/Error.h>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
-
-namespace core {
-
-enum class SysError : ssize_t;
-
-} // namespace core
 
 enum class TransferType : uint8_t;
 
@@ -75,14 +70,14 @@ class TrbRing {
     bool m_cycle_state{true};
 
 public:
-    static ustd::Result<ustd::UniquePtr<TrbRing>, core::SysError> create(bool insert_link);
+    static ustd::Result<ustd::UniquePtr<TrbRing>, ub_error_t> create(bool insert_link);
 
     TrbRing(RawTrb *ring, bool insert_link);
     // TODO: Free m_ring in destructor.
 
     ustd::Span<RawTrb> dequeue();
     RawTrb &enqueue(const RawTrb &trb);
-    ustd::Result<uintptr_t, core::SysError> physical_base() const;
-    ustd::Result<uintptr_t, core::SysError> physical_head() const;
+    ustd::Result<uintptr_t, ub_error_t> physical_base() const;
+    ustd::Result<uintptr_t, ub_error_t> physical_head() const;
     RawTrb &operator[](size_t index) const;
 };

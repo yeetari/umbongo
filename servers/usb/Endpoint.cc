@@ -19,8 +19,7 @@
 Endpoint::Endpoint(const Device &device, uint32_t id) : m_device(device), m_id(id) {}
 Endpoint::~Endpoint() = default;
 
-ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> Endpoint::setup(EndpointType type,
-                                                                                uint16_t packet_size) {
+ustd::Result<void, ustd::ErrorUnion<HostError, ub_error_t>> Endpoint::setup(EndpointType type, uint16_t packet_size) {
     auto &context = m_device.endpoint_context(m_id);
     m_transfer_ring = TRY(TrbRing::create(true));
     context.endpoint_type = type;

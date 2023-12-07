@@ -3,6 +3,7 @@
 #include "Port.hh" // IWYU pragma: keep
 
 #include <core/File.hh>
+#include <system/Error.h>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
@@ -14,7 +15,6 @@
 namespace core {
 
 class EventLoop;
-enum class SysError : ssize_t;
 
 } // namespace core
 
@@ -83,9 +83,9 @@ public:
     HostController &operator=(const HostController &) = delete;
     HostController &operator=(HostController &&) = delete;
 
-    ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> enable();
+    ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> enable();
     void handle_interrupt();
-    ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, core::SysError>>
+    ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, ub_error_t>>
     handle_port_status_change(const RawTrb &event);
     void ring_doorbell(uint32_t slot, uint32_t endpoint);
     ustd::Result<RawTrb, HostError> send_command(const RawTrb &command);

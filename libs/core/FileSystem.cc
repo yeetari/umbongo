@@ -1,19 +1,19 @@
 #include <core/FileSystem.hh>
 
-#include <core/Error.hh>
-#include <core/Syscall.hh>
+#include <system/Error.h>
+#include <system/Syscall.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>
 
 namespace core {
 
-ustd::Result<void, SysError> mount(ustd::StringView target, ustd::StringView fs_type) {
-    if (auto result = syscall(Syscall::mkdir, target.data());
-        result.is_error() && result.error() != SysError::AlreadyExists) {
+ustd::Result<void, ub_error_t> mount(ustd::StringView target, ustd::StringView fs_type) {
+    if (auto result = system::syscall(UB_SYS_mkdir, target.data());
+        result.is_error() && result.error() != UB_ERROR_ALREADY_EXISTS) {
         return result.error();
     }
-    TRY(syscall(Syscall::mount, target.data(), fs_type.data()));
+    TRY(system::syscall(UB_SYS_mount, target.data(), fs_type.data()));
     return {};
 }
 

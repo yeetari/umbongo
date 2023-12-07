@@ -3,7 +3,7 @@
 #include <core/File.hh>
 #include <core/KeyEvent.hh>
 #include <core/Print.hh>
-#include <core/Syscall.hh>
+#include <system/Syscall.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -51,7 +51,7 @@ public:
     Editor &operator=(const Editor &) = delete;
     Editor &operator=(Editor &&) = delete;
 
-    ustd::Result<void, core::SysError> load(ustd::String &&path);
+    ustd::Result<void, ub_error_t> load(ustd::String &&path);
     bool read_key();
     void render();
 };
@@ -65,7 +65,7 @@ Editor::~Editor() {
     core::print("\x1b[?1049l");
 }
 
-ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
+ustd::Result<void, ub_error_t> Editor::load(ustd::String &&path) {
     m_path = ustd::move(path);
     auto file = TRY(core::File::open(m_path, UB_OPEN_MODE_CREATE));
     auto size = TRY(file.size());
@@ -87,7 +87,7 @@ ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
 bool Editor::read_key() {
     // TODO: Global stdin file to .read<KeyEvent>() from.
     core::KeyEvent event;
-    EXPECT(core::syscall<ssize_t>(core::Syscall::read, 0, &event, sizeof(core::KeyEvent)));
+    EXPECT(system::syscall<ssize_t>(UB_SYS_read, 0, &event, sizeof(core::KeyEvent)));
     if (event.code() >= 0x4f && event.code() <= 0x52) {
         if (event.ctrl_pressed()) {
             return true;

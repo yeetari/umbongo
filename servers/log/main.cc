@@ -1,6 +1,5 @@
 #include <core/EventLoop.hh>
 #include <core/File.hh>
-#include <core/Syscall.hh>
 #include <core/Time.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>

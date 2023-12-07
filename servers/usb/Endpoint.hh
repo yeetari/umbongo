@@ -1,15 +1,10 @@
 #pragma once
 
+#include <system/Error.h>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
-
-namespace core {
-
-enum class SysError : ssize_t;
-
-} // namespace core
 
 class Device;
 class TrbRing;
@@ -59,7 +54,7 @@ public:
     Endpoint &operator=(const Endpoint &) = delete;
     Endpoint &operator=(Endpoint &&) = delete;
 
-    ustd::Result<void, ustd::ErrorUnion<HostError, core::SysError>> setup(EndpointType type, uint16_t packet_size);
+    ustd::Result<void, ustd::ErrorUnion<HostError, ub_error_t>> setup(EndpointType type, uint16_t packet_size);
     ustd::Result<void, DeviceError> send_control(ControlTransfer transfer, TransferType transfer_type,
                                                  ustd::Span<void> data = {});
     void set_interval(uint8_t interval);

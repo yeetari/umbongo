@@ -1,7 +1,7 @@
 #include <core/File.hh>
-#include <core/Syscall.hh>
 #include <elf/Elf.hh>
 #include <log/Log.hh>
+#include <system/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Numeric.hh>
 #include <ustd/Try.hh>
@@ -24,8 +24,8 @@ size_t main(size_t argc, const char **argv) {
     }
 
     // TODO: Don't always allocate writable + executable.
-    auto base_offset = EXPECT(core::syscall<uintptr_t>(core::Syscall::allocate_region, region_end - region_base,
-                                                       UB_MEMORY_PROT_WRITE | UB_MEMORY_PROT_EXEC));
+    auto base_offset = EXPECT(system::syscall<uintptr_t>(UB_SYS_allocate_region, region_end - region_base,
+                                                         UB_MEMORY_PROT_WRITE | UB_MEMORY_PROT_EXEC));
     size_t dynamic_entry_count = 0;
     size_t dynamic_table_offset = 0;
     for (uint16_t i = 0; i < header.ph_count; i++) {

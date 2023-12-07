@@ -5,8 +5,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-#include <core/Syscall.hh>
 #include <log/Log.hh>
+#include <system/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
@@ -18,7 +18,7 @@ int access(const char *, int) {
 }
 
 int close(int fd) {
-    if (auto result = core::syscall(core::Syscall::close, fd); result.is_error()) {
+    if (auto result = system::syscall(UB_SYS_close, fd); result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;
     }
@@ -87,7 +87,7 @@ off_t lseek(int, off_t, int) {
 }
 
 ssize_t read(int fd, void *data, size_t size) {
-    auto result = core::syscall<ssize_t>(core::Syscall::read, fd, data, size);
+    auto result = system::syscall<ssize_t>(UB_SYS_read, fd, data, size);
     if (result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;

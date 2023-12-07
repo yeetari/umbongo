@@ -1,7 +1,7 @@
 #include <core/Error.hh>
 #include <core/File.hh>
 #include <core/Print.hh>
-#include <core/Syscall.hh>
+#include <system/Syscall.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
@@ -40,7 +40,7 @@ size_t main(size_t argc, const char **argv) {
             }
             for (size_t total_written = 0; total_written < bytes_read;) {
                 auto bytes_written_or_error =
-                    core::syscall(core::Syscall::write, 1, buf.data() + total_written, bytes_read - total_written);
+                    system::syscall(UB_SYS_write, 1, buf.data() + total_written, bytes_read - total_written);
                 if (bytes_written_or_error.is_error()) {
                     core::println("cat: failed to write: {}", core::error_string(bytes_written_or_error.error()));
                     return 1;

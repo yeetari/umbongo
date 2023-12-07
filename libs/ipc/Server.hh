@@ -1,8 +1,9 @@
 #pragma once
 
 #include <core/EventLoop.hh>
-#include <core/Syscall.hh>
 #include <core/Watchable.hh>
+#include <system/Syscall.hh>
+#include <system/System.h>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Optional.hh>
@@ -44,11 +45,11 @@ public:
 
 template <typename ClientType>
 Server<ClientType>::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loop(event_loop) {
-    m_fd.emplace(EXPECT(core::syscall<uint32_t>(core::Syscall::create_server_socket, 4)));
-    EXPECT(core::syscall(core::Syscall::bind, *m_fd, path.data()));
+    m_fd.emplace(EXPECT(system::syscall<uint32_t>(UB_SYS_create_server_socket, 4)));
+    EXPECT(system::syscall(UB_SYS_bind, *m_fd, path.data()));
     event_loop.watch(*this, UB_POLL_EVENT_ACCEPT);
     set_on_read_ready([this] {
-        uint32_t client_fd = EXPECT(core::syscall<uint32_t>(core::Syscall::accept, *m_fd));
+        uint32_t client_fd = EXPECT(system::syscall<uint32_t>(UB_SYS_accept, *m_fd));
         auto *client = m_clients.emplace(new ClientType(client_fd)).ptr();
         m_event_loop.watch(*client, UB_POLL_EVENT_READ);
         client->set_on_disconnect([this, client] {

@@ -1,13 +1,12 @@
 #pragma once
 
 #include <core/File.hh>
+#include <system/Error.h>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
 namespace core {
-
-enum class SysError : ssize_t;
 
 class Pipe {
     File m_read_end;
@@ -19,12 +18,12 @@ public:
 
     void close_read() { m_read_end.close(); }
     void close_write() { m_write_end.close(); }
-    ustd::Result<void, SysError> rebind_read(uint32_t fd);
-    ustd::Result<void, SysError> rebind_write(uint32_t fd);
+    ustd::Result<void, ub_error_t> rebind_read(uint32_t fd);
+    ustd::Result<void, ub_error_t> rebind_write(uint32_t fd);
     uint32_t read_fd() const { return m_read_end.fd(); }
     uint32_t write_fd() const { return m_write_end.fd(); }
 };
 
-ustd::Result<Pipe, SysError> create_pipe();
+ustd::Result<Pipe, ub_error_t> create_pipe();
 
 } // namespace core

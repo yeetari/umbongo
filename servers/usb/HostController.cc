@@ -12,9 +12,9 @@
 #include <core/Error.hh>
 #include <core/File.hh>
 #include <core/Time.hh>
-#include <kernel/api/Types.h>
 #include <log/Log.hh>
 #include <mmio/Mmio.hh>
+#include <system/System.h>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Optional.hh>
@@ -43,7 +43,7 @@ HostController::HostController(ustd::StringView name, core::EventLoop &event_loo
 HostController::HostController(HostController &&) = default;
 HostController::~HostController() = default;
 
-ustd::Result<void, ustd::ErrorUnion<core::SysError, HostError>> HostController::enable() {
+ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enable() {
     TRY(m_file.ioctl(UB_IOCTL_REQUEST_PCI_ENABLE_DEVICE));
     auto *cap_regs = TRY(m_file.mmap<CapRegs>());
 
@@ -247,7 +247,7 @@ void HostController::handle_interrupt() {
     mmio::write(m_run_regs->erst_dptr, dptr | (1u << 3u));
 }
 
-ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, core::SysError>>
+ustd::Result<void, ustd::ErrorUnion<DeviceError, HostError, ub_error_t>>
 HostController::handle_port_status_change(const RawTrb &event) {
     const uint8_t port_id = (event.data >> 24u) & 0xffu;
     if (port_id == 0 || port_id > m_ports.size()) {

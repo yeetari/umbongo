@@ -1,8 +1,8 @@
 #include <log/Log.hh>
 
-#include <core/Syscall.hh>
 #include <ipc/Client.hh>
 #include <log/IpcMessages.hh>
+#include <system/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/StringView.hh>
 
@@ -24,14 +24,14 @@ void initialise(ustd::StringView name) {
 }
 
 void message(Level level, ustd::StringView message) {
-    static_cast<void>(core::syscall(core::Syscall::debug_line, message.data()));
+    static_cast<void>(system::syscall(UB_SYS_debug_line, message.data()));
     if (s_client != nullptr && s_client->connected()) {
         s_client->send_message<LogMessage>(level, message);
         return;
     }
     const char newline = '\n';
-    static_cast<void>(core::syscall(core::Syscall::write, 1, message.data(), message.length()));
-    static_cast<void>(core::syscall(core::Syscall::write, 1, &newline, 1));
+    static_cast<void>(system::syscall(UB_SYS_write, 1, message.data(), message.length()));
+    static_cast<void>(system::syscall(UB_SYS_write, 1, &newline, 1));
 }
 
 } // namespace log

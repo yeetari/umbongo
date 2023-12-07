@@ -6,7 +6,6 @@
 #include <core/Error.hh>
 #include <core/EventLoop.hh>
 #include <core/File.hh>
-#include <kernel/api/Types.h>
 #include <log/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -43,7 +42,7 @@ size_t main(size_t, const char **) {
     for (auto &host_controller : host_controllers) {
         if (auto result = host_controller.enable(); result.is_error()) {
             auto error = result.error();
-            if (auto sys_error = error.as<core::SysError>()) {
+            if (auto sys_error = error.as<ub_error_t>()) {
                 log::warn("Skipping controller {}: {}", host_controller.name(), core::error_string(*sys_error));
             } else if (auto initialisation_error = error.as<HostError>()) {
                 log::warn("Skipping controller {}: {}", host_controller.name(),

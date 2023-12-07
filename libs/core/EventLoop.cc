@@ -1,10 +1,10 @@
 #include <core/EventLoop.hh>
 
 #include <core/Error.hh>
-#include <core/Syscall.hh>
 #include <core/Timer.hh>
 #include <core/Watchable.hh>
 #include <log/Log.hh>
+#include <system/Syscall.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Result.hh>
@@ -68,11 +68,11 @@ void EventLoop::unwatch(Watchable &watchable) {
 size_t EventLoop::run() {
     while (true) {
         const auto timeout = next_timer_deadline();
-        if (auto rc = syscall(Syscall::poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
+        if (auto rc = system::syscall(UB_SYS_poll, m_poll_fds.data(), m_poll_fds.size(), timeout); rc.is_error()) {
             log::error("poll: {}", core::error_string(rc.error()));
             return 1;
         }
-        auto now = EXPECT(syscall<size_t>(Syscall::gettime));
+        auto now = EXPECT(system::syscall<size_t>(UB_SYS_gettime));
         for (auto *timer : m_timers) {
             if (!timer->has_expired(now)) {
                 continue;
