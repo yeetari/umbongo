@@ -19,18 +19,18 @@ ustd::Result<void, SysError> chdir(const char *path) {
 
 ustd::Result<size_t, SysError> create_process(const char *path) {
     ustd::Array<const char *, 2> argv{path, nullptr};
-    ustd::Array<kernel::FdPair, 1> copy_fds{{{0, 0}}};
+    ustd::Array<ub_fd_pair_t, 1> copy_fds{{{0, 0}}};
     return TRY(syscall(Syscall::create_process, path, argv.data(), copy_fds.data()));
 }
 
 ustd::Result<size_t, SysError> create_process(const char *path, ustd::Vector<const char *> argv) {
     argv.push(nullptr);
-    ustd::Array<kernel::FdPair, 1> copy_fds{{{0, 0}}};
+    ustd::Array<ub_fd_pair_t, 1> copy_fds{{{0, 0}}};
     return TRY(syscall(Syscall::create_process, path, argv.data(), copy_fds.data()));
 }
 
 ustd::Result<size_t, SysError> create_process(const char *path, ustd::Vector<const char *> argv,
-                                              ustd::Vector<kernel::FdPair> copy_fds) {
+                                              ustd::Vector<ub_fd_pair_t> copy_fds) {
     argv.push(nullptr);
     copy_fds.push({0, 0});
     return TRY(syscall(Syscall::create_process, path, argv.data(), copy_fds.data()));

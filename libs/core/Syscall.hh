@@ -1,9 +1,9 @@
 #pragma once
 
-#include <kernel/api/Types.hh>    // IWYU pragma: export
+#include <kernel/api/Types.h>    // IWYU pragma: export
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
-// IWYU pragma: no_include "kernel/api/Types.hh"
+// IWYU pragma: no_include "kernel/api/Types.h"
 
 namespace core {
 

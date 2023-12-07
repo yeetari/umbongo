@@ -25,7 +25,7 @@ size_t main(size_t argc, const char **argv) {
 
     // TODO: Don't always allocate writable + executable.
     auto base_offset = EXPECT(core::syscall<uintptr_t>(core::Syscall::allocate_region, region_end - region_base,
-                                                       kernel::MemoryProt::Write | kernel::MemoryProt::Exec));
+                                                       UB_MEMORY_PROT_WRITE | UB_MEMORY_PROT_EXEC));
     size_t dynamic_entry_count = 0;
     size_t dynamic_table_offset = 0;
     for (uint16_t i = 0; i < header.ph_count; i++) {

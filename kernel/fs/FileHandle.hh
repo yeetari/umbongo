@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh> // IWYU pragma: keep
+#include <kernel/api/Types.h>
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Types.hh>
@@ -26,10 +26,10 @@ public:
 
     bool read_would_block() const;
     bool write_would_block() const;
-    SyscallResult ioctl(IoctlRequest request, void *arg) const;
+    SyscallResult ioctl(ub_ioctl_request_t request, void *arg) const;
     uintptr_t mmap(VirtSpace &virt_space) const;
     SysResult<size_t> read(void *data, size_t size);
-    size_t seek(size_t offset, SeekMode mode);
+    size_t seek(size_t offset, ub_seek_mode_t mode);
     SysResult<size_t> write(void *data, size_t size);
     bool valid() const;
 

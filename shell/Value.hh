@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/api/Types.hh> // IWYU pragma: keep
+#include <kernel/api/Types.h>
 #include <ustd/String.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
@@ -65,7 +65,7 @@ public:
         : Value(k_kind), m_command(ustd::move(command)), m_args(ustd::move(args)) {}
 
     void await_completion() const;
-    void spawn(const ustd::Vector<kernel::FdPair> &copy_fds);
+    void spawn(const ustd::Vector<ub_fd_pair_t> &copy_fds);
 };
 
 class ListValue : public Value {

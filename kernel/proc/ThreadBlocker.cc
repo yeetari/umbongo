@@ -2,7 +2,7 @@
 
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/ipc/ServerSocket.hh>
@@ -24,7 +24,7 @@ bool ConnectBlocker::should_unblock() {
     return m_socket->connected();
 }
 
-PollBlocker::PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize_t timeout)
+PollBlocker::PollBlocker(const ustd::LargeVector<ub_poll_fd_t> &fds, SpinLock &lock, Process &process, ssize_t timeout)
     : m_fds(fds), m_lock(lock), m_process(process) {
     if (timeout > 0) {
         m_deadline.emplace(TimeManager::ns_since_boot() + static_cast<size_t>(timeout));
@@ -40,10 +40,10 @@ bool PollBlocker::should_unblock() {
     for (const auto &poll_fd : m_fds) {
         // TODO: Bounds checking.
         auto &handle = m_process.file_handle(poll_fd.fd);
-        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && !handle.read_would_block()) {
+        if ((poll_fd.events & UB_POLL_EVENT_READ) == UB_POLL_EVENT_READ && !handle.read_would_block()) {
             return true;
         }
-        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && !handle.write_would_block()) {
+        if ((poll_fd.events & UB_POLL_EVENT_WRITE) == UB_POLL_EVENT_WRITE && !handle.write_would_block()) {
             return true;
         }
     }

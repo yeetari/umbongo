@@ -2,7 +2,7 @@
 
 #include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh> // IWYU pragma: keep
+#include <kernel/api/Types.h>
 #include <ustd/Shareable.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
@@ -36,7 +36,7 @@ public:
     virtual void detach(AttachDirection) {}
     virtual bool read_would_block(size_t offset) const = 0;
     virtual bool write_would_block(size_t offset) const = 0;
-    virtual SyscallResult ioctl(IoctlRequest, void *) { return Error::Invalid; }
+    virtual SyscallResult ioctl(ub_ioctl_request_t, void *) { return Error::Invalid; }
     virtual uintptr_t mmap(VirtSpace &) const { return 0; }
     virtual SysResult<size_t> read(ustd::Span<void> data, size_t offset = 0) = 0;
     virtual SysResult<size_t> write(ustd::Span<const void> data, size_t offset = 0) = 0;

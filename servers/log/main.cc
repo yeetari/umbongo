@@ -46,7 +46,7 @@ void Client::log(log::Level level, ustd::StringView message) {
 }
 
 size_t main(size_t, const char **) {
-    auto file = EXPECT(core::File::open("/log", core::OpenMode::Create | core::OpenMode::Truncate));
+    auto file = EXPECT(core::File::open("/log", UB_OPEN_MODE_CREATE | UB_OPEN_MODE_TRUNCATE));
     core::EventLoop event_loop;
     ipc::Server<Client> server(event_loop, "/run/log"sv);
     server.set_on_message([&](Client &client, ipc::MessageDecoder &decoder) {

@@ -5,7 +5,7 @@
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
@@ -57,16 +57,16 @@ SyscallResult Process::sys_accept(uint32_t fd) {
     return accepted_fd;
 }
 
-SyscallResult Process::sys_allocate_region(size_t size, MemoryProt prot) {
+SyscallResult Process::sys_allocate_region(size_t size, ub_memory_prot_t prot) {
     ScopedLock locker(m_lock);
     auto access = RegionAccess::UserAccessible;
-    if ((prot & MemoryProt::Write) == MemoryProt::Write) {
+    if ((prot & UB_MEMORY_PROT_WRITE) == UB_MEMORY_PROT_WRITE) {
         access |= RegionAccess::Writable;
     }
-    if ((prot & MemoryProt::Exec) == MemoryProt::Exec) {
+    if ((prot & UB_MEMORY_PROT_EXEC) == UB_MEMORY_PROT_EXEC) {
         access |= RegionAccess::Executable;
     }
-    if ((prot & MemoryProt::Uncacheable) == MemoryProt::Uncacheable) {
+    if ((prot & UB_MEMORY_PROT_UNCACHEABLE) == UB_MEMORY_PROT_UNCACHEABLE) {
         access |= RegionAccess::Uncacheable;
     }
     auto &region = m_virt_space->allocate_region(size, access);
@@ -96,7 +96,7 @@ SyscallResult Process::sys_close(uint32_t fd) {
 }
 
 SyscallResult Process::sys_connect(const char *path) {
-    auto file = TRY(Vfs::open(path, OpenMode::None, m_cwd));
+    auto file = TRY(Vfs::open(path, UB_OPEN_MODE_NONE, m_cwd));
     if (!file->is_server_socket()) {
         return Error::Invalid;
     }
@@ -125,7 +125,7 @@ SyscallResult Process::sys_create_pipe(uint32_t *fds) {
     return 0;
 }
 
-SyscallResult Process::sys_create_process(const char *path, const char **argv, FdPair *copy_fds) {
+SyscallResult Process::sys_create_process(const char *path, const char **argv, ub_fd_pair_t *copy_fds) {
     ScopedLock locker(m_lock);
     auto new_thread = Thread::create_user(ThreadPriority::Normal);
     auto &new_process = new_thread->process();
@@ -233,7 +233,7 @@ SyscallResult Process::sys_gettime() {
     return TimeManager::ns_since_boot();
 }
 
-SyscallResult Process::sys_ioctl(uint32_t fd, IoctlRequest request, void *arg) {
+SyscallResult Process::sys_ioctl(uint32_t fd, ub_ioctl_request_t request, void *arg) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return Error::BadFd;
@@ -265,7 +265,7 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) {
     return TRY(Vfs::mount(target, ustd::move(fs)));
 }
 
-SyscallResult Process::sys_open(const char *path, OpenMode mode) {
+SyscallResult Process::sys_open(const char *path, ub_open_mode_t mode) {
     ScopedLock locker(m_lock);
     // Try to open the file first so that we don't leak a file descriptor in the event of failure.
     // TODO: Don't assume Read!
@@ -275,22 +275,22 @@ SyscallResult Process::sys_open(const char *path, OpenMode mode) {
     return fd;
 }
 
-SyscallResult Process::sys_poll(PollFd *fds, size_t count, ssize_t timeout) {
-    ustd::LargeVector<PollFd> poll_fds(count);
-    __builtin_memcpy(poll_fds.data(), fds, count * sizeof(PollFd));
+SyscallResult Process::sys_poll(ub_poll_fd_t *fds, size_t count, ssize_t timeout) {
+    ustd::LargeVector<ub_poll_fd_t> poll_fds(count);
+    __builtin_memcpy(poll_fds.data(), fds, count * sizeof(ub_poll_fd_t));
     Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {
         // TODO: Bounds checking.
         auto &handle = m_fds[poll_fd.fd];
-        poll_fd.revents = static_cast<PollEvents>(0);
-        if ((poll_fd.events & PollEvents::Read) == PollEvents::Read && !handle->read_would_block()) {
-            poll_fd.revents |= PollEvents::Read;
+        poll_fd.revents = static_cast<ub_poll_events_t>(0);
+        if ((poll_fd.events & UB_POLL_EVENT_READ) == UB_POLL_EVENT_READ && !handle->read_would_block()) {
+            poll_fd.revents |= UB_POLL_EVENT_READ;
         }
-        if ((poll_fd.events & PollEvents::Write) == PollEvents::Write && !handle->write_would_block()) {
-            poll_fd.revents |= PollEvents::Write;
+        if ((poll_fd.events & UB_POLL_EVENT_WRITE) == UB_POLL_EVENT_WRITE && !handle->write_would_block()) {
+            poll_fd.revents |= UB_POLL_EVENT_WRITE;
         }
     }
-    __builtin_memcpy(fds, poll_fds.data(), count * sizeof(PollFd));
+    __builtin_memcpy(fds, poll_fds.data(), count * sizeof(ub_poll_fd_t));
     return 0;
 }
 
@@ -331,7 +331,7 @@ SyscallResult Process::sys_read_directory(const char *path, uint8_t *data) {
     return 0;
 }
 
-SyscallResult Process::sys_seek(uint32_t fd, size_t offset, SeekMode mode) {
+SyscallResult Process::sys_seek(uint32_t fd, size_t offset, ub_seek_mode_t mode) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return Error::BadFd;

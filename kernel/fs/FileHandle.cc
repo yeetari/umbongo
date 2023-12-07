@@ -1,7 +1,7 @@
 #include <kernel/fs/FileHandle.hh>
 
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Try.hh>
@@ -28,7 +28,7 @@ bool FileHandle::write_would_block() const {
     return m_file->write_would_block(m_offset);
 }
 
-SyscallResult FileHandle::ioctl(IoctlRequest request, void *arg) const {
+SyscallResult FileHandle::ioctl(ub_ioctl_request_t request, void *arg) const {
     return m_file->ioctl(request, arg);
 }
 
@@ -42,12 +42,12 @@ SysResult<size_t> FileHandle::read(void *data, size_t size) {
     return bytes_read;
 }
 
-size_t FileHandle::seek(size_t offset, SeekMode mode) {
+size_t FileHandle::seek(size_t offset, ub_seek_mode_t mode) {
     switch (mode) {
-    case SeekMode::Add:
+    case UB_SEEK_MODE_ADD:
         m_offset += offset;
         break;
-    case SeekMode::Set:
+    case UB_SEEK_MODE_SET:
         m_offset = offset;
         break;
     }

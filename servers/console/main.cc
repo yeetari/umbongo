@@ -10,7 +10,7 @@
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Numeric.hh>
@@ -25,7 +25,7 @@ size_t main(size_t, const char **) {
     log::initialise("console-server");
     core::EventLoop event_loop;
     core::File stdin(static_cast<uint32_t>(0));
-    event_loop.watch(stdin, kernel::PollEvents::Read);
+    event_loop.watch(stdin, UB_POLL_EVENT_READ);
 
     config::listen(event_loop);
     config::read("console-server");

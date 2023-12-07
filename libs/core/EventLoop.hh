@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/api/Types.hh> // IWYU pragma: keep
+#include <kernel/api/Types.h>
 #include <ustd/Types.hh>
 #include <ustd/Vector.hh>
 
@@ -10,7 +10,7 @@ class Timer;
 class Watchable;
 
 class EventLoop {
-    ustd::Vector<kernel::PollFd> m_poll_fds;
+    ustd::Vector<ub_poll_fd_t> m_poll_fds;
     ustd::Vector<Timer *> m_timers;
     ustd::Vector<Watchable *> m_watchables;
 
@@ -21,7 +21,7 @@ class EventLoop {
 public:
     void register_timer(Timer &timer);
     void unregister_timer(Timer &timer);
-    void watch(Watchable &watchable, kernel::PollEvents events);
+    void watch(Watchable &watchable, ub_poll_events_t events);
     void unwatch(Watchable &watchable);
     size_t run();
 };

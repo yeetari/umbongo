@@ -221,15 +221,15 @@ int scanf_impl(const char *str, [[maybe_unused]] const char *fmt, va_list ap) {
     return 1;
 }
 
-kernel::OpenMode parse_mode(const char *mode) {
-    auto ret = kernel::OpenMode::None;
+ub_open_mode_t parse_mode(const char *mode) {
+    auto ret = UB_OPEN_MODE_NONE;
     for (const auto *ch = mode; *ch != '\0'; ch++) {
         switch (*ch) {
         case 'r':
         case '+':
             break;
         case 'w':
-            ret |= kernel::OpenMode::Create | kernel::OpenMode::Truncate;
+            ret |= UB_OPEN_MODE_CREATE | UB_OPEN_MODE_TRUNCATE;
             break;
         case 'b':
         case 't':
@@ -242,12 +242,12 @@ kernel::OpenMode parse_mode(const char *mode) {
     return ret;
 }
 
-kernel::SeekMode seek_mode(int whence) {
+ub_seek_mode_t seek_mode(int whence) {
     switch (whence) {
     case SEEK_SET:
-        return kernel::SeekMode::Set;
+        return UB_SEEK_MODE_SET;
     case SEEK_CUR:
-        return kernel::SeekMode::Add;
+        return UB_SEEK_MODE_ADD;
     default:
         ENSURE_NOT_REACHED();
     }
@@ -309,7 +309,7 @@ int FILE::seek(long offset, int whence) {
 }
 
 ssize_t FILE::tell() {
-    return EXPECT(core::syscall<ssize_t>(core::Syscall::seek, m_fd, 0, kernel::SeekMode::Add));
+    return EXPECT(core::syscall<ssize_t>(core::Syscall::seek, m_fd, 0, UB_SEEK_MODE_ADD));
 }
 
 size_t FILE::write(const void *data, size_t size) {

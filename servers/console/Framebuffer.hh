@@ -1,13 +1,13 @@
 #pragma once
 
 #include <core/File.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 
 class Framebuffer {
     core::File m_file;
-    kernel::FramebufferInfo m_info{};
+    ub_fb_info_t m_info{};
     uint32_t *m_back_buffer{nullptr};
     uint32_t *m_front_buffer{nullptr};
     bool m_dirty{false};

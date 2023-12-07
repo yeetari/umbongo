@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh> // IWYU pragma: keep
+#include <kernel/api/Types.h>
 #include <kernel/dev/Device.hh>
 #include <ustd/Types.hh>
 
@@ -21,7 +21,7 @@ public:
 
     bool read_would_block(size_t) const override { return false; }
     bool write_would_block(size_t) const override { return false; }
-    SyscallResult ioctl(IoctlRequest request, void *arg) override;
+    SyscallResult ioctl(ub_ioctl_request_t request, void *arg) override;
     uintptr_t mmap(VirtSpace &virt_space) const override;
 };
 

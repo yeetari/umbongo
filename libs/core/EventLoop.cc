@@ -51,8 +51,8 @@ void EventLoop::unregister_timer(Timer &timer) {
     m_timers.remove(index_of(&timer));
 }
 
-void EventLoop::watch(Watchable &watchable, kernel::PollEvents events) {
-    m_poll_fds.push(kernel::PollFd{
+void EventLoop::watch(Watchable &watchable, ub_poll_events_t events) {
+    m_poll_fds.push(ub_poll_fd_t{
         .fd = watchable.fd(),
         .events = events,
     });
@@ -86,12 +86,10 @@ size_t EventLoop::run() {
             auto &poll_fd = m_poll_fds[i - 1];
             auto *watchable = m_watchables[i - 1];
             ASSERT(poll_fd.fd == watchable->fd());
-            if ((poll_fd.revents & kernel::PollEvents::Read) == kernel::PollEvents::Read &&
-                watchable->m_on_read_ready) {
+            if ((poll_fd.revents & UB_POLL_EVENT_READ) == UB_POLL_EVENT_READ && watchable->m_on_read_ready) {
                 watchable->m_on_read_ready();
             }
-            if ((poll_fd.revents & kernel::PollEvents::Write) == kernel::PollEvents::Write &&
-                watchable->m_on_write_ready) {
+            if ((poll_fd.revents & UB_POLL_EVENT_WRITE) == UB_POLL_EVENT_WRITE && watchable->m_on_write_ready) {
                 watchable->m_on_write_ready();
             }
         }

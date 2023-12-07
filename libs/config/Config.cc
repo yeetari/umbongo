@@ -4,7 +4,7 @@
 #include <core/EventLoop.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Optional.hh>
@@ -38,7 +38,7 @@ ipc::Client &client() {
 void listen(core::EventLoop &event_loop) {
     ASSERT(s_update_callbacks == nullptr);
     s_update_callbacks = new ustd::Vector<UpdateCallback>;
-    event_loop.watch(client(), kernel::PollEvents::Read);
+    event_loop.watch(client(), UB_POLL_EVENT_READ);
     client().set_on_message([](ipc::MessageDecoder &decoder) {
         if (decoder.decode<MessageKind>() != MessageKind::NotifyChange) {
             return false;

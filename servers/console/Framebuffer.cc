@@ -8,8 +8,9 @@
 #include <ustd/Types.hh>
 
 Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {
-    EXPECT(m_file.ioctl(kernel::IoctlRequest::FramebufferGetInfo, &m_info));
-    m_back_buffer = EXPECT(core::syscall<uint32_t *>(core::Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
+    EXPECT(m_file.ioctl(UB_IOCTL_REQUEST_FB_GET_INFO, &m_info));
+    m_back_buffer =
+        EXPECT(core::syscall<uint32_t *>(core::Syscall::allocate_region, m_info.size, UB_MEMORY_PROT_WRITE));
     m_front_buffer = EXPECT(m_file.mmap<uint32_t>());
 }
 

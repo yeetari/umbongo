@@ -2,7 +2,7 @@
 
 #include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/dev/Device.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/Region.hh>
@@ -98,13 +98,13 @@ void Function::write_config(uint32_t offset, T value) {
     *reinterpret_cast<volatile T *>(m_address + offset) = value;
 }
 
-SyscallResult Function::ioctl(IoctlRequest request, void *) {
+SyscallResult Function::ioctl(ub_ioctl_request_t request, void *) {
     switch (request) {
-    case IoctlRequest::PciEnableDevice:
+    case UB_IOCTL_REQUEST_PCI_ENABLE_DEVICE:
         // Enable device by enabling memory space, bus mastering, and disabling legacy interrupts.
         write_config<uint16_t>(k_reg_command, (1u << 10u) | (1u << 2u) | (1u << 1u));
         return 0;
-    case IoctlRequest::PciEnableInterrupts: {
+    case UB_IOCTL_REQUEST_PCI_ENABLE_INTERRUPTS: {
         auto irq_handler = [this] {
             m_interrupt_pending = true;
         };
@@ -174,14 +174,14 @@ SysResult<size_t> Function::read(ustd::Span<void> data, size_t offset) {
     if (offset != 0) {
         return 0u;
     }
-    PciDeviceInfo info{
+    ub_pci_device_info_t info{
         .bars{
-            PciBar{m_bars[0].address, m_bars[0].size},
-            PciBar{m_bars[1].address, m_bars[1].size},
-            PciBar{m_bars[2].address, m_bars[2].size},
-            PciBar{m_bars[3].address, m_bars[3].size},
-            PciBar{m_bars[4].address, m_bars[4].size},
-            PciBar{m_bars[5].address, m_bars[5].size},
+            ub_pci_bar_t{m_bars[0].address, m_bars[0].size},
+            ub_pci_bar_t{m_bars[1].address, m_bars[1].size},
+            ub_pci_bar_t{m_bars[2].address, m_bars[2].size},
+            ub_pci_bar_t{m_bars[3].address, m_bars[3].size},
+            ub_pci_bar_t{m_bars[4].address, m_bars[4].size},
+            ub_pci_bar_t{m_bars[5].address, m_bars[5].size},
         },
         .vendor_id = m_vendor_id,
         .device_id = m_device_id,
@@ -189,7 +189,7 @@ SysResult<size_t> Function::read(ustd::Span<void> data, size_t offset) {
         .subc = static_cast<uint8_t>((m_class_info >> 16u) & 0xffu),
         .prif = static_cast<uint8_t>((m_class_info >> 8u) & 0xffu),
     };
-    const auto size = ustd::min(data.size(), sizeof(PciDeviceInfo));
+    const auto size = ustd::min(data.size(), sizeof(ub_pci_device_info_t));
     __builtin_memcpy(data.data(), &info, size);
     return size;
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>    // IWYU pragma: keep
-#include <ustd/SharedPtr.hh>      // IWYU pragma: keep
+#include <kernel/api/Types.h>
+#include <ustd/SharedPtr.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 
@@ -20,7 +20,7 @@ struct Vfs {
     static SysResult<Inode *> create(ustd::StringView path, Inode *base, InodeType type);
     static SysResult<> mkdir(ustd::StringView path, Inode *base);
     static SysResult<> mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs);
-    static SysResult<ustd::SharedPtr<File>> open(ustd::StringView path, OpenMode mode, Inode *base);
+    static SysResult<ustd::SharedPtr<File>> open(ustd::StringView path, ub_open_mode_t mode, Inode *base);
     static SysResult<Inode *> open_directory(ustd::StringView path, Inode *base);
     static Inode *root_inode();
 };

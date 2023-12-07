@@ -2,7 +2,7 @@
 
 #include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -142,15 +142,15 @@ SysResult<> Vfs::mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs) 
     return {};
 }
 
-SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode, Inode *base) {
+SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, ub_open_mode_t mode, Inode *base) {
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
-        if ((mode & OpenMode::Create) == OpenMode::Create) {
+        if ((mode & UB_OPEN_MODE_CREATE) == UB_OPEN_MODE_CREATE) {
             return TRY(Vfs::create(path, base, InodeType::RegularFile))->open();
         }
         return Error::NonExistent;
     }
-    if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
+    if ((mode & UB_OPEN_MODE_TRUNCATE) == UB_OPEN_MODE_TRUNCATE) {
         TRY(inode->truncate());
     }
     return TRY(inode->open());

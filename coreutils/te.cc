@@ -67,7 +67,7 @@ Editor::~Editor() {
 
 ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
     m_path = ustd::move(path);
-    auto file = TRY(core::File::open(m_path, core::OpenMode::Create));
+    auto file = TRY(core::File::open(m_path, UB_OPEN_MODE_CREATE));
     auto size = TRY(file.size());
     auto *line = &m_lines.emplace();
     for (size_t i = 0; i < size; i++) {
@@ -162,7 +162,7 @@ bool Editor::read_key() {
         return false;
     }
     if (event.ctrl_pressed() && event.character() == 'x') {
-        auto file = EXPECT(core::File::open(m_path, core::OpenMode::Truncate));
+        auto file = EXPECT(core::File::open(m_path, UB_OPEN_MODE_TRUNCATE));
         for (const auto &line : m_lines) {
             EXPECT(file.write({line.data(), line.column_count()}));
             EXPECT(file.write('\n'));

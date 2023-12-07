@@ -4,7 +4,7 @@
 #include <kernel/Dmesg.hh>
 #include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -112,7 +112,7 @@ Thread::~Thread() {
 }
 
 SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String> &args) {
-    auto file = TRY(Vfs::open(path, OpenMode::None, m_process->m_cwd));
+    auto file = TRY(Vfs::open(path, UB_OPEN_MODE_NONE, m_process->m_cwd));
     auto &stack_region =
         m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     m_register_state.rsp = stack_region.base() + stack_region.size();
@@ -130,7 +130,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     }
     auto executable = file;
     if (!interpreter_path->empty()) {
-        auto interpreter = TRY(Vfs::open(*interpreter_path, OpenMode::None, m_process->m_cwd));
+        auto interpreter = TRY(Vfs::open(*interpreter_path, UB_OPEN_MODE_NONE, m_process->m_cwd));
         executable = ustd::move(interpreter);
     }
 

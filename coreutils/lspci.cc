@@ -3,7 +3,7 @@
 #include <core/File.hh>
 #include <core/Print.hh>
 #include <core/Process.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>
@@ -21,7 +21,7 @@ void print_device(const char *name) {
         core::exit(1);
     }
     auto file = file_or_error.disown_value();
-    auto info = EXPECT(file.read<kernel::PciDeviceInfo>());
+    auto info = EXPECT(file.read<ub_pci_device_info_t>());
     ustd::StringBuilder builder;
     builder.append("{}\n", name);
     builder.append(" - Vendor ID: {:h4}\n", info.vendor_id);
@@ -29,7 +29,7 @@ void print_device(const char *name) {
     builder.append(" - Class: {:h2}\n", info.clas);
     builder.append(" - Subclass: {:h2}\n", info.subc);
     builder.append(" - Prog IF: {:h2}\n", info.prif);
-    for (size_t i = 0; i < info.bars.size(); i++) {
+    for (size_t i = 0; i < 6; i++) {
         const auto &bar = info.bars[i];
         if (bar.address != 0) {
             builder.append(" - BAR{}: {:h} ({} bytes)\n", i, bar.address, bar.size);

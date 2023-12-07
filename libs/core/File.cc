@@ -10,7 +10,7 @@
 
 namespace core {
 
-ustd::Result<File, SysError> File::open(ustd::StringView path, OpenMode mode) {
+ustd::Result<File, SysError> File::open(ustd::StringView path, ub_open_mode_t mode) {
     auto fd = TRY(syscall<uint32_t>(Syscall::open, path.data(), mode));
     return File(static_cast<uint32_t>(fd));
 }
@@ -26,7 +26,7 @@ void File::close() {
     }
 }
 
-ustd::Result<size_t, SysError> File::ioctl(kernel::IoctlRequest request, void *arg) {
+ustd::Result<size_t, SysError> File::ioctl(ub_ioctl_request_t request, void *arg) {
     return TRY(syscall(Syscall::ioctl, *m_fd, request, arg));
 }
 
@@ -39,7 +39,7 @@ ustd::Result<size_t, SysError> File::read(ustd::Span<void> data) {
 }
 
 ustd::Result<size_t, SysError> File::read(ustd::Span<void> data, size_t offset) {
-    TRY(syscall(Syscall::seek, *m_fd, offset, kernel::SeekMode::Set));
+    TRY(syscall(Syscall::seek, *m_fd, offset, UB_SEEK_MODE_SET));
     return TRY(syscall(Syscall::read, *m_fd, data.data(), data.size()));
 }
 

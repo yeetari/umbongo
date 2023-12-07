@@ -20,7 +20,7 @@
 
 namespace {
 
-void execute(Value &value, ustd::Vector<kernel::FdPair> &rewirings) {
+void execute(Value &value, ustd::Vector<ub_fd_pair_t> &rewirings) {
     if (auto *builtin = value.as_or_null<Builtin>()) {
         const auto &args = builtin->args();
         switch (builtin->function()) {
@@ -58,7 +58,7 @@ void Job::await_completion() const {
     EXPECT(core::wait_pid(m_pid));
 }
 
-void Job::spawn(const ustd::Vector<kernel::FdPair> &copy_fds) {
+void Job::spawn(const ustd::Vector<ub_fd_pair_t> &copy_fds) {
     if (m_pid != 0) {
         return;
     }
@@ -92,7 +92,7 @@ size_t main(size_t, const char **) {
                 Lexer lexer(line);
                 Parser parser(lexer);
                 auto node = parser.parse();
-                ustd::Vector<kernel::FdPair> rewirings;
+                ustd::Vector<ub_fd_pair_t> rewirings;
                 execute(*node->evaluate(), rewirings);
                 break;
             }

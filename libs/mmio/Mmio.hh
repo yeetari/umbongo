@@ -17,7 +17,7 @@ namespace mmio {
 
 template <typename T>
 ustd::Result<T *, core::SysError> alloc_dma() {
-    constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
+    constexpr auto prot = UB_MEMORY_PROT_WRITE | UB_MEMORY_PROT_UNCACHEABLE;
     auto *region = TRY(core::syscall<T *>(core::Syscall::allocate_region, sizeof(T), prot));
     return &(*region = T{});
 }
@@ -27,7 +27,7 @@ ustd::Result<T *, core::SysError> alloc_dma_array(size_t size) {
     if (size == 0) {
         return nullptr;
     }
-    constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
+    constexpr auto prot = UB_MEMORY_PROT_WRITE | UB_MEMORY_PROT_UNCACHEABLE;
     auto *region = TRY(core::syscall<T *>(core::Syscall::allocate_region, size * sizeof(T), prot));
     ustd::fill_n(region, size, T{});
     return region;

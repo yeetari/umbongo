@@ -29,12 +29,12 @@ int open(const char *path, int oflag, ...) {
     auto flags = static_cast<uint32_t>(oflag);
     flags &= ~(O_RDONLY | O_WRONLY);
 
-    auto mode = kernel::OpenMode::None;
+    auto mode = UB_OPEN_MODE_NONE;
     if ((flags & O_CREAT) == O_CREAT) {
-        mode |= kernel::OpenMode::Create;
+        mode |= UB_OPEN_MODE_CREATE;
     }
     if ((flags & O_TRUNC) == O_TRUNC) {
-        mode |= kernel::OpenMode::Truncate;
+        mode |= UB_OPEN_MODE_TRUNCATE;
     }
     flags &= ~(O_CREAT | O_TRUNC);
     if (flags != 0) {

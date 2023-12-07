@@ -6,7 +6,7 @@
 #include <core/Error.hh>
 #include <core/EventLoop.hh>
 #include <core/File.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <log/Log.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
@@ -24,7 +24,7 @@ ustd::Vector<HostController> find_host_controllers(core::EventLoop &event_loop) 
     ustd::Vector<HostController> host_controllers;
     EXPECT(core::iterate_directory("/dev/pci", [&](ustd::StringView device_name) {
         auto file = EXPECT(core::File::open(ustd::format("/dev/pci/{}", device_name)));
-        auto info = EXPECT(file.read<kernel::PciDeviceInfo>());
+        auto info = EXPECT(file.read<ub_pci_device_info_t>());
         if (info.clas == 0x0c && info.subc == 0x03 && info.prif == 0x30) {
             host_controllers.emplace(device_name, event_loop, ustd::move(file));
         }
@@ -51,7 +51,7 @@ size_t main(size_t, const char **) {
             }
             continue;
         }
-        event_loop.watch(host_controller.file(), kernel::PollEvents::Write);
+        event_loop.watch(host_controller.file(), UB_POLL_EVENT_WRITE);
     }
     return event_loop.run();
 }

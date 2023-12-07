@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/Watchable.hh>
-#include <kernel/api/Types.hh>
+#include <kernel/api/Types.h>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -14,13 +14,11 @@ namespace core {
 
 enum class SysError : ssize_t;
 
-using OpenMode = kernel::OpenMode;
-
 class File : public Watchable {
     ustd::Optional<uint32_t> m_fd;
 
 public:
-    static ustd::Result<File, SysError> open(ustd::StringView path, OpenMode mode = OpenMode::None);
+    static ustd::Result<File, SysError> open(ustd::StringView path, ub_open_mode_t open_mode = UB_OPEN_MODE_NONE);
 
     File() = default;
     explicit File(uint32_t fd) : m_fd(fd) {}
@@ -36,7 +34,7 @@ public:
     }
 
     void close();
-    ustd::Result<size_t, SysError> ioctl(kernel::IoctlRequest request, void *arg = nullptr);
+    ustd::Result<size_t, SysError> ioctl(ub_ioctl_request_t request, void *arg = nullptr);
     ustd::Result<uintptr_t, SysError> mmap();
     ustd::Result<size_t, SysError> read(ustd::Span<void> data);
     ustd::Result<size_t, SysError> read(ustd::Span<void> data, size_t offset);

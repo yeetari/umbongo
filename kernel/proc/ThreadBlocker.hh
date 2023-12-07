@@ -12,7 +12,7 @@
 
 namespace kernel {
 
-struct PollFd;
+typedef struct ub_poll_fd ub_poll_fd_t;
 class SpinLock;
 
 class ThreadBlocker {
@@ -47,13 +47,13 @@ public:
 };
 
 class PollBlocker : public ThreadBlocker {
-    const ustd::LargeVector<PollFd> &m_fds;
+    const ustd::LargeVector<ub_poll_fd_t> &m_fds;
     SpinLock &m_lock;
     Process &m_process;
     ustd::Optional<size_t> m_deadline;
 
 public:
-    PollBlocker(const ustd::LargeVector<PollFd> &fds, SpinLock &lock, Process &process, ssize_t timeout);
+    PollBlocker(const ustd::LargeVector<ub_poll_fd_t> &fds, SpinLock &lock, Process &process, ssize_t timeout);
 
     bool should_unblock() override;
 };
