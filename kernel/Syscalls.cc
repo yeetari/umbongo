@@ -193,7 +193,7 @@ SyscallResult Process::sys_dup_fd(uint32_t src, uint32_t dst) {
     return 0;
 }
 
-SyscallResult Process::sys_exit(size_t code) const {
+SyscallResult Process::sys_exit(size_t code) {
     if (code != 0) {
         dmesg("[#{}]: sys_exit called with non-zero code {}", m_pid, code);
     }
@@ -201,7 +201,7 @@ SyscallResult Process::sys_exit(size_t code) const {
     return 0;
 }
 
-SyscallResult Process::sys_getcwd(char *path) const {
+SyscallResult Process::sys_getcwd(char *path) {
     ScopedLock locker(m_lock);
     ustd::Vector<Inode *> inodes;
     for (auto *inode = m_cwd; inode != Vfs::root_inode(); inode = inode->parent()) {
@@ -225,11 +225,11 @@ SyscallResult Process::sys_getcwd(char *path) const {
     return 0;
 }
 
-SyscallResult Process::sys_getpid() const {
+SyscallResult Process::sys_getpid() {
     return m_pid;
 }
 
-SyscallResult Process::sys_gettime() const {
+SyscallResult Process::sys_gettime() {
     return TimeManager::ns_since_boot();
 }
 
@@ -241,12 +241,12 @@ SyscallResult Process::sys_ioctl(uint32_t fd, IoctlRequest request, void *arg) {
     return m_fds[fd]->ioctl(request, arg);
 }
 
-SyscallResult Process::sys_mkdir(const char *path) const {
+SyscallResult Process::sys_mkdir(const char *path) {
     ScopedLock locker(m_lock);
     return TRY(Vfs::mkdir(path, m_cwd));
 }
 
-SyscallResult Process::sys_mmap(uint32_t fd) const {
+SyscallResult Process::sys_mmap(uint32_t fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return Error::BadFd;
@@ -254,7 +254,7 @@ SyscallResult Process::sys_mmap(uint32_t fd) const {
     return m_fds[fd]->mmap(*m_virt_space);
 }
 
-SyscallResult Process::sys_mount(const char *target, const char *fs_type) const {
+SyscallResult Process::sys_mount(const char *target, const char *fs_type) {
     ScopedLock locker(m_lock);
     ustd::UniquePtr<FileSystem> fs;
     if (ustd::StringView(fs_type) == "ram") {
