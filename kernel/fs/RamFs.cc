@@ -1,8 +1,8 @@
 #include <kernel/fs/RamFs.hh>
 
+#include <kernel/Error.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/Inode.hh>
 #include <kernel/fs/InodeFile.hh>
@@ -64,7 +64,7 @@ size_t RamFsInode::write(ustd::Span<const void> data, size_t offset) {
 
 SysResult<Inode *> RamFsDirectoryInode::child(size_t index) const {
     if (index >= ustd::Limits<uint32_t>::max()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     ScopedLock locker(m_lock);
     return m_children[static_cast<uint32_t>(index)].ptr();
@@ -79,7 +79,7 @@ SysResult<Inode *> RamFsDirectoryInode::create(ustd::StringView name, InodeType 
     case InodeType::Directory:
         return m_children.emplace(new RamFsDirectoryInode(this, name)).ptr();
     default:
-        return SysError::Invalid;
+        return Error::Invalid;
     }
 }
 
@@ -107,7 +107,7 @@ SysResult<> RamFsDirectoryInode::remove(ustd::StringView name) {
             return {};
         }
     }
-    return SysError::NonExistent;
+    return Error::NonExistent;
 }
 
 size_t RamFsDirectoryInode::size() const {

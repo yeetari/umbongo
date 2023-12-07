@@ -1,8 +1,8 @@
 #include <kernel/pci/Function.hh>
 
-#include <kernel/SysError.hh>
+#include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/dev/Device.hh>
 #include <kernel/intr/InterruptManager.hh>
 #include <kernel/mem/Region.hh>
@@ -155,7 +155,7 @@ SyscallResult Function::ioctl(IoctlRequest request, void *) {
         return 0;
     }
     default:
-        return SysError::Invalid;
+        return Error::Invalid;
     }
 }
 

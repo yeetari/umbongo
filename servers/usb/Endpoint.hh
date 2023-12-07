@@ -1,10 +1,15 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh>
+
+namespace core {
+
+enum class SysError : ssize_t;
+
+} // namespace core
 
 class Device;
 class TrbRing;

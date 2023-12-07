@@ -1,8 +1,8 @@
 #include <kernel/fs/Inode.hh>
 
+#include <kernel/Error.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/fs/File.hh>
 #include <ustd/Assert.hh>
@@ -15,7 +15,7 @@
 namespace kernel {
 
 SysResult<ustd::SharedPtr<File>> Inode::open_impl() {
-    return SysError::Invalid;
+    return Error::Invalid;
 }
 
 void Inode::bind_anonymous_file(ustd::SharedPtr<File> anonymous_file) {
@@ -28,7 +28,7 @@ SysResult<ustd::SharedPtr<File>> Inode::open() {
     if (m_type == InodeType::AnonymousFile) {
         ScopedLock locker(m_anonymous_file_lock);
         if (!m_anonymous_file) {
-            return SysError::Invalid;
+            return Error::Invalid;
         }
         return m_anonymous_file;
     }
@@ -36,11 +36,11 @@ SysResult<ustd::SharedPtr<File>> Inode::open() {
 }
 
 SysResult<Inode *> Inode::child(size_t) const {
-    return SysError::NotDirectory;
+    return Error::NotDirectory;
 }
 
 SysResult<Inode *> Inode::create(ustd::StringView, InodeType) {
-    return SysError::NotDirectory;
+    return Error::NotDirectory;
 }
 
 Inode *Inode::lookup(ustd::StringView) {
@@ -52,11 +52,11 @@ size_t Inode::read(ustd::Span<void>, size_t) const {
 }
 
 SysResult<> Inode::remove(ustd::StringView) {
-    return SysError::NotDirectory;
+    return Error::NotDirectory;
 }
 
 SysResult<> Inode::truncate() {
-    return SysError::Invalid;
+    return Error::Invalid;
 }
 
 size_t Inode::write(ustd::Span<const void>, size_t) {

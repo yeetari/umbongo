@@ -1,8 +1,8 @@
 #include <kernel/dev/FramebufferDevice.hh>
 
-#include <kernel/SysError.hh>
+#include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/mem/Region.hh>
 #include <kernel/mem/VirtSpace.hh>
 #include <ustd/Types.hh>
@@ -24,7 +24,7 @@ SyscallResult FramebufferDevice::ioctl(IoctlRequest request, void *arg) {
         return 0;
     }
     default:
-        return SysError::Invalid;
+        return Error::Invalid;
     }
 }
 

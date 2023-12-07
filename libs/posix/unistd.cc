@@ -18,7 +18,7 @@ int access(const char *, int) {
 }
 
 int close(int fd) {
-    if (auto result = core::syscall(Syscall::close, fd); result.is_error()) {
+    if (auto result = core::syscall(core::Syscall::close, fd); result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;
     }
@@ -87,7 +87,7 @@ off_t lseek(int, off_t, int) {
 }
 
 ssize_t read(int fd, void *data, size_t size) {
-    auto result = core::syscall<ssize_t>(Syscall::read, fd, data, size);
+    auto result = core::syscall<ssize_t>(core::Syscall::read, fd, data, size);
     if (result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;

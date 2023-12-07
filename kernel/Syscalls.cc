@@ -1,11 +1,11 @@
 #include <kernel/proc/Process.hh>
 
 #include <kernel/Dmesg.hh>
+#include <kernel/Error.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
@@ -41,11 +41,11 @@ namespace kernel {
 SyscallResult Process::sys_accept(uint32_t fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     auto &file = m_fds[fd]->file();
     if (!file.is_server_socket()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     auto &server = static_cast<ServerSocket &>(file);
     if (server.accept_would_block()) {
@@ -89,7 +89,7 @@ SyscallResult Process::sys_chdir(const char *path) {
 SyscallResult Process::sys_close(uint32_t fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     m_fds[fd].clear();
     return 0;
@@ -98,7 +98,7 @@ SyscallResult Process::sys_close(uint32_t fd) {
 SyscallResult Process::sys_connect(const char *path) {
     auto file = TRY(Vfs::open(path, OpenMode::None, m_cwd));
     if (!file->is_server_socket()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     auto client = ustd::make_shared<Socket>(new DoubleBuffer(64_KiB), new DoubleBuffer(64_KiB));
     auto &server = static_cast<ServerSocket &>(*file);
@@ -183,7 +183,7 @@ SyscallResult Process::sys_dup_fd(uint32_t src, uint32_t dst) {
     // TODO: Which check should happen first?
     ScopedLock locker(m_lock);
     if (src >= m_fds.size() || !m_fds[src]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     if (src == dst) {
         return 0;
@@ -236,20 +236,20 @@ SyscallResult Process::sys_gettime() const {
 SyscallResult Process::sys_ioctl(uint32_t fd, IoctlRequest request, void *arg) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     return m_fds[fd]->ioctl(request, arg);
 }
 
 SyscallResult Process::sys_mkdir(const char *path) const {
     ScopedLock locker(m_lock);
-    return Vfs::mkdir(path, m_cwd);
+    return TRY(Vfs::mkdir(path, m_cwd));
 }
 
 SyscallResult Process::sys_mmap(uint32_t fd) const {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     return m_fds[fd]->mmap(*m_virt_space);
 }
@@ -260,9 +260,9 @@ SyscallResult Process::sys_mount(const char *target, const char *fs_type) const 
     if (ustd::StringView(fs_type) == "ram") {
         fs = ustd::make_unique<RamFs>();
     } else {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
-    return Vfs::mount(target, ustd::move(fs));
+    return TRY(Vfs::mount(target, ustd::move(fs)));
 }
 
 SyscallResult Process::sys_open(const char *path, OpenMode mode) {
@@ -297,12 +297,12 @@ SyscallResult Process::sys_poll(PollFd *fds, size_t count, ssize_t timeout) {
 SyscallResult Process::sys_read(uint32_t fd, void *data, size_t size) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     auto &handle = m_fds[fd];
     if (!handle->valid()) {
         handle.clear();
-        return SysError::BrokenHandle;
+        return Error::BrokenHandle;
     }
     if (handle->read_would_block()) {
         Processor::current_thread()->block<ReadBlocker>(handle->file(), handle->offset());
@@ -334,11 +334,11 @@ SyscallResult Process::sys_read_directory(const char *path, uint8_t *data) {
 SyscallResult Process::sys_seek(uint32_t fd, size_t offset, SeekMode mode) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     if (!m_fds[fd]->valid()) {
         m_fds[fd].clear();
-        return SysError::BrokenHandle;
+        return Error::BrokenHandle;
     }
     return m_fds[fd]->seek(offset, mode);
 }
@@ -346,15 +346,15 @@ SyscallResult Process::sys_seek(uint32_t fd, size_t offset, SeekMode mode) {
 SyscallResult Process::sys_size(uint32_t fd) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     if (!m_fds[fd]->valid()) {
         m_fds[fd].clear();
-        return SysError::BrokenHandle;
+        return Error::BrokenHandle;
     }
     auto &file = m_fds[fd]->file();
     if (!file.is_inode_file()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     return static_cast<InodeFile &>(file).inode()->size();
 }
@@ -396,7 +396,7 @@ SyscallResult Process::sys_virt_to_phys(uintptr_t virt) {
             return physical_page->phys() + offset;
         }
     }
-    return SysError::NonExistent;
+    return Error::NonExistent;
 }
 
 SyscallResult Process::sys_wait_pid(size_t pid) {
@@ -407,12 +407,12 @@ SyscallResult Process::sys_wait_pid(size_t pid) {
 SyscallResult Process::sys_write(uint32_t fd, void *data, size_t size) {
     ScopedLock locker(m_lock);
     if (fd >= m_fds.size() || !m_fds[fd]) {
-        return SysError::BadFd;
+        return Error::BadFd;
     }
     auto &handle = m_fds[fd];
     if (!handle->valid()) {
         handle.clear();
-        return SysError::BrokenHandle;
+        return Error::BrokenHandle;
     }
     if (handle->write_would_block()) {
         Processor::current_thread()->block<WriteBlocker>(handle->file(), handle->offset());

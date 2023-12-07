@@ -44,11 +44,11 @@ public:
 
 template <typename ClientType>
 Server<ClientType>::Server(core::EventLoop &event_loop, ustd::StringView path) : m_event_loop(event_loop) {
-    m_fd.emplace(EXPECT(core::syscall<uint32_t>(Syscall::create_server_socket, 4)));
-    EXPECT(core::syscall(Syscall::bind, *m_fd, path.data()));
+    m_fd.emplace(EXPECT(core::syscall<uint32_t>(core::Syscall::create_server_socket, 4)));
+    EXPECT(core::syscall(core::Syscall::bind, *m_fd, path.data()));
     event_loop.watch(*this, kernel::PollEvents::Accept);
     set_on_read_ready([this] {
-        uint32_t client_fd = EXPECT(core::syscall<uint32_t>(Syscall::accept, *m_fd));
+        uint32_t client_fd = EXPECT(core::syscall<uint32_t>(core::Syscall::accept, *m_fd));
         auto *client = m_clients.emplace(new ClientType(client_fd)).ptr();
         m_event_loop.watch(*client, kernel::PollEvents::Read);
         client->set_on_disconnect([this, client] {

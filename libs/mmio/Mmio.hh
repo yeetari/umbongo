@@ -1,6 +1,5 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <core/Syscall.hh>
 #include <core/Time.hh>
 #include <ustd/Algorithm.hh>
@@ -8,12 +7,18 @@
 #include <ustd/Try.hh>
 #include <ustd/Types.hh>
 
+namespace core {
+
+enum class SysError : ssize_t;
+
+} // namespace core
+
 namespace mmio {
 
 template <typename T>
 ustd::Result<T *, core::SysError> alloc_dma() {
     constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
-    auto *region = TRY(core::syscall<T *>(Syscall::allocate_region, sizeof(T), prot));
+    auto *region = TRY(core::syscall<T *>(core::Syscall::allocate_region, sizeof(T), prot));
     return &(*region = T{});
 }
 
@@ -23,7 +28,7 @@ ustd::Result<T *, core::SysError> alloc_dma_array(size_t size) {
         return nullptr;
     }
     constexpr auto prot = kernel::MemoryProt::Write | kernel::MemoryProt::Uncacheable;
-    auto *region = TRY(core::syscall<T *>(Syscall::allocate_region, size * sizeof(T), prot));
+    auto *region = TRY(core::syscall<T *>(core::Syscall::allocate_region, size * sizeof(T), prot));
     ustd::fill_n(region, size, T{});
     return region;
 }
@@ -50,7 +55,7 @@ bool wait_timeout(const volatile T &value, T mask, T desired, size_t timeout) {
 }
 
 inline ustd::Result<uintptr_t, core::SysError> virt_to_phys(const void *virt) {
-    return virt != nullptr ? TRY(core::syscall(Syscall::virt_to_phys, virt)) : 0ul;
+    return virt != nullptr ? TRY(core::syscall(core::Syscall::virt_to_phys, virt)) : 0ul;
 }
 
 } // namespace mmio

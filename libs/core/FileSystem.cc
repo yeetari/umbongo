@@ -2,7 +2,6 @@
 
 #include <core/Error.hh>
 #include <core/Syscall.hh>
-#include <kernel/SysError.hh>
 #include <ustd/Result.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Try.hh>

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <core/Watchable.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <ustd/Optional.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -12,6 +11,8 @@
 #include <ustd/Utility.hh>
 
 namespace core {
+
+enum class SysError : ssize_t;
 
 using OpenMode = kernel::OpenMode;
 

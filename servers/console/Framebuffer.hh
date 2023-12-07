@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/File.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <ustd/StringView.hh>
 #include <ustd/Types.hh>
 

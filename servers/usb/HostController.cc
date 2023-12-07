@@ -12,7 +12,7 @@
 #include <core/Error.hh>
 #include <core/File.hh>
 #include <core/Time.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <log/Log.hh>
 #include <mmio/Mmio.hh>
 #include <ustd/Array.hh>

@@ -9,7 +9,7 @@
 
 Framebuffer::Framebuffer(ustd::StringView path) : m_file(EXPECT(core::File::open(path))) {
     EXPECT(m_file.ioctl(kernel::IoctlRequest::FramebufferGetInfo, &m_info));
-    m_back_buffer = EXPECT(core::syscall<uint32_t *>(Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
+    m_back_buffer = EXPECT(core::syscall<uint32_t *>(core::Syscall::allocate_region, m_info.size, kernel::MemoryProt::Write));
     m_front_buffer = EXPECT(m_file.mmap<uint32_t>());
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <ustd/Function.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh> // IWYU pragma: keep
@@ -8,6 +7,12 @@
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
 #include <ustd/Vector.hh>
 // IWYU pragma: no_forward_declare ustd::Function
+
+namespace core {
+
+enum class SysError : ssize_t;
+
+} // namespace core
 
 class Endpoint;
 class HostController;

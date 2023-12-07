@@ -1,12 +1,13 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <core/File.hh>
 #include <ustd/Result.hh>
 #include <ustd/Types.hh>
 #include <ustd/Utility.hh>
 
 namespace core {
+
+enum class SysError : ssize_t;
 
 class Pipe {
     File m_read_end;

@@ -43,7 +43,7 @@ int open(const char *path, int oflag, ...) {
         return -1;
     }
 
-    auto result = core::syscall(Syscall::open, path, mode);
+    auto result = core::syscall(core::Syscall::open, path, mode);
     if (result.is_error()) {
         errno = posix::to_errno(result.error());
         return -1;

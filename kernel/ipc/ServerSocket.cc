@@ -1,8 +1,8 @@
 #include <kernel/ipc/ServerSocket.hh>
 
+#include <kernel/Error.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/ipc/Socket.hh>
 #include <ustd/SharedPtr.hh>
@@ -41,18 +41,18 @@ bool ServerSocket::write_would_block(size_t) const {
 SysResult<> ServerSocket::queue_connection_from(ustd::SharedPtr<Socket> socket) {
     ScopedLock locker(m_lock);
     if (m_connection_queue.size() + 1 >= m_connection_queue.capacity()) {
-        return SysError::Busy;
+        return Error::Busy;
     }
     m_connection_queue.push(ustd::move(socket));
     return {};
 }
 
 SysResult<size_t> ServerSocket::read(ustd::Span<void>, size_t) {
-    return SysError::Invalid;
+    return Error::Invalid;
 }
 
 SysResult<size_t> ServerSocket::write(ustd::Span<const void>, size_t) {
-    return SysError::Invalid;
+    return Error::Invalid;
 }
 
 } // namespace kernel

@@ -1,11 +1,15 @@
 #pragma once
 
-#include <kernel/SysError.hh> // IWYU pragma: keep
 #include <ustd/StringView.hh>
+#include <ustd/Types.hh>
 
 namespace core {
 
-using SysError = kernel::SysError;
+enum class SysError : ssize_t {
+#define E(_, name, value) name = (value),
+#include <kernel/api/Errors.in>
+#undef E
+};
 
 [[noreturn]] void abort_error(ustd::StringView msg, SysError error);
 ustd::StringView error_string(SysError error);

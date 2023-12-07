@@ -1,10 +1,15 @@
 #pragma once
 
-#include <core/Error.hh>
 #include <ustd/Result.hh>
 #include <ustd/Span.hh>
 #include <ustd/Types.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
+
+namespace core {
+
+enum class SysError : ssize_t;
+
+} // namespace core
 
 enum class TransferType : uint8_t;
 

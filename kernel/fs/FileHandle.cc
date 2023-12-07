@@ -1,7 +1,7 @@
 #include <kernel/fs/FileHandle.hh>
 
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/fs/File.hh>
 #include <ustd/SharedPtr.hh>
 #include <ustd/Try.hh>

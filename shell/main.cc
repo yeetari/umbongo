@@ -77,7 +77,7 @@ size_t main(size_t, const char **) {
         while (true) {
             core::KeyEvent event;
             while (true) {
-                auto rc = core::syscall(Syscall::read, 0, &event, sizeof(core::KeyEvent));
+                auto rc = core::syscall(core::Syscall::read, 0, &event, sizeof(core::KeyEvent));
                 if (rc.is_error()) {
                     return 1;
                 }

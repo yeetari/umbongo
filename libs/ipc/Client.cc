@@ -6,7 +6,6 @@
 #include <ipc/Message.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/MessageEncoder.hh>
-#include <kernel/SysError.hh>
 #include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Assert.hh>
@@ -27,7 +26,7 @@ Client::Client(ustd::Optional<uint32_t> fd) : m_fd(ustd::move(fd)) {
     m_on_disconnect = [this] {
         log::warn("Lost connection to server!");
         if (m_fd) {
-            EXPECT(core::syscall(Syscall::close, *m_fd));
+            EXPECT(core::syscall(core::Syscall::close, *m_fd));
         }
     };
     set_on_read_ready([this] {
@@ -54,14 +53,14 @@ Client::Client(ustd::Optional<uint32_t> fd) : m_fd(ustd::move(fd)) {
 
 Client::~Client() {
     if (m_fd) {
-        EXPECT(core::syscall(Syscall::close, *m_fd));
+        EXPECT(core::syscall(core::Syscall::close, *m_fd));
     }
 }
 
 bool Client::connect(ustd::StringView path) {
     // TODO: Retries are only a temporary fix. system-server should have proper dependencies/socket takeover.
     for (size_t tries = 100; tries != 0; tries--) {
-        auto result = core::syscall(Syscall::connect, path.data());
+        auto result = core::syscall(core::Syscall::connect, path.data());
         if (result.is_error() && result.error() == core::SysError::NonExistent) {
             core::sleep(2000000ul);
             continue;
@@ -82,13 +81,13 @@ void Client::send_message(const Message &message) {
     ustd::Array<uint8_t, 8_KiB> buffer;
     MessageEncoder encoder(buffer.span());
     message.encode(encoder);
-    [[maybe_unused]] auto bytes_written = core::syscall(Syscall::write, *m_fd, buffer.data(), encoder.size());
+    [[maybe_unused]] auto bytes_written = core::syscall(core::Syscall::write, *m_fd, buffer.data(), encoder.size());
     ASSERT(!bytes_written.is_error());
     ASSERT(bytes_written.value() == encoder.size());
 }
 
 size_t Client::wait_message(ustd::Span<uint8_t> buffer) {
-    auto bytes_read = core::syscall(Syscall::read, *m_fd, buffer.data(), buffer.size());
+    auto bytes_read = core::syscall(core::Syscall::read, *m_fd, buffer.data(), buffer.size());
     ASSERT(!bytes_read.is_error());
     return bytes_read.value();
 }

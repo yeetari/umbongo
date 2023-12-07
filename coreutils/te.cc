@@ -87,7 +87,7 @@ ustd::Result<void, core::SysError> Editor::load(ustd::String &&path) {
 bool Editor::read_key() {
     // TODO: Global stdin file to .read<KeyEvent>() from.
     core::KeyEvent event;
-    EXPECT(core::syscall<ssize_t>(Syscall::read, 0, &event, sizeof(core::KeyEvent)));
+    EXPECT(core::syscall<ssize_t>(core::Syscall::read, 0, &event, sizeof(core::KeyEvent)));
     if (event.code() >= 0x4f && event.code() <= 0x52) {
         if (event.ctrl_pressed()) {
             return true;

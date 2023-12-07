@@ -10,7 +10,7 @@
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
 #include <ipc/Server.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <log/Log.hh>
 #include <ustd/Array.hh>
 #include <ustd/Numeric.hh>

@@ -1,0 +1,8 @@
+E(BAD_FD, BadFd, -1)
+E(NON_EXISTENT, NonExistent, -2)
+E(BROKEN_HANDLE, BrokenHandle, -3)
+E(INVALID, Invalid, -4)
+E(NO_EXEC, NoExec, -5)
+E(NOT_DIRECTORY, NotDirectory, -6)
+E(ALREADY_EXISTS, AlreadyExists, -7)
+E(BUSY, Busy, -8)

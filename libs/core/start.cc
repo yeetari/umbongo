@@ -17,7 +17,7 @@ size_t main(size_t argc, const char **argv);
         builder.append("\n=> {}", msg);
     }
     log::message(log::Level::Error, builder.build());
-    static_cast<void>(core::syscall(Syscall::exit, 1));
+    static_cast<void>(core::syscall(core::Syscall::exit, 1));
     while (true) {
         asm volatile("ud2");
     }
@@ -25,5 +25,5 @@ size_t main(size_t argc, const char **argv);
 
 extern "C" void _start(size_t argc, const char **argv) {
     asm volatile("andq $~15, %rsp");
-    EXPECT(core::syscall(Syscall::exit, main(argc, argv)));
+    EXPECT(core::syscall(core::Syscall::exit, main(argc, argv)));
 }

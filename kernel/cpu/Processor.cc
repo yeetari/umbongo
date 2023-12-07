@@ -2,7 +2,6 @@
 
 #include <kernel/Dmesg.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/Syscall.hh>
 #include <kernel/acpi/ApicTable.hh>
 #include <kernel/acpi/InterruptController.hh>
 #include <kernel/cpu/LocalApic.hh>
@@ -188,9 +187,11 @@ struct [[gnu::packed]] SyscallFrame {
 
 ustd::Array<InterruptHandler, k_interrupt_count> s_interrupt_table;
 using SyscallHandler = SyscallResult (Process::*)(uint64_t, uint64_t, uint64_t);
-#define ENUMERATE_SYSCALL(s) reinterpret_cast<SyscallHandler>(&Process::sys_##s),
-const ustd::Array<SyscallHandler, Syscall::__Count__> s_syscall_table{ENUMERATE_SYSCALLS(ENUMERATE_SYSCALL)};
-#undef ENUMERATE_SYSCALL
+#define S(name, ...) reinterpret_cast<SyscallHandler>(&Process::sys_##name),
+const ustd::Array s_syscall_table{
+#include <kernel/api/Syscalls.in>
+};
+#undef S
 
 LocalApic *s_apic = nullptr;
 ustd::Atomic<uint8_t> s_initialised_ap_count = 0;

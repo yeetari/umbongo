@@ -1,8 +1,8 @@
 #include <kernel/dev/DevFs.hh>
 
+#include <kernel/Error.hh>
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SysError.hh>
 #include <kernel/SysResult.hh>
 #include <kernel/dev/Device.hh>
 #include <kernel/fs/File.hh>
@@ -62,7 +62,7 @@ void DevFs::mount(Inode *parent, Inode *host) {
 
 SysResult<Inode *> DevFsDirectoryInode::child(size_t index) const {
     if (index >= ustd::Limits<uint32_t>::max()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     ScopedLock locker(m_lock);
     return m_children[static_cast<uint32_t>(index)].ptr();
@@ -76,7 +76,7 @@ SysResult<Inode *> DevFsDirectoryInode::create(ustd::StringView name, InodeType 
     case InodeType::Directory:
         return m_children.emplace(new DevFsDirectoryInode(this, name)).ptr();
     default:
-        return SysError::Invalid;
+        return Error::Invalid;
     }
 }
 
@@ -104,7 +104,7 @@ SysResult<> DevFsDirectoryInode::remove(ustd::StringView name) {
             return {};
         }
     }
-    return SysError::NonExistent;
+    return Error::NonExistent;
 }
 
 size_t DevFsDirectoryInode::size() const {

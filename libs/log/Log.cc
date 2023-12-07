@@ -24,14 +24,14 @@ void initialise(ustd::StringView name) {
 }
 
 void message(Level level, ustd::StringView message) {
-    static_cast<void>(core::syscall(Syscall::debug_line, message.data()));
+    static_cast<void>(core::syscall(core::Syscall::debug_line, message.data()));
     if (s_client != nullptr && s_client->connected()) {
         s_client->send_message<LogMessage>(level, message);
         return;
     }
     const char newline = '\n';
-    static_cast<void>(core::syscall(Syscall::write, 1, message.data(), message.length()));
-    static_cast<void>(core::syscall(Syscall::write, 1, &newline, 1));
+    static_cast<void>(core::syscall(core::Syscall::write, 1, message.data(), message.length()));
+    static_cast<void>(core::syscall(core::Syscall::write, 1, &newline, 1));
 }
 
 } // namespace log

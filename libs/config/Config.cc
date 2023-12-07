@@ -4,7 +4,7 @@
 #include <core/EventLoop.hh>
 #include <ipc/Client.hh>
 #include <ipc/MessageDecoder.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <ustd/Assert.hh>
 #include <ustd/Function.hh>
 #include <ustd/Optional.hh>

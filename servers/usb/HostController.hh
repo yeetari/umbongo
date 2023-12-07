@@ -2,7 +2,6 @@
 
 #include "Port.hh" // IWYU pragma: keep
 
-#include <core/Error.hh>
 #include <core/File.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
@@ -15,6 +14,7 @@
 namespace core {
 
 class EventLoop;
+enum class SysError : ssize_t;
 
 } // namespace core
 

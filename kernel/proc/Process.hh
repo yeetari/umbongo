@@ -2,7 +2,7 @@
 
 #include <kernel/SpinLock.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
+#include <kernel/api/Types.hh> // IWYU pragma: keep
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/mem/VirtSpace.hh> // IWYU pragma: keep
 #include <ustd/Atomic.hh>

@@ -54,7 +54,7 @@ KeyboardDevice::~KeyboardDevice() = default;
 ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_loop) {
     m_dma_buffer = EXPECT(mmio::alloc_dma_array<uint8_t>(8));
     m_pipe = EXPECT(core::create_pipe());
-    EXPECT(core::syscall(Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
+    EXPECT(core::syscall(core::Syscall::bind, m_pipe.read_fd(), "/dev/kb"));
     TRY(walk_configuration([this](void *descriptor, DescriptorType type) -> ustd::Result<void, DeviceError> {
         if (type == DescriptorType::Configuration) {
             auto *config_descriptor = static_cast<ConfigDescriptor *>(descriptor);
@@ -96,7 +96,7 @@ ustd::Result<void, DeviceError> KeyboardDevice::enable(core::EventLoop &event_lo
             m_modifiers[2] || m_modifiers[6],
             m_modifiers[0] || m_modifiers[4],
         };
-        EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
+        EXPECT(core::syscall(core::Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
     });
 
     config::watch("usb-server", "keyboard.repeat_delay", [this](ustd::StringView value) {
@@ -138,7 +138,7 @@ void KeyboardDevice::poll() {
         };
         m_last_code = key;
         m_last_time = core::time();
-        EXPECT(core::syscall(Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
+        EXPECT(core::syscall(core::Syscall::write, m_pipe.write_fd(), &key_event, sizeof(core::KeyEvent)));
     }
     __builtin_memcpy(m_cmp_buffer.data(), m_dma_buffer, 8);
 }

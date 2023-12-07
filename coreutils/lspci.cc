@@ -3,7 +3,7 @@
 #include <core/File.hh>
 #include <core/Print.hh>
 #include <core/Process.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <ustd/Array.hh>
 #include <ustd/Result.hh>
 #include <ustd/String.hh>

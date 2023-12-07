@@ -28,7 +28,7 @@ public:
     explicit FILE(uint32_t fd) : m_fd(fd) {}
     FILE(const FILE &) = delete;
     FILE(FILE &&) = delete;
-    ~FILE() { EXPECT(core::syscall(Syscall::close, m_fd)); }
+    ~FILE() { EXPECT(core::syscall(core::Syscall::close, m_fd)); }
 
     FILE &operator=(const FILE &) = delete;
     FILE &operator=(FILE &&) = delete;
@@ -262,7 +262,7 @@ bool FILE::gets(uint8_t *data, int size) {
     size_t total_read = 0;
     while (size > 1) {
         uint8_t byte = 0;
-        auto bytes_read = core::syscall(Syscall::read, m_fd, &byte, 1);
+        auto bytes_read = core::syscall(core::Syscall::read, m_fd, &byte, 1);
         if (bytes_read.is_error() || bytes_read.value() == 0) {
             *data = 0;
             if (bytes_read.value() == 0) {
@@ -284,7 +284,7 @@ bool FILE::gets(uint8_t *data, int size) {
 size_t FILE::read(void *data, size_t size) {
     size_t total_read = 0;
     while (size > 0) {
-        auto bytes_read = core::syscall(Syscall::read, m_fd, data, size);
+        auto bytes_read = core::syscall(core::Syscall::read, m_fd, data, size);
         if (bytes_read.is_error() || bytes_read.value() == 0) {
             if (bytes_read.value() == 0) {
                 m_eof = true;
@@ -301,7 +301,7 @@ size_t FILE::read(void *data, size_t size) {
 
 int FILE::seek(long offset, int whence) {
     ENSURE(whence != SEEK_END, "TODO: Support SEEK_END");
-    if (auto result = core::syscall(Syscall::seek, m_fd, offset, seek_mode(whence)); result.is_error()) {
+    if (auto result = core::syscall(core::Syscall::seek, m_fd, offset, seek_mode(whence)); result.is_error()) {
         return -1;
     }
     m_eof = false;
@@ -309,13 +309,13 @@ int FILE::seek(long offset, int whence) {
 }
 
 ssize_t FILE::tell() {
-    return EXPECT(core::syscall<ssize_t>(Syscall::seek, m_fd, 0, kernel::SeekMode::Add));
+    return EXPECT(core::syscall<ssize_t>(core::Syscall::seek, m_fd, 0, kernel::SeekMode::Add));
 }
 
 size_t FILE::write(const void *data, size_t size) {
     size_t total_written = 0;
     while (size > 0) {
-        auto bytes_written = core::syscall(Syscall::write, m_fd, data, size);
+        auto bytes_written = core::syscall(core::Syscall::write, m_fd, data, size);
         if (bytes_written.is_error()) {
             m_error = posix::to_errno(bytes_written.error());
             return total_written;
@@ -329,7 +329,7 @@ size_t FILE::write(const void *data, size_t size) {
 __BEGIN_DECLS
 
 FILE *fopen(const char *path, const char *mode) {
-    auto fd = core::syscall<uint32_t>(Syscall::open, path, parse_mode(mode));
+    auto fd = core::syscall<uint32_t>(core::Syscall::open, path, parse_mode(mode));
     if (fd.is_error()) {
         return nullptr;
     }

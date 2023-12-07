@@ -1,8 +1,8 @@
 #include <kernel/fs/Vfs.hh>
 
-#include <kernel/SysError.hh>
+#include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileSystem.hh>
 #include <kernel/fs/Inode.hh>
@@ -115,13 +115,13 @@ SysResult<Inode *> Vfs::create(ustd::StringView path, Inode *base, InodeType typ
     Inode *parent = nullptr;
     ustd::StringView name;
     if (resolve_path(path, base, &parent, &name) != nullptr) {
-        return SysError::AlreadyExists;
+        return Error::AlreadyExists;
     }
     if (parent == nullptr) {
-        return SysError::NonExistent;
+        return Error::NonExistent;
     }
     if (name.empty()) {
-        return SysError::Invalid;
+        return Error::Invalid;
     }
     return parent->create(name, type);
 }
@@ -135,7 +135,7 @@ SysResult<> Vfs::mount(ustd::StringView path, ustd::UniquePtr<FileSystem> &&fs) 
     Inode *parent = nullptr;
     auto *host = resolve_path(path, nullptr, &parent);
     if (host == nullptr) {
-        return SysError::NonExistent;
+        return Error::NonExistent;
     }
     fs->mount(parent, host);
     s_data->mounts.emplace(host, ustd::move(fs));
@@ -148,7 +148,7 @@ SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode,
         if ((mode & OpenMode::Create) == OpenMode::Create) {
             return TRY(Vfs::create(path, base, InodeType::RegularFile))->open();
         }
-        return SysError::NonExistent;
+        return Error::NonExistent;
     }
     if ((mode & OpenMode::Truncate) == OpenMode::Truncate) {
         TRY(inode->truncate());
@@ -159,10 +159,10 @@ SysResult<ustd::SharedPtr<File>> Vfs::open(ustd::StringView path, OpenMode mode,
 SysResult<Inode *> Vfs::open_directory(ustd::StringView path, Inode *base) {
     auto *inode = resolve_path(path, base);
     if (inode == nullptr) {
-        return SysError::NonExistent;
+        return Error::NonExistent;
     }
     if (inode->type() != InodeType::Directory) {
-        return SysError::NotDirectory;
+        return Error::NotDirectory;
     }
     return inode;
 }

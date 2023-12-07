@@ -2,9 +2,9 @@
 
 #include <elf/Elf.hh>
 #include <kernel/Dmesg.hh>
-#include <kernel/SysError.hh>
+#include <kernel/Error.hh>
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/cpu/Processor.hh>
 #include <kernel/cpu/RegisterState.hh>
 #include <kernel/fs/File.hh>
@@ -126,7 +126,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     auto interpreter_path = interpreter_for(*file);
     if (!interpreter_path) {
         // If there was an error trying to parse the interpreter location, not if the executable doesn't have one.
-        return SysError::NoExec;
+        return Error::NoExec;
     }
     auto executable = file;
     if (!interpreter_path->empty()) {
@@ -136,14 +136,14 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 
     elf::Header header{};
     if (executable->read({&header, sizeof(elf::Header)}) != sizeof(elf::Header)) {
-        return SysError::NoExec;
+        return Error::NoExec;
     }
     for (uint16_t i = 0; i < header.ph_count; i++) {
         elf::ProgramHeader phdr{};
         if (executable->read({&phdr, sizeof(elf::ProgramHeader)}, header.ph_off + header.ph_size * i) !=
                 sizeof(elf::ProgramHeader) ||
             phdr.filesz > phdr.memsz) {
-            return SysError::NoExec;
+            return Error::NoExec;
         }
         if (phdr.type != elf::SegmentType::Load) {
             continue;
@@ -163,11 +163,11 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
 
         size_t copy_offset = phdr.vaddr & 0xfffu;
         if (copy_offset + phdr.memsz > region.size()) {
-            return SysError::NoExec;
+            return Error::NoExec;
         }
         if (executable->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.filesz}, phdr.offset) !=
             phdr.filesz) {
-            return SysError::NoExec;
+            return Error::NoExec;
         }
     }
 

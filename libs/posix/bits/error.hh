@@ -3,7 +3,6 @@
 #include <errno.h>
 
 #include <core/Error.hh>
-#include <kernel/SysError.hh>
 #include <ustd/Assert.hh>
 
 namespace posix {

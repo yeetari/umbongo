@@ -2,7 +2,7 @@
 
 #include <kernel/ScopedLock.hh>
 #include <kernel/SpinLock.hh>
-#include <kernel/SyscallTypes.hh>
+#include <kernel/api/Types.hh>
 #include <kernel/fs/File.hh>
 #include <kernel/fs/FileHandle.hh>
 #include <kernel/ipc/ServerSocket.hh>

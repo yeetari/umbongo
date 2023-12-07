@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/SysResult.hh>
-#include <kernel/SyscallTypes.hh> // IWYU pragma: keep
+#include <kernel/api/Types.hh>    // IWYU pragma: keep
 #include <ustd/SharedPtr.hh>      // IWYU pragma: keep
 #include <ustd/StringView.hh>
 #include <ustd/UniquePtr.hh> // IWYU pragma: keep
