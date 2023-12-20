@@ -21,4 +21,4 @@ else
     flags+=("-cpu max")
 fi
 
-qemu-system-x86_64 ${flags[@]}
+qemu-system-x86_64 ${flags[@]} ${@:3}
