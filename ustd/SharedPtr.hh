@@ -86,9 +86,18 @@ T *SharedPtr<T>::operator->() const {
     return m_ptr;
 }
 
+template <typename T>
+SharedPtr<T> adopt_shared(T *ptr) {
+    return SharedPtr<T>(ptr);
+}
+
 template <typename T, typename... Args>
 SharedPtr<T> make_shared(Args &&...args) {
     return SharedPtr<T>(new T(forward<Args>(args)...));
 }
 
 } // namespace ustd
+
+#define USTD_ALLOW_MAKE_SHARED                                                                                         \
+    template <typename T, typename... Args>                                                                            \
+    friend ustd::SharedPtr<T> ustd::make_shared(Args &&...)
