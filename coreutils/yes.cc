@@ -1,5 +1,5 @@
-#include <core/Print.hh>
-#include <ustd/Types.hh>
+#include <core/print.hh>
+#include <ustd/types.hh>
 
 size_t main(size_t argc, const char **argv) {
     while (true) {

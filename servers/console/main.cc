@@ -1,25 +1,25 @@
-#include "EscapeParser.hh"
-#include "Framebuffer.hh"
-#include "Terminal.hh"
+#include "escape_parser.hh"
+#include "framebuffer.hh"
+#include "terminal.hh"
 
-#include <config/Config.hh>
-#include <console/IpcMessages.hh>
-#include <core/EventLoop.hh>
-#include <core/File.hh>
-#include <core/Timer.hh>
-#include <ipc/Client.hh>
-#include <ipc/MessageDecoder.hh>
-#include <ipc/Server.hh>
-#include <log/Log.hh>
-#include <system/System.h>
-#include <ustd/Array.hh>
-#include <ustd/Numeric.hh>
-#include <ustd/Optional.hh>
-#include <ustd/Span.hh>
-#include <ustd/StringCast.hh>
-#include <ustd/StringView.hh>
-#include <ustd/Try.hh>
-#include <ustd/Types.hh>
+#include <config/config.hh>
+#include <console/ipc_messages.hh>
+#include <core/event_loop.hh>
+#include <core/file.hh>
+#include <core/timer.hh>
+#include <ipc/client.hh>
+#include <ipc/message_decoder.hh>
+#include <ipc/server.hh>
+#include <log/log.hh>
+#include <system/system.h>
+#include <ustd/array.hh>
+#include <ustd/numeric.hh>
+#include <ustd/optional.hh>
+#include <ustd/span.hh>
+#include <ustd/string_cast.hh>
+#include <ustd/string_view.hh>
+#include <ustd/try.hh>
+#include <ustd/types.hh>
 
 size_t main(size_t, const char **) {
     log::initialise("console-server");

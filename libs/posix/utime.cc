@@ -2,7 +2,7 @@
 
 #include <sys/cdefs.h>
 
-#include <ustd/Assert.hh>
+#include <ustd/assert.hh>
 
 __BEGIN_DECLS
 

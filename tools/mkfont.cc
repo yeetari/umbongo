@@ -89,9 +89,9 @@ int main(int argc, char **argv) {
         throw std::runtime_error("Failed to open output file!");
     }
 
-    output_file << "#include <kernel/Font.hh>\n";
-    output_file << "#include <ustd/Array.hh>\n";
-    output_file << "#include <ustd/Types.hh>\n\n";
+    output_file << "#include <kernel/font.hh>\n";
+    output_file << "#include <ustd/array.hh>\n";
+    output_file << "#include <ustd/types.hh>\n\n";
 
     FreeType freetype;
     auto face = freetype.new_face(argv[1], 0);

@@ -5,10 +5,10 @@
 #include <stdarg.h>
 #include <sys/cdefs.h>
 
-#include <log/Log.hh>
-#include <system/Syscall.hh>
-#include <ustd/Result.hh>
-#include <ustd/Types.hh>
+#include <log/log.hh>
+#include <system/syscall.hh>
+#include <ustd/result.hh>
+#include <ustd/types.hh>
 
 __BEGIN_DECLS
 

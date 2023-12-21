@@ -5,12 +5,12 @@
 #include <limits.h>
 #include <sys/cdefs.h>
 
-#include <core/Process.hh>
-#include <log/Log.hh>
-#include <ustd/Algorithm.hh>
-#include <ustd/Assert.hh>
-#include <ustd/Types.hh>
-#include <ustd/Utility.hh>
+#include <core/process.hh>
+#include <log/log.hh>
+#include <ustd/algorithm.hh>
+#include <ustd/assert.hh>
+#include <ustd/types.hh>
+#include <ustd/utility.hh>
 
 namespace {
 

@@ -1,13 +1,13 @@
-#include <core/Error.hh>
-#include <core/File.hh>
-#include <core/Print.hh>
-#include <system/Syscall.hh>
-#include <ustd/Array.hh>
-#include <ustd/Result.hh>
-#include <ustd/Span.hh>
-#include <ustd/Types.hh>
-#include <ustd/Utility.hh>
-#include <ustd/Vector.hh>
+#include <core/error.hh>
+#include <core/file.hh>
+#include <core/print.hh>
+#include <system/syscall.hh>
+#include <ustd/array.hh>
+#include <ustd/result.hh>
+#include <ustd/span.hh>
+#include <ustd/types.hh>
+#include <ustd/utility.hh>
+#include <ustd/vector.hh>
 
 size_t main(size_t argc, const char **argv) {
     ustd::Vector<core::File> files;

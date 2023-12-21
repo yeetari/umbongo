@@ -1,11 +1,11 @@
-#include <core/File.hh>
-#include <elf/Elf.hh>
-#include <log/Log.hh>
-#include <system/Syscall.hh>
-#include <ustd/Assert.hh>
-#include <ustd/Numeric.hh>
-#include <ustd/Try.hh>
-#include <ustd/Types.hh>
+#include <core/file.hh>
+#include <elf/elf.hh>
+#include <log/log.hh>
+#include <system/syscall.hh>
+#include <ustd/assert.hh>
+#include <ustd/numeric.hh>
+#include <ustd/try.hh>
+#include <ustd/types.hh>
 
 size_t main(size_t argc, const char **argv) {
     auto file = EXPECT(core::File::open(argv[0]));

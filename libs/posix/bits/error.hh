@@ -2,8 +2,8 @@
 
 #include <errno.h>
 
-#include <system/Error.h>
-#include <ustd/Assert.hh>
+#include <system/error.h>
+#include <ustd/assert.hh>
 
 namespace posix {
 

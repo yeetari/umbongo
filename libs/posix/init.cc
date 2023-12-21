@@ -1,9 +1,9 @@
 #include <sys/cdefs.h>
 
-#include <log/Log.hh>
-#include <ustd/String.hh>
-#include <ustd/StringBuilder.hh>
-#include <ustd/Types.hh>
+#include <log/log.hh>
+#include <ustd/string.hh>
+#include <ustd/string_builder.hh>
+#include <ustd/types.hh>
 
 __BEGIN_DECLS
 

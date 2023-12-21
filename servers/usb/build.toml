@@ -2,11 +2,11 @@
 name = "usb-server"
 deps = ["config", "core", "log", "ipc", "ustd"]
 sources = [
-    "Device.cc",
-    "Endpoint.cc",
-    "HostController.cc",
-    "KeyboardDevice.cc",
+    "device.cc",
+    "endpoint.cc",
+    "host_controller.cc",
+    "keyboard_device.cc",
     "main.cc",
-    "Port.cc",
-    "TrbRing.cc",
+    "port.cc",
+    "trb_ring.cc",
 ]

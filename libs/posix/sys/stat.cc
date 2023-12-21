@@ -3,10 +3,10 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-#include <system/Syscall.hh>
-#include <ustd/Assert.hh>
-#include <ustd/Try.hh>
-#include <ustd/Types.hh>
+#include <system/syscall.hh>
+#include <ustd/assert.hh>
+#include <ustd/try.hh>
+#include <ustd/types.hh>
 
 __BEGIN_DECLS
 

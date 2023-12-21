@@ -1,8 +1,8 @@
 sources = [
-    "Builtin.cc",
-    "String.cc",
-    "StringBuilder.cc",
-    "StringView.cc",
+    "builtin.cc",
+    "string.cc",
+    "string_builder.cc",
+    "string_view.cc",
 ]
 
 [[library]]

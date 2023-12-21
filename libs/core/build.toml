@@ -1,15 +1,15 @@
 [[library]]
 name = "core"
 sources = [
-    "Directory.cc",
-    "Error.cc",
-    "EventLoop.cc",
-    "File.cc",
-    "FileSystem.cc",
-    "Heap.cc",
-    "Pipe.cc",
-    "Process.cc",
+    "directory.cc",
+    "error.cc",
+    "event_loop.cc",
+    "file.cc",
+    "file_system.cc",
+    "heap.cc",
+    "pipe.cc",
+    "process.cc",
     "start.cc",
-    "Time.cc",
-    "Timer.cc",
+    "time.cc",
+    "timer.cc",
 ]

@@ -1,11 +1,11 @@
-#include <core/Error.hh>
-#include <core/File.hh>
-#include <core/FileSystem.hh>
-#include <core/Pipe.hh>
-#include <core/Process.hh>
-#include <ustd/Result.hh>
-#include <ustd/Try.hh>
-#include <ustd/Types.hh>
+#include <core/error.hh>
+#include <core/file.hh>
+#include <core/file_system.hh>
+#include <core/pipe.hh>
+#include <core/process.hh>
+#include <ustd/result.hh>
+#include <ustd/try.hh>
+#include <ustd/types.hh>
 
 size_t main(size_t, const char **) {
     EXPECT(core::mount("/run", "ram"), "Failed to mount /run");

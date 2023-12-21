@@ -1,15 +1,15 @@
-#include <boot/BootInfo.hh>
-#include <boot/Efi.hh>
-#include <elf/Elf.hh>
-#include <ustd/Algorithm.hh>
-#include <ustd/Array.hh>
-#include <ustd/Assert.hh>
-#include <ustd/Numeric.hh>
-#include <ustd/RingBuffer.hh>
-#include <ustd/Span.hh>
-#include <ustd/StringView.hh>
-#include <ustd/Types.hh>
-#include <ustd/Utility.hh>
+#include <boot/boot_info.hh>
+#include <boot/efi.hh>
+#include <elf/elf.hh>
+#include <ustd/algorithm.hh>
+#include <ustd/array.hh>
+#include <ustd/assert.hh>
+#include <ustd/numeric.hh>
+#include <ustd/ring_buffer.hh>
+#include <ustd/span.hh>
+#include <ustd/string_view.hh>
+#include <ustd/types.hh>
+#include <ustd/utility.hh>
 
 namespace {
 

@@ -1,5 +1,5 @@
 [[library]]
 name = "log"
 sources = [
-    "Log.cc",
+    "log.cc",
 ]

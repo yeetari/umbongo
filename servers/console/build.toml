@@ -1,15 +1,15 @@
 [[command]]
-command = "$build_root/tools/mkfont $root/FantasqueSansMono.ttf $build_root/servers/console/Font.cc 24"
+command = "$build_root/tools/mkfont $root/FantasqueSansMono.ttf $build_root/servers/console/font.cc 24"
 deps = ["mkfont"]
-output = "Font.cc"
+output = "font.cc"
 
 [[executable]]
 name = "console-server"
 deps = ["config", "core", "log", "ipc", "ustd"]
 sources = [
-    "EscapeParser.cc",
-    "Font.cc",
-    "Framebuffer.cc",
+    "escape_parser.cc",
+    "font.cc",
+    "framebuffer.cc",
     "main.cc",
-    "Terminal.cc",
+    "terminal.cc",
 ]
