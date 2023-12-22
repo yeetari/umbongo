@@ -193,7 +193,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
 
     // Claim memory for kernel.
     const auto kernel_page_count = ustd::ceil_div(phdr.memsz, 4_KiB);
-    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Reserved,
+    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAddress, efi::MemoryType::Kernel,
                                                 kernel_page_count, &phdr.paddr),
               "Failed to claim physical memory for kernel!");
 
@@ -226,7 +226,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
     // Allocate dmesg ring buffer memory.
     const auto dmesg_area_page_count = ustd::ceil_div(sizeof(ustd::RingBuffer<char, 128_KiB>), 4_KiB);
     uintptr_t dmesg_area = 0;
-    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::Reserved,
+    EFI_CHECK(st->boot_services->allocate_pages(efi::AllocateType::AllocateAnyPages, efi::MemoryType::Kernel,
                                                 dmesg_area_page_count, &dmesg_area),
               "Failed to allocate memory for kernel dmesg area!");
     ENSURE(dmesg_area != 0, "Failed to allocate memory for kernel dmesg area!");
@@ -316,7 +316,6 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
         case efi::MemoryType::BootServicesData:
         case efi::MemoryType::LoaderCode:
         case efi::MemoryType::LoaderData:
-            // TODO: Mark efi::MemoryType::AcpiReclaimable as reclaimable too?
             entry->type = MemoryType::Reclaimable;
             break;
         default:

@@ -40,6 +40,7 @@ enum class MemoryType : uint32_t {
     MemoryMappedIoPortSpace,
     PalCode,
     PersistentMemory,
+    Kernel = 0x80000001,
 };
 
 enum class MemoryFlag : uint64_t {
