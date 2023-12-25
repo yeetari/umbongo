@@ -62,7 +62,7 @@ ustd::Result<void, DeviceError> Endpoint::send_control(ControlTransfer transfer,
     // Control transfer is 8 bytes and can therefore fit directly into the data field of the setup TRB via the immediate
     // data flag.
     m_transfer_ring->enqueue({
-        .data = __builtin_bit_cast(uint64_t, transfer),
+        .data = ustd::bit_cast<uint64_t>(transfer),
         .status = sizeof(uint64_t),
         .immediate_data = true,
         .type = TrbType::SetupStage,

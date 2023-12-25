@@ -158,6 +158,12 @@ constexpr void swap(T &lhs, T &rhs) {
     rhs = move(tmp);
 }
 
+template <TriviallyCopyable To, TriviallyCopyable From>
+constexpr To bit_cast(const From &from) {
+    static_assert(sizeof(To) == sizeof(From));
+    return __builtin_bit_cast(To, from);
+}
+
 template <typename T>
 inline constexpr bool is_move_constructible = requires(T &&t) { new T(move(t)); };
 
