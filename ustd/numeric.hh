@@ -126,4 +126,47 @@ constexpr T align_down(T value, U alignment) {
     return value & ~(T(alignment) - 1);
 }
 
+// NOLINTBEGIN(google-runtime-int)
+template <UnsignedIntegral T>
+constexpr T popcount(T value) {
+    if constexpr (sizeof(T) <= sizeof(unsigned int)) {
+        return __builtin_popcount(static_cast<unsigned int>(value));
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long)) {
+        return __builtin_popcountl(static_cast<unsigned long>(value));
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long long)) {
+        return __builtin_popcountll(static_cast<unsigned long long>(value));
+    }
+}
+
+template <UnsignedIntegral T>
+constexpr T clz(T value) {
+    constexpr int bit_count = 8 * sizeof(T);
+    if (value == 0) {
+        return T(bit_count);
+    }
+    if constexpr (sizeof(T) <= sizeof(unsigned int)) {
+        return T(__builtin_clz(value)) - (8 * sizeof(unsigned int) - bit_count);
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long)) {
+        return T(__builtin_clzl(value)) - (8 * sizeof(unsigned long) - bit_count);
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long long)) {
+        return T(__builtin_clzll(value)) - (8 * sizeof(unsigned long long) - bit_count);
+    }
+}
+
+template <UnsignedIntegral T>
+constexpr T ctz(T value) {
+    constexpr int bit_count = 8 * sizeof(T);
+    if (value == 0) {
+        return T(bit_count);
+    }
+    if constexpr (sizeof(T) <= sizeof(unsigned int)) {
+        return T(__builtin_ctz(value));
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long)) {
+        return T(__builtin_ctzl(value));
+    } else if constexpr (sizeof(T) <= sizeof(unsigned long long)) {
+        return T(__builtin_ctzll(value));
+    }
+}
+// NOLINTEND(google-runtime-int)
+
 } // namespace ustd
