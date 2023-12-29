@@ -34,7 +34,7 @@ public:
 void PriorityQueue::enqueue(Thread *thread) {
     uint32_t head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
     auto &slot = m_slots[head % k_slot_count];
-    while (!slot.compare_exchange_temp(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
+    while (!slot.cmpxchg(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
         do {
             asm volatile("pause");
         } while (slot.load(ustd::MemoryOrder::Relaxed) != nullptr);
@@ -198,8 +198,7 @@ void Scheduler::switch_next(RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(RegisterState *regs) {
-    if (s_time_being_updated.compare_exchange_temp(false, true, ustd::MemoryOrder::AcqRel,
-                                                   ustd::MemoryOrder::Acquire)) {
+    if (s_time_being_updated.cmpxchg(false, true, ustd::MemoryOrder::AcqRel, ustd::MemoryOrder::Acquire)) {
         TimeManager::update();
         s_time_being_updated.store(false, ustd::MemoryOrder::Release);
     }
