@@ -27,7 +27,7 @@ void dmesg_single(const char *opts, T arg) {
         dmesg_put_char(static_cast<char>(arg));
         return;
     }
-    const size_t base = opts[1] == 'h' || opts[1] == 'x' ? 16 : 10;
+    const size_t base = opts[1] == 'h' || opts[1] == 'p' || opts[1] == 'x' ? 16 : 10;
     ustd::Array<char, 20> buf{};
     uint8_t len = 0;
     do {
@@ -42,7 +42,12 @@ void dmesg_single(const char *opts, T arg) {
             buf[len++] = opts[3] != '\0' ? opts[3] : '0';
         }
     }
-    if (opts[1] == 'h') {
+    if (opts[1] == 'p') {
+        for (uint8_t i = len; i < 12; i++) {
+            buf[len++] = '0';
+        }
+    }
+    if (opts[1] == 'h' || opts[1] == 'p') {
         buf[len++] = 'x';
         buf[len++] = '0';
     }
