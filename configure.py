@@ -31,12 +31,14 @@ class Target:
 
 
 def add_flags(flags: dict[str, str], obj):
-    if 'asm_flags' in obj:
-        flags['asm'] += ' ' + obj['asm_flags']
+    if 'as_flags' in obj:
+        flags['as'] += ' ' + obj['as_flags']
     if 'cxx_flags' in obj:
         flags['cxx'] += ' ' + obj['cxx_flags']
     if 'ld_flags' in obj:
         flags['ld'] += ' ' + obj['ld_flags']
+    if 'nasm_flags' in obj:
+        flags['nasm'] += ' ' + obj['nasm_flags']
 
 
 def build_target(definition, dir_path: Path, flags: dict[str, str], sources: list[str], kind: TargetKind | None) -> Target:
@@ -59,7 +61,7 @@ def build_target(definition, dir_path: Path, flags: dict[str, str], sources: lis
         commands.extend(definition.get('commands', []))
 
     if definition.get('no_inherit', False):
-        flags = {'cxx': '', 'ld': ''}
+        flags = {'as': '', 'cxx': '', 'ld': '', 'nasm': ''}
 
     # Add flags for this target.
     add_flags(flags, definition)
@@ -168,7 +170,8 @@ class Context(NinjaWriter):
 
             source_path = target.dir_path.joinpath(source)
             source_type = {
-                '.asm': 'asm',
+                '.S': 'as',
+                '.asm': 'nasm',
                 '.cc': 'cxx',
             }[str(source_path.suffix)]
 
@@ -258,9 +261,10 @@ def main():
         enabled_options=args.enable,
     )
     context.build_tree(Path('.'), {
-        'asm': '',
+        'as': '',
         'cxx': '',
         'ld': '',
+        'nasm': '',
     }, 0)
 
     context.targets.append(Target(
@@ -292,11 +296,11 @@ def main():
                  '$command',
                  description='$description')
     context.newline()
-    context.rule('asm',
-                 'nasm -MD $out.d -MT $out -f elf64 -o $out $in',
+    context.rule('as',
+                 'clang++ $flags -MD -MT $out -MF $out.d -o $out -c $in',
                  depfile='$out.d',
                  deps='gcc',
-                 description='Building ASM object $out')
+                 description='Building AS object $out')
     context.newline()
     context.rule('cxx',
                  'clang++ $flags -MD -MT $out -MF $out.d -o $out -c $in',
@@ -311,6 +315,12 @@ def main():
     context.rule('link-static',
                  'rm -f $out && llvm-ar qcs $out $in',
                  description='Linking static library $out')
+    context.newline()
+    context.rule('nasm',
+                 'nasm -MD $out.d -MT $out -f elf64 -o $out $in',
+                 depfile='$out.d',
+                 deps='gcc',
+                 description='Building ASM object $out')
     context.newline()
 
     # Write ninja for targets.
