@@ -1,5 +1,6 @@
 #include <kernel/time/hpet.hh>
 
+#include <kernel/arch/cpu.hh>
 #include <ustd/assert.hh>
 #include <ustd/types.hh>
 
@@ -37,7 +38,7 @@ void Hpet::spin(uint64_t millis) const {
     constexpr uint64_t millis_per_femto = 1000000000000;
     uint64_t trigger = read_counter() + millis * millis_per_femto / m_period;
     while (read_counter() < trigger) {
-        asm volatile("pause");
+        arch::cpu_relax();
     }
 }
 

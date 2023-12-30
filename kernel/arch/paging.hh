@@ -4,6 +4,8 @@
 #include <ustd/assert.hh>
 #include <ustd/types.hh>
 
+// TODO: This is all amd64 specific!
+
 namespace kernel {
 
 enum class PageFlags : size_t {

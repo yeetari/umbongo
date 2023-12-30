@@ -1,6 +1,6 @@
 #pragma once
 
-#include <kernel/cpu/paging.hh>
+#include <kernel/arch/paging.hh>
 #include <kernel/spin_lock.hh>
 #include <ustd/optional.hh>
 #include <ustd/shareable.hh>
@@ -46,6 +46,8 @@ public:
     Region &allocate_region(size_t size, RegionAccess access, ustd::Optional<uintptr_t> phys_base = {});
     Region &create_region(uintptr_t base, size_t size, RegionAccess access, ustd::Optional<uintptr_t> phys_base = {});
     ustd::SharedPtr<VirtSpace> clone() const;
+
+    void *pml4_ptr() const { return m_pml4.ptr(); }
 };
 
 } // namespace kernel

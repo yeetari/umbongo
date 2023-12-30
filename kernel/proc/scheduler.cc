@@ -1,8 +1,7 @@
 #include <kernel/proc/scheduler.hh>
 
-#include <kernel/cpu/local_apic.hh>
-#include <kernel/cpu/processor.hh>
-#include <kernel/cpu/register_state.hh>
+#include <kernel/arch/cpu.hh>
+#include <kernel/arch/register_state.hh>
 #include <kernel/mem/memory_manager.hh>
 #include <kernel/proc/process.hh>
 #include <kernel/proc/thread.hh>
@@ -36,7 +35,7 @@ void PriorityQueue::enqueue(Thread *thread) {
     auto &slot = m_slots[head % k_slot_count];
     while (!slot.cmpxchg(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
         do {
-            asm volatile("pause");
+            arch::cpu_relax();
         } while (slot.load(ustd::MemoryOrder::Relaxed) != nullptr);
     }
 }
@@ -55,13 +54,10 @@ Thread *PriorityQueue::dequeue() {
             return thread;
         }
         do {
-            asm volatile("pause");
+            arch::cpu_relax();
         } while (slot.load(ustd::MemoryOrder::Relaxed) == nullptr);
     }
 }
-
-constexpr uint8_t k_timer_vector = 40;
-uint32_t s_ticks_in_one_ms = 0;
 
 Thread *s_base_thread;
 SpinLock s_thread_list_lock;
@@ -87,12 +83,12 @@ Thread *pick_next() {
 }
 
 uint32_t time_slice_for(Thread *thread) {
-    return (static_cast<uint32_t>(thread->priority()) + 1u) * s_ticks_in_one_ms;
+    return static_cast<uint32_t>(thread->priority()) + 1u;
 }
 
 } // namespace
 
-extern "C" void switch_now(RegisterState *regs);
+extern "C" void switch_now(arch::RegisterState *regs);
 
 ustd::SharedPtr<Process> Process::from_pid(size_t pid) {
     ScopedLock locker(s_thread_list_lock);
@@ -107,39 +103,22 @@ ustd::SharedPtr<Process> Process::from_pid(size_t pid) {
 }
 
 void Scheduler::initialise() {
-    // Start the APIC timer counting down from its max value.
-    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, 255);
-    Processor::apic()->set_timer_count(0xffffffff);
-
-    // Spin for 1 ms and then calculate the total number of ticks occured in that time by the APIC timer.
-    TimeManager::spin(1);
-    s_ticks_in_one_ms = 0xffffffff - Processor::apic()->read_timer_count();
-
     // Initialise idle thread and process. We pass null as the entry point as when the thread first gets interrupted,
     // its state will be saved.
     s_base_thread = Thread::create_kernel(nullptr, ThreadPriority::Idle).disown();
     s_base_thread->m_prev = s_base_thread;
     s_base_thread->m_next = s_base_thread;
-    Processor::set_current_thread(s_base_thread);
-
-    // Wire various interrupts for fault handling and timing.
-    auto handle_fault = +[](RegisterState *regs) {
-        auto *thread = Processor::current_thread();
-        if (thread == nullptr) {
-            ENSURE_NOT_REACHED("Early fault in ring 0!");
-        }
-        thread->handle_fault(regs);
-    };
-    Processor::wire_interrupt(0, handle_fault);
-    Processor::wire_interrupt(6, handle_fault);
-    Processor::wire_interrupt(13, handle_fault);
-    Processor::wire_interrupt(14, handle_fault);
-    Processor::wire_interrupt(k_timer_vector, &timer_handler);
 
     s_blocked_queue = new PriorityQueue;
     for (auto &queue : s_queues) {
         queue = new PriorityQueue;
     }
+}
+
+[[noreturn]] void Scheduler::start_bsp() {
+    // Start on the BSP.
+    arch::wire_timer(&timer_handler);
+    arch::sched_start(s_base_thread);
 }
 
 void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
@@ -154,31 +133,8 @@ void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
     }
 }
 
-void Scheduler::start() {
-    // Enable the local APIC and acknowledge any outstanding interrupts.
-    Processor::apic()->enable();
-    Processor::apic()->send_eoi();
-
-    // Initialise the APIC timer in one shot mode so that after each process switch, we can set a new count value
-    // depending on the process' priority.
-    Processor::apic()->set_timer(LocalApic::TimerMode::OneShot, k_timer_vector);
-    Processor::apic()->set_timer_count(s_ticks_in_one_ms);
-
-    // Each AP needs an idle thread created to ensure that there is always something to schedule.
-    if (Processor::id() != 0) {
-        auto idle_thread = Thread::create_kernel(&start, ThreadPriority::Idle);
-        Processor::set_current_thread(idle_thread.ptr());
-        insert_thread(ustd::move(idle_thread));
-    }
-
-    asm volatile("sti");
-    while (true) {
-        asm volatile("hlt");
-    }
-}
-
-void Scheduler::switch_next(RegisterState *regs) {
-    Thread *current_thread = Processor::current_thread();
+void Scheduler::switch_next(arch::RegisterState *regs) {
+    Thread *current_thread = &Thread::current();
     if (current_thread->m_state != ThreadState::Dead) {
         s_queues[static_cast<uint32_t>(current_thread->priority())]->enqueue(current_thread);
     } else {
@@ -186,40 +142,32 @@ void Scheduler::switch_next(RegisterState *regs) {
     }
 
     Thread *next_thread = pick_next();
-    __builtin_memcpy(regs, &next_thread->m_register_state, sizeof(RegisterState));
-    asm volatile("xrstor %0" ::"m"(*next_thread->m_simd_region), "a"(0xffffffffu), "d"(0xffffffffu));
-    auto &process = *next_thread->m_process;
-    if (MemoryManager::current_space() != process.m_virt_space.ptr()) {
-        MemoryManager::switch_space(*process.m_virt_space);
-    }
-    Processor::apic()->set_timer_count(time_slice_for(next_thread));
-    Processor::set_current_thread(next_thread);
-    Processor::set_kernel_stack(next_thread->m_kernel_stack);
+    arch::virt_space_switch(*next_thread->m_process->m_virt_space);
+    arch::timer_set_one_shot(time_slice_for(next_thread));
+    arch::thread_load(regs, next_thread);
 }
 
-void Scheduler::timer_handler(RegisterState *regs) {
+void Scheduler::timer_handler(arch::RegisterState *regs) {
     if (s_time_being_updated.cmpxchg(false, true, ustd::MemoryOrder::AcqRel, ustd::MemoryOrder::Acquire)) {
         TimeManager::update();
         s_time_being_updated.store(false, ustd::MemoryOrder::Release);
     }
-    auto *thread = Processor::current_thread();
-    __builtin_memcpy(&thread->m_register_state, regs, sizeof(RegisterState));
-    asm volatile("xsave %0" : "=m"(*thread->m_simd_region) : "a"(0xffffffffu), "d"(0xffffffffu));
+    arch::thread_save(regs);
     switch_next(regs);
 }
 
 void Scheduler::yield(bool save_state) {
     if (save_state) {
-        asm volatile("int $40");
+        asm volatile("int $0xec");
         return;
     }
-    RegisterState regs{};
+    arch::RegisterState regs{};
     switch_next(&regs);
     switch_now(&regs);
 }
 
 void Scheduler::yield_and_kill() {
-    Processor::current_thread()->kill();
+    Thread::current().kill();
     yield(false);
 }
 

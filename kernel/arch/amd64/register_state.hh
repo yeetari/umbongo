@@ -2,7 +2,9 @@
 
 #include <ustd/types.hh>
 
-namespace kernel {
+// IWYU pragma: private, include <kernel/arch/register_state.hh>
+
+namespace kernel::arch {
 
 struct [[gnu::packed]] RegisterState {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8, rbp, rsi, rdi, rdx, rcx, rbx, rax;
@@ -10,4 +12,4 @@ struct [[gnu::packed]] RegisterState {
     uint64_t rip, cs, rflags, rsp, ss;
 };
 
-} // namespace kernel
+} // namespace kernel::arch

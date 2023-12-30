@@ -5,7 +5,7 @@ PHDRS {
 }
 
 SECTIONS {
-    . = 1M;
+    . = 5M;
 
     .text : ALIGN(4K) {
         k_interrupt_stubs_start = .;

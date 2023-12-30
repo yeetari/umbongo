@@ -1,6 +1,6 @@
 #include <kernel/mem/virt_space.hh>
 
-#include <kernel/cpu/paging.hh>
+#include <kernel/arch/paging.hh>
 #include <kernel/mem/region.hh>
 #include <kernel/scoped_lock.hh>
 #include <kernel/spin_lock.hh>

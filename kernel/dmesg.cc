@@ -1,14 +1,11 @@
 #include <kernel/dmesg.hh>
 
+#include <kernel/arch/cpu.hh>
 #include <kernel/console.hh>
 #include <kernel/dev/dmesg_device.hh>
 #include <kernel/spin_lock.hh>
 #include <ustd/string.hh>
 #include <ustd/string_view.hh>
-
-#ifdef KERNEL_QEMU_DEBUG
-#include <kernel/port.hh>
-#endif
 
 namespace kernel {
 namespace {
@@ -30,7 +27,7 @@ void dmesg_unlock() {
 void dmesg_put_char(char ch) {
     DmesgDevice::put_char(ch);
 #ifdef KERNEL_QEMU_DEBUG
-    port_write(0xe9, ch);
+    arch::vm_debug_char(ch);
 #endif
     if (g_console_enabled) {
         Console::put_char(ch);

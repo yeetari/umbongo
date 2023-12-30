@@ -1,6 +1,7 @@
 #include <kernel/mem/region.hh>
 
-#include <kernel/cpu/paging.hh>
+#include <kernel/arch/cpu.hh>
+#include <kernel/arch/paging.hh>
 #include <kernel/mem/memory_manager.hh>
 #include <kernel/mem/physical_page.hh>
 #include <kernel/mem/virt_space.hh>
@@ -81,11 +82,7 @@ void Region::map(VirtSpace *virt_space) const {
         }
     }
 
-    if (MemoryManager::current_space() == virt_space) {
-        for (uintptr_t virt = m_base; virt < m_base + m_size; virt += 4_KiB) {
-            asm volatile("invlpg (%0)" : : "r"(virt) : "memory");
-        }
-    }
+    arch::tlb_flush_range(virt_space, m_base, m_size);
 }
 
 } // namespace kernel

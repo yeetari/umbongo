@@ -1,7 +1,6 @@
 #include <kernel/mem/memory_manager.hh>
 
 #include <boot/boot_info.hh>
-#include <kernel/cpu/processor.hh>
 #include <kernel/dmesg.hh>
 #include <kernel/mem/heap.hh>
 #include <kernel/mem/region.hh>
@@ -114,8 +113,12 @@ void parse_memory_map(BootInfo *boot_info) {
 
 void MemoryManager::initialise(BootInfo *boot_info) {
     parse_memory_map(boot_info);
+
+    // Reserve 0x8000 for the SMP trampoline.
+    // TODO: This is x86 specific.
     ENSURE(is_frame_free(0x8000));
     set_frame(0x8000 / k_frame_size);
+
     Heap::initialise();
 
     // Create the kernel virtual space and identity map physical memory up to 512 GiB. Using 1 GiB pages means this only
@@ -147,11 +150,6 @@ void MemoryManager::reclaim(BootInfo *boot_info) {
     } else {
         dmesg(" mem: Reclaimed {}B of memory", total_reclaimed);
     }
-}
-
-void MemoryManager::switch_space(VirtSpace &virt_space) {
-    Processor::set_current_space(&virt_space);
-    Processor::write_cr3(virt_space.m_pml4.ptr());
 }
 
 uintptr_t MemoryManager::alloc_frame() {
@@ -212,10 +210,6 @@ void MemoryManager::free_contiguous(void *ptr, size_t size) {
         ASSERT(is_frame_set(i));
         clear_frame(i);
     }
-}
-
-VirtSpace *MemoryManager::current_space() {
-    return Processor::current_space();
 }
 
 VirtSpace *MemoryManager::kernel_space() {

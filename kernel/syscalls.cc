@@ -1,7 +1,6 @@
 #include <kernel/proc/process.hh>
 
 #include <kernel/api/types.h>
-#include <kernel/cpu/processor.hh>
 #include <kernel/dmesg.hh>
 #include <kernel/error.hh>
 #include <kernel/fs/file.hh>
@@ -49,7 +48,7 @@ SyscallResult Process::sys_accept(uint32_t fd) {
     }
     auto &server = static_cast<ServerSocket &>(file);
     if (server.accept_would_block()) {
-        Processor::current_thread()->block<AcceptBlocker>(ustd::SharedPtr<ServerSocket>(&server));
+        Thread::current().block<AcceptBlocker>(ustd::SharedPtr<ServerSocket>(&server));
     }
     auto accepted = server.accept();
     uint32_t accepted_fd = allocate_fd();
@@ -105,7 +104,7 @@ SyscallResult Process::sys_connect(const char *path) {
     if (auto rc = server.queue_connection_from(client); rc.is_error()) {
         return rc.error();
     }
-    Processor::current_thread()->block<ConnectBlocker>(client);
+    Thread::current().block<ConnectBlocker>(client);
     ScopedLock locker(m_lock);
     uint32_t client_fd = allocate_fd();
     m_fds[client_fd].emplace(client);
@@ -278,7 +277,7 @@ SyscallResult Process::sys_open(const char *path, ub_open_mode_t mode) {
 SyscallResult Process::sys_poll(ub_poll_fd_t *fds, size_t count, ssize_t timeout) {
     ustd::LargeVector<ub_poll_fd_t> poll_fds(count);
     __builtin_memcpy(poll_fds.data(), fds, count * sizeof(ub_poll_fd_t));
-    Processor::current_thread()->block<PollBlocker>(poll_fds, m_lock, *this, timeout);
+    Thread::current().block<PollBlocker>(poll_fds, m_lock, *this, timeout);
     for (auto &poll_fd : poll_fds) {
         // TODO: Bounds checking.
         auto &handle = m_fds[poll_fd.fd];
@@ -305,7 +304,7 @@ SyscallResult Process::sys_read(uint32_t fd, void *data, size_t size) {
         return Error::BrokenHandle;
     }
     if (handle->read_would_block()) {
-        Processor::current_thread()->block<ReadBlocker>(handle->file(), handle->offset());
+        Thread::current().block<ReadBlocker>(handle->file(), handle->offset());
     }
     return TRY(handle->read(data, size));
 }
@@ -400,7 +399,7 @@ SyscallResult Process::sys_virt_to_phys(uintptr_t virt) {
 }
 
 SyscallResult Process::sys_wait_pid(size_t pid) {
-    Processor::current_thread()->block<WaitBlocker>(pid);
+    Thread::current().block<WaitBlocker>(pid);
     return 0;
 }
 
@@ -415,7 +414,7 @@ SyscallResult Process::sys_write(uint32_t fd, void *data, size_t size) {
         return Error::BrokenHandle;
     }
     if (handle->write_would_block()) {
-        Processor::current_thread()->block<WriteBlocker>(handle->file(), handle->offset());
+        Thread::current().block<WriteBlocker>(handle->file(), handle->offset());
     }
     return TRY(handle->write(data, size));
 }

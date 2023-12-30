@@ -1,11 +1,10 @@
 #include <kernel/intr/interrupt_manager.hh>
 
-#include <kernel/cpu/processor.hh>
-#include <kernel/cpu/register_state.hh>
+#include <kernel/arch/cpu.hh>
+#include <kernel/arch/register_state.hh>
 #include <kernel/dmesg.hh>
 #include <kernel/intr/interrupt_type.hh>
 #include <kernel/intr/io_apic.hh>
-#include <kernel/port.hh>
 #include <ustd/array.hh>
 #include <ustd/assert.hh>
 #include <ustd/function.hh>
@@ -66,16 +65,10 @@ ustd::Optional<IoApic &> io_apic_for_gsi(uint32_t gsi) {
 uint8_t InterruptManager::allocate(ustd::Function<void()> &&handler) {
     uint8_t vector = s_current_vector++;
     s_custom_handlers[vector] = ustd::move(handler);
-    Processor::wire_interrupt(vector, [](RegisterState *regs) {
+    arch::wire_interrupt(vector, [](arch::RegisterState *regs) {
         s_custom_handlers[regs->int_num]();
     });
     return vector;
-}
-
-void InterruptManager::mask_pic() {
-    dmesg("intr: Found legacy PIC, masking");
-    port_write<uint8_t>(0x21, 0xff);
-    port_write<uint8_t>(0xa1, 0xff);
 }
 
 void InterruptManager::register_io_apic(uint32_t base, uint32_t gsi_base) {

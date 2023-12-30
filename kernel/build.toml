@@ -3,31 +3,25 @@ command = "$build_root/tools/mkfont $root/FantasqueSansMono.ttf $build_root/kern
 deps = ["mkfont"]
 output = "font.cc"
 
-[[library]]
-name = "kernel-asm"
-type = "object"
-sources = [
-    "cpu/cpu.asm",
-    "cpu/interrupts.asm",
-    "cpu/smp.asm",
-]
-
 [[executable]]
 name = "kernel"
 deps = [
-    "kernel-asm",
     "ustd-no-sse",
 ]
 
 cxx_flags = "-ffreestanding -mno-red-zone -mno-sse"
-ld_flags = "-T$root/kernel/linker.ld -no-pie"
+ld_flags = "-T$root/kernel/arch/amd64/linker.ld -no-pie"
 sources = [
     "acpi/apic_table.cc",
     "acpi/pci_table.cc",
     "acpi/root_table.cc",
     "acpi/table.cc",
-    "cpu/local_apic.cc",
-    "cpu/processor.cc",
+    "arch/amd64/cpu.S",
+    "arch/amd64/cpu.cc",
+    "arch/amd64/interrupt.S",
+    "arch/amd64/smp.S",
+    "arch/amd64/syscall.S",
+    "arch/amd64/syscall.cc",
     "dev/dev_fs.cc",
     "dev/device.cc",
     "dev/dmesg_device.cc",

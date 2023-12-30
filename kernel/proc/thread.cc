@@ -2,8 +2,7 @@
 
 #include <elf/elf.hh>
 #include <kernel/api/types.h>
-#include <kernel/cpu/processor.hh>
-#include <kernel/cpu/register_state.hh>
+#include <kernel/arch/cpu.hh>
 #include <kernel/dmesg.hh>
 #include <kernel/error.hh>
 #include <kernel/fs/file.hh>
@@ -33,9 +32,9 @@
 namespace kernel {
 namespace {
 
-constexpr size_t k_kernel_stack_size = 64_KiB;
+constexpr size_t k_kernel_stack_size = 32_KiB;
 
-void dump_backtrace([[maybe_unused]] RegisterState *regs) {
+void dump_backtrace([[maybe_unused]] arch::RegisterState *regs) {
     // TODO(GH-9): Backtrace generation is unsafe.
 #ifndef ASSERTIONS
     auto *rbp = reinterpret_cast<uint64_t *>(regs->rbp);
@@ -84,20 +83,12 @@ ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
 }
 
 Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), m_priority(priority) {
-    process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
-    m_kernel_stack = new uint8_t[k_kernel_stack_size] + k_kernel_stack_size;
-    m_simd_region = new (ustd::align_val_t(64)) uint8_t[Processor::simd_region_size()];
-    __builtin_memcpy(m_simd_region, Processor::simd_default_region(), Processor::simd_region_size());
-    m_register_state.cs = process->m_is_kernel ? 0x08 : (0x20u | 0x3u);
-    m_register_state.ss = process->m_is_kernel ? 0x10 : (0x18u | 0x3u);
-    m_register_state.rflags = 0x202;
-    if (process->m_is_kernel) {
-        // Disable preemption for kernel threads.
-        m_register_state.rflags &= ~(1u << 9u);
-
-        // A kernel process doesn't use syscalls, so we can use m_kernel_stack.
-        m_register_state.rsp = reinterpret_cast<uintptr_t>(m_kernel_stack);
+    // Don't bother creating a kernel stack for idle threads since they can reuse their AP stack.
+    if (priority != ThreadPriority::Idle) {
+        m_kernel_stack = new uint8_t[k_kernel_stack_size] + k_kernel_stack_size;
     }
+    process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
+    arch::thread_init(this);
 }
 
 Thread::~Thread() {
@@ -117,10 +108,9 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     m_register_state.rsp = stack_region.base() + stack_region.size();
 
-    auto *original_space = MemoryManager::current_space();
-    MemoryManager::switch_space(*m_process->m_virt_space);
-    ustd::ScopeGuard space_guard([original_space] {
-        MemoryManager::switch_space(*original_space);
+    arch::virt_space_switch(*m_process->m_virt_space);
+    ustd::ScopeGuard space_guard([] {
+        arch::virt_space_switch(Thread::current().process().virt_space());
     });
 
     auto interpreter_path = interpreter_for(*file);
@@ -199,21 +189,6 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     // Allocate some space for heap storage.
     m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
     return {};
-}
-
-void Thread::handle_fault(RegisterState *regs) {
-    uint64_t cr2 = 0;
-    asm volatile("mov %%cr2, %0" : "=r"(cr2));
-    if ((regs->cs & 3u) != 0u) {
-        dmesg("[#{}]: Fault {} caused by instruction at {:h}! (cr2={:h})", m_process->pid(), regs->int_num, regs->rip,
-              cr2);
-    }
-    if ((regs->cs & 3u) == 0u) {
-        ENSURE_NOT_REACHED("Fault in ring 0!");
-    }
-    dump_backtrace(regs);
-    kill();
-    Scheduler::switch_next(regs);
 }
 
 void Thread::kill() {

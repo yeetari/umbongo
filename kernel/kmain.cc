@@ -6,9 +6,9 @@
 #include <kernel/acpi/root_table.hh>
 #include <kernel/acpi/root_table_ptr.hh>
 #include <kernel/acpi/table.hh>
+#include <kernel/arch/cpu.hh>
+#include <kernel/arch/register_state.hh>
 #include <kernel/console.hh>
-#include <kernel/cpu/processor.hh>
-#include <kernel/cpu/register_state.hh>
 #include <kernel/dev/dev_fs.hh>
 #include <kernel/dev/dmesg_device.hh>
 #include <kernel/dev/framebuffer_device.hh>
@@ -33,24 +33,10 @@
 #include <ustd/unique_ptr.hh>
 #include <ustd/utility.hh>
 
-#ifdef KERNEL_QEMU_DEBUG
-#include <kernel/port.hh>
-#endif
-
 extern void (*k_ctors_start)();
 extern void (*k_ctors_end)();
 
 size_t __stack_chk_guard = 0xdeadc0de;
-
-[[noreturn]] void assertion_failed(const char *file, unsigned int line, const char *expr, const char *msg) {
-    kernel::dmesg_no_lock("\nAssertion '{}' failed at {}:{}", expr, file, line);
-    if (msg != nullptr) {
-        kernel::dmesg_no_lock("=> {}", msg);
-    }
-    while (true) {
-        asm volatile("cli; hlt");
-    }
-}
 
 namespace kernel {
 
@@ -83,8 +69,7 @@ InterruptTriggerMode interrupt_trigger_mode(uint8_t trigger_mode) {
 }
 
 void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
-    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
-    Processor::start_aps(madt);
+    arch::smp_init(xsdt);
 
     // Setup in-memory file system.
     auto root_fs = ustd::make_unique<RamFs>();
@@ -136,23 +121,18 @@ extern "C" void kmain(BootInfo *boot_info) {
     Console::initialise(boot_info);
     DmesgDevice::early_initialise(boot_info);
     dmesg("core: Using font {} {}", g_font.name(), g_font.style());
-#ifdef KERNEL_QEMU_DEBUG
-    ENSURE(port_read(0xe9) == 0xe9, "KERNEL_QEMU_DEBUG config option enabled, but port e9 isn't available!");
-#endif
 
     dmesg("core: boot_info = {}", boot_info);
     dmesg("core: framebuffer = {:h} ({}x{})", boot_info->framebuffer_base, boot_info->width, boot_info->height);
     dmesg("core: rsdp = {}", boot_info->rsdp);
-
-    MemoryManager::initialise(boot_info);
-    Processor::initialise();
-    Processor::setup(0);
 
     // Invoke global constructors.
     dmesg("core: Invoking {} global constructors", &k_ctors_end - &k_ctors_start);
     for (void (**ctor)() = &k_ctors_start; ctor < &k_ctors_end; ctor++) {
         (*ctor)();
     }
+
+    MemoryManager::initialise(boot_info);
 
     auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
@@ -166,11 +146,12 @@ extern "C" void kmain(BootInfo *boot_info) {
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
     }
 
-    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
-    if ((madt->flags() & 1u) != 0) {
-        InterruptManager::mask_pic();
-    }
+    auto *hpet_table = EXPECT(xsdt->find<acpi::HpetTable>());
+    TimeManager::initialise(hpet_table);
 
+    arch::bsp_init(xsdt);
+
+    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     for (auto *controller : *madt) {
         // TODO: Handle local APIC address override.
         ENSURE(controller->type != 5);
@@ -186,13 +167,6 @@ extern "C" void kmain(BootInfo *boot_info) {
         }
     }
 
-    auto *apic = reinterpret_cast<LocalApic *>(madt->local_apic());
-    dmesg("acpi: Local APIC = {}", apic);
-    Processor::set_apic(apic);
-
-    auto *hpet_table = EXPECT(xsdt->find<acpi::HpetTable>());
-    TimeManager::initialise(hpet_table);
-
     // Start a new kernel thread that will perform the rest of the initialisation. We do this so that we can safely
     // start kernel threads, and so that the current stack we are using is no longer in use, meaning we can reclaim the
     // memory.
@@ -202,7 +176,7 @@ extern "C" void kmain(BootInfo *boot_info) {
 
     Scheduler::initialise();
     Scheduler::insert_thread(ustd::move(kernel_init_thread));
-    Scheduler::start();
+    Scheduler::start_bsp();
 }
 
 } // namespace kernel
