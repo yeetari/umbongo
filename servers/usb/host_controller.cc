@@ -40,6 +40,7 @@ struct [[gnu::packed]] EventRingSegment {
 
 HostController::HostController(ustd::StringView name, core::EventLoop &event_loop, core::File &&file)
     : m_name(name), m_event_loop(event_loop), m_file(ustd::move(file)) {}
+
 HostController::HostController(HostController &&) = default;
 HostController::~HostController() = default;
 
@@ -47,15 +48,23 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
     TRY(m_file.ioctl(UB_IOCTL_REQUEST_PCI_ENABLE_DEVICE));
     auto *cap_regs = TRY(m_file.mmap<CapRegs>());
 
-    const auto op_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->cap_length);
-    const auto rt_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->runtime_offset);
-    const auto db_base = reinterpret_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->doorbell_offset);
-    ENSURE(op_base % sizeof(uint32_t) == 0);
-    ENSURE(rt_base % 32 == 0);
-    ENSURE(db_base % sizeof(uint32_t) == 0);
-    m_op_regs = reinterpret_cast<OpRegs *>(op_base);
-    m_run_regs = reinterpret_cast<RunRegs *>(rt_base);
-    m_doorbell_array = reinterpret_cast<DoorbellArray *>(db_base);
+    const auto op_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->cap_length);
+    if ((op_base & 0b11u) != 0u) {
+        return HostError::BadAlignment;
+    }
+    m_op_regs = ustd::bit_cast<OpRegs *>(op_base);
+
+    const auto db_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->doorbell_offset);
+    if ((db_base & 0b11u) != 0u) {
+        return HostError::BadAlignment;
+    }
+    m_doorbell_array = ustd::bit_cast<DoorbellArray *>(db_base);
+
+    const auto rt_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->runtime_offset);
+    if ((rt_base & 0b11111u) != 0u) {
+        return HostError::BadAlignment;
+    }
+    m_run_regs = ustd::bit_cast<RunRegs *>(rt_base);
 
     // Ensure the run/stop bit is clear and wait until halted bit is set. Spec says HC should halt within 16 ms, but
     // linux uses 32 ms "as some hosts take longer".

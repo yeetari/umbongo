@@ -9,6 +9,7 @@ enum class DeviceError {
 };
 
 enum class HostError {
+    BadAlignment,
     CommandTimedOut,
     HaltTimedOut,
     InvalidPortId,
@@ -35,6 +36,8 @@ inline const char *device_error_string(DeviceError error) {
 
 inline const char *host_error_string(HostError error) {
     switch (error) {
+    case HostError::BadAlignment:
+        return "bad alignment";
     case HostError::CommandTimedOut:
         return "command timed out";
     case HostError::HaltTimedOut:
