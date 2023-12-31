@@ -164,6 +164,10 @@ constexpr To bit_cast(const From &from) {
     return __builtin_bit_cast(To, from);
 }
 
+[[noreturn]] inline void unreachable() {
+    __builtin_unreachable();
+}
+
 template <typename T>
 inline constexpr bool is_move_constructible = requires(T &&t) { new T(move(t)); };
 

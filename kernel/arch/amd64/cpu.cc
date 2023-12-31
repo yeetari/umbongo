@@ -673,5 +673,5 @@ Thread &Thread::current() {
 
     // Halt ourselves.
     arch::halt_cpu(nullptr);
-    __builtin_unreachable();
+    ustd::unreachable();
 }
