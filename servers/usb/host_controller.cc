@@ -76,12 +76,12 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
     // Reset the controller and unconditionally wait 1 ms to allow older intel HCs to reset properly.
     mmio::write(m_op_regs->command, mmio::read(m_op_regs->command) | (1u << 1u));
     core::sleep(1000000ul);
-    if (!mmio::wait_timeout(m_op_regs->command, (1u << 1u), 0u, 10000)) {
+    if (!mmio::wait_timeout(m_op_regs->command, 1u << 1u, 0u, 1000)) {
         return HostError::ResetTimedOut;
     }
 
     // Wait for controller readiness after reset.
-    if (!mmio::wait_timeout(m_op_regs->status, (1u << 11u), 0u, 10000)) {
+    if (!mmio::wait_timeout(m_op_regs->status, 1u << 11u, 0u, 1000)) {
         return HostError::ResetTimedOut;
     }
 
