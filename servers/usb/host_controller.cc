@@ -205,9 +205,13 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
     m_file.set_on_write_ready([this] {
         handle_interrupt();
     });
+
     for (auto &port : m_ports) {
+        if (port.connected()) {
+            log::debug("Port {} connected; resetting", port.id());
+        }
         if (port.connected() && !port.reset()) {
-            log::warn("Failed to reset port {}", port.id());
+            log::error("Failed to reset port {}", port.id());
         }
     }
     return {};

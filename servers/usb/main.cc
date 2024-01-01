@@ -38,15 +38,17 @@ size_t main(size_t, const char **) {
     core::EventLoop event_loop;
     config::listen(event_loop);
     config::read("usb-server");
+
     auto host_controllers = find_host_controllers(event_loop);
     for (auto &host_controller : host_controllers) {
+        log::info("Found host controller {}", host_controller.name());
         if (auto result = host_controller.enable(); result.is_error()) {
             auto error = result.error();
             if (auto sys_error = error.as<ub_error_t>()) {
-                log::warn("Skipping controller {}: {}", host_controller.name(), core::error_string(*sys_error));
+                log::error("Skipping controller {}: {}", host_controller.name(), core::error_string(*sys_error));
             } else if (auto initialisation_error = error.as<HostError>()) {
-                log::warn("Skipping controller {}: {}", host_controller.name(),
-                          host_error_string(*initialisation_error));
+                log::error("Skipping controller {}: {}", host_controller.name(),
+                           host_error_string(*initialisation_error));
             }
             continue;
         }
