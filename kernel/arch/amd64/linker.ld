@@ -1,4 +1,4 @@
-ENTRY(kmain)
+ENTRY(kernel_entry)
 
 PHDRS {
     load PT_LOAD;

@@ -117,7 +117,7 @@ extern "C" [[noreturn]] void __stack_chk_fail() {
     ENSURE_NOT_REACHED("Stack smashing detected!");
 }
 
-extern "C" void kmain(BootInfo *boot_info) {
+extern "C" void kernel_entry(BootInfo *boot_info) {
     Console::initialise(boot_info);
     DmesgDevice::early_initialise(boot_info);
     dmesg("core: Using font {} {}", g_font.name(), g_font.style());

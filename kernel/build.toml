@@ -52,8 +52,8 @@ sources = [
     "time/time_manager.cc",
     "console.cc",
     "dmesg.cc",
+    "entry.cc",
     "font.cc",
-    "kmain.cc",
     "syscalls.cc",
     "ub_san.cc",
 ]
