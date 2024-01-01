@@ -169,4 +169,8 @@ constexpr T ctz(T value) {
 }
 // NOLINTEND(google-runtime-int)
 
+constexpr uint8_t decode_bcd(uint8_t byte) {
+    return ((byte & 0xf0u) >> 4u) * 10 + (byte & 0xfu);
+}
+
 } // namespace ustd
