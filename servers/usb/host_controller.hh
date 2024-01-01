@@ -64,9 +64,12 @@ class HostController {
     ustd::String m_name;
     core::EventLoop &m_event_loop;
     core::File m_file;
-    const OpRegs *m_op_regs{nullptr};
-    const RunRegs *m_run_regs{nullptr};
-    const DoorbellArray *m_doorbell_array{nullptr};
+
+    CapRegs *m_cap_regs{nullptr};
+    OpRegs *m_op_regs{nullptr};
+    RunRegs *m_run_regs{nullptr};
+    DoorbellArray *m_doorbell_array{nullptr};
+
     ustd::UniquePtr<TrbRing> m_command_ring;
     ustd::UniquePtr<TrbRing> m_event_ring;
     ustd::Vector<ustd::UniquePtr<Device>> m_devices;

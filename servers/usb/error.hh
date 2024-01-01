@@ -12,6 +12,7 @@ enum class DeviceError {
 
 enum class HostError {
     BadAlignment,
+    BiosHandoverTimedOut,
     CommandTimedOut,
     HaltTimedOut,
     InvalidPortId,
@@ -40,6 +41,8 @@ inline ustd::StringView host_error_string(HostError error) {
     switch (error) {
     case HostError::BadAlignment:
         return "bad alignment"sv;
+    case HostError::BiosHandoverTimedOut:
+        return "bios handover timed out"sv;
     case HostError::CommandTimedOut:
         return "command timed out"sv;
     case HostError::HaltTimedOut:

@@ -46,21 +46,21 @@ HostController::~HostController() = default;
 
 ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enable() {
     TRY(m_file.ioctl(UB_IOCTL_REQUEST_PCI_ENABLE_DEVICE));
-    auto *cap_regs = TRY(m_file.mmap<CapRegs>());
+    m_cap_regs = TRY(m_file.mmap<CapRegs>());
 
-    const auto op_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->cap_length);
+    const auto op_base = ustd::bit_cast<uintptr_t>(m_cap_regs) + mmio::read(m_cap_regs->cap_length);
     if ((op_base & 0b11u) != 0u) {
         return HostError::BadAlignment;
     }
     m_op_regs = ustd::bit_cast<OpRegs *>(op_base);
 
-    const auto db_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->doorbell_offset);
+    const auto db_base = ustd::bit_cast<uintptr_t>(m_cap_regs) + mmio::read(m_cap_regs->doorbell_offset);
     if ((db_base & 0b11u) != 0u) {
         return HostError::BadAlignment;
     }
     m_doorbell_array = ustd::bit_cast<DoorbellArray *>(db_base);
 
-    const auto rt_base = ustd::bit_cast<uintptr_t>(cap_regs) + mmio::read(cap_regs->runtime_offset);
+    const auto rt_base = ustd::bit_cast<uintptr_t>(m_cap_regs) + mmio::read(m_cap_regs->runtime_offset);
     if ((rt_base & 0b11111u) != 0u) {
         return HostError::BadAlignment;
     }
@@ -90,16 +90,20 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
         return HostError::UnsupportedPageSize;
     }
 
-    // Retrieve context size and ensure that 64-bit addressing (bit 0) is available from capability parameters.
-    m_context_size = (mmio::read(cap_regs->hcc_params1) & (1u << 2u)) == 0u ? 32u : 64u;
-    if ((mmio::read(cap_regs->hcc_params1) & 1u) != 1u) {
+    // Retrieve context size.
+    m_context_size = (mmio::read(m_cap_regs->hcc_params1) & (1u << 2u)) == 0u ? 32u : 64u;
+    log::trace("context_size = {}", m_context_size);
+
+    // Ensure that 64-bit addressing (bit 0) is available from the capability parameters.
+    if ((mmio::read(m_cap_regs->hcc_params1) & 1u) != 1u) {
         return HostError::No64BitAddressing;
     }
 
     // Program max slot count.
     const auto config = mmio::read(m_op_regs->config) & ~0xffu;
-    const auto slot_count = mmio::read(cap_regs->hcs_params1) & 0xffu;
+    const auto slot_count = mmio::read(m_cap_regs->hcs_params1) & 0xffu;
     mmio::write(m_op_regs->config, config | slot_count);
+    log::trace("slot_count = {}", slot_count);
 
     // Allocate the device context base address array. `+ 1` for the scratchpad.
     m_context_table = TRY(mmio::alloc_dma_array<uintptr_t>(slot_count + 1));
@@ -107,7 +111,7 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
     mmio::write(m_op_regs->dcbaap, EXPECT(mmio::virt_to_phys(m_context_table)));
 
     // Allocate the scratchpad buffers.
-    const auto hcs_params2 = mmio::read(cap_regs->hcs_params2);
+    const auto hcs_params2 = mmio::read(m_cap_regs->hcs_params2);
     uint32_t scratch_buffer_count = ((hcs_params2 >> 27u) & 0x1fu) | ((hcs_params2 >> 16u) & 0x3e0u);
     auto *scratchpad_buffer_array = TRY(mmio::alloc_dma_array<uintptr_t>(scratch_buffer_count));
     m_context_table[0] = EXPECT(mmio::virt_to_phys(scratchpad_buffer_array));
@@ -130,27 +134,57 @@ ustd::Result<void, ustd::ErrorUnion<ub_error_t, HostError>> HostController::enab
     mmio::write(m_run_regs->erst_dptr, EXPECT(event_ring->physical_head()));
     mmio::write(m_run_regs->erst_base, EXPECT(mmio::virt_to_phys(segment_table)));
 
-    const auto port_count = (mmio::read(cap_regs->hcs_params1) >> 24u) & 0xffu;
-    m_ports.ensure_size(port_count, nullptr, static_cast<uint8_t>(0u));
+    const auto max_port_count = (mmio::read(m_cap_regs->hcs_params1) >> 24u) & 0xffu;
+    m_ports.ensure_size(max_port_count, nullptr, static_cast<uint8_t>(0u));
+    log::debug("port_count = {}", max_port_count);
 
-    // Initialise port array by reading extended capabilities.
-    // TODO: Tidy this up.
-    uint16_t xecp = (mmio::read(cap_regs->hcc_params1) >> 16u) & 0xffffu;
-    uint32_t ext_cap = 0;
-    do {
-        ext_cap = mmio::read(reinterpret_cast<const uint32_t *>(cap_regs)[xecp]);
-        if ((ext_cap & 0xffu) != 2u) {
-            continue;
+    // Iterate over extended capabilities.
+    uint32_t ext_cap_offset = (mmio::read(m_cap_regs->hcc_params1) >> 16u) & 0xffffu;
+    while (ext_cap_offset != 0) {
+        const auto *xecp = &ustd::bit_cast<uint32_t *>(m_cap_regs)[ext_cap_offset];
+        const auto ext_cap = mmio::read(xecp[0]);
+
+        const auto cap_id = ext_cap & 0xffu;
+        if (cap_id == 1u && (ext_cap & (1u << 16u)) != 0u) {
+            log::debug("Attempting to relinquish BIOS control over controller");
+
+            // Set OS owned semaphore.
+            mmio::write(xecp[0], 1u << 24u);
+
+            // Wait up to a second for the BIOS to relinquish control.
+            if (!mmio::wait_timeout(xecp[0], 1u << 16u, 0u, 1000)) {
+                log::error("BIOS didn't hand over control");
+                return HostError::BiosHandoverTimedOut;
+            }
+
+            // Disable any BIOS SMIs and clear all SMI events.
+            uint32_t smi_value = mmio::read(xecp[1]);
+            smi_value &= ~1u;
+            smi_value &= ~(1u << 4u);
+            smi_value &= ~(0b111u << 13u);
+            smi_value |= 0b111u << 29u;
+            mmio::write(xecp[1], smi_value);
+        } else if (cap_id == 2u) {
+            const auto protocol_info = mmio::read(xecp[2]);
+            uint8_t port_start = (protocol_info >> 0u) & 0xffu;
+            uint8_t port_count = (protocol_info >> 8u) & 0xffu;
+            uint8_t major_revision = ustd::decode_bcd((ext_cap >> 24u) & 0xffu);
+            uint8_t minor_revision = ustd::decode_bcd((ext_cap >> 16u) & 0xffu);
+
+            log::info("Root hub ports {} to {} support protocol {}.{}", port_start, port_start + port_count - 1,
+                      major_revision, minor_revision);
+            for (uint8_t i = port_start; i < (port_start + port_count); i++) {
+                auto *portsc = reinterpret_cast<uint32_t *>(op_base + 0x400 + (i - 1) * 0x10);
+                m_ports[i - 1] = Port(portsc, i);
+            }
         }
-        auto protcol_info = mmio::read(reinterpret_cast<const uint32_t *>(cap_regs)[xecp + 2]);
-        uint8_t protocol_port_start = (protcol_info >> 0u) & 0xffu;
-        uint8_t protocol_port_count = (protcol_info >> 8u) & 0xffu;
-        for (uint8_t i = protocol_port_start; i < (protocol_port_start + protocol_port_count); i++) {
-            auto *portsc = reinterpret_cast<uint32_t *>(op_base + 0x400 + (i - 1) * 0x10);
-            m_ports[i - 1] = Port(portsc, i);
+
+        const auto next_offset = (ext_cap >> 8u) & 0xffu;
+        if (next_offset == 0) {
+            break;
         }
-        xecp += (ext_cap >> 8u) & 0xffu;
-    } while (((ext_cap >> 8u) & 0xffu) != 0u);
+        ext_cap_offset += next_offset;
+    }
 
     // Enable interrupts and start the schedule by
     //  1. Enabling PCI MSI/MSI-X via the ioctl
