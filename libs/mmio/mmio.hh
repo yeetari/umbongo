@@ -30,18 +30,22 @@ ustd::Result<T *, ub_error_t> alloc_dma_array(size_t size) {
 }
 
 template <typename T>
-T read(const volatile T &value) {
+T read(const volatile T &addr) {
+    asm volatile("" ::: "memory");
+    T value = addr;
+    asm volatile("lfence" ::: "memory");
     return value;
 }
 
 template <typename T>
 void write(const volatile T &addr, T value) {
+    asm volatile("sfence" ::: "memory");
     const_cast<volatile T &>(addr) = value;
 }
 
 template <typename T>
-bool wait_timeout(const volatile T &value, T mask, T desired, size_t timeout) {
-    for (; (value & mask) != desired; timeout--) {
+bool wait_timeout(const volatile T &addr, T mask, T desired, size_t timeout) {
+    for (; (read(addr) & mask) != desired; timeout--) {
         if (timeout == 0) {
             return false;
         }
