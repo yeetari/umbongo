@@ -22,6 +22,10 @@ class VirtSpace;
 Process::Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space)
     : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()), m_virt_space(ustd::move(virt_space)) {}
 
+Process::~Process() {
+    ASSERT(m_thread_count.load() == 0);
+}
+
 uint32_t Process::allocate_fd() {
     // TODO: Limits/error handling. Allocating 2^32 fds would overflow the vector.
     for (uint32_t i = 0; i < m_fds.size(); i++) {
