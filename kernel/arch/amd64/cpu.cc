@@ -387,6 +387,11 @@ extern "C" void interrupt_handler(RegisterState *regs) {
     s_interrupt_table[regs->int_num](regs);
 }
 
+uint32_t current_cpu() {
+    // TODO: Would probably be faster to read from GS directly.
+    return CpuStorage::current().index;
+}
+
 void bsp_init(const acpi::RootTable *xsdt) {
     CpuId standard_features(0x1);
     if ((standard_features.ecx() & (1u << 21u)) == 0u) {

@@ -54,6 +54,7 @@ sources = [
     "dmesg.cc",
     "entry.cc",
     "font.cc",
+    "spin_lock.cc",
     "syscalls.cc",
     "ub_san.cc",
 ]

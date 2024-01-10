@@ -30,6 +30,7 @@ struct RegisterState;
 
 using InterruptHandler = void (*)(RegisterState *);
 
+uint32_t current_cpu();
 void bsp_init(const acpi::RootTable *xsdt);
 void smp_init(const acpi::RootTable *xsdt);
 [[noreturn]] void sched_start(Thread *base_thread);

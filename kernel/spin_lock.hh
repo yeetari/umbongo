@@ -1,21 +1,19 @@
 #pragma once
 
 #include <ustd/atomic.hh>
+#include <ustd/types.hh>
 
 namespace kernel {
 
 class SpinLock {
-    ustd::Atomic<bool> m_locked{false};
+    ustd::Atomic<uint32_t> m_value{0};
 
 public:
-    void lock() {
-        while (m_locked.exchange(true, ustd::memory_order_relaxed)) {
-            asm volatile("pause");
-        }
-    }
+    void lock();
+    void unlock();
 
-    void unlock() { m_locked.store(false, ustd::memory_order_relaxed); }
-    bool locked() const { return m_locked.load(ustd::memory_order_relaxed); }
+    bool is_locked() const;
+    bool is_locked_by_current_cpu() const;
 };
 
 } // namespace kernel
