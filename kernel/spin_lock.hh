@@ -9,13 +9,13 @@ class SpinLock {
 
 public:
     void lock() {
-        while (m_locked.exchange(true, ustd::MemoryOrder::Relaxed)) {
+        while (m_locked.exchange(true, ustd::memory_order_relaxed)) {
             asm volatile("pause");
         }
     }
 
-    void unlock() { m_locked.store(false, ustd::MemoryOrder::Relaxed); }
-    bool locked() const { return m_locked.load(ustd::MemoryOrder::Relaxed); }
+    void unlock() { m_locked.store(false, ustd::memory_order_relaxed); }
+    bool locked() const { return m_locked.load(ustd::memory_order_relaxed); }
 };
 
 } // namespace kernel

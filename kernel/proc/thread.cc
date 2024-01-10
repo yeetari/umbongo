@@ -87,14 +87,14 @@ Thread::Thread(Process *process, ThreadPriority priority) : m_process(process), 
     if (priority != ThreadPriority::Idle) {
         m_kernel_stack = new uint8_t[k_kernel_stack_size] + k_kernel_stack_size;
     }
-    process->m_thread_count.fetch_add(1, ustd::MemoryOrder::AcqRel);
+    process->m_thread_count.fetch_add(1, ustd::memory_order_acq_rel);
     arch::thread_init(this);
 }
 
 Thread::~Thread() {
     delete[] (m_kernel_stack - k_kernel_stack_size);
     operator delete[](m_simd_region, ustd::align_val_t(64));
-    m_process->m_thread_count.fetch_sub(1, ustd::MemoryOrder::AcqRel);
+    m_process->m_thread_count.fetch_sub(1, ustd::memory_order_acq_rel);
     if (m_prev != nullptr) {
         ASSERT(m_next != nullptr);
         m_prev->m_next = m_next;

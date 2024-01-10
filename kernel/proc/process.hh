@@ -56,7 +56,7 @@ public:
     bool is_kernel() const { return m_is_kernel; }
     VirtSpace &virt_space() { return *m_virt_space; }
     FileHandle &file_handle(uint32_t fd) { return *m_fds[fd]; }
-    size_t thread_count() const { return m_thread_count.load(ustd::MemoryOrder::Relaxed); }
+    size_t thread_count() const { return m_thread_count.load(ustd::memory_order_relaxed); }
 };
 
 } // namespace kernel

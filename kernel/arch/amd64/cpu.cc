@@ -128,7 +128,7 @@ CpuStorage *s_cpu_storage_list = nullptr;
 Idt *s_idt = nullptr;
 
 // TODO: Support more than 64 CPUs.
-ustd::Atomic<uint64_t, ustd::MemoryOrder::SeqCst> s_online_cpu_set;
+ustd::Atomic<uint64_t, ustd::memory_order_seq_cst> s_online_cpu_set;
 ustd::Atomic<uint32_t> s_total_cpu_count;
 uint32_t s_ticks_in_one_ms = 0;
 uint8_t *s_simd_default_region = nullptr;

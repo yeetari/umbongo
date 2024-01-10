@@ -31,31 +31,31 @@ public:
 };
 
 void PriorityQueue::enqueue(Thread *thread) {
-    uint32_t head = m_head.fetch_add(1, ustd::MemoryOrder::Acquire);
+    uint32_t head = m_head.fetch_add(1, ustd::memory_order_acquire);
     auto &slot = m_slots[head % k_slot_count];
-    while (!slot.cmpxchg(nullptr, thread, ustd::MemoryOrder::Release, ustd::MemoryOrder::Relaxed)) {
+    while (!slot.cmpxchg(nullptr, thread, ustd::memory_order_release)) {
         do {
             arch::cpu_relax();
-        } while (slot.load(ustd::MemoryOrder::Relaxed) != nullptr);
+        } while (slot.load(ustd::memory_order_relaxed) != nullptr);
     }
 }
 
 Thread *PriorityQueue::dequeue() {
-    uint32_t tail = m_tail.load(ustd::MemoryOrder::Relaxed);
+    uint32_t tail = m_tail.load(ustd::memory_order_relaxed);
     do {
-        if (static_cast<int32_t>(m_head.load(ustd::MemoryOrder::Relaxed) - tail) <= 0) {
+        if (static_cast<int32_t>(m_head.load(ustd::memory_order_relaxed) - tail) <= 0) {
             return nullptr;
         }
-    } while (!m_tail.compare_exchange(tail, tail + 1, ustd::MemoryOrder::Acquire, ustd::MemoryOrder::Relaxed));
+    } while (!m_tail.compare_exchange(tail, tail + 1, ustd::memory_order_acquire));
     auto &slot = m_slots[tail % k_slot_count];
     while (true) {
-        Thread *thread = slot.exchange(nullptr, ustd::MemoryOrder::Release);
+        Thread *thread = slot.exchange(nullptr, ustd::memory_order_release);
         if (thread != nullptr) {
             return thread;
         }
         do {
             arch::cpu_relax();
-        } while (slot.load(ustd::MemoryOrder::Relaxed) == nullptr);
+        } while (slot.load(ustd::memory_order_relaxed) == nullptr);
     }
 }
 
@@ -148,9 +148,9 @@ void Scheduler::switch_next(arch::RegisterState *regs) {
 }
 
 void Scheduler::timer_handler(arch::RegisterState *regs) {
-    if (s_time_being_updated.cmpxchg(false, true, ustd::MemoryOrder::AcqRel, ustd::MemoryOrder::Acquire)) {
+    if (s_time_being_updated.cmpxchg(false, true, ustd::memory_order_acq_rel, ustd::memory_order_acquire)) {
         TimeManager::update();
-        s_time_being_updated.store(false, ustd::MemoryOrder::Release);
+        s_time_being_updated.store(false, ustd::memory_order_release);
     }
     arch::thread_save(regs);
     switch_next(regs);
