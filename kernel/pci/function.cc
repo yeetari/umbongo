@@ -4,8 +4,9 @@
 #include <kernel/dev/device.hh>
 #include <kernel/error.hh>
 #include <kernel/intr/interrupt_manager.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/region.hh>
-#include <kernel/mem/virt_space.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/sys_result.hh>
 #include <ustd/array.hh>
 #include <ustd/assert.hh>
@@ -13,6 +14,7 @@
 #include <ustd/scoped_change.hh>
 #include <ustd/span.hh>
 #include <ustd/string_builder.hh>
+#include <ustd/try.hh>
 #include <ustd/types.hh>
 #include <ustd/utility.hh>
 
@@ -159,10 +161,12 @@ SyscallResult Function::ioctl(ub_ioctl_request_t request, void *) {
     }
 }
 
-uintptr_t Function::mmap(VirtSpace &virt_space) const {
+uintptr_t Function::mmap(AddressSpace &address_space) const {
     constexpr auto access = RegionAccess::Writable | RegionAccess::UserAccessible | RegionAccess::Uncacheable;
     const auto &bar = m_bars[0];
-    auto &region = virt_space.allocate_region(bar.size, access, bar.address);
+    auto vm_object = VmObject::create_physical(bar.address, bar.size);
+    auto &region = EXPECT(address_space.allocate_anywhere(bar.size, access));
+    region.map(ustd::move(vm_object));
     return region.base();
 }
 

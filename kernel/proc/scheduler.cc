@@ -134,15 +134,20 @@ void Scheduler::insert_thread(ustd::UniquePtr<Thread> &&unique_thread) {
 }
 
 void Scheduler::switch_next(arch::RegisterState *regs) {
+    // Requeue switched from thread if not dead.
     Thread *current_thread = &Thread::current();
     if (current_thread->m_state != ThreadState::Dead) {
         s_queues[static_cast<uint32_t>(current_thread->priority())]->enqueue(current_thread);
-    } else {
-        delete current_thread;
     }
 
     Thread *next_thread = pick_next();
-    arch::virt_space_switch(*next_thread->m_process->m_virt_space);
+    arch::switch_space(next_thread->process().address_space());
+
+    // Only delete previous thread after switching address space.
+    if (current_thread->m_state == ThreadState::Dead) {
+        delete current_thread;
+    }
+
     arch::timer_set_one_shot(time_slice_for(next_thread));
     arch::thread_load(regs, next_thread);
 }

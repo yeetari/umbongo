@@ -9,7 +9,7 @@
 
 namespace kernel {
 
-class VirtSpace;
+class AddressSpace;
 
 enum class AttachDirection {
     Read,
@@ -37,7 +37,7 @@ public:
     virtual bool read_would_block(size_t offset) const = 0;
     virtual bool write_would_block(size_t offset) const = 0;
     virtual SyscallResult ioctl(ub_ioctl_request_t, void *) { return Error::Invalid; }
-    virtual uintptr_t mmap(VirtSpace &) const { return 0; }
+    virtual uintptr_t mmap(AddressSpace &) const { return 0; }
     virtual SysResult<size_t> read(ustd::Span<void> data, size_t offset = 0) = 0;
     virtual SysResult<size_t> write(ustd::Span<const void> data, size_t offset = 0) = 0;
     virtual bool valid() const { return true; }

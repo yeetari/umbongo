@@ -6,6 +6,7 @@
 #include <kernel/arch/amd64/descriptor.hh>
 #include <kernel/arch/amd64/register_state.hh>
 #include <kernel/dmesg.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/memory_manager.hh>
 #include <kernel/proc/process.hh>
 #include <kernel/proc/scheduler.hh>
@@ -553,6 +554,13 @@ void smp_init(const acpi::RootTable *xsdt) {
     }
 }
 
+void switch_space(AddressSpace &address_space) {
+    const auto pml4_address = ustd::bit_cast<uintptr_t>(address_space.pml4_ptr());
+    if (read_cr3() != pml4_address) {
+        write_pml4(pml4_address);
+    }
+}
+
 void thread_init(Thread *thread) {
     auto *simd_region = new (ustd::align_val_t(64)) uint8_t[s_simd_region_size];
     __builtin_memcpy(simd_region, s_simd_default_region, s_simd_region_size);
@@ -592,33 +600,31 @@ void timer_set_one_shot(uint32_t ms) {
 }
 
 // TODO: Send these parameters to other CPUs with the IPI to avoid a full flush.
-// TODO: Lazy TLB invalidation - if not sending an IPI would cause a page fault next access, leave it and let the page
-//       fault handler invalidate the TLB. We can do this for any permission increase (e.g. read only ->
-//       writable/executable), or not present to present.
-void tlb_flush_range(VirtSpace *virt_space, uintptr_t base, size_t size) {
+void tlb_flush_range(AddressSpace &address_space, VirtualRange range) {
     if (!s_bsp_initialised) {
         // We are really early in boot.
         return;
     }
 
-    // TODO: Could be simplified and made more granular if VirtSpace stored a reference to its process.
-
-    // Check if we're modifying different page tables to our currently active ones, in which case we don't need to flush
-    // anything ourselves, but we do need to inform other CPUs.
-    auto &current_process = Thread::current().process();
-    if (read_cr3() != ustd::bit_cast<uintptr_t>(virt_space->pml4_ptr()) ||
-        &current_process.virt_space() != virt_space) {
-        // Broadcast flush IPI.
-        send_ipi(0xf7, IpiType::Fixed, IpiDestination::all_excluding_self());
+    // If we're modfiying different page tables to our currently active ones, we don't need to flush anything on our
+    // current CPU, but we do need to inform other CPUs if there are still threads running.
+    auto &process = address_space.process();
+    if (read_cr3() != ustd::bit_cast<uintptr_t>(address_space.pml4_ptr())) {
+        if (process.thread_count() > 0) {
+            // Broadcast flush IPI.
+            send_ipi(0xf7, IpiType::Fixed, IpiDestination::all_excluding_self());
+        }
         return;
     }
 
-    if (current_process.thread_count() > 1) {
+    // Check if other CPUs may be executing threads of the process.
+    const bool is_running_a_thread = &process == &Thread::current().process();
+    if ((!is_running_a_thread && process.thread_count() > 0) || process.thread_count() > 1) {
         // Broadcast flush IPI.
         send_ipi(0xf7, IpiType::Fixed, IpiDestination::all_excluding_self());
     }
 
-    auto page_count = ustd::ceil_div(size, 4_KiB);
+    auto page_count = ustd::ceil_div(range.size(), 4_KiB);
 
     // Just do a full flush if there's a lot of pages, linux uses a threshold of 33 as the default value.
     if (page_count > 33) {
@@ -627,16 +633,10 @@ void tlb_flush_range(VirtSpace *virt_space, uintptr_t base, size_t size) {
     }
 
     // Otherwise, invalidate in a loop.
+    uintptr_t base = range.base();
     while (page_count-- > 0) {
         asm volatile("invlpg (%0)" : : "r"(base) : "memory");
         base += 4_KiB;
-    }
-}
-
-void virt_space_switch(VirtSpace &virt_space) {
-    const auto pml4_address = ustd::bit_cast<uintptr_t>(virt_space.pml4_ptr());
-    if (read_cr3() != pml4_address) {
-        write_pml4(pml4_address);
     }
 }
 

@@ -7,9 +7,10 @@
 #include <kernel/error.hh>
 #include <kernel/fs/file.hh>
 #include <kernel/fs/vfs.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/memory_manager.hh>
 #include <kernel/mem/region.hh>
-#include <kernel/mem/virt_space.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/proc/process.hh>
 #include <kernel/proc/scheduler.hh>
 #include <kernel/proc/thread_blocker.hh>
@@ -71,14 +72,14 @@ ustd::Optional<ustd::String> interpreter_for(File &file) {
 } // namespace
 
 ustd::UniquePtr<Thread> Thread::create_kernel(uintptr_t entry_point, ThreadPriority priority) {
-    auto *process = new Process(true, ustd::SharedPtr<VirtSpace>(MemoryManager::kernel_space()));
+    auto *process = new Process(true);
     auto thread = process->create_thread(priority);
     thread->m_register_state.rip = entry_point;
     return thread;
 }
 
 ustd::UniquePtr<Thread> Thread::create_user(ThreadPriority priority) {
-    auto *process = new Process(false, MemoryManager::kernel_space()->clone());
+    auto *process = new Process(false);
     return process->create_thread(priority);
 }
 
@@ -104,13 +105,16 @@ Thread::~Thread() {
 
 SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String> &args) {
     auto file = TRY(Vfs::open(path, UB_OPEN_MODE_NONE, m_process->m_cwd));
-    auto &stack_region =
-        m_process->m_virt_space->allocate_region(2_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
-    m_register_state.rsp = stack_region.base() + stack_region.size();
 
-    arch::virt_space_switch(*m_process->m_virt_space);
+    auto stack_object = VmObject::create(2_MiB);
+    auto &stack_region = TRY(m_process->address_space().allocate_anywhere(
+        stack_object->size(), RegionAccess::Writable | RegionAccess::UserAccessible));
+    stack_region.map(ustd::move(stack_object));
+    m_register_state.rsp = stack_region.range().end();
+
+    arch::switch_space(m_process->address_space());
     ustd::ScopeGuard space_guard([] {
-        arch::virt_space_switch(Thread::current().process().virt_space());
+        arch::switch_space(Thread::current().process().address_space());
     });
 
     auto interpreter_path = interpreter_for(*file);
@@ -144,7 +148,10 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         }
         // TODO: Don't always map writable. We only need to for copying the data in.
         access |= RegionAccess::Writable;
-        auto &region = m_process->m_virt_space->allocate_region(phdr.memsz + (phdr.vaddr & 0xfffu), access);
+
+        auto vm_object = VmObject::create(phdr.memsz + (phdr.vaddr & 0xfffu));
+        auto &region = TRY(m_process->address_space().allocate_anywhere(vm_object->size(), access));
+        region.map(ustd::move(vm_object));
 
         // Segment contains entry point.
         if (header.entry >= phdr.vaddr && header.entry < phdr.vaddr + phdr.memsz) {
@@ -152,7 +159,7 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
         }
 
         size_t copy_offset = phdr.vaddr & 0xfffu;
-        if (copy_offset + phdr.memsz > region.size()) {
+        if (copy_offset + phdr.memsz > region.range().size()) {
             return Error::NoExec;
         }
         if (executable->read({reinterpret_cast<void *>(region.base() + copy_offset), phdr.filesz}, phdr.offset) !=
@@ -187,7 +194,10 @@ SysResult<> Thread::exec(ustd::StringView path, const ustd::Vector<ustd::String>
     m_register_state.rsi = m_register_state.rsp; // argv
 
     // Allocate some space for heap storage.
-    m_process->m_virt_space->create_region(6_TiB, 5_MiB, RegionAccess::Writable | RegionAccess::UserAccessible);
+    auto heap_object = VmObject::create(5_MiB);
+    auto &heap_region = TRY(m_process->address_space().allocate_specific(
+        {6_TiB, heap_object->size()}, RegionAccess::Writable | RegionAccess::UserAccessible));
+    heap_region.map(ustd::move(heap_object));
     return {};
 }
 

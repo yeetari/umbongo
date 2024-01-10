@@ -2,9 +2,11 @@
 
 #include <kernel/api/types.h>
 #include <kernel/error.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/region.hh>
-#include <kernel/mem/virt_space.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/sys_result.hh>
+#include <ustd/try.hh>
 #include <ustd/types.hh>
 
 namespace kernel {
@@ -28,9 +30,11 @@ SyscallResult FramebufferDevice::ioctl(ub_ioctl_request_t request, void *arg) {
     }
 }
 
-uintptr_t FramebufferDevice::mmap(VirtSpace &virt_space) const {
+uintptr_t FramebufferDevice::mmap(AddressSpace &address_space) const {
     const size_t size = m_pitch * m_height;
-    auto &region = virt_space.allocate_region(size, RegionAccess::Writable | RegionAccess::UserAccessible, m_base);
+    auto vm_object = VmObject::create_physical(m_base, size);
+    auto &region = EXPECT(address_space.allocate_anywhere(size, RegionAccess::Writable | RegionAccess::UserAccessible));
+    region.map(ustd::move(vm_object));
     return region.base();
 }
 

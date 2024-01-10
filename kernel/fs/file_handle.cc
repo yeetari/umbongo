@@ -32,8 +32,8 @@ SyscallResult FileHandle::ioctl(ub_ioctl_request_t request, void *arg) const {
     return m_file->ioctl(request, arg);
 }
 
-uintptr_t FileHandle::mmap(VirtSpace &virt_space) const {
-    return m_file->mmap(virt_space);
+uintptr_t FileHandle::mmap(AddressSpace &address_space) const {
+    return m_file->mmap(address_space);
 }
 
 SysResult<size_t> FileHandle::read(void *data, size_t size) {

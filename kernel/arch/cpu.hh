@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kernel/arch/arch.hh>
+#include <kernel/mem/virtual_range.hh>
 #include <ustd/types.hh>
 
 // IWYU pragma: begin_keep
@@ -13,8 +14,8 @@
 
 namespace kernel {
 
+class AddressSpace;
 class Thread;
-class VirtSpace;
 
 } // namespace kernel
 
@@ -34,12 +35,12 @@ uint32_t current_cpu();
 void bsp_init(const acpi::RootTable *xsdt);
 void smp_init(const acpi::RootTable *xsdt);
 [[noreturn]] void sched_start(Thread *base_thread);
+void switch_space(AddressSpace &address_space);
 void thread_init(Thread *thread);
 void thread_load(RegisterState *state, Thread *thread);
 void thread_save(RegisterState *state);
 void timer_set_one_shot(uint32_t ms);
-void tlb_flush_range(VirtSpace *virt_space, uintptr_t base, size_t size);
-void virt_space_switch(VirtSpace &virt_space);
+void tlb_flush_range(AddressSpace &address_space, VirtualRange range);
 void vm_debug_char(char ch);
 void wire_interrupt(uint8_t vector, InterruptHandler handler);
 void wire_timer(InterruptHandler handler);

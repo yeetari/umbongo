@@ -14,9 +14,10 @@
 #include <kernel/ipc/pipe.hh>
 #include <kernel/ipc/server_socket.hh>
 #include <kernel/ipc/socket.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/physical_page.hh>
 #include <kernel/mem/region.hh>
-#include <kernel/mem/virt_space.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/proc/scheduler.hh>
 #include <kernel/proc/thread.hh>
 #include <kernel/proc/thread_blocker.hh>
@@ -63,6 +64,8 @@ SyscallResult Process::sys_accept(uint32_t fd) {
 }
 
 SyscallResult Process::sys_allocate_region(size_t size, ub_memory_prot_t prot) {
+    size = ustd::align_up(size, 4_KiB);
+
     auto access = RegionAccess::UserAccessible;
     if ((prot & UB_MEMORY_PROT_WRITE) == UB_MEMORY_PROT_WRITE) {
         access |= RegionAccess::Writable;
@@ -73,7 +76,10 @@ SyscallResult Process::sys_allocate_region(size_t size, ub_memory_prot_t prot) {
     if ((prot & UB_MEMORY_PROT_UNCACHEABLE) == UB_MEMORY_PROT_UNCACHEABLE) {
         access |= RegionAccess::Uncacheable;
     }
-    auto &region = m_virt_space->allocate_region(size, access);
+
+    auto vm_object = VmObject::create(size);
+    auto &region = TRY(m_address_space->allocate_anywhere(size, access));
+    region.map(ustd::move(vm_object));
     return region.base();
 }
 
@@ -256,7 +262,7 @@ SyscallResult Process::sys_mmap(uint32_t fd) {
     if (fd >= m_fds.size() || !m_fds[fd]) {
         return Error::BadFd;
     }
-    return m_fds[fd]->mmap(*m_virt_space);
+    return m_fds[fd]->mmap(*m_address_space);
 }
 
 SyscallResult Process::sys_mount(const char *target, const char *fs_type) {
@@ -369,43 +375,7 @@ SyscallResult Process::sys_size(uint32_t fd) {
 }
 
 SyscallResult Process::sys_virt_to_phys(uintptr_t virt) {
-    ScopedLock lock(m_lock);
-    for (const auto &region : *m_virt_space) {
-        if (virt < region->base() || virt >= (region->base() + region->size())) {
-            continue;
-        }
-        for (uintptr_t page_virt = region->base(); const auto &physical_page : region->physical_pages()) {
-            uintptr_t page_end = page_virt;
-            switch (physical_page->size()) {
-            case PhysicalPageSize::Normal:
-                page_end += 4_KiB;
-                break;
-            case PhysicalPageSize::Large:
-                page_end += 2_MiB;
-                break;
-            case PhysicalPageSize::Huge:
-                page_end += 1_GiB;
-                break;
-            }
-            if (virt < page_virt || virt >= page_end) {
-                continue;
-            }
-            size_t offset = virt - page_virt;
-            switch (physical_page->size()) {
-            case PhysicalPageSize::Normal:
-                page_virt += 4_KiB;
-                break;
-            case PhysicalPageSize::Large:
-                page_virt += 2_MiB;
-                break;
-            case PhysicalPageSize::Huge:
-                page_virt += 1_GiB;
-                break;
-            }
-            return physical_page->phys() + offset;
-        }
-    }
-    return Error::NonExistent;
+    return TRY(m_address_space->virt_to_phys(virt));
 }
 
 SyscallResult Process::sys_wait_pid(size_t pid) {

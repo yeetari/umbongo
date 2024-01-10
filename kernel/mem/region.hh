@@ -1,16 +1,16 @@
 #pragma once
 
-#include <kernel/mem/physical_page.hh>
-#include <ustd/optional.hh> // IWYU pragma: keep
+#include <kernel/mem/virtual_range.hh>
 #include <ustd/shared_ptr.hh>
-#include <ustd/types.hh>
-#include <ustd/vector.hh>
+#include <ustd/splay_tree.hh> // TODO
 
 namespace kernel {
 
-class VirtSpace;
+class AddressSpace;
+class VmObject;
 
-enum class RegionAccess : uint8_t {
+enum class RegionAccess : uint32_t {
+    None = 0,
     Writable = 1u << 0u,
     Executable = 1u << 1u,
     UserAccessible = 1u << 2u,
@@ -18,43 +18,45 @@ enum class RegionAccess : uint8_t {
     Global = 1u << 4u,
 };
 
-class Region {
-    uintptr_t m_base;
-    size_t m_size;
-    RegionAccess m_access;
-    bool m_free;
-    ustd::Vector<ustd::SharedPtr<PhysicalPage>> m_physical_pages;
+class Region : public ustd::IntrusiveTreeNode<Region> {
+    friend AddressSpace;
+
+private:
+    AddressSpace &m_address_space;
+    const VirtualRange m_range;
+    const RegionAccess m_access;
+    ustd::SharedPtr<VmObject> m_vm_object;
+
+    Region(AddressSpace &, VirtualRange, RegionAccess);
 
 public:
-    Region(uintptr_t base, size_t size, RegionAccess access, bool free, ustd::Optional<uintptr_t> phys_base);
-    Region(const Region &) = default;
-    Region(Region &&) = default;
-    ~Region() = default;
+    Region(const Region &) = delete;
+    Region(Region &&) = delete;
+    ~Region();
 
     Region &operator=(const Region &) = delete;
     Region &operator=(Region &&) = delete;
 
-    void map(VirtSpace *virt_space) const;
-    void set_base(uintptr_t base) { m_base = base; }
-    void set_size(size_t size) { m_size = size; }
+    void map(ustd::SharedPtr<VmObject> &&vm_object);
+    void unmap_if_needed();
 
-    uintptr_t base() const { return m_base; }
-    size_t size() const { return m_size; }
+    uintptr_t base() const { return m_range.base(); }
+    AddressSpace &address_space() const { return m_address_space; }
+    VirtualRange range() const { return m_range; }
     RegionAccess access() const { return m_access; }
-    bool free() const { return m_free; }
-    const auto &physical_pages() const { return m_physical_pages; }
+    ustd::SharedPtr<VmObject> vm_object() const;
 };
 
-inline constexpr RegionAccess operator&(RegionAccess a, RegionAccess b) {
-    return static_cast<RegionAccess>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
+inline constexpr RegionAccess operator&(RegionAccess lhs, RegionAccess rhs) {
+    return static_cast<RegionAccess>(ustd::to_underlying(lhs) & ustd::to_underlying(rhs));
 }
 
-inline constexpr RegionAccess operator|(RegionAccess a, RegionAccess b) {
-    return static_cast<RegionAccess>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+inline constexpr RegionAccess operator|(RegionAccess lhs, RegionAccess rhs) {
+    return static_cast<RegionAccess>(ustd::to_underlying(lhs) | ustd::to_underlying(rhs));
 }
 
-inline constexpr RegionAccess &operator|=(RegionAccess &a, RegionAccess b) {
-    return a = (a | b);
+inline constexpr RegionAccess &operator|=(RegionAccess &lhs, RegionAccess rhs) {
+    return lhs = (lhs | rhs);
 }
 
 } // namespace kernel

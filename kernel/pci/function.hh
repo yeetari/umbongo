@@ -9,7 +9,7 @@
 
 namespace kernel {
 
-class VirtSpace;
+class AddressSpace;
 
 } // namespace kernel
 
@@ -45,7 +45,7 @@ public:
     bool read_would_block(size_t) const override { return false; }
     bool write_would_block(size_t) const override { return !m_interrupt_pending; }
     SyscallResult ioctl(ub_ioctl_request_t request, void *arg) override;
-    uintptr_t mmap(VirtSpace &virt_space) const override;
+    uintptr_t mmap(AddressSpace &address_space) const override;
     SysResult<size_t> read(ustd::Span<void> data, size_t offset) override;
 };
 

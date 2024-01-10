@@ -2,14 +2,17 @@
 
 #include <boot/boot_info.hh>
 #include <kernel/dmesg.hh>
+#include <kernel/mem/address_space.hh>
 #include <kernel/mem/heap.hh>
 #include <kernel/mem/region.hh>
-#include <kernel/mem/virt_space.hh>
+#include <kernel/mem/virtual_range.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/scoped_lock.hh>
 #include <kernel/spin_lock.hh>
 #include <ustd/assert.hh>
 #include <ustd/numeric.hh>
 #include <ustd/optional.hh>
+#include <ustd/splay_tree.hh>
 #include <ustd/types.hh>
 #include <ustd/unique_ptr.hh>
 #include <ustd/utility.hh>
@@ -23,7 +26,7 @@ constexpr size_t k_frame_size = 4_KiB;
 struct MemoryManagerData {
     size_t *frame_bitset{nullptr};
     size_t frame_count{0};
-    VirtSpace *kernel_space{nullptr};
+    VmObject *kernel_object{nullptr};
 } s_data;
 SpinLock s_lock;
 
@@ -121,14 +124,9 @@ void MemoryManager::initialise(BootInfo *boot_info) {
 
     Heap::initialise();
 
-    // Create the kernel virtual space and identity map physical memory up to 512 GiB. Using 1 GiB pages means this only
-    // takes 4 KiB of page structures to do.
-    constexpr auto access = RegionAccess::Writable | RegionAccess::Executable | RegionAccess::Global;
-    s_data.kernel_space = new VirtSpace;
-    s_data.kernel_space->create_region(0, 512_GiB, access, 0);
-
-    // Leak a ref for the kernel space to ensure it never gets deleted by a kernel process being destroyed.
-    s_data.kernel_space->leak_ref();
+    // Create the identity map VmObject.
+    auto kernel_object = VmObject::create_physical(0, 512_GiB);
+    s_data.kernel_object = kernel_object.disown();
 }
 
 void MemoryManager::reclaim(BootInfo *boot_info) {
@@ -212,8 +210,8 @@ void MemoryManager::free_contiguous(void *ptr, size_t size) {
     }
 }
 
-VirtSpace *MemoryManager::kernel_space() {
-    return s_data.kernel_space;
+VmObject *MemoryManager::kernel_object() {
+    return s_data.kernel_object;
 }
 
 } // namespace kernel

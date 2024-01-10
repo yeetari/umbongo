@@ -2,9 +2,13 @@
 
 #include <kernel/fs/file_handle.hh>
 #include <kernel/fs/vfs.hh>
+#include <kernel/mem/address_space.hh>
+#include <kernel/mem/memory_manager.hh>
+#include <kernel/mem/vm_object.hh>
 #include <kernel/proc/thread.hh>
 #include <ustd/optional.hh>
 #include <ustd/shared_ptr.hh>
+#include <ustd/try.hh>
 #include <ustd/types.hh>
 #include <ustd/unique_ptr.hh>
 #include <ustd/utility.hh>
@@ -17,10 +21,15 @@ size_t s_pid_counter = 0;
 
 } // namespace
 
-class VirtSpace;
+Process::Process(bool is_kernel) : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()) {
+    m_address_space = ustd::make_unique<AddressSpace>(*this);
 
-Process::Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space)
-    : m_pid(s_pid_counter++), m_is_kernel(is_kernel), m_cwd(Vfs::root_inode()), m_virt_space(ustd::move(virt_space)) {}
+    // TODO: Mapping this into every process is wasteful.
+    constexpr auto access = RegionAccess::Writable | RegionAccess::Executable | RegionAccess::Global;
+    auto *kernel_object = MemoryManager::kernel_object();
+    auto &kernel_region = ASSUME(m_address_space->allocate_specific({0, kernel_object->size()}, access));
+    kernel_region.map(ustd::adopt_shared(kernel_object));
+}
 
 Process::~Process() {
     ASSERT(m_thread_count.load() == 0);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kernel/fs/file_handle.hh>
-#include <kernel/mem/virt_space.hh> // IWYU pragma: keep
+#include <kernel/mem/address_space.hh>
 #include <kernel/spin_lock.hh>
 #include <kernel/sys_result.hh>
 #include <ustd/atomic.hh>
@@ -27,12 +27,12 @@ private:
     const size_t m_pid;
     const bool m_is_kernel;
     Inode *m_cwd;
-    ustd::SharedPtr<VirtSpace> m_virt_space;
+    ustd::UniquePtr<AddressSpace> m_address_space;
     ustd::Vector<ustd::Optional<FileHandle>> m_fds;
     ustd::Atomic<size_t> m_thread_count{0};
     mutable SpinLock m_lock;
 
-    Process(bool is_kernel, ustd::SharedPtr<VirtSpace> virt_space);
+    explicit Process(bool is_kernel);
 
     uint32_t allocate_fd();
 
@@ -54,7 +54,7 @@ public:
 
     size_t pid() const { return m_pid; }
     bool is_kernel() const { return m_is_kernel; }
-    VirtSpace &virt_space() { return *m_virt_space; }
+    AddressSpace &address_space() { return *m_address_space; }
     FileHandle &file_handle(uint32_t fd) { return *m_fds[fd]; }
     size_t thread_count() const { return m_thread_count.load(ustd::memory_order_relaxed); }
 };

@@ -257,7 +257,7 @@ efi::Status efi_main(efi::Handle image_handle, efi::SystemTable *st) {
         size_t info_size = 0;
         EFI_CHECK(graphics_protocol->query_mode(graphics_protocol, i, &info_size, &info),
                   "Failed to query video mode!");
-        if (info->width * info->height > pixel_count) {
+        if (info->width == 1280 && info->height == 720) {
             pixel_count = info->width * info->height;
             preferred_mode = i;
         }

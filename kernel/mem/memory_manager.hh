@@ -6,7 +6,7 @@ struct BootInfo;
 
 namespace kernel {
 
-class VirtSpace;
+class VmObject;
 
 struct MemoryManager {
     static void initialise(BootInfo *boot_info);
@@ -19,7 +19,7 @@ struct MemoryManager {
     static void *alloc_contiguous(size_t size);
     static void free_contiguous(void *ptr, size_t size);
 
-    static VirtSpace *kernel_space();
+    static VmObject *kernel_object();
 };
 
 } // namespace kernel
