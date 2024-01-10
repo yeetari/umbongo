@@ -36,7 +36,7 @@ bool PollBlocker::should_unblock() {
         return true;
     }
 
-    ScopedLock locker(m_lock);
+    ScopedLock lock(m_lock);
     for (const auto &poll_fd : m_fds) {
         // TODO: Bounds checking.
         auto &handle = m_process.file_handle(poll_fd.fd);
