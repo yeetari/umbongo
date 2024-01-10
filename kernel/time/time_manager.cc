@@ -14,7 +14,7 @@ uint64_t s_ns_since_boot = 0;
 
 } // namespace
 
-void TimeManager::initialise(acpi::HpetTable *hpet_table) {
+void TimeManager::initialise(const acpi::HpetTable *hpet_table) {
     // Retrieve HPET address from ACPI tables and ensure the values are sane.
     const auto &hpet_address = hpet_table->base_address();
     ENSURE(hpet_address.address_space == acpi::AddressSpace::SystemMemory);

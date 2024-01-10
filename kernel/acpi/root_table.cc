@@ -6,7 +6,7 @@
 
 namespace kernel::acpi {
 
-Table *RootTable::entry(size_t index) const {
+const Table *RootTable::entry(size_t index) const {
     ASSERT(index < entry_count());
     return m_entries[index];
 }

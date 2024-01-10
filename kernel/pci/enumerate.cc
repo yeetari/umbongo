@@ -17,7 +17,7 @@ uint16_t read_vendor_id(const acpi::PciSegment *segment, uint8_t bus, uint8_t de
 
 } // namespace
 
-void enumerate(acpi::PciTable *mcfg) {
+void enumerate(const acpi::PciTable *mcfg) {
     for (const auto *segment : *mcfg) {
         const uint8_t bus_count = segment->end_bus - segment->start_bus;
         for (uint8_t bus = 0; bus < bus_count; bus++) {

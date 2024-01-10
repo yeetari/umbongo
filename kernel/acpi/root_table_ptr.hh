@@ -15,13 +15,13 @@ class [[gnu::packed]] RootTablePtr {
     uint8_t m_revision;
     uint32_t : 32;
     uint32_t m_length;
-    RootTable *m_xsdt;
+    const RootTable *m_xsdt;
     uint8_t m_extended_checksum;
     size_t : 24;
 
 public:
     uint8_t revision() const { return m_revision; }
-    RootTable *xsdt() const { return m_xsdt; }
+    const RootTable *xsdt() const { return m_xsdt; }
 };
 
 } // namespace kernel::acpi

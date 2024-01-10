@@ -8,6 +8,6 @@ class PciTable;
 
 namespace kernel::pci {
 
-void enumerate(acpi::PciTable *mcfg);
+void enumerate(const acpi::PciTable *mcfg);
 
 } // namespace kernel::pci

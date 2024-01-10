@@ -90,7 +90,7 @@ void kernel_init(BootInfo *boot_info, acpi::RootTable *xsdt) {
     DevFs::initialise();
     DmesgDevice::initialise();
 
-    auto *mcfg = EXPECT(xsdt->find<acpi::PciTable>());
+    const auto *mcfg = EXPECT(xsdt->find<acpi::PciTable>());
     pci::enumerate(mcfg);
 
     auto *fb = new FramebufferDevice(boot_info->framebuffer_base, boot_info->width, boot_info->height,
@@ -137,21 +137,21 @@ extern "C" void kernel_entry(BootInfo *boot_info) {
     auto *rsdp = reinterpret_cast<acpi::RootTablePtr *>(boot_info->rsdp);
     ENSURE(rsdp->revision() == 2, "ACPI 2.0+ required!");
 
-    auto *xsdt = rsdp->xsdt();
+    const auto *xsdt = rsdp->xsdt();
     dmesg("acpi: XSDT = {} (revision={}, valid={})", xsdt, xsdt->revision(), xsdt->valid());
     ENSURE(xsdt->valid());
 
-    for (auto *entry : *xsdt) {
+    for (const auto *entry : *xsdt) {
         dmesg("acpi:  - {:c}{:c}{:c}{:c} = {} (revision={}, valid={})", entry->signature()[0], entry->signature()[1],
               entry->signature()[2], entry->signature()[3], entry, entry->revision(), entry->valid());
     }
 
-    auto *hpet_table = EXPECT(xsdt->find<acpi::HpetTable>());
+    const auto *hpet_table = EXPECT(xsdt->find<acpi::HpetTable>());
     TimeManager::initialise(hpet_table);
 
     arch::bsp_init(xsdt);
 
-    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
+    const auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     for (auto *controller : *madt) {
         // TODO: Handle local APIC address override.
         ENSURE(controller->type != 5);

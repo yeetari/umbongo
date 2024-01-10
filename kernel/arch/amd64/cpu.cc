@@ -422,7 +422,7 @@ void bsp_init(const acpi::RootTable *xsdt) {
     s_umip_available = (intel_extended_features.ecx() & (1u << 2u)) != 0u;
 
     // Mask legacy PIC if present.
-    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
+    const auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     if ((madt->flags() & 1u) != 0) {
         write_port(0x21, 0xff);
         write_port(0xa1, 0xff);
@@ -496,7 +496,7 @@ void smp_init(const acpi::RootTable *xsdt) {
     uintptr_t *stack_pointer = smp_prepare();
 
     // Start APs one by one.
-    auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
+    const auto *madt = EXPECT(xsdt->find<acpi::ApicTable>());
     for (auto *controller : *madt) {
         if (controller->type != 0) {
             continue;

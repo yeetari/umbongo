@@ -15,7 +15,7 @@ class [[gnu::packed]] RootTable : public Table {
 #pragma clang diagnostic ignored "-Wc99-extensions"
 #pragma clang diagnostic ignored "-Wgnu-empty-struct"
     // NOLINTNEXTLINE
-    Table *m_entries[];
+    const Table *m_entries[];
 #pragma clang diagnostic pop
 
 public:
@@ -23,9 +23,9 @@ public:
     RootTableIterator end() const;
 
     template <typename T>
-    ustd::Optional<T *> find() const;
+    ustd::Optional<const T *> find() const;
 
-    Table *entry(size_t index) const;
+    const Table *entry(size_t index) const;
     size_t entry_count() const;
 };
 
@@ -47,7 +47,7 @@ public:
     }
 
     constexpr bool operator<=>(const RootTableIterator &) const = default;
-    constexpr Table *operator*() const { return m_table->entry(m_index); }
+    constexpr const Table *operator*() const { return m_table->entry(m_index); }
 };
 
 inline RootTableIterator RootTable::begin() const {
@@ -59,10 +59,10 @@ inline RootTableIterator RootTable::end() const {
 }
 
 template <typename T>
-ustd::Optional<T *> RootTable::find() const {
-    for (auto *table : *this) {
+ustd::Optional<const T *> RootTable::find() const {
+    for (const auto *table : *this) {
         if (ustd::equal(table->signature(), T::k_signature) && table->valid()) {
-            return static_cast<T *>(table);
+            return static_cast<const T *>(table);
         }
     }
     return {};
